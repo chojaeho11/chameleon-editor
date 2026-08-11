@@ -118,10 +118,12 @@ export function initConfig() {
                     const _t = window.t || ((k, d) => d);
                     if (session) {
                         btnLogin.innerText = _t('btn_logout', 'Logout');
+                        btnLogin.removeAttribute('data-i18n');   // 번역 재적용이 라벨 덮어쓰지 않게
                         btnLogin.style.fontWeight = 'bold';
                         btnLogin.style.color = '#ef4444';
                     } else {
                         btnLogin.innerText = _t('btn_login', 'Login');
+                        btnLogin.setAttribute('data-i18n', 'btn_login');
                         btnLogin.style.fontWeight = 'normal';
                         btnLogin.style.color = '';
                         // 로그아웃 상태 → 클릭 시 로그인 모달 열기
@@ -355,11 +357,16 @@ function updateUserSession(session) {
             btnLogin.innerText = _isAdm
                 ? (window.t ? window.t('btn_admin_logout', 'Admin Logout') : 'Admin Logout')
                 : (window.t ? window.t('btn_logout', 'Logout') : 'Logout');
+            // 2026-08-11 (버그): 로그인 후에도 'Login' 으로 되돌아가는 문제 — 번역파일이 늦게 로드되면
+            //   applyTranslations 가 data-i18n="btn_login" 을 다시 적용해 라벨을 덮어썼다.
+            //   로그인 상태에서는 data-i18n 을 떼어 재번역이 라벨을 못 건드리게 한다.
+            btnLogin.removeAttribute('data-i18n');
             btnLogin.classList.add('primary');
             if (_isAdm) btnLogin.style.backgroundColor = '#dc2626';
             else btnLogin.style.backgroundColor = '';
         } else {
             btnLogin.innerText = window.t ? window.t('btn_login', 'Login') : 'Login';
+            btnLogin.setAttribute('data-i18n', 'btn_login');   // 로그아웃 상태는 다시 번역 대상으로
             btnLogin.classList.remove('primary');
             btnLogin.style.backgroundColor = '';
         }

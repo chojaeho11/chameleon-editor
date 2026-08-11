@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260811222944';
+    var CV = '20260811224140';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -866,6 +866,18 @@ if ('caches' in window) {
         
         <div style="flex:1;"></div>
 
+        <!-- 2026-08-11 (버그): 모바일에서 상단 버튼을 '스크립트 로드 전에' 누르면 핸들러(window.fn)가
+             아직 없어 아무 반응이 없던 문제 → 준비될 때까지 잠깐 재시도 후 실행. -->
+        <script>
+        window._tbRetry = function(fnName, arg){
+            var tries = 0;
+            (function go(){
+                var fn = window[fnName];
+                if (typeof fn === 'function'){ try { fn(arg); } catch(e){} return; }
+                if (tries++ < 24) setTimeout(go, 150);   // 최대 ~3.6초 대기 후 실행
+            })();
+        };
+        </script>
         <!-- 2026-08-10: 상단 장바구니 버튼 (클릭 시 카트 드로어 → 주문하기) -->
         <!-- 2026-08-10: SNS 체험단 탑바 버튼 (귀엽게, KR/JP 노출) -->
         <style>
@@ -873,12 +885,12 @@ if ('caches' in window) {
             #btnSnsTop{ display:none; }
             html[data-site="KR"] #btnSnsTop, html[data-site="JP"] #btnSnsTop{ display:inline-flex !important; align-items:center; }
         </style>
-        <button class="btn" id="btnSnsTop" onclick="if(window.openBlogRecruitInfo)openBlogRecruitInfo()" title="SNS 체험단 모집" style="margin-right:6px; background:linear-gradient(135deg,#f472b6,#c084fc); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; animation:snsTopPulse 1.7s ease-in-out infinite;">
+        <button class="btn" id="btnSnsTop" onclick="window._tbRetry('openBlogRecruitInfo')" title="SNS 체험단 모집" style="margin-right:6px; background:linear-gradient(135deg,#f472b6,#c084fc); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; animation:snsTopPulse 1.7s ease-in-out infinite;">
             <span id="snsTopLabel">🎉 SNS 체험단</span>
         </button>
         <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('snsTopLabel');if(el)el.textContent=(c==='JP')?'🎉 SNS体験団':'🎉 SNS 체험단';})();</script>
 
-        <button class="btn" id="btnCartTop" onclick="if(window._soToggleCart)window._soToggleCart(true)" style="position:relative; margin-right:5px; background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
+        <button class="btn" id="btnCartTop" onclick="window._tbRetry('_soToggleCart', true)" style="position:relative; margin-right:5px; background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
             <span id="cartTopLabel">장바구니</span>
             <span id="soHeaderCartCount" style="display:none; position:absolute; top:-7px; right:-7px; background:#ef4444; color:#fff; border-radius:980px; min-width:19px; height:19px; line-height:19px; font-size:11px; text-align:center; padding:0 5px; box-sizing:border-box;">0</span>
         </button>
@@ -2320,7 +2332,7 @@ window._tcmFallbackClick = function(code) {
                     try {
                         var sb = window.sb;
                         if (!sb) {
-                            try { var mod = await import('./config.js?v=444'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
+                            try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
                         }
                         if (!sb) { console.warn('[mgrPhones] sb 미초기화 — 슬롯 정리'); _cleanupSlot(); return; }
                         // 1차 fetch 실패 시 1.5초 후 재시도 (모바일 네트워크 불안정 대응)
@@ -3370,7 +3382,7 @@ window._tcmFallbackClick = function(code) {
                 if (quoteId) _addPendingId(quoteId);
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=444'); sb = mod.sb || window.sb; }
+                    try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; }
                     catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
@@ -3692,7 +3704,7 @@ window._tcmFallbackClick = function(code) {
             msg.textContent = '...';
             try {
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=444'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { msg.style.color = '#dc2626'; msg.textContent = 'Supabase ' + t.lookupErr; return; }
                 var res = await sb.from('orders').select('id, total_amount, payment_status, status').eq('id', val).maybeSingle();
                 if (res.error || !res.data) {
@@ -3720,7 +3732,7 @@ window._tcmFallbackClick = function(code) {
                 // 1) 주문의 items 를 카트에 로드
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=444'); sb = mod.sb || window.sb; } catch(e){}
+                    try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){}
                 }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var { data: order, error } = await sb
@@ -3826,7 +3838,7 @@ window._tcmFallbackClick = function(code) {
             try {
                 if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 처리중...'; }
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=444'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var em = '';
                 try { var { data: sess } = await sb.auth.getUser(); em = sess?.user?.email || ''; } catch (e) {}
@@ -10559,7 +10571,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 메인 페이지에서 ~16개 모듈, 약 1MB JS 다운로드/파싱 절감. -->
 <!-- 남은 정적 import: config(필수), order(필수, canvas-core/size/pages/export 도 자동 동반), login(필수), main(orchestrator). -->
 <!-- wall-3d-* 는 에디터 진입 후 wall 3D 미리보기에서 lazy-init 되도록 defer 유지. -->
-<script type="module" src="./config.js?v=444"></script>
+<script type="module" src="./config.js?v=445"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
 <script src="/attribution.js?v=1"></script>
@@ -12074,7 +12086,7 @@ window.filterFxCards = function(cat, btn) {
     import { canvas, setMaxLimits } from './canvas-core.js?v=435';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=737'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=435';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=444';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=445';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -17503,7 +17515,7 @@ if (w >= 20 && h >= 20) {
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=444')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=445')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -17555,7 +17567,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=444')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=445')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -19348,8 +19360,9 @@ if (w >= 20 && h >= 20) {
             if (btnLogin) {
                 // [수정] "로그아웃" -> window.t('btn_logout')
                 btnLogin.innerText = window.t('btn_logout');
-                btnLogin.style.fontWeight = "bold"; 
-                btnLogin.style.color = "#ef4444"; 
+                btnLogin.removeAttribute('data-i18n');   // 2026-08-11: 번역 늦게 로드돼도 'Login' 으로 안 되돌아가게
+                btnLogin.style.fontWeight = "bold";
+                btnLogin.style.color = "#ef4444";
                 btnLogin.onclick = async function() {
                     // [수정] "로그아웃 하시겠습니까?" -> window.t('msg_logout_confirm')
                     if (confirm(window.t('msg_logout_confirm'))) {
@@ -19371,6 +19384,7 @@ if (w >= 20 && h >= 20) {
             if (btnLogin) {
                 // [수정] "로그인" -> window.t('btn_login')
                 btnLogin.innerText = window.t('btn_login');
+                btnLogin.setAttribute('data-i18n', 'btn_login');
                 btnLogin.onclick = () => document.getElementById('loginModal').style.display = 'flex';
             }
             if(btnConsole) btnConsole.style.setProperty('display', 'none', 'important');
@@ -21669,7 +21683,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=444';
+    import { sb, initConfig } from './config.js?v=445';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {
