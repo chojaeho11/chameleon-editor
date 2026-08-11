@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260811210258';
+    var CV = '20260811211402';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -206,7 +206,7 @@
 </head>
 <body class="mypage-body">
 <script src="toast.js?v=267"></script>
-<script src="./sns-ranking.js?v=6"></script>
+<script src="./sns-ranking.js?v=7"></script>
 
     <nav class="mp-sidebar">
         <div class="mp-logo" onclick="location.href='index.html'"><i class="fa-solid fa-palette"></i> Chameleon</div>
@@ -342,33 +342,35 @@
 
         <div id="tab-blog" class="mp-section">
             <h3 id="blogTitle">블로그·SNS 체험단</h3>
-            <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:12px; padding:16px 18px; margin:14px 0 14px; color:#475569; font-size:13px; line-height:1.7;">
-                <div id="blogIntroTitle" style="color:#a855f7; font-size:15px; margin-bottom:6px;">매월 무료 포인트가 지급됩니다</div>
-                <span id="blogIntroDesc">제품을 무료로 구매(배송비 포함)하고 SNS·블로그에 홍보 후기를 남겨주세요. 매월 <b>5만 포인트</b>(Threads 이용자 <b>10만 포인트</b>)가 지급됩니다. 다음 달 포인트를 받으려면 후기 링크를 최소 2개 등록해야 합니다.</span>
+
+            <!-- 2026-08-11: 후기·홍보 링크 등록을 최상단으로 (진입 시 바로 글 올리는 곳이 보이게). -->
+            <div style="border:1px solid #e9d5ff; border-radius:12px; padding:18px; background:#faf5ff;">
+                <div id="blogSubmitTitle" style="font-size:15px; color:#7c3aed; margin-bottom:4px;">✍ 후기·홍보 링크 등록</div>
+                <div style="font-size:12.5px; color:#94a3b8; margin-bottom:12px; line-height:1.6;">제품을 구매하고 SNS·블로그에 올린 홍보/후기 글의 링크를 붙여넣어 주세요.</div>
+                <input id="blogLinkUrl" type="url" placeholder="https://..."
+                    style="width:100%; padding:12px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+                <input id="blogLinkMemo" type="text" placeholder="메모 (선택)"
+                    style="width:100%; padding:12px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:12px; box-sizing:border-box;">
+                <button id="blogLinkSubmitBtn" onclick="submitBlogLink()"
+                    style="width:100%; padding:13px 22px; background:#a855f7; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">등록</button>
             </div>
 
-            <!-- 월간 게시글 수 랭킹 현금 이벤트 -->
-            <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5); border:1px solid #fdba74; border-radius:12px; padding:16px 18px; margin-bottom:16px; color:#7c2d12; font-size:13px; line-height:1.7;">
+            <div id="blogMyLinksTitle" style="font-size:14px; color:#334155; margin:22px 0 12px;">내가 등록한 링크</div>
+            <div id="blogLinkList"></div>
+
+            <!-- 월간 게시글 점수 랭킹 현금 이벤트 -->
+            <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5); border:1px solid #fdba74; border-radius:12px; padding:16px 18px; margin:26px 0 14px; color:#7c2d12; font-size:13px; line-height:1.7;">
                 <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 SNS 홍보 랭킹 현금 이벤트 <span style="font-size:12px; background:#fff; border:1px solid #fdba74; border-radius:980px; padding:1px 8px; margin-left:4px;">⏰ 9/15 16:00 종료</span></div>
                 <span id="blogEventDesc">제품을 구매하고 SNS에 후기·홍보 글을 올려주세요! <b>게시글 1개=1점 · 정성글=3점 · 조회수 터짐=5점</b>(관리자 확인, 실시간 반영). 점수 상위 <b>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급! (한국·일본 회원 · 8/10 이후 게시글만 인정) <b style="color:#b91c1c;">※ 카멜레온프린팅과 무관하거나 도배성 글만 있는 경우 지급 제외</b></span>
             </div>
 
-            <div id="snsRankMypage" style="margin-bottom:20px;"></div>
+            <div id="snsRankMypage" style="margin-bottom:16px;"></div>
 
-            <div id="blogMonStatus" style="margin-bottom:22px;"></div>
-
-            <div style="border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
-                <div id="blogSubmitTitle" style="font-size:14px; color:#334155; margin-bottom:12px;">후기·홍보 링크 등록</div>
-                <input id="blogLinkUrl" type="url" placeholder="https://..."
-                    style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
-                <input id="blogLinkMemo" type="text" placeholder="메모 (선택)"
-                    style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:12px; box-sizing:border-box;">
-                <button id="blogLinkSubmitBtn" onclick="submitBlogLink()"
-                    style="padding:11px 22px; background:#a855f7; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">등록</button>
+            <!-- 매월 무료 포인트 안내 -->
+            <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:12px; padding:16px 18px; color:#475569; font-size:13px; line-height:1.7;">
+                <div id="blogIntroTitle" style="color:#a855f7; font-size:15px; margin-bottom:6px;">매월 무료 포인트가 지급됩니다</div>
+                <span id="blogIntroDesc">제품을 무료로 구매(배송비 포함)하고 SNS·블로그에 홍보 후기를 남겨주세요. 매월 <b>5만 포인트</b>(Threads 이용자 <b>10만 포인트</b>)가 지급됩니다. 다음 달 포인트를 받으려면 후기 링크를 최소 2개 등록해야 합니다.</span>
             </div>
-
-            <div id="blogMyLinksTitle" style="font-size:14px; color:#334155; margin:26px 0 12px;">내가 등록한 링크</div>
-            <div id="blogLinkList"></div>
             <script>(function(){
                 if (window.__SITE_CODE !== 'JP') return;
                 var t = {

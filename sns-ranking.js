@@ -50,7 +50,8 @@
             + '.snsrk-h .mo{background:#fce7f3;color:#db2777 !important;font-weight:800;}'
             + '</style>';
         var head = '<div class="snsrk"><div class="snsrk-h"><b>🏆 ' + esc(T.title) + '</b><span class="mo">⏰ ' + esc(T.ends) + '</span></div>'
-            + '<div class="snsrk-desc">' + esc(T.desc) + '</div>';
+            // desc 는 우리가 만든 안전한 상수(HTML 강조 포함) → esc 하지 않고 그대로 렌더. hideDesc 면 생략.
+            + (data._hideDesc ? '' : '<div class="snsrk-desc">' + T.desc + '</div>');
         if (!rank.length) {
             return css + head + '<div class="snsrk-empty">' + esc(T.empty) + '</div><div class="snsrk-note">' + esc(T.note) + '</div></div>';
         }
@@ -75,14 +76,16 @@
     };
 
     // 컨테이너에 랭킹 로드
-    window.loadSnsRankingInto = async function (containerId) {
+    window.loadSnsRankingInto = async function (containerId, opts) {
         var box = document.getElementById(containerId);
         if (!box) return;
         var sb = getSb();
         box.innerHTML = '<div style="padding:24px;text-align:center;color:#9a8c6a;">' + esc(T.loading) + '</div>';
         try {
             var r = await sb.rpc('blog_view_ranking_public');
-            box.innerHTML = window.renderSnsRankingHTML((r && r.data) || {});
+            var d = (r && r.data) || {};
+            if (opts && opts.hideDesc) d._hideDesc = true;   // 마이페이지엔 위에 이벤트 안내가 이미 있어 desc 중복 숨김
+            box.innerHTML = window.renderSnsRankingHTML(d);
         } catch (e) { box.innerHTML = '<div style="padding:20px;text-align:center;color:#c05;">' + esc(e.message || e) + '</div>'; }
     };
 

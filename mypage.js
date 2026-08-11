@@ -172,6 +172,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2026-05-31: 사용자 요청 — 마이페이지 진입 시 주문 내역을 기본 표시. 즉시 로드.
     loadOrders();
 
+    // 2026-08-11: 체험단 승인 팝업 '글쓰러 가기'(mypage.html?tab=blog)로 진입 시 SNS 후기 작성 탭을 기본으로 열고 입력창으로 이동.
+    try {
+        var _mpTab = new URLSearchParams(location.search).get('tab');
+        if (_mpTab === 'blog') {
+            switchTab('blog');
+            setTimeout(function(){
+                var f = document.getElementById('blogLinkUrl');
+                if (f) { try { f.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ } try { f.focus(); } catch(_){ } }
+            }, 500);
+        }
+    } catch(e){}
+
     // 2026-05-31: 모바일↔데스크탑 폭 전환 시 주문목록 재렌더 (768px 경계).
     // 카드/테이블 분기가 window.innerWidth 1회만 평가되어, devtools responsive 모드
     // 전환 시 레이아웃이 안 바뀌는 문제 fix.
@@ -267,8 +279,8 @@ function switchTab(tabId) {
 async function loadBlogMonitorTab() {
     const listEl = document.getElementById('blogLinkList');
     if (!listEl) return;
-    // 게임풍 공개 랭킹 (조회수 합산 순위)
-    try { if (window.loadSnsRankingInto) window.loadSnsRankingInto('snsRankMypage'); } catch(e) {}
+    // 게임풍 공개 랭킹 (점수 합산 순위) — 위 이벤트 안내와 중복되는 설명은 숨김(hideDesc)
+    try { if (window.loadSnsRankingInto) window.loadSnsRankingInto('snsRankMypage', { hideDesc: true }); } catch(e) {}
     // 상태 배너 (잔액 + 다음 지급까지 후기 진행 + Threads)
     try {
         const { data: st } = await sb.rpc('blog_monitor_sync');

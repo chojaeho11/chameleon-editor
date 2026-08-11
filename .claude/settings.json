@@ -434,7 +434,8 @@
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\bugreply.sql\")",
       "PowerShell(\"applied\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\bug24q.sql\")",
-      "Bash(./deploy.sh \"Mypage mobile: restore tab navigation as a horizontal scrollable tab bar \\(Orders + Blog Monitor/SNS for members\\) - previously all tabs were hidden on mobile so members could not reach the SNS link submission menu; dashboard/profit stay hidden \\(no mobile layout\\)\")"
+      "Bash(./deploy.sh \"Mypage mobile: restore tab navigation as a horizontal scrollable tab bar \\(Orders + Blog Monitor/SNS for members\\) - previously all tabs were hidden on mobile so members could not reach the SNS link submission menu; dashboard/profit stay hidden \\(no mobile layout\\)\")",
+      "Bash(./deploy.sh \"Mypage blog tab cleanup: move review-link form to top \\(so entering shows the writing area\\), remove obsolete zero coupon-balance card, hide duplicate ranking description, fix literal bold-tag rendering; approval popup button relabeled 'go write a post' and deep-links to mypage?tab=blog which auto-opens the blog tab and focuses the link input \\(sns-ranking v7\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
