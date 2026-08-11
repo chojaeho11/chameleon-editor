@@ -2120,7 +2120,7 @@ window.loadDesignWithdrawals = async () => {
         (profs || []).forEach(p => profMap[p.id] = p);
 
         // 2026-06-19 v646: 디자이너별 작업 내역 한꺼번에 fetch — 경리과가 출처 확인 가능
-        const ASSET_REWARD = { template:3000, vector:1000, image:500, logo:200 };
+        const ASSET_REWARD = { template:200, vector:500, image:500, logo:500 };
         const workMap = {};  // designerId → { templates, vectors, images, logos, orderClaimed, orderCompleted, orderSettled, totalAsset, totalOrder }
         try {
             // admin_templates approved by these designers

@@ -437,7 +437,10 @@
       "Bash(./deploy.sh \"Mypage mobile: restore tab navigation as a horizontal scrollable tab bar \\(Orders + Blog Monitor/SNS for members\\) - previously all tabs were hidden on mobile so members could not reach the SNS link submission menu; dashboard/profit stay hidden \\(no mobile layout\\)\")",
       "Bash(./deploy.sh \"Mypage blog tab cleanup: move review-link form to top \\(so entering shows the writing area\\), remove obsolete zero coupon-balance card, hide duplicate ranking description, fix literal bold-tag rendering; approval popup button relabeled 'go write a post' and deep-links to mypage?tab=blog which auto-opens the blog tab and focuses the link input \\(sns-ranking v7\\)\")",
       "Bash(sed -i 's#sns-ranking.js?v=7#sns-ranking.js?v=8#g' index.html mypage.html)",
-      "Bash(./deploy.sh \"SNS ranking widget: keep title, end-date badge, score and prize on one line \\(white-space:nowrap\\) so they stop breaking vertically in the narrow mobile columns; name column wraps instead \\(sns-ranking v8\\)\")"
+      "Bash(./deploy.sh \"SNS ranking widget: keep title, end-date badge, score and prize on one line \\(white-space:nowrap\\) so they stop breaking vertically in the narrow mobile columns; name column wraps instead \\(sns-ranking v8\\)\")",
+      "Bash(sed -i 's#global_users.js?v=314#global_users.js?v=315#' global_admin.js)",
+      "Bash(sed -i 's#global_admin.js?v=291#global_admin.js?v=292#' global_admin.html)",
+      "Bash(./deploy.sh \"Designer contribution rewards changed: template 3000->200, vector 1000->500, PNG stays 500, logo 200->500 KRW \\(updated in all 3 reward maps + admin banner + contribute cards; USD auto-converts to \\\\$0.20/\\\\$0.50, JPY to Y20/Y50\\). Added a strong upfront warning in KR/JP/EN that only self-designed images are accepted and anything not your own original work is rejected immediately\")"
     ],
     "additionalDirectories": [
       "\\tmp",

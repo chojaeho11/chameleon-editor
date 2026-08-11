@@ -292,7 +292,7 @@ async function loadPendingReviewList() {
         }
         // 2026-06-19 v642: asset_type 별 보상 — template 3K, vector 1K, image 500, logo 200.
         //   asset_type 컬럼 NULL 이면 slot 유무로 추정 (slots 있으면 template, 없으면 vector).
-        const REWARD = { template: 3000, vector: 1000, image: 500, logo: 200 };
+        const REWARD = { template: 200, vector: 500, image: 500, logo: 500 };
         const TYPE_LBL = { template: '템플릿', vector: '벡터 (SVG)', image: 'PNG 이미지', logo: '로고' };
         const TYPE_COLOR = { template: '#7c3aed', vector: '#0369a1', image: '#16a34a', logo: '#d97706' };
         g.innerHTML = data.map(t => {
