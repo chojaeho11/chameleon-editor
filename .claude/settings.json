@@ -432,7 +432,9 @@
       "Bash(./deploy.sh \"Blog SEO: return 404 \\(noindex\\) for nonexistent/old-integer blog post IDs instead of serving the blog list page with HTTP 200 - fixes soft-404/duplicate-content that was causing Google to de-index the blog; real posts and the list page unchanged\")",
       "Bash(./deploy.sh \"Blog SEO internal linking: each prerendered blog article now links to 12 other recent posts \\(link mesh\\) so crawlers discover all posts instead of finding them orphaned - fixes 'no referring pages' in Search Console\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\bugreply.sql\")",
-      "PowerShell(\"applied\")"
+      "PowerShell(\"applied\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\bug24q.sql\")",
+      "Bash(./deploy.sh \"Mypage mobile: restore tab navigation as a horizontal scrollable tab bar \\(Orders + Blog Monitor/SNS for members\\) - previously all tabs were hidden on mobile so members could not reach the SNS link submission menu; dashboard/profit stay hidden \\(no mobile layout\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

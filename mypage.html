@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260811134318';
+    var CV = '20260811210258';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -124,17 +124,19 @@
         /* ===== 모바일 반응형 ===== */
         @media (max-width: 768px) {
             body.mypage-body { flex-direction: column; height: auto; overflow: auto; }
-            /* 2026-05-31: 사용자 요청 — 모바일은 사이드바 탭 메뉴 숨김.
-               로고 + 로그아웃만 얇은 헤더로 유지. 주문내역만 풀스크린. */
+            /* 2026-08-11: 모바일에서도 탭 전환 가능하게 — 사이드바를 가로 스크롤 탭바로.
+               주문내역 + 블로그 체험단(회원만) + 로그아웃 노출. 대시보드/수익은 모바일 전용
+               레이아웃이 없어(.mp-mobile-hide) 숨김. (기존: 전 탭 숨겨 SNS 링크 메뉴에 못 들어감) */
             .mp-sidebar {
-                width: 100%; flex-direction: row; padding: 8px 14px; gap: 10px;
+                width: 100%; flex-direction: row; padding: 8px 12px; gap: 8px;
                 border-right: none; border-bottom: 1px solid #e2e8f0;
-                align-items: center; justify-content: space-between;
+                align-items: center; justify-content: flex-start;
+                overflow-x: auto; -webkit-overflow-scrolling: touch;
             }
-            .mp-sidebar .mp-nav-item:not(:last-child):not([style*="color:#ef4444"]) { display: none; }
+            .mp-sidebar .mp-nav-item.mp-mobile-hide { display: none; }
             .mp-sidebar > div[style*="margin-top: auto"] { margin-top: 0 !important; margin-left: auto; }
-            .mp-logo { margin-bottom: 0; font-size: 16px; white-space: nowrap; }
-            .mp-nav-item { padding: 6px 10px; margin: 0; font-size: 12px; }
+            .mp-logo { margin-bottom: 0; font-size: 16px; white-space: nowrap; flex-shrink: 0; }
+            .mp-nav-item { padding: 6px 10px; margin: 0; font-size: 12px; flex-shrink: 0; white-space: nowrap; }
             .mp-header { display: none !important; }
             /* 다른 탭 영역도 숨김 — 모바일은 주문내역만 */
             #tab-dashboard, #tab-designs, #tab-sales, #tab-profit { display: none !important; }
@@ -213,11 +215,11 @@
         <div class="mp-nav-item active" onclick="switchTab('orders')">
             <i class="fa-solid fa-receipt" style="width:20px;"></i> <span data-i18n="mp_menu_orders">Orders</span>
         </div>
-        <div class="mp-nav-item" onclick="switchTab('dashboard')">
+        <div class="mp-nav-item mp-mobile-hide" onclick="switchTab('dashboard')">
             <i class="fa-solid fa-chart-pie" style="width:20px;"></i> <span data-i18n="mp_menu_dashboard">Dashboard</span>
         </div>
         <!-- 2026-06-19 v646: '내 디자인' / '작품 판매' 메뉴 제거 — 디자이너 활동은 /contribute 로 통합 -->
-        <div class="mp-nav-item" onclick="switchTab('profit')">
+        <div class="mp-nav-item mp-mobile-hide" onclick="switchTab('profit')">
             <i class="fa-solid fa-sack-dollar" style="width:20px;"></i> <span data-i18n="mp_menu_profit">Profit & Points</span>
         </div>
 
