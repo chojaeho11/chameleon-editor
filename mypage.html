@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260811215655';
+    var CV = '20260811221840';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -206,7 +206,7 @@
 </head>
 <body class="mypage-body">
 <script src="toast.js?v=267"></script>
-<script src="./sns-ranking.js?v=8"></script>
+<script src="./sns-ranking.js?v=9"></script>
 
     <nav class="mp-sidebar">
         <div class="mp-logo" onclick="location.href='index.html'"><i class="fa-solid fa-palette"></i> Chameleon</div>
@@ -360,8 +360,8 @@
 
             <!-- 월간 게시글 점수 랭킹 현금 이벤트 -->
             <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5); border:1px solid #fdba74; border-radius:12px; padding:16px 18px; margin:26px 0 14px; color:#7c2d12; font-size:13px; line-height:1.7;">
-                <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 SNS 홍보 랭킹 현금 이벤트 <span style="font-size:12px; background:#fff; border:1px solid #fdba74; border-radius:980px; padding:1px 8px; margin-left:4px;">⏰ 9/15 16:00 종료</span></div>
-                <span id="blogEventDesc">제품을 구매하고 SNS에 후기·홍보 글을 올려주세요! <b>게시글 1개=1점 · 정성글=3점 · 조회수 터짐=5점</b>(관리자 확인, 실시간 반영). 점수 상위 <b>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급! (한국·일본 회원 · 8/10 이후 게시글만 인정) <b style="color:#b91c1c;">※ 카멜레온프린팅과 무관하거나 도배성 글만 있는 경우 지급 제외</b></span>
+                <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 SNS 홍보 랭킹 현금 이벤트 <span style="font-size:12px; background:#fff; border:1px solid #fdba74; border-radius:980px; padding:1px 8px; margin-left:4px;">⏰ 10/15 16:00 종료</span></div>
+                <div id="blogEventDesc">제품을 구매하고 SNS에 후기·홍보 글을 올려주세요!<br><b>게시글 1개=1점 · 정성글=3점 · 조회수 터짐=5점</b> (관리자 확인, 실시간 반영). 8/10 이후 게시글만 인정 · 한국·일본 회원.<div style="margin-top:10px; display:grid; gap:5px;"><div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-radius:8px; padding:8px 12px;"><span>🥇 1위</span><b>100만원</b></div><div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-radius:8px; padding:8px 12px;"><span>🥈 2위</span><b>50만원</b></div><div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-radius:8px; padding:8px 12px;"><span>🥉 3위</span><b>25만원</b></div><div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-radius:8px; padding:8px 12px;"><span>4위</span><b>10만원</b></div><div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-radius:8px; padding:8px 12px;"><span>5위</span><b>5만원</b></div><div style="display:flex; justify-content:space-between; align-items:center; background:#fff3e0; border:1px solid #fb923c; border-radius:8px; padding:8px 12px;"><span>🔥 조회수 최다 1건</span><b>30만원</b></div></div><div style="color:#b91c1c; margin-top:8px; font-size:12px;">※ 카멜레온프린팅과 무관하거나 도배성 글만 있는 경우 지급 제외</div><div style="margin-top:8px; color:#7c2d12; font-weight:700;">👇 아래에서 당신의 순위를 확인하세요</div></div>
             </div>
 
             <div id="snsRankMypage" style="margin-bottom:16px;"></div>
@@ -377,8 +377,8 @@
                     blogTitle:'ブログ・SNSモニター',
                     blogIntroTitle:'毎月 無料ポイントを進呈します',
                     blogIntroDesc:'商品を無料で購入（送料込み）し、SNS・ブログにPRレビューを投稿してください。毎月<b>5,000円分</b>（Threads利用者は<b>10,000円分</b>）のポイントを進呈します。翌月のポイントを受け取るには、レビューリンクを2件以上登録してください。',
-                    blogEventTitle:'🏆 SNS PRランキング 現金イベント <span style="font-size:12px;background:#fff;border:1px solid #fdba74;border-radius:980px;padding:1px 8px;margin-left:4px;">⏰ 9/15 16:00 終了</span>',
-                    blogEventDesc:'商品を購入し、SNSにレビュー・PRを投稿！ <b>投稿1件=1点・力作=3点・バズり=5点</b>（管理者確認, リアルタイム反映）。点数上位 <b>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円</b>の現金を進呈！（韓国・日本の会員 · 8/10以降の投稿のみ）<b style="color:#b91c1c;">※ カメレオン印刷と無関係、または雑な連投のみの場合は賞金対象外</b>',
+                    blogEventTitle:'🏆 SNS PRランキング 現金イベント <span style="font-size:12px;background:#fff;border:1px solid #fdba74;border-radius:980px;padding:1px 8px;margin-left:4px;">⏰ 10/15 16:00 終了</span>',
+                    blogEventDesc:'商品を購入し、SNSにレビュー・PRを投稿！<br><b>投稿1件=1点・力作=3点・バズり=5点</b>（管理者確認, リアルタイム反映）。8/10以降の投稿のみ・韓国・日本の会員。<div style="margin-top:10px;display:grid;gap:5px;"><div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:8px;padding:8px 12px;"><span>🥇 1位</span><b>10万円</b></div><div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:8px;padding:8px 12px;"><span>🥈 2位</span><b>5万円</b></div><div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:8px;padding:8px 12px;"><span>🥉 3位</span><b>2.5万円</b></div><div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:8px;padding:8px 12px;"><span>4位</span><b>1万円</b></div><div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:8px;padding:8px 12px;"><span>5位</span><b>5千円</b></div><div style="display:flex;justify-content:space-between;align-items:center;background:#fff3e0;border:1px solid #fb923c;border-radius:8px;padding:8px 12px;"><span>🔥 バズり最多1件</span><b>3万円</b></div></div><div style="color:#b91c1c;margin-top:8px;font-size:12px;">※ カメレオン印刷と無関係、または雑な連投のみは対象外</div><div style="margin-top:8px;color:#7c2d12;font-weight:700;">👇 下であなたの順位を確認してください</div>',
                     blogSubmitTitle:'レビュー・PRリンク登録',
                     blogMyLinksTitle:'登録したリンク'
                 };
