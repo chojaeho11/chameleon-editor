@@ -748,6 +748,22 @@ export default {
                 return Response.redirect(targetUrl.toString(), 301);
             }
 
+            // 2026-08-11 (버그 #31): 패브릭 원단 딥링크(?mode=poster / ?fabric=..)로 랜딩 경로에 들어오면
+            //   랜딩만 다시 떠서 "메인화면처럼 뜨고 바로 주문 불가" → 실제 포스터 디자이너(cafe/fabric)로 302 전달.
+            //   원단(cotton20/chiffon 등) 파라미터를 그대로 넘겨 그 원단이 선택된 채 주문화면이 열림.
+            //   (파라미터 없는 일반 방문은 그대로 아래 랜딩 서빙 블록 유지 — 랜딩 UX 불변)
+            {
+                const _landing = (path === '' || path === 'index.html' || path === 'cotton-print' ||
+                                  path === 'cotton-print.html' || path === 'fabric' || path === 'fabric-print');
+                const _wantDesigner = (url.searchParams.get('mode') === 'poster') || url.searchParams.has('fabric');
+                if (_landing && _wantDesigner) {
+                    const dest = new URL('https://' + cafeHost + '/fabric');
+                    dest.search = url.search;          // mode=poster&fabric=.. 그대로 전달
+                    dest.searchParams.delete('lang');  // 도메인이 언어를 결정 → 불필요
+                    return Response.redirect(dest.toString(), 302);
+                }
+            }
+
             // 2026-05-13: 랜딩 페이지는 cotton-print.com 도메인 그대로 유지 (proxy/rewrite)
             //   - 301 redirect 하면 URL 이 cafe2626.com 으로 바뀜 → 사용자 불만
             //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 cotton-print.com 유지
