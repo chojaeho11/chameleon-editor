@@ -232,6 +232,13 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         </div>
     </div>
 
+    <!-- 2026-08-11 (버그#30): 한↔일 번역 토글 — 일본 주문 작업지시서를 한국어로도 볼 수 있게. -->
+    <div id="woLangToggle" style="display:none; justify-content:flex-end; gap:6px; margin-top:12px; align-items:center;">
+        <span style="font-size:11px; color:#a8a29e; margin-right:2px;">표기 / 表記</span>
+        <button type="button" id="woLangKo" onclick="window._woSetLang('ko')" style="background:#fff; color:#78716c; border:1.5px solid #d6d3d1; border-radius:6px; padding:5px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">한국어</button>
+        <button type="button" id="woLangJa" onclick="window._woSetLang('ja')" style="background:#fff; color:#78716c; border:1.5px solid #d6d3d1; border-radius:6px; padding:5px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">日本語</button>
+    </div>
+
     <div style="display:flex; gap:14px; margin-top:16px; align-items:stretch;">
         <div class="barcode-area" style="flex:1; margin-top:0;">
             <div class="order-no" id="woOrderNo">#0000</div>
@@ -375,6 +382,62 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         window._woOrderId = orderId;
         window._woItems = order.items || [];
         window._woIsAdmin = _woIsAdmin;
+        // 2026-08-11 (버그#30): 한↔일 번역 토글. 일본 주문의 작업지시서가 일본어로 떠서 한국 직원이
+        //   읽기 어렵다는 요청 → 상단 [한국어/日本語] 버튼으로 옵션 '값'을 전환. (라벨/구조는 그대로)
+        //   내가 코드로 생성하는 값(키링/스티커 옵션·확인문구)은 완전 양방향. 부자재 이름은 JP↔KR 사전으로 최선.
+        window._woIsJP = (order.site_code === 'JP');
+        // 기본 언어: 한국에서 인쇄하는 작업지시서라 기본 한국어(제품명도 이미 한국어 강제). 저장된 선택이 있으면 우선.
+        //   일본 주문이라도 한국 직원이 바로 읽도록 기본 ko, [日本語] 버튼으로 원문(일본어) 확인 가능.
+        try { window._woLang = localStorage.getItem('_woLang') || 'ko'; }
+        catch(e){ window._woLang = 'ko'; }
+        // 부자재/색상 등 JP→KR 용어 사전 (DB 에 한국어 이름이 없어 값만 저장돼 있어서 필요).
+        //   반대(KR→JP)도 자동 생성. 미등록 용어는 원문 유지.
+        window._WO_TERMS_JAKO = {
+            'カラーロック':'카라락','カラビナ':'카라비너','ボールチェーン':'볼체인','キーホルダー':'키홀더',
+            'ストラップ':'스트랩','ナスカン':'개고리','リング':'링','고리':'고리',
+            'グリーン':'그린','パープル':'퍼플','レッド':'레드','ブルー':'블루','スカイ':'스카이','空':'하늘',
+            'ブラック':'블랙','ホワイト':'화이트','イエロー':'옐로우','ピンク':'핑크','ゴールド':'골드',
+            'シルバー':'실버','オレンジ':'오렌지','ネイビー':'네이비','グレー':'그레이','クリア':'투명','透明':'투명'
+        };
+        (function(){ var r={}; for (var k in window._WO_TERMS_JAKO){ r[window._WO_TERMS_JAKO[k]]=k; } window._WO_TERMS_KOJA=r; })();
+        // 문자열 안의 등록된 용어를 목표 언어로 치환 (부자재 이름 최선 번역).
+        window._woTermTrans = function(s, toLang){
+            if (!s) return s;
+            var map = (toLang === 'ko') ? window._WO_TERMS_JAKO : window._WO_TERMS_KOJA;
+            var out = String(s);
+            Object.keys(map).sort(function(a,b){ return b.length - a.length; }).forEach(function(term){
+                if (out.indexOf(term) >= 0) out = out.split(term).join(map[term]);
+            });
+            return out;
+        };
+        // 이중언어 span 생성: 토글 시 data-ko / data-ja 로 textContent 교체. (값만 전환, 라벨은 그대로)
+        window._woT = function(ko, ja){
+            var e = function(s){ return String(s==null?'':s).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); };
+            var cur = (window._woLang === 'ja') ? ja : ko;
+            return '<span class="woi18n" data-ko="'+e(ko)+'" data-ja="'+e(ja)+'">'+e(cur)+'</span>';
+        };
+        // 부자재 등 저장문자열(주로 JP) → 이중언어 span. ko 는 사전 역번역, ja 는 원문(또는 사전 번역).
+        window._woTStored = function(stored){
+            var s = String(stored||'');
+            var ko = window._woTermTrans(s, 'ko');
+            var ja = /[ぁ-んァ-ヶ一-龠]/.test(s) ? s : window._woTermTrans(s, 'ja');
+            return window._woT(ko, ja);
+        };
+        // 언어 토글 — 모든 .woi18n 값을 교체하고 버튼/기억 갱신.
+        window._woSetLang = function(l){
+            window._woLang = (l === 'ja') ? 'ja' : 'ko';
+            try { localStorage.setItem('_woLang', window._woLang); } catch(e){}
+            document.querySelectorAll('.woi18n').forEach(function(sp){
+                var v = sp.getAttribute('data-' + window._woLang);
+                if (v != null) sp.textContent = v;
+            });
+            var bk = document.getElementById('woLangKo'), bj = document.getElementById('woLangJa');
+            if (bk && bj) {
+                var on = 'background:#451a03; color:#fde047;', off = 'background:#fff; color:#78716c;';
+                bk.setAttribute('style', bk.getAttribute('style').replace(/background:[^;]+;\s*color:[^;]+;/, window._woLang==='ko'?on:off));
+                bj.setAttribute('style', bj.getAttribute('style').replace(/background:[^;]+;\s*color:[^;]+;/, window._woLang==='ja'?on:off));
+            }
+        };
 
         show('woOrderNo', '#' + order.id);
         show('woOrderDate', dt(order.created_at || order.order_date));
@@ -809,17 +872,18 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         // 라벨이 raw code 패턴 (영숫자/언더스코어만) 이면 숨김.
                         return '';
                     }
-                    const label = esc(cleanLabel);
+                    const label = esc(cleanLabel);                 // alt 속성용 (평문)
+                    const labelDisp = window._woTStored(cleanLabel); // 표시용 (한↔일 이중언어 span)
                     const qtyStr = a.qty && a.qty > 1 ? ` × ${a.qty}` : '';
                     if (imgUrl) {
                         return `<div style="display:inline-flex; flex-direction:column; align-items:center; gap:4px; margin:4px 6px 4px 0; vertical-align:top;">
                             <div style="width:72px; height:72px; border:1px solid #d4d4d8; border-radius:8px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center;">
                                 <img src="${esc(imgUrl)}" alt="${label}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fa-solid fa-image\\' style=\\'color:#cbd5e1; font-size:24px;\\'></i>';">
                             </div>
-                            <div style="font-size:10.5px; font-weight:700; color:#0f172a; text-align:center; max-width:80px; line-height:1.3; word-break:keep-all;">${label}${qtyStr}</div>
+                            <div style="font-size:10.5px; font-weight:700; color:#0f172a; text-align:center; max-width:80px; line-height:1.3; word-break:keep-all;">${labelDisp}${qtyStr}</div>
                         </div>`;
                     }
-                    return `<div style="display:inline-block; vertical-align:top; margin:4px 6px 4px 0; padding:6px 10px; border:1px solid #e7e5e4; border-radius:6px; background:#fff; font-size:11.5px; font-weight:700;">${label}${qtyStr}</div>`;
+                    return `<div style="display:inline-block; vertical-align:top; margin:4px 6px 4px 0; padding:6px 10px; border:1px solid #e7e5e4; border-radius:6px; background:#fff; font-size:11.5px; font-weight:700;">${labelDisp}${qtyStr}</div>`;
                 }).filter(Boolean).join('');
                 if (addonRows) {
                     boxes.push(`<div class="opt-box opt-addon">
@@ -977,19 +1041,23 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const _kLines = [];
                 const _kCut = it._keyringCut;
                 if (_kCut && (_kCut.label || _kCut.label_jp)) {
-                    const _cutStr = _kCut.label + (_kCut.label_jp && _kCut.label_jp !== _kCut.label ? ' (' + _kCut.label_jp + ')' : '');
-                    _kLines.push('모양 / 칼선: <b>' + esc(_cutStr) + '</b>');
+                    // label=한국어, label_jp=일본어 (하나만 있으면 공용)
+                    const _cutKo = _kCut.label || _kCut.label_jp;
+                    const _cutJa = _kCut.label_jp || _kCut.label;
+                    _kLines.push('모양 / 칼선: <b>' + window._woT(_cutKo, _cutJa) + '</b>');
                 }
                 if (it._keyringSide) {
-                    _kLines.push('인쇄면: <b>' + (it._keyringSide === 'double' ? '양면 (両面)' : '단면 (片面)') + '</b>');
+                    _kLines.push('인쇄면: <b>' + (it._keyringSide === 'double' ? window._woT('양면','両面') : window._woT('단면','片面')) + '</b>');
                 }
                 const _kcs = it.customSize || {};
                 if (_kcs.w_cm || _kcs.h_cm) {
                     _kLines.push('사이즈: <b>' + (_kcs.w_cm || '?') + ' × ' + (_kcs.h_cm || '?') + ' cm</b>');
                 }
-                const _KWRAP = { plain: '개별포장 (인쇄 없음)', insert: '내지인쇄 포장', top: '상단인쇄 포장', bulk: '벌크포장 (개별포장 없음)', none: '포장 없음' };
+                const _KWRAP    = { plain: '개별포장 (인쇄 없음)', insert: '내지인쇄 포장', top: '상단인쇄 포장', bulk: '벌크포장 (개별포장 없음)', none: '포장 없음' };
+                const _KWRAP_JA = { plain: '個別包装（印刷なし）', insert: '内紙印刷 包装', top: '上部印刷 包装', bulk: 'バルク包装（個別包装なし）', none: '包装なし' };
                 if (it._presetWrapType && it._presetWrapType !== 'none') {
-                    _kLines.push('포장: <b>' + esc(_KWRAP[it._presetWrapType] || it._presetWrapType) + '</b>');
+                    const _wk = it._presetWrapType;
+                    _kLines.push('포장: <b>' + window._woT(_KWRAP[_wk] || _wk, _KWRAP_JA[_wk] || _wk) + '</b>');
                 }
                 if (_kLines.length > 0) {
                     boxes.push(`<div class="opt-box" style="border-color:#bae6fd; background:#f0f9ff;"><div class="opt-head" style="color:#075985;"><i class="fa-solid fa-key"></i> 키링 옵션</div><div class="opt-val" style="line-height:1.9;">${_kLines.join('<br>')}</div></div>`);
@@ -1401,6 +1469,13 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 </div>
             </div>`;
         }).join('');
+
+        // 2026-08-11 (버그#30): 한↔일 토글 표시 + 현재 언어로 버튼/값 초기화.
+        try {
+            var _lt = document.getElementById('woLangToggle');
+            if (_lt) _lt.style.display = 'flex';
+            if (window._woSetLang) window._woSetLang(window._woLang);
+        } catch (e) { console.warn('[wo lang]', e); }
 
         // 2026-06-15: PDF 썸네일을 PDF.js 로 1페이지 이미지 렌더 (인쇄에 안전).
         //   await 로 모두 끝낸 후 페이지 분할 → embed → img 교체된 상태에서 레이아웃 적용.
