@@ -332,9 +332,7 @@ function renderBlogLinkList(links) {
     }
     listEl.innerHTML = links.map(function(l){
         const dt = l.created_at ? new Date(l.created_at).toLocaleDateString() : '';
-        const chk = l.admin_checked
-            ? '<span style="color:#16a34a; font-size:12px;">' + window.t('mp_blog_checked', '확인됨') + '</span>'
-            : '<span style="color:#94a3b8; font-size:12px;">' + window.t('mp_blog_pending', '확인 대기') + '</span>';
+        // 2026-08-11: 회원 화면에서 '확인됨/확인 대기' 상태 라벨 제거 (사장님 요청).
         const safeUrl = String(l.url || '').replace(/"/g, '%22');
         const safeMemo = l.memo ? String(l.memo).replace(/[<>&]/g, function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}) : '';
         return '<div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px;">'
@@ -343,7 +341,6 @@ function renderBlogLinkList(links) {
              +   (safeMemo ? '<div style="color:#64748b; font-size:12px; margin-top:3px;">' + safeMemo + '</div>' : '')
              +   '<div style="color:#94a3b8; font-size:11px; margin-top:3px;">' + dt + '</div>'
              + '</div>'
-             + chk
              + '</div>';
     }).join('');
 }
