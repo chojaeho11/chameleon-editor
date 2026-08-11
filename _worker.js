@@ -511,6 +511,25 @@ ${post.content || ''}
 </body></html>`;
 }
 
+// 2026-08-11 (블로그 SEO): 존재하지 않는 블로그 글 id(옛 사이트의 정수 id 또는 삭제된 UUID) 요청 시
+//   목록 페이지를 200 으로 돌려주면 = 소프트404/중복콘텐츠 → 구글이 블로그 전체 품질을 낮게 봄.
+//   대신 명확한 404 + noindex 를 돌려 구글이 죽은 옛 URL 을 색인에서 깔끔히 제거하도록 한다.
+function generateBlogGoneHtml(cc) {
+    const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
+    const siteName = cc === 'JP' ? 'カメレオンプリンティング' : cc === 'US' ? 'Chameleon Printing' : '카멜레온프린팅';
+    const domain = BLOG_DOMAINS[cc] || BLOG_DOMAINS.KR;
+    const msg = cc === 'JP' ? 'この記事は見つかりませんでした。' : cc === 'US' ? 'This post was not found.' : '요청하신 글을 찾을 수 없습니다.';
+    const listLabel = cc === 'JP' ? 'ブログ一覧を見る' : cc === 'US' ? 'See all posts' : '블로그 목록 보기';
+    const listUrl = `${domain}/board.html?cat=blog&country=${cc}`;
+    return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(msg)} - ${escHtml(siteName)}</title>
+<meta name="robots" content="noindex, follow">
+</head><body>
+<h1>${escHtml(msg)}</h1>
+<p><a href="${escHtml(listUrl)}">${escHtml(listLabel)}</a> · <a href="${domain}/">${escHtml(siteName)}</a></p>
+</body></html>`;
+}
+
 function generateBlogListHtml(posts, cc) {
     const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
     const siteName = cc === 'JP' ? 'カメレオンプリンティング' : cc === 'US' ? 'Chameleon Printing' : '카멜레온프린팅';
@@ -911,25 +930,35 @@ export default {
                 const postCC = cc === 'KR' ? 'KR' : cc === 'JP' ? 'JP' : 'US';
                 const id = url.searchParams.get('id');
 
-                if (id && /^[0-9a-f-]{36}$/i.test(id)) {
-                    const rows = await fetchFromSupabase(
-                        `blog_posts?select=id,title,content,thumbnail,markdown,author_name,created_at,country_code,source_id&id=eq.${encodeURIComponent(id)}&limit=1`
-                    );
-                    if (rows && rows.length > 0) {
-                        const post = rows[0];
-                        // 다른 언어판 (hreflang) — source_id 로 묶인 형제글
-                        const sid = post.source_id || post.id;
-                        const sibs = await fetchFromSupabase(
-                            `blog_posts?select=id,country_code&category=eq.blog&or=(id.eq.${sid},source_id.eq.${sid})`
+                if (id) {
+                    // 개별 글 요청. 유효 UUID 이고 DB 에 있으면 완성 HTML 반환.
+                    if (/^[0-9a-f-]{36}$/i.test(id)) {
+                        const rows = await fetchFromSupabase(
+                            `blog_posts?select=id,title,content,thumbnail,markdown,author_name,created_at,country_code,source_id&id=eq.${encodeURIComponent(id)}&limit=1`
                         );
-                        post._siblings = sibs || [];
-                        return new Response(generateBlogHtml(post, post.country_code || postCC), {
-                            status: 200,
-                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=600' }
-                        });
+                        if (rows && rows.length > 0) {
+                            const post = rows[0];
+                            // 다른 언어판 (hreflang) — source_id 로 묶인 형제글
+                            const sid = post.source_id || post.id;
+                            const sibs = await fetchFromSupabase(
+                                `blog_posts?select=id,country_code&category=eq.blog&or=(id.eq.${sid},source_id.eq.${sid})`
+                            );
+                            post._siblings = sibs || [];
+                            return new Response(generateBlogHtml(post, post.country_code || postCC), {
+                                status: 200,
+                                headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=600' }
+                            });
+                        }
                     }
+                    // 2026-08-11 (블로그 SEO): id 는 있는데 (a) UUID 형식 아님(옛 사이트의 정수 id) 또는
+                    //   (b) 현재 DB 에 없음 = 삭제된 옛 글. 예전엔 목록 페이지를 200 으로 돌려줘서
+                    //   구글이 소프트404/중복으로 보고 블로그 전체를 강등했다. → 명확한 404(noindex) 로 교체.
+                    return new Response(generateBlogGoneHtml(cc), {
+                        status: 404,
+                        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=600' }
+                    });
                 } else {
-                    // 목록 — 크롤러가 개별 글로 타고 들어갈 수 있는 유일한 내부 링크
+                    // id 없음 = 진짜 목록 요청 — 크롤러가 개별 글로 타고 들어갈 수 있는 유일한 내부 링크
                     const posts = await fetchFromSupabase(
                         `blog_posts?select=id,title,created_at&category=eq.blog&country_code=eq.${postCC}&order=created_at.desc&limit=100`
                     );
