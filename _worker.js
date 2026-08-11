@@ -507,6 +507,17 @@ ${faqLd}
 ${blogIntro(cc)}
 ${post.content || ''}
 </article>
+${(() => {
+    // 2026-08-11 (블로그 SEO 내부링크): 각 글에서 다른 최신 글들로 링크(자기 자신 제외).
+    //   구글이 글 하나를 크롤하면 링크를 타고 나머지 글도 발견 → "참조 페이지 없음"(고아 페이지) 해소.
+    const others = (Array.isArray(post._recent) ? post._recent : []).filter(p => p && p.id !== post.id).slice(0, 12);
+    if (!others.length) return '';
+    const heading = cc === 'JP' ? '他の記事' : cc === 'US' ? 'More posts' : '다른 글 보기';
+    const links = others.map(p =>
+        `<li><a href="${domain}/board.html?cat=blog&country=${cc}&id=${p.id}">${escHtml(p.title || '')}</a></li>`
+    ).join('');
+    return `<nav aria-label="${escHtml(heading)}"><h2>${escHtml(heading)}</h2><ul>${links}</ul></nav>`;
+})()}
 <p><a href="${domain}/board.html?cat=blog&country=${cc}">${escHtml(cc === 'JP' ? 'ブログ一覧' : cc === 'US' ? 'All posts' : '블로그 목록')}</a> · <a href="${domain}/">${escHtml(siteName)}</a></p>
 </body></html>`;
 }
@@ -944,7 +955,14 @@ export default {
                                 `blog_posts?select=id,country_code&category=eq.blog&or=(id.eq.${sid},source_id.eq.${sid})`
                             );
                             post._siblings = sibs || [];
-                            return new Response(generateBlogHtml(post, post.country_code || postCC), {
+                            // 2026-08-11 (블로그 SEO 내부링크): 같은 나라 최신 글들을 받아 글 하단에 링크로 노출
+                            //   → 글끼리 서로 연결(링크 메시). 구글이 크롤 시 다른 글도 발견(고아 페이지 방지).
+                            const pcc = post.country_code || postCC;
+                            const recent = await fetchFromSupabase(
+                                `blog_posts?select=id,title&category=eq.blog&country_code=eq.${pcc}&order=created_at.desc&limit=13`
+                            );
+                            post._recent = recent || [];
+                            return new Response(generateBlogHtml(post, pcc), {
                                 status: 200,
                                 headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=600' }
                             });
