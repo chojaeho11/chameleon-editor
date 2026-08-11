@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260811101935';
+        var CV = '20260811134318';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6955,7 +6955,28 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     st_reopen:{ ko:'⚠ 재접수', ja:'⚠ 再受付', en:'⚠ Reopened', zh:'⚠ 重新提交', ar:'⚠ أعيد فتحه', es:'⚠ Reabierto', de:'⚠ Wieder offen', fr:'⚠ Rouvert' },
     btnClose: { ko:'👍 정상처리되었어요', ja:'👍 正常に処理されました', en:'👍 Resolved!', zh:'👍 已正常处理', ar:'👍 تمت المعالجة بنجاح', es:'👍 ¡Resuelto!', de:'👍 Erledigt!', fr:'👍 Résolu !' },
     btnReopen:{ ko:'해결되지 않았어요 다시접수합니다', ja:'解決していません 再受付します', en:'Not fixed — reopening', zh:'未解决，重新提交', ar:'لم يُحل — إعادة الفتح', es:'No resuelto — reabrir', de:'Nicht gelöst — erneut öffnen', fr:'Non résolu — rouvrir' },
-    btnDel:   { ko:'🗑 삭제', ja:'🗑 削除', en:'🗑 Delete', zh:'🗑 删除', ar:'🗑 حذف', es:'🗑 Eliminar', de:'🗑 Löschen', fr:'🗑 Supprimer' }
+    btnDel:   { ko:'🗑 삭제', ja:'🗑 削除', en:'🗑 Delete', zh:'🗑 删除', ar:'🗑 حذف', es:'🗑 Eliminar', de:'🗑 Löschen', fr:'🗑 Supprimer' },
+    st_replied:{ ko:'답변옴', ja:'返信あり', en:'Replied', zh:'已回复', ar:'تم الرد', es:'Respondido', de:'Beantwortet', fr:'Répondu' },
+    aiAsk:    { ko:'🤖 AI 개발자가 물어봤어요 — 아래에서 고르거나 직접 적어 답해주세요',
+                ja:'🤖 AI開発者からの質問 — 下から選ぶか、直接記入して回答してください',
+                en:'🤖 The AI developer asked — pick one below or write your own answer',
+                zh:'🤖 AI 开发者的提问 — 请在下方选择或自行填写回答',
+                ar:'🤖 سأل مطوّر الذكاء الاصطناعي — اختر أدناه أو اكتب إجابتك',
+                es:'🤖 El desarrollador IA preguntó — elige abajo o escribe tu respuesta',
+                de:'🤖 Der KI-Entwickler hat gefragt — unten wählen oder selbst antworten',
+                fr:"🤖 Le développeur IA a demandé — choisissez ci-dessous ou écrivez votre réponse" },
+    myReply:  { ko:'내 답변', ja:'私の回答', en:'My reply', zh:'我的回复', ar:'ردّي', es:'Mi respuesta', de:'Meine Antwort', fr:'Ma réponse' },
+    replyPh:  { ko:'AI 개발자에게 답변·추가설명을 적어주세요 (선택지를 눌러도 됩니다)',
+                ja:'AI開発者への回答・補足を記入してください（選択肢を押してもOK）',
+                en:'Write your answer/notes to the AI developer (or tap an option above)',
+                zh:'请填写给 AI 开发者的回答/补充（也可点击上方选项）',
+                ar:'اكتب إجابتك/ملاحظاتك لمطوّر الذكاء الاصطناعي (أو اضغط خيارًا أعلاه)',
+                es:'Escribe tu respuesta/notas al desarrollador IA (o toca una opción arriba)',
+                de:'Antwort/Notizen an den KI-Entwickler schreiben (oder Option oben tippen)',
+                fr:"Écrivez votre réponse/notes au développeur IA (ou touchez une option ci-dessus)" },
+    replySend:{ ko:'답변 보내기', ja:'回答を送る', en:'Send reply', zh:'发送回复', ar:'إرسال الرد', es:'Enviar respuesta', de:'Antwort senden', fr:'Envoyer' },
+    replySent:{ ko:'답변이 전달되었습니다. 감사합니다!', ja:'回答を送信しました。ありがとうございます！', en:'Reply sent. Thank you!', zh:'已发送回复，谢谢！', ar:'تم إرسال الرد. شكرًا!', es:'Respuesta enviada. ¡Gracias!', de:'Antwort gesendet. Danke!', fr:'Réponse envoyée. Merci !' },
+    replyEmpty:{ ko:'답변 내용을 적어주세요.', ja:'回答内容を記入してください。', en:'Please write your reply.', zh:'请填写回复内容。', ar:'يرجى كتابة ردّك.', es:'Escribe tu respuesta.', de:'Bitte Antwort eingeben.', fr:'Veuillez écrire votre réponse.' }
   };
   function _bl(){ var l; try { l = localStorage.getItem('bugLang') || (navigator.language||'ko').slice(0,2); } catch(e){ l='ko'; } return (BUG_LANGS.indexOf(l) >= 0) ? l : 'ko'; }
   function T(k){ var d = BUG_I18N[k] || {}; return d[_bl()] || d.ko || ''; }
@@ -7026,11 +7047,11 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     var sb = bugSb(); if (!sb) return;
     try {
       // 2026-07-07: 재접수(reopened_at) 건은 맨 위로 — reopened_at desc(널 뒤로) → id desc.
-      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution,reopened_at').order('reopened_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).limit(30);
+      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution,reopened_at,ai_options,reporter_reply,reporter_reply_at').order('reopened_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).limit(30);
       var rows = (r && r.data) || [];
       if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8; font-size:13px;">' + T('empty') + '</div>'; return; }
-      var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', done:'#16a34a', closed:'#64748b' };
-      var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), done:T('st_done'), closed:T('st_closed') };
+      var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', replied:'#2563eb', done:'#16a34a', closed:'#64748b' };
+      var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), replied:T('st_replied'), done:T('st_done'), closed:T('st_closed') };
       // 재접수(미해결로 되돌린) 건 = status 'new' + reopened_at 있음 → 배지/색 별도.
       var esc = function(s){ return String(s||'').replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); };
       var btnCss = 'padding:5px 11px; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;';
@@ -7047,7 +7068,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
         if (b.status === 'new') {
           actions = '<button style="' + btnCss + 'background:#7c3aed;color:#fff;" onclick="updateBugStatus(' + b.id + ',\'approved\')">' + T('btnAppr') + '</button>' +
                     '<button style="' + btnCss + 'background:#fee2e2;color:#b91c1c;" onclick="updateBugStatus(' + b.id + ',\'rejected\')">' + T('btnRej') + '</button>';
-        } else if (b.status === 'approved' || b.status === 'in_progress') {
+        } else if (b.status === 'approved' || b.status === 'in_progress' || b.status === 'replied') {
           actions = '<button style="' + btnCss + 'background:#dcfce7;color:#15803d;" onclick="updateBugStatus(' + b.id + ',\'done\')">' + T('btnDone') + '</button>' +
                     '<button style="' + btnCss + 'background:#fee2e2;color:#b91c1c;" onclick="updateBugStatus(' + b.id + ',\'rejected\')">' + T('btnRej') + '</button>';
         } else if (b.status === 'done') {
@@ -7057,6 +7078,26 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
         }
         // 삭제 버튼 — 모든 제보에 노출 (오른쪽 끝).
         actions += '<button style="' + btnCss + 'background:#f1f5f9;color:#64748b;margin-left:auto;" onclick="deleteBugReport(' + b.id + ')">' + T('btnDel') + '</button>';
+        // 2026-08-11: 직원↔AI 소통 — AI가 남긴 선택지(ai_options) 버튼 + 자유서술 답변창.
+        //   종료(closed)·반려(rejected) 건은 답변창 숨김 (진행 중인 건만 소통).
+        var replyBlock = '';
+        if (b.status !== 'closed' && b.status !== 'rejected') {
+          var optsArr = Array.isArray(b.ai_options) ? b.ai_options : [];
+          var optBtns = optsArr.map(function(o){
+            var key = (o && typeof o === 'object' && o.key) ? o.key : '';
+            var label = (o && typeof o === 'object') ? (o.label || '') : String(o);
+            var full = (key ? key + ') ' : '') + label;
+            var fullAttr = esc(full).replace(/"/g,'&quot;');
+            return '<button type="button" style="' + btnCss + 'background:#eef2ff;color:#4338ca;text-align:left;white-space:normal;line-height:1.4;" data-v="' + fullAttr + '" onclick="pickBugOption(' + b.id + ', this.getAttribute(\'data-v\'))">' + esc(full) + '</button>';
+          }).join('');
+          replyBlock =
+            (optsArr.length ? '<div style="margin-top:8px; padding:8px 10px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px;"><div style="font-size:11px; color:#4338ca; font-weight:800; margin-bottom:6px;">' + T('aiAsk') + '</div><div style="display:flex; flex-direction:column; gap:5px;">' + optBtns + '</div></div>' : '') +
+            (b.reporter_reply ? '<div style="font-size:11.5px; color:#1e40af; margin-top:6px; background:#eff6ff; border-radius:6px; padding:5px 8px; white-space:pre-wrap; word-break:break-word;">💬 ' + T('myReply') + ': ' + esc(b.reporter_reply) + '</div>' : '') +
+            '<div style="margin-top:6px; display:flex; gap:6px; align-items:flex-start;">' +
+              '<textarea id="bugReply_' + b.id + '" rows="2" placeholder="' + esc(T('replyPh')) + '" style="flex:1; min-width:0; font-size:12px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>' +
+              '<button type="button" style="' + btnCss + 'background:#2563eb;color:#fff; flex-shrink:0;" onclick="submitBugReply(' + b.id + ')">' + T('replySend') + '</button>' +
+            '</div>';
+        }
         return '<div class="bug-item">' +
           (thumbHtml ? '<div style="display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; max-width:150px;">' + thumbHtml + '</div>' : '') +
           '<div style="flex:1; min-width:0;">' +
@@ -7065,6 +7106,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
             '<div style="font-size:12.5px; color:#334155; margin-top:4px; white-space:pre-wrap; word-break:break-word;">' + esc(b.description) + '</div>' +
             (b.resolution ? '<div style="font-size:11.5px; color:#15803d; margin-top:5px; background:#f0fdf4; border-radius:6px; padding:5px 8px;">✅ ' + esc(b.resolution) + '</div>' : '') +
             '<div style="font-size:10.5px; color:#94a3b8; margin-top:5px;">#' + b.id + ' · ' + dt + (thumbs.length>1?(' · 📎'+thumbs.length):'') + '</div>' +
+            replyBlock +
             (actions ? '<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">' + actions + '</div>' : '') +
           '</div></div>';
       }).join('');
@@ -7119,6 +7161,37 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     } catch(e) {
       if (window.showToast) showToast('상태 변경 실패: ' + (e.message||e), 'error');
       else alert('상태 변경 실패: ' + (e.message||e));
+    }
+  };
+
+  // 2026-08-11: 직원 → AI 답변. 선택지 버튼을 누르면 답변창을 채우고, [답변 보내기]로 저장.
+  window.pickBugOption = function(id, val){
+    var ta = document.getElementById('bugReply_' + id);
+    if (ta) { ta.value = val; ta.focus(); }
+  };
+  window.submitBugReply = async function(id){
+    var sb = bugSb(); if (!sb) { alert('DB 연결이 없습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+    var ta = document.getElementById('bugReply_' + id);
+    var val = (ta && ta.value || '').trim();
+    if (!val) { alert(T('replyEmpty')); return; }
+    try {
+      // 답변 저장 + status='replied' (AI 개발자가 답변옴을 인지) — 기존 status/resolution 은 보존.
+      var res = await sb.from('bug_reports').update({
+        reporter_reply: val,
+        reporter_reply_at: new Date().toISOString(),
+        status: 'replied'
+      }).eq('id', id).select();
+      if (res.error) throw res.error;
+      if (!res.data || res.data.length === 0) {
+        if (window.showToast) showToast('답변이 저장되지 않았습니다 (권한/RLS). 새로고침 후 다시 시도해 주세요.', 'error');
+        else alert('답변이 저장되지 않았습니다 (권한/RLS).');
+        return;
+      }
+      if (window.showToast) showToast(T('replySent'), 'success');
+      if (window.loadBugReports) await window.loadBugReports();
+    } catch(e) {
+      if (window.showToast) showToast('답변 실패: ' + (e.message||e), 'error');
+      else alert('답변 실패: ' + (e.message||e));
     }
   };
 
