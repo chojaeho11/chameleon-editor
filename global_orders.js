@@ -1936,11 +1936,16 @@ window.loadOrders = async () => {
             const _hasReceipt = !!(order.receipt_info && order.receipt_info.type && order.receipt_info.type !== 'none');
             // 2026-08-03 (버그#20): payment_method 미기록(매니저견적 수동확정 등)이라도 입금자명/증빙(세금계산서·현금영수증)이
             //   있으면 무통장으로 인식해 결제수단을 노출 (경리가 '-' 만 보고 방법을 몰라 헤매던 문제).
-            const isBank = pmLower.includes('무통장') || pmLower.includes('bank') || (!isCard && !isDeposit && (!!depositor || _hasReceipt));
+            // 2026-08-13: SNS 홍보 무료쿠폰(통합 포인트) 결제 — '수단 미기록' 대신 'SNS 이벤트 쿠폰' 으로 표기.
+            const isPoint = pmLower.includes('포인트') || pmLower.includes('블로그체험단쿠폰') || pmLower.includes('쿠폰') || pmLower.includes('point');
+            const isBank = !isPoint && (pmLower.includes('무통장') || pmLower.includes('bank') || (!isCard && !isDeposit && (!!depositor || _hasReceipt)));
             const isPaid = order.payment_status === '결제완료' || order.payment_status === '입금확인';
 
             let payHtml = '';
-            if (isCard) {
+            if (isPoint) {
+                payHtml = `<div style="font-size:11px;font-weight:bold;color:#a21caf;">🎁 SNS 이벤트 쿠폰</div>`;
+                if (isPaid) payHtml += `<div style="font-size:10px;color:#15803d;">확인</div>`;
+            } else if (isCard) {
                 let label = '카드';
                 if (pmLower.includes('stripe')) label = 'Stripe';
                 else if (pmLower.includes('카카오')) label = '카카오페이';

@@ -95,7 +95,7 @@
         if (ov) ov.remove();
         ov = document.createElement('div');
         ov.id = 'snsRankModal';
-        ov.style.cssText = 'position:fixed;inset:0;background:rgba(20,6,28,.85);backdrop-filter:blur(3px);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px;';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(20,6,28,.85);backdrop-filter:blur(3px);z-index:2000001;display:flex;align-items:center;justify-content:center;padding:18px;';
         ov.innerHTML = '<div style="max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">'
             + '<div id="snsRankModalBody"><div style="padding:40px;text-align:center;color:#c084bc;background:#fff;border-radius:18px;">' + esc(T.loading) + '</div></div>'
             + '<button onclick="document.getElementById(\'snsRankModal\').remove()" style="margin-top:12px;width:100%;padding:12px;background:linear-gradient(135deg,#f9a8d4,#c084fc);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;">' + esc(T.close) + '</button>'
