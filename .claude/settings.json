@@ -457,7 +457,12 @@
       "Bash(./deploy.sh \"Traffic-source report: back-trace attribution for manager/untracked orders using the customer's own first-touch channel from their history; repeat customers with no attribution inferred as favorites; only truly-untraceable stay 'unknown' \\(shows inferred count\\)\")",
       "Bash(./deploy.sh \"Secret dashboard: new 'Customers by acquisition channel' report - counts unique customers by how they first entered \\(ad / SNS link / organic search / favorites\\), using first-touch attribution with repeat-customer=favorites fallback; shows count, share and cumulative revenue per channel\")",
       "Bash(./deploy.sh \"Customers-by-channel report: fix undercount \\(reuse fully-paginated order set instead of the 1000-row-capped query\\), split into Korea/Japan, and classify all untracked/pre-tracking customers as favorites \\(no more unknown bucket\\)\")",
-      "Bash(./deploy.sh \"Bug #35: workorder sheet had no version auto-refresh, so staff browsers kept serving a stale cached copy \\(fixed sticker paper-type still looked missing = recurrence\\). Added the CV self-heal block so work orders always update to the latest deploy\")"
+      "Bash(./deploy.sh \"Bug #35: workorder sheet had no version auto-refresh, so staff browsers kept serving a stale cached copy \\(fixed sticker paper-type still looked missing = recurrence\\). Added the CV self-heal block so work orders always update to the latest deploy\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\b35done.sql\")",
+      "PowerShell(\"marked\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\b33q.sql\")",
+      "PowerShell(\"applied #33 question\")",
+      "Bash(./deploy.sh \"Bug #30: extend workorder JP-KR term dictionary with keyring/hardware/material/color terms \\(heart keyring, rose gold, corotto, carabiner, holographic, etc.\\) so JP-order work orders translate those addon labels to Korean too\")"
     ],
     "additionalDirectories": [
       "\\tmp",
