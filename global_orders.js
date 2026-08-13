@@ -1987,11 +1987,13 @@ window.loadOrders = async () => {
                 const rl = ri.type === 'tax_invoice' ? '📄세금계산서' : '🧾현금영수증';
                 payHtml += `<div style="font-size:9px;color:#7c3aed;cursor:pointer;text-decoration:underline;margin-top:2px;" onclick="event.stopPropagation();window.openReceiptInfo('${order.id}')">${rl}</div>`;
             }
-            // 2026-08-05: 유입경로 배지 (구매직전 유입)
+            // 2026-08-05: 유입경로 배지 (구매직전 유입). 2026-08-13: 4분류로 통일 — 자연검색/광고/SNS링크/즐겨찾기 (QR·외부사이트·직접은 즐겨찾기로 통합)
             if (order.attribution_channel) {
                 const _ac = order.attribution_channel;
-                const _acColor = _ac.indexOf('광고') === 0 ? '#ef4444' : _ac === '자연검색' ? '#16a34a' : _ac === 'SNS' ? '#8b5cf6' : _ac === '즐겨찾기·직접' ? '#2563eb' : '#94a3b8';
-                const _acLabel = _ac.indexOf('광고') === 0 ? ('📢 ' + _ac.replace('광고-', '')) : _ac;
+                let _acColor = '#2563eb', _acLabel = '⭐ 즐겨찾기';
+                if (_ac.indexOf('광고') === 0)      { _acColor = '#ef4444'; _acLabel = '📢 광고'; }
+                else if (_ac === '자연검색')         { _acColor = '#16a34a'; _acLabel = '🔍 자연검색'; }
+                else if (_ac === 'SNS')              { _acColor = '#8b5cf6'; _acLabel = '📱 SNS링크'; }
                 payHtml += `<div style="font-size:9px; color:${_acColor}; margin-top:2px;" title="유입경로(구매직전)">${_acLabel}</div>`;
             }
 

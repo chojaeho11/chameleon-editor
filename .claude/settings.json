@@ -449,7 +449,9 @@
       "Bash(./deploy.sh \"Checkout: for SNS promo \\(blog-monitor\\) members, show a big prominent 'Order with SNS free coupon' button right under the payment methods \\(drives the existing points-full checkbox\\) plus a 'Join promo event' button beside it \\(opens the SNS event popup\\); regular customers keep the normal Points card unchanged \\(simple_order v852\\)\")",
       "Bash(sed -i 's#global_orders.js?v=486#global_orders.js?v=487#g' order_management.html)",
       "Bash(./deploy.sh \"Order mgmt: SNS free-coupon \\(points\\) paid orders now show 'SNS event coupon' instead of 'payment method missing'. Checkout: 'Join promo event' button popup now opens above the checkout modal \\(was behind it due to z-index\\); ranking modal too \\(sns-ranking v10, global_orders v487\\)\")",
-      "Bash(./deploy.sh \"Secret dashboard: show traffic-source badge \\(favorites/direct, organic search, ad, SNS, QR, external\\) on each order in the today real-time orders list, same as order management \\(added attribution_channel to the query\\)\")"
+      "Bash(./deploy.sh \"Secret dashboard: show traffic-source badge \\(favorites/direct, organic search, ad, SNS, QR, external\\) on each order in the today real-time orders list, same as order management \\(added attribution_channel to the query\\)\")",
+      "Bash(sed -i 's#global_orders.js?v=487#global_orders.js?v=488#g' order_management.html)",
+      "Bash(./deploy.sh \"Attribution display simplified to 4 buckets everywhere \\(dashboard real-time orders + order management\\): organic search / ad / SNS link / favorites - QR, external-site and direct all fold into favorites \\(global_orders v488\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
