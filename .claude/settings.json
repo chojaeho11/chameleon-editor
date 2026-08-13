@@ -462,7 +462,12 @@
       "PowerShell(\"marked\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\b33q.sql\")",
       "PowerShell(\"applied #33 question\")",
-      "Bash(./deploy.sh \"Bug #30: extend workorder JP-KR term dictionary with keyring/hardware/material/color terms \\(heart keyring, rose gold, corotto, carabiner, holographic, etc.\\) so JP-order work orders translate those addon labels to Korean too\")"
+      "Bash(./deploy.sh \"Bug #30: extend workorder JP-KR term dictionary with keyring/hardware/material/color terms \\(heart keyring, rose gold, corotto, carabiner, holographic, etc.\\) so JP-order work orders translate those addon labels to Korean too\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\b30done.sql\")",
+      "PowerShell(\"marked #30 done\")",
+      "Skill(schedule)",
+      "Skill(schedule:*)",
+      "Bash(./deploy.sh \"Bug #37: VIP intake list now pins HQ-assigned/unassigned + pending \\(unhandled\\) inquiries to the top with a gold highlight and a 'needs check' badge, so unconfirmed HQ items are visible at a glance \\(global_orders v489\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

@@ -1401,8 +1401,23 @@ window.loadVipOrders = async () => {
             return;
         }
 
+        // 2026-08-13 (버그#37): 본사배정(또는 미지정) + 미확인(대기중) 건을 맨 위로 + 강조 → 한눈에 체크.
+        const _vipHqPending = function(it){
+            var st = String(it.status || '');
+            var mgr = String(it.preferred_manager || '');
+            if (st.includes('상담중:')) mgr = st.replace('상담중:', '').trim();
+            var isHQ = /본사/.test(mgr) || !mgr.trim();          // 본사배정 또는 미지정(아직 아무도 안 잡음)
+            var isPending = !st.includes('상담중:') && st !== '확인됨';   // 대기중(미확인)
+            return isHQ && isPending;
+        };
+        data.sort(function(a, b){
+            var pa = _vipHqPending(a) ? 0 : 1, pb = _vipHqPending(b) ? 0 : 1;
+            if (pa !== pb) return pa - pb;                       // 본사·미확인 먼저
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
         tbody.innerHTML = '';
         data.forEach(item => {
+            const _isHqPend = _vipHqPending(item);
             const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
             let filesHtml = realFiles.length ? realFiles.map(f => `<a href="${f.url}" target="_blank" class="btn btn-outline btn-sm" style="margin:2px; font-size:11px;">💾 ${f.name}</a>`).join('') : '<span style="color:#ccc;">파일 없음</span>';
 
@@ -1424,9 +1439,10 @@ window.loadVipOrders = async () => {
             let assignedManager = item.preferred_manager || '';
             if (st.includes('상담중:')) assignedManager = st.replace('상담중:', '').trim();
             else if (lockedBy) assignedManager = lockedBy;
-            const managerBadge = assignedManager
+            const _hqAlert = _isHqPend ? `<div style="font-size:10px;color:#fbbf24;font-weight:800;margin-bottom:3px;white-space:nowrap;">🔔 확인요망</div>` : '';
+            const managerBadge = _hqAlert + (assignedManager
                 ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
-                : `<span class="badge" style="background:#f1f5f9;color:#64748b;">미지정</span>`;
+                : `<span class="badge" style="background:#fef3c7;color:#92400e;font-weight:bold;">본사/미지정</span>`);
 
             const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777', '롤원단':'#0d9488' }[qqCategory] || '#475569';
             // 국가 표시 — 해외 접수만 국기 배지 (KR/국내는 표시 안 함)
@@ -1447,7 +1463,7 @@ window.loadVipOrders = async () => {
                     : `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`);
 
             tbody.innerHTML += `
-                <tr style="background:${st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a'};color:#e2e8f0;">
+                <tr style="background:${_isHqPend ? '#3b2f0a' : (st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a')};color:#e2e8f0;${_isHqPend ? 'box-shadow: inset 4px 0 0 #fbbf24;' : ''}">
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td>${managerBadge}</td>
