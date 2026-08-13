@@ -451,7 +451,8 @@
       "Bash(./deploy.sh \"Order mgmt: SNS free-coupon \\(points\\) paid orders now show 'SNS event coupon' instead of 'payment method missing'. Checkout: 'Join promo event' button popup now opens above the checkout modal \\(was behind it due to z-index\\); ranking modal too \\(sns-ranking v10, global_orders v487\\)\")",
       "Bash(./deploy.sh \"Secret dashboard: show traffic-source badge \\(favorites/direct, organic search, ad, SNS, QR, external\\) on each order in the today real-time orders list, same as order management \\(added attribution_channel to the query\\)\")",
       "Bash(sed -i 's#global_orders.js?v=487#global_orders.js?v=488#g' order_management.html)",
-      "Bash(./deploy.sh \"Attribution display simplified to 4 buckets everywhere \\(dashboard real-time orders + order management\\): organic search / ad / SNS link / favorites - QR, external-site and direct all fold into favorites \\(global_orders v488\\)\")"
+      "Bash(./deploy.sh \"Attribution display simplified to 4 buckets everywhere \\(dashboard real-time orders + order management\\): organic search / ad / SNS link / favorites - QR, external-site and direct all fold into favorites \\(global_orders v488\\)\")",
+      "Bash(./deploy.sh \"Traffic-source revenue report: consolidated to 4 buckets \\(organic search / ad / SNS link / favorites\\) and added per-search-engine breakdown for organic search \\(Google/Naver/Daum/Bing via attribution.last.sub\\); SNS also broken down by platform\")"
     ],
     "additionalDirectories": [
       "\\tmp",
