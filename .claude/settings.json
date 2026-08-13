@@ -456,7 +456,8 @@
       "Bash(./deploy.sh \"Traffic-source revenue report now matches the Today Revenue card: removed the paid-only filter so it counts all non-cancelled orders \\(incl. unpaid/pending\\) like the dashboard total, instead of only completed payments\")",
       "Bash(./deploy.sh \"Traffic-source report: back-trace attribution for manager/untracked orders using the customer's own first-touch channel from their history; repeat customers with no attribution inferred as favorites; only truly-untraceable stay 'unknown' \\(shows inferred count\\)\")",
       "Bash(./deploy.sh \"Secret dashboard: new 'Customers by acquisition channel' report - counts unique customers by how they first entered \\(ad / SNS link / organic search / favorites\\), using first-touch attribution with repeat-customer=favorites fallback; shows count, share and cumulative revenue per channel\")",
-      "Bash(./deploy.sh \"Customers-by-channel report: fix undercount \\(reuse fully-paginated order set instead of the 1000-row-capped query\\), split into Korea/Japan, and classify all untracked/pre-tracking customers as favorites \\(no more unknown bucket\\)\")"
+      "Bash(./deploy.sh \"Customers-by-channel report: fix undercount \\(reuse fully-paginated order set instead of the 1000-row-capped query\\), split into Korea/Japan, and classify all untracked/pre-tracking customers as favorites \\(no more unknown bucket\\)\")",
+      "Bash(./deploy.sh \"Bug #35: workorder sheet had no version auto-refresh, so staff browsers kept serving a stale cached copy \\(fixed sticker paper-type still looked missing = recurrence\\). Added the CV self-heal block so work orders always update to the latest deploy\")"
     ],
     "additionalDirectories": [
       "\\tmp",
