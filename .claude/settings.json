@@ -453,7 +453,8 @@
       "Bash(sed -i 's#global_orders.js?v=487#global_orders.js?v=488#g' order_management.html)",
       "Bash(./deploy.sh \"Attribution display simplified to 4 buckets everywhere \\(dashboard real-time orders + order management\\): organic search / ad / SNS link / favorites - QR, external-site and direct all fold into favorites \\(global_orders v488\\)\")",
       "Bash(./deploy.sh \"Traffic-source revenue report: consolidated to 4 buckets \\(organic search / ad / SNS link / favorites\\) and added per-search-engine breakdown for organic search \\(Google/Naver/Daum/Bing via attribution.last.sub\\); SNS also broken down by platform\")",
-      "Bash(./deploy.sh \"Traffic-source revenue report now matches the Today Revenue card: removed the paid-only filter so it counts all non-cancelled orders \\(incl. unpaid/pending\\) like the dashboard total, instead of only completed payments\")"
+      "Bash(./deploy.sh \"Traffic-source revenue report now matches the Today Revenue card: removed the paid-only filter so it counts all non-cancelled orders \\(incl. unpaid/pending\\) like the dashboard total, instead of only completed payments\")",
+      "Bash(./deploy.sh \"Traffic-source report: back-trace attribution for manager/untracked orders using the customer's own first-touch channel from their history; repeat customers with no attribution inferred as favorites; only truly-untraceable stay 'unknown' \\(shows inferred count\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
