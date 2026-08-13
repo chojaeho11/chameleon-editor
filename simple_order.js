@@ -3388,6 +3388,19 @@ html, body { background: #ffffff !important; }
         </div>
       </div>
 
+      <!-- 2026-08-12: SNS 홍보 무료쿠폰 주문 (체험단 회원 전용) — 결제방법 바로 아래 크게 노출. 잘 보이는 색 + 홍보이벤트 참여 버튼. -->
+      <div class="so-co-section" id="soSnsCouponBox" style="display:none;">
+        <div style="display:flex; gap:8px; align-items:stretch;">
+          <button type="button" id="soSnsCouponBtn" onclick="window._soToggleSnsCoupon&&window._soToggleSnsCoupon()" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px; padding:13px 15px; border:2px solid #16a34a; background:linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
+            <span style="font-size:14px;">🎁 ${tr('SNS 홍보 무료쿠폰으로 주문','SNS PR無料クーポンで注文','Order with SNS free coupon')}</span>
+            <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 전액 적용 · 배송비 포함','タップで全額適用 · 送料込み','Tap to apply · incl. shipping')}</span>
+          </button>
+          <button type="button" onclick="if(window.openBlogRecruitInfo)window.openBlogRecruitInfo()" title="${tr('홍보이벤트 참여','PRイベント参加','Join event')}" style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:10px 14px; border:2px solid #e879f9; background:linear-gradient(135deg,#fae8ff,#f5d0fe); color:#a21caf; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12px; line-height:1.25; white-space:nowrap;">
+            🏆 ${tr('홍보이벤트<br>참여','PRイベント<br>参加','Join<br>Event')}
+          </button>
+        </div>
+      </div>
+
       <!-- 2026-06-01: 할인 4종 (이벤트 쿠폰 / 마일리지 / 예치금 / 구독할인) — 라디오 1개 선택 (중복 불가) -->
       <div class="so-co-section" id="soCoWalletBox" style="display:none;">
         <span class="so-co-label">${tr('포인트 · 할인 적용','ポイント · 割引','Points &amp; Discount')}</span>
@@ -19570,6 +19583,45 @@ html, body { background: #ffffff !important; }
     //   잔액(profiles.mileage/deposit)·원장(wallet_logs)은 order.js 와 동일 스키마 사용.
     window._soWallet = { ready: false };
     // 비-KR(일본 등): 4-box 할인은 통화이슈로 미노출. 블로그 체험단 SNS 포인트만 노출(내부 KRW, _soFormatPrice 로 현지통화 표시).
+    // 2026-08-12: SNS 홍보 무료쿠폰 주문 버튼 (체험단 회원 전용) 헬퍼들.
+    //   - _soCheckBlogMonitor: 현재 로그인 유저가 승인된 체험단 회원인지 (본인행 RLS select).
+    //   - _soToggleSnsCoupon: 큰 버튼 = 기존 포인트 체크박스(soDiscBlogChk) 토글 → 기존 지갑로직 그대로 사용.
+    //   - _soSyncSnsCouponBtn: 버튼 색/문구를 현재 적용상태에 맞춤.
+    window._soCheckBlogMonitor = async function (uid) {
+        if (!uid) return false;
+        var sb = getSb(); if (!sb) return false;
+        try {
+            var r = await sb.from('blog_monitors').select('status,is_active').eq('user_id', uid).maybeSingle();
+            var m = r && r.data;
+            return !!(m && (m.status === 'approved' || m.is_active === true));
+        } catch (e) { return false; }
+    };
+    window._soSyncSnsCouponBtn = function () {
+        var chk = document.getElementById('soDiscBlogChk');
+        var btn = document.getElementById('soSnsCouponBtn');
+        var sub = document.getElementById('soSnsCouponSub');
+        if (!btn) return;
+        var on = !!(chk && chk.checked);
+        if (on) {
+            btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#15803d';
+            if (sub) sub.textContent = tr('✓ 적용됨 · 전액·배송비 포함', '✓ 適用中 · 全額·送料込み', '✓ Applied · full · incl. shipping');
+        } else {
+            btn.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
+            btn.style.color = '#065f46';
+            btn.style.borderColor = '#16a34a';
+            if (sub) sub.textContent = tr('눌러서 전액 적용 · 배송비 포함', 'タップで全額適用 · 送料込み', 'Tap to apply · incl. shipping');
+        }
+    };
+    window._soToggleSnsCoupon = function () {
+        var chk = document.getElementById('soDiscBlogChk');
+        if (!chk || chk.disabled) return;
+        chk.checked = !chk.checked;
+        if (typeof window._soOnDiscountSelect === 'function') window._soOnDiscountSelect();
+        window._soSyncSnsCouponBtn();
+    };
+
     window._soInitBlogOnly = async function (box) {
         var sb = getSb(); if (!sb) return;
         var uid = null;
@@ -19596,6 +19648,16 @@ html, body { background: #ffffff !important; }
             var hintEl = document.getElementById('soDiscBlogHint'); if (hintEl) hintEl.textContent = tr('남은 ','残り ','Remaining ') + _soFormatPrice(bal);
             var chkEl = document.getElementById('soDiscBlogChk'); if (chkEl) chkEl.disabled = false;
         }
+        // 2026-08-12: 체험단 회원이면 그리드 포인트카드 대신 큰 'SNS 홍보 무료쿠폰 주문' 버튼 노출
+        try {
+            var _isMon = await window._soCheckBlogMonitor(uid);
+            var _snsBox = document.getElementById('soSnsCouponBox');
+            if (_isMon && bal > 0) {
+                if (_snsBox) _snsBox.style.display = '';
+                if (blogCard) blogCard.style.display = 'none';
+                if (window._soSyncSnsCouponBtn) window._soSyncSnsCouponBtn();
+            } else if (_snsBox) { _snsBox.style.display = 'none'; }
+        } catch (e) {}
         var lblEl = box ? box.querySelector('.so-co-label') : null;
         if (lblEl) lblEl.textContent = tr('포인트', 'ポイント', 'Points');
         if (box) box.style.display = '';
@@ -19727,6 +19789,16 @@ html, body { background: #ffffff !important; }
             var _bHint = document.getElementById('soDiscBlogHint'); if (_bHint) _bHint.textContent = tr('남은 ','残り ','Remaining ') + _soFormatPrice(blogBal);
             var _bChk = document.getElementById('soDiscBlogChk'); if (_bChk) _bChk.disabled = false;
         } else if (_blogCardK) { _blogCardK.style.display = 'none'; }
+        // 2026-08-12: 체험단 회원이면 그리드 포인트카드 대신 큰 'SNS 홍보 무료쿠폰 주문' 버튼 노출 (결제방법 아래)
+        try {
+            var _isMonK = await window._soCheckBlogMonitor(uid);
+            var _snsBoxK = document.getElementById('soSnsCouponBox');
+            if (_isMonK && blogBal > 0) {
+                if (_snsBoxK) _snsBoxK.style.display = '';
+                if (_blogCardK) _blogCardK.style.display = 'none';   // 그리드 중복 포인트카드 숨김
+                if (window._soSyncSnsCouponBtn) window._soSyncSnsCouponBtn();
+            } else if (_snsBoxK) { _snsBoxK.style.display = 'none'; }
+        } catch (e) {}
         var exMsg = document.getElementById('soWalletExcludedMsg'); if (exMsg) exMsg.style.display = excluded ? '' : 'none';
         if (box) box.style.display = '';
         _soApplyWalletToTotal();
