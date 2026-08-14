@@ -234,7 +234,7 @@
             if (d && d.ok && d.granted) {
                 var sc = (window.__SITE_CODE || 'KR');
                 var jp = (sc === 'JP'), us = (sc !== 'KR' && sc !== 'JP');
-                var disp = jp ? 3000 : (us ? 30 : 30000);   // showRewardPopup 는 통화접미사만 붙이므로 사이트별 환산액 전달
+                var disp = jp ? 1000 : (us ? 10 : 10000);   // 주간 선물 1만원(=JP ¥1,000). showRewardPopup 는 통화접미사만 붙이므로 사이트별 환산액 전달
                 window.showRewardPopup({ kind: 'mileage', title: jp ? '今週の無料プレゼント！' : (us ? 'Your weekly free gift!' : '이번 주 무료 선물!'), mileage: disp });
             }
         } catch (e) {}
