@@ -476,7 +476,9 @@
       "Bash(printf \"select id, created_at, applied_at, status, country_code, name from blog_monitors order by created_at desc limit 5;\")",
       "Bash(printf \"select public.blog_monitor_sync\\(\\) as sync_test;\")",
       "Bash(awk 'NR>=5440 && NR<=5545 && /<script|<\\\\/script>/ {print NR\": \"$0}' index.html)",
-      "Bash(./deploy.sh \"Blog monitor recruit: reset stale 30-day popup-hide \\(new localStorage key\\) so the launch-wave non-members see the invite again; shorten dismiss from 30 to 3 days\")"
+      "Bash(./deploy.sh \"Blog monitor recruit: reset stale 30-day popup-hide \\(new localStorage key\\) so the launch-wave non-members see the invite again; shorten dismiss from 30 to 3 days\")",
+      "Bash(awk 'NR>=5440 && NR<=5555 && /<script|<\\\\/script>/ {print NR\": \"$0}' index.html)",
+      "Bash(./deploy.sh \"Blog monitor recruit popup: add warm first-timer welcome line \\(free coupons ~150k KRW from signup event + SNS marketing, KR/JP\\) at top of the invite and apply screens\")"
     ],
     "additionalDirectories": [
       "\\tmp",

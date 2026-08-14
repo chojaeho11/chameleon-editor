@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814101904';
+    var CV = '20260814102338';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5471,10 +5471,15 @@ function _blogRecruitBuild(jp, loggedIn, status){
     var rankMsg = jp
         ? '🏆 SNS PRランキング 現金イベント <b>(〜10/15 16:00)</b><br>投稿1件1点・力作3点・バズり5点！ 上位 1位10万円…5位5千円 + バズり最多1件3万円！<br><span style="font-size:11px;color:#b91c1c;">※ カメレオン印刷と無関係、または雑な連投のみは対象外</span>'
         : '🏆 SNS 홍보 랭킹 현금 이벤트 <b>(~10/15 16:00)</b><br>게시글 1점·정성글 3점·조회수 터짐 5점! 상위 1위 100만…5위 5만원 + 조회수 최다 1건 30만원!<br><span style="font-size:11px;color:#b91c1c;">※ 카멜레온과 무관하거나 도배성 글만 있는 경우 지급 제외</span>';
+    var firstMsg = jp
+        ? '初めてですか？ 無料クーポンで気軽にご購入ください。会員登録イベント＋SNSマーケティングクーポンで<b>約15,000円分</b>を進呈します。仲良くなりましょう！'
+        : '처음 오셨나요? 무료쿠폰으로 부담 없이 구매하세요. 회원가입 이벤트 + SNS 마케팅 쿠폰으로 <b>약 15만원</b>을 드립니다. 우리 친해져요!';
+    var firstBox = '<div style="background:#fdf2f8; color:#9d174d; border:1px solid #fbcfe8; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:12px; line-height:1.65;">'+firstMsg+'</div>';
     var btnStyle='width:100%; padding:12px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;';
     var inner='';
     if (!loggedIn) {
-        inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:14px;">'+intro+'</div>'
+        inner = firstBox
+              + '<div style="font-size:13.5px; line-height:1.75; margin-bottom:14px;">'+intro+'</div>'
               + '<div style="background:#111; color:#fff; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:12px; line-height:1.6;">'+threadsMsg+'</div>'
               + '<div style="background:#fff7ed; color:#7c2d12; border:1px solid #fdba74; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:16px; line-height:1.6;">'+rankMsg+'</div>'
               + '<button onclick="_blogRecruitLogin()" style="'+btnStyle+'">'+(jp?'ログインして応募':'로그인하고 신청')+'</button>';
@@ -5485,7 +5490,8 @@ function _blogRecruitBuild(jp, loggedIn, status){
         inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:16px;">'+(jp?'応募を受け付けました。承認までしばらくお待ちください。承認されるとマイページにクーポンが表示されます。':'신청이 접수되었습니다. 승인을 기다려 주세요. 승인되면 마이페이지에 쿠폰이 표시됩니다.')+'</div>'
               + '<button onclick="_blogRecruitClose()" style="'+btnStyle+'">'+(jp?'閉じる':'닫기')+'</button>';
     } else {
-        inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:12px;">'+intro+'</div>'
+        inner = firstBox
+              + '<div style="font-size:13.5px; line-height:1.75; margin-bottom:12px;">'+intro+'</div>'
               + '<div style="background:#111; color:#fff; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:12px; line-height:1.6;">'+threadsMsg+'</div>'
               + '<div style="background:#fff7ed; color:#7c2d12; border:1px solid #fdba74; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:16px; line-height:1.6;">'+rankMsg+'</div>'
               + '<div style="font-size:12.5px; color:#334155; margin-bottom:6px;">'+(jp?'あなたの宣伝チャンネルURL（ブログ / Threads / Instagram など）':'홍보채널 주소 (블로그 / 스레드 / 인스타 등)')+'</div>'
