@@ -302,9 +302,12 @@
                 var list = document.getElementById('rhTbList');
                 if (list) {
                     var posts = (pr && pr.data) || [];
-                    list.innerHTML = posts.length ? posts.map(function (p) {
-                        return '<div style="padding:9px 0;border-bottom:1px solid #f1f5f9;"><div style="font-size:12.5px;color:#334155;line-height:1.5;word-break:break-word;">' + esc(p.content || p.title || '') + '</div><div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + esc(p.author_name || '') + '</div></div>';
-                    }).join('') : '<div style="text-align:center;color:#cbd5e1;padding:20px;font-size:12px;">' + T2('첫 글을 남겨보세요!', '最初のひとことを！', 'Be the first!') + '</div>';
+                    var _html = posts.map(function (p) {
+                        var plain = String(p.content || p.title || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&lt;|&gt;|&amp;/gi, ' ').replace(/\s+/g, ' ').trim();
+                        if (!plain) return '';
+                        return '<div style="padding:9px 0;border-bottom:1px solid #f1f5f9;"><div style="font-size:12.5px;color:#334155;line-height:1.5;word-break:break-word;">' + esc(plain) + '</div><div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + esc(p.author_name || '') + '</div></div>';
+                    }).join('');
+                    list.innerHTML = _html || '<div style="text-align:center;color:#cbd5e1;padding:20px;font-size:12px;">' + T2('첫 글을 남겨보세요!', '最初のひとことを！', 'Be the first!') + '</div>';
                 }
             } catch (e) {}
             document.getElementById('rhTbGo').onclick = async function () {
@@ -327,7 +330,8 @@
                 + '<button id="rhCloseX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
                 + '<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:12px;margin:8px 0 14px;">'
                 + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
-                + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + (st.logged_in ? won(st.mileage) : '—') + '</div></div>';
+                + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + (st.logged_in ? won(st.mileage) : '—') + '</div>'
+                + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>';
             var rows = ''
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
                 + rowHtml(2, T2('이달 첫 접속', '今月の初ログイン', 'Monthly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
@@ -469,9 +473,13 @@
           + '.wc-top{background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;padding:18px 20px;text-align:center}'
           + '.wc-top h3{margin:0;font-size:18px}.wc-top p{margin:4px 0 0;font-size:12px;opacity:.9}'
           + '.wc-body{padding:18px 20px 20px}'
-          + '.wc-chain{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:14px;min-height:26px}'
-          + '.wc-word{background:#eef2ff;color:#4338ca;border-radius:999px;padding:4px 11px;font-size:13px}'
-          + '.wc-word.last{background:#4f46e5;color:#fff}'
+          + '.wc-chain{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;max-height:150px;overflow-y:auto}'
+          + '.wc-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#eef2ff;border-radius:8px;padding:6px 11px}'
+          + '.wc-row.last{background:#4f46e5}'
+          + '.wc-w{font-size:14px;color:#4338ca;font-weight:700;word-break:break-all}'
+          + '.wc-row.last .wc-w{color:#fff}'
+          + '.wc-u{font-size:11px;color:#94a3b8;flex-shrink:0}'
+          + '.wc-row.last .wc-u{color:#e0e7ff}'
           + '.wc-need{text-align:center;font-size:14px;color:#0f172a;margin-bottom:12px}'
           + '.wc-need b{color:#4f46e5;font-size:19px}'
           + '.wc-inrow{display:flex;gap:8px}'
@@ -515,9 +523,12 @@
 
         function render(st) {
             var recent = (st && st.recent) || [];
-            ov.querySelector('#wcChain').innerHTML = recent.slice().reverse().map(function (w, i) {
-                return '<span class="wc-word' + (i === recent.length - 1 ? ' last' : '') + '">' + String(w).replace(/</g, '&lt;') + '</span>';
-            }).join('') || ('<span style="color:#94a3b8;font-size:13px">' + G.empty + '</span>');
+            var _e = function (s) { return String(s == null ? '' : s).replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); };
+            ov.querySelector('#wcChain').innerHTML = recent.length ? recent.map(function (e, i) {
+                var word = (e && typeof e === 'object' && e.word != null) ? e.word : e;
+                var name = (e && typeof e === 'object' && e.name) ? e.name : '';
+                return '<div class="wc-row' + (i === 0 ? ' last' : '') + '"><span class="wc-w">' + _e(word) + '</span><span class="wc-u">' + _e(name) + '</span></div>';
+            }).join('') : ('<div style="color:#94a3b8;font-size:13px;text-align:center;padding:8px;">' + G.empty + '</div>');
             nextChar = st && st.next_char;
             ov.querySelector('#wcNeed').innerHTML = nextChar ? (G.next + '<b>' + nextChar + '</b>') : G.any;
             ov.querySelector('#wcFoot').textContent = G.today + Math.min((st && st.plays_today) || 0, 1) + ' / ' + 1;
