@@ -240,6 +240,96 @@
         } catch (e) {}
     };
 
+    // 2026-08-14: 리워드 허브 — 이벤트 팝업에서 5가지 보상을 그 자리에서. 상단 누적포인트 + 축하 빵빠레.
+    window.openRewardHub = async function () {
+        var sbc = await sbReady(); if (!sbc) return;
+        var sc = (window.__SITE_CODE || 'KR');
+        var jp = (sc === 'JP'), en = (sc !== 'KR' && sc !== 'JP');
+        var T2 = function (ko, ja, eng) { return jp ? ja : (en ? (eng || ko) : ko); };
+        var won = function (krw) { return jp ? ('¥' + Math.round(krw * 0.1).toLocaleString()) : (en ? ('$' + Math.round(krw / 1000)) : (Number(krw).toLocaleString() + '원')); };
+        var dispAmt = function (krw) { return jp ? Math.round(krw * 0.1) : (en ? Math.round(krw / 1000) : krw); };
+        var celebrate = function (krw, title) { try { if (window.showRewardPopup) window.showRewardPopup({ kind: 'mileage', title: title || T2('축하해요! 포인트가 도착했어요', 'おめでとう！ポイント到着', 'Reward granted!'), mileage: dispAmt(krw) }); } catch (e) {} };
+
+        var old = document.getElementById('rewardHubModal'); if (old) old.remove();
+        var ov = document.createElement('div');
+        ov.id = 'rewardHubModal';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147482990; display:flex; align-items:center; justify-content:center; padding:14px;';
+        ov.innerHTML = '<div id="rhCard" style="background:#fff; border-radius:18px; max-width:430px; width:100%; max-height:94vh; overflow-y:auto; padding:20px 18px; color:#334155;"><div style="text-align:center; color:#94a3b8; padding:40px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div></div>';
+        document.body.appendChild(ov);
+        var closeHub = function () { try { ov.remove(); } catch (e) {} };
+        ov.addEventListener('click', function (e) { if (e.target === ov) closeHub(); });
+
+        async function getState() {
+            var st = { logged_in: false, mileage: 0, monthly_gift_done: false, attendance_done: false, sns: 'none', uid: null, email: '', name: '' };
+            try { var u = await sbc.auth.getUser(); var user = u && u.data && u.data.user; if (user) { st.logged_in = true; st.uid = user.id; st.email = user.email || ''; } } catch (e) {}
+            if (st.logged_in) {
+                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.monthly_gift_done = !!d.monthly_gift_done; st.attendance_done = !!d.attendance_done; } } catch (e) {}
+                try { var s = await sbc.rpc('blog_monitor_sync'); if (s && s.data) st.sns = s.data.status || 'none'; } catch (e) {}
+                try { var pf = await sbc.from('profiles').select('username').eq('id', st.uid).maybeSingle(); st.name = (pf && pf.data && pf.data.username) || (st.email.split('@')[0]) || 'user'; } catch (e) { st.name = (st.email.split('@')[0]) || 'user'; }
+            }
+            return st;
+        }
+        var badge = function (n) { return '<div style="width:26px;height:26px;border-radius:50%;background:#fed7aa;color:#c2410c;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + n + '</div>'; };
+        var doneTag = function (t) { return '<span style="font-size:12px;color:#16a34a;">✓ ' + t + '</span>'; };
+        var lockTag = function () { return '<span style="font-size:11.5px;color:#cbd5e1;">' + T2('로그인 후', 'ログイン後', 'Login') + '</span>'; };
+        var actBtn = function (id, t) { return '<button id="' + id + '" style="padding:8px 13px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:9px;font-size:12.5px;cursor:pointer;white-space:nowrap;">' + t + '</button>'; };
+        var rowHtml = function (n, title, amt, right) {
+            return '<div style="border:1px solid #fed7aa;border-radius:12px;padding:11px 12px;">'
+                + '<div style="display:flex;align-items:center;gap:10px;">' + badge(n)
+                + '<div style="flex:1;min-width:0;"><div style="font-size:13.5px;color:#7c2d12;">' + title + '</div><div style="font-size:11px;color:#ea580c;">' + amt + '</div></div>'
+                + '<div style="flex-shrink:0;">' + right + '</div></div>'
+                + '<div id="rhExtra' + n + '"></div></div>';
+        };
+        async function render() {
+            var st = await getState();
+            var card = document.getElementById('rhCard'); if (!card) return;
+            var top = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+                + '<div style="font-size:17px;color:#ea580c;">' + T2('여름 무료 이벤트', '夏の無料イベント', 'Free Event') + '</div>'
+                + '<button id="rhCloseX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
+                + '<div style="text-align:center;background:linear-gradient(135deg,#fff7ed,#ffedd5);border-radius:14px;padding:12px;margin-bottom:14px;">'
+                + '<div style="font-size:12px;color:#9a3412;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
+                + '<div style="font-size:26px;color:#ea580c;">' + (st.logged_in ? won(st.mileage) : '—') + '</div></div>';
+            var rows = ''
+                + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(30000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
+                + rowHtml(2, T2('이달 첫 접속', '今月の初ログイン', 'Monthly login'), won(30000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
+                + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor'), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : (st.sns !== 'none' ? doneTag(st.sns === 'approved' ? T2('승인', '承認', 'Approved') : T2('신청됨', '申請済み', 'Applied')) : actBtn('rhAct3', T2('신청', '申請', 'Apply'))))
+                + rowHtml(4, T2('출석 · 오늘의 잡담', '出席 · 今日のひとこと', 'Check-in'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('오늘 완료', '本日完了', 'Done')) : actBtn('rhAct4', T2('한마디 쓰기', 'ひとこと', 'Post'))))
+                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1500) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
+            var note = '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:14px 0 4px;">' + T2('합쳐서 매달 최대 16만원 · 매월 말일 미사용분 소멸', '合計 毎月最大¥16,000 · 毎月末に未使用分は消滅', 'Up to ~$160/mo · resets monthly') + '</div>';
+            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
+            var byId = function (id) { return document.getElementById(id); };
+            if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
+            if (byId('rhAct1')) byId('rhAct1').onclick = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(30000, T2('가입 완료! 3만원 지급', '登録完了！¥3,000付与', 'Welcome! Reward granted')); render(); }); } };
+            if (byId('rhAct2')) byId('rhAct2').onclick = async function () { this.disabled = true; try { var r = await sbc.rpc('monthly_gift_claim'); var d = r && r.data; if (d && d.ok && d.granted) celebrate(30000); } catch (e) {} render(); };
+            if (byId('rhAct3')) byId('rhAct3').onclick = function () {
+                var ex = byId('rhExtra3'); if (!ex) return;
+                ex.innerHTML = '<div style="margin-top:8px;display:flex;gap:6px;"><input id="rhSnsUrl" type="url" placeholder="https://blog/threads/insta…" style="flex:1;min-width:0;padding:8px 10px;border:1px solid #fed7aa;border-radius:8px;font-size:12px;"><button id="rhSnsGo" style="padding:8px 12px;background:#ea580c;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">' + T2('신청', '申請', 'Go') + '</button></div>';
+                byId('rhSnsGo').onclick = async function () {
+                    var url = (byId('rhSnsUrl').value || '').trim();
+                    if (!/^https?:\/\//i.test(url)) { alert(T2('http(s):// 주소를 입력해 주세요', 'http(s):// のURLを入力', 'Enter a valid URL')); return; }
+                    this.disabled = true;
+                    try { var r = await sbc.rpc('blog_monitor_apply', { _channel_url: url, _country: sc }); var d = r && r.data; if (d && d.ok) { alert(T2('신청 완료! 승인되면 매월 5만원이 지급돼요', '申請完了！承認されると毎月¥5,000', 'Applied! 50k/mo after approval')); } else { alert(T2('신청 실패', '申請失敗', 'Failed') + (d && d.error ? ': ' + d.error : '')); } } catch (e) { alert(T2('신청 실패', '申請失敗', 'Failed')); }
+                    render();
+                };
+            };
+            if (byId('rhAct4')) byId('rhAct4').onclick = function () {
+                var ex = byId('rhExtra4'); if (!ex) return;
+                ex.innerHTML = '<div style="margin-top:8px;"><textarea id="rhTalk" rows="2" placeholder="' + T2('오늘 하고 싶은 한마디를 남겨보세요 :)', '今日のひとこと :)', 'Say hi :)') + '" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #fed7aa;border-radius:8px;font-size:12.5px;resize:vertical;"></textarea><button id="rhTalkGo" style="margin-top:6px;width:100%;padding:9px;background:#ea580c;color:#fff;border:none;border-radius:8px;font-size:12.5px;cursor:pointer;">' + T2('등록하고 출석', '投稿して出席', 'Post & check-in') + '</button></div>';
+                byId('rhTalkGo').onclick = async function () {
+                    var txt = (byId('rhTalk').value || '').trim();
+                    if (txt.length < 1) { byId('rhTalk').focus(); return; }
+                    this.disabled = true;
+                    try { await sbc.from('blog_posts').insert({ category: 'freetalk', country_code: sc, author_id: st.uid, author_name: st.name, author_email: st.email, title: txt.slice(0, 80), content: txt }); } catch (e) {}
+                    try { var r = await sbc.rpc('attendance_claim'); var d = r && r.data; if (d && d.ok && d.mileage_added) celebrate(d.mileage_added, T2('출석 완료! 포인트 지급', '出席完了！ポイント付与', 'Checked in!')); } catch (e) {}
+                    render();
+                };
+            };
+            if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
+        }
+        render();
+    };
+    window.openSummerEvent = window.openRewardHub;
+
     // 수동(출석체크 버튼) — 지급/이미완료/미로그인 모두 피드백.
     window.attendanceCheck = async function () {
         var sb = await sbReady(); if (!sb) { _rwInfo(tr('잠시 후 다시 시도해주세요', '少し後にお試しください', 'Please try again shortly.')); return; }
