@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814141938';
+    var CV = '20260814190557';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -6218,7 +6218,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script src="./mini-editor.js?v=556"></script>
-<script src="./rewards.js?v=8"></script>
+<script src="./rewards.js?v=9"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
@@ -19398,6 +19398,8 @@ if (w >= 20 && h >= 20) {
             console.log("✅ 로그인 됨:", window.currentUser.email);
             // 2026-07-28: 그날 첫 접속 시 오늘의 선물(접속보상) + 오늘의 미션(게임·자유게시판) 안내 팝업. 하루 1회.
             try { if (window.dailyGiftPopup) window.dailyGiftPopup(); } catch (_dg) {}
+            // 2026-08-14: 매월 첫 접속 무료 선물 3만원 (월 1회, 서버에서 중복방지).
+            try { if (window.claimMonthlyGift) window.claimMonthlyGift(); } catch (_mg) {}
             if (btnLogin) {
                 // [수정] "로그아웃" -> window.t('btn_logout')
                 btnLogin.innerText = window.t('btn_logout');

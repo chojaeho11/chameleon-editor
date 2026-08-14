@@ -225,6 +225,21 @@
         } catch (e) {}
     };
 
+    // 2026-08-14: 매월 첫 접속 무료 선물 3만원 (월 1회). 무료 이벤트 포인트라 매월 말일 소멸 대상.
+    window.claimMonthlyGift = async function () {
+        var sb = await sbReady(); if (!sb) return;
+        var uid = await loggedInUid(sb); if (!uid) return;
+        try {
+            var r = await sb.rpc('monthly_gift_claim'); var d = r && r.data;
+            if (d && d.ok && d.granted) {
+                var sc = (window.__SITE_CODE || 'KR');
+                var jp = (sc === 'JP'), us = (sc !== 'KR' && sc !== 'JP');
+                var disp = jp ? 3000 : (us ? 30 : 30000);   // showRewardPopup 는 통화접미사만 붙이므로 사이트별 환산액 전달
+                window.showRewardPopup({ kind: 'mileage', title: jp ? '今月の無料プレゼント！' : (us ? 'Your monthly free gift!' : '이번 달 무료 선물!'), mileage: disp });
+            }
+        } catch (e) {}
+    };
+
     // 수동(출석체크 버튼) — 지급/이미완료/미로그인 모두 피드백.
     window.attendanceCheck = async function () {
         var sb = await sbReady(); if (!sb) { _rwInfo(tr('잠시 후 다시 시도해주세요', '少し後にお試しください', 'Please try again shortly.')); return; }
