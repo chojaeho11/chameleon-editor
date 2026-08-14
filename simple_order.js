@@ -3393,7 +3393,7 @@ html, body { background: #ffffff !important; }
         <div style="display:flex; gap:8px; align-items:stretch;">
           <button type="button" id="soSnsCouponBtn" onclick="window._soToggleSnsCoupon&&window._soToggleSnsCoupon()" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px; padding:13px 15px; border:2px solid #16a34a; background:linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
             <span style="font-size:14px;">🎁 ${tr('SNS 홍보 무료쿠폰으로 주문','SNS PR無料クーポンで注文','Order with SNS free coupon')}</span>
-            <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 전액 적용 · 배송비 포함','タップで全額適用 · 送料込み','Tap to apply · incl. shipping')}</span>
+            <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 적용 · 1회 최대 5만원 (배송비 포함)','タップで適用 · 1回最大5,000円','Tap to apply · up to 50,000 KRW/order')}</span>
           </button>
           <button type="button" onclick="if(window.openBlogRecruitInfo)window.openBlogRecruitInfo()" title="${tr('홍보이벤트 참여','PRイベント参加','Join event')}" style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:10px 14px; border:2px solid #e879f9; background:linear-gradient(135deg,#fae8ff,#f5d0fe); color:#a21caf; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12px; line-height:1.25; white-space:nowrap;">
             🏆 ${tr('홍보이벤트<br>참여','PRイベント<br>参加','Join<br>Event')}
@@ -19606,12 +19606,12 @@ html, body { background: #ffffff !important; }
             btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
             btn.style.color = '#fff';
             btn.style.borderColor = '#15803d';
-            if (sub) sub.textContent = tr('✓ 적용됨 · 전액·배송비 포함', '✓ 適用中 · 全額·送料込み', '✓ Applied · full · incl. shipping');
+            if (sub) sub.textContent = tr('✓ 적용됨 · 1회 최대 5만원 (배송비 포함)', '✓ 適用中 · 1回最大5,000円', '✓ Applied · up to 50,000 KRW/order');
         } else {
             btn.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
             btn.style.color = '#065f46';
             btn.style.borderColor = '#16a34a';
-            if (sub) sub.textContent = tr('눌러서 전액 적용 · 배송비 포함', 'タップで全額適用 · 送料込み', 'Tap to apply · incl. shipping');
+            if (sub) sub.textContent = tr('눌러서 적용 · 1회 최대 5만원 (배송비 포함)', 'タップで適用 · 1回最大5,000円', 'Tap to apply · up to 50,000 KRW/order');
         }
     };
     window._soToggleSnsCoupon = function () {
@@ -19634,7 +19634,7 @@ html, body { background: #ffffff !important; }
         var cart = _soReadAllCart();
         var calc = _soCalcCartTotal(cart);
         var grand = Math.max(0, calc.grandTotal || 0);
-        var blogMax = Math.min(bal, grand);
+        var blogMax = Math.min(bal, grand, 50000);   // 2026-08-14: SNS 무료쿠폰 1회 최대 5만원 제한
         window._soWallet = {
             ready: true, userId: uid,
             mileageBalKRW: 0, depositBalKRW: 0, eventCouponBalKRW: 0, blogCouponBalKRW: bal,
@@ -19778,7 +19778,7 @@ html, body { background: #ffffff !important; }
             '원');
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
-        var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase));
+        var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase), 50000);   // 2026-08-14: SNS 무료쿠폰 1회 최대 5만원 제한
         window._soWallet.blogCouponBalKRW = blogBal;
         window._soWallet.blogMax = blogMax;
         window._soWallet.blogOn = false;
@@ -19837,7 +19837,7 @@ html, body { background: #ffffff !important; }
         var afterDeposit = Math.max(0, afterDiscount - useDeposit);
         var _bcChkLive = document.getElementById('soDiscBlogChk');
         var _blogOnLive = !!(_bcChkLive && _bcChkLive.checked && !_bcChkLive.disabled);
-        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit) : 0;
+        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 50000) : 0;   // 2026-08-14: SNS 무료쿠폰 1회 최대 5만원
         return { useMileage: useMileage, useDeposit: useDeposit, useBlogCoupon: useBlogCoupon, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {
