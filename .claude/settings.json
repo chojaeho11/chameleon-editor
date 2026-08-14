@@ -470,7 +470,13 @@
       "Bash(./deploy.sh \"Bug #37: VIP intake list now pins HQ-assigned/unassigned + pending \\(unhandled\\) inquiries to the top with a gold highlight and a 'needs check' badge, so unconfirmed HQ items are visible at a glance \\(global_orders v489\\)\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\b37_and_asks.sql\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\st.sql\")",
-      "Bash(./deploy.sh \"SNS free coupon \\(unified points\\): cap usage at 50,000 KRW per order \\(blogMax display + actual charge in getWalletUseKRW, both KR and non-KR paths\\); deposit stays uncapped; button label updated to 'up to 50,000/order' \\(simple_order v853\\)\")"
+      "Bash(./deploy.sh \"SNS free coupon \\(unified points\\): cap usage at 50,000 KRW per order \\(blogMax display + actual charge in getWalletUseKRW, both KR and non-KR paths\\); deposit stays uncapped; button label updated to 'up to 50,000/order' \\(simple_order v853\\)\")",
+      "Bash(printf \"select pg_get_functiondef\\('public.blog_monitor_apply\\(text,text\\)'::regprocedure\\) as def;\")",
+      "Bash(printf \"select public.blog_monitor_apply\\('https://test.example.com/x','JP'\\) as test_result;\")",
+      "Bash(printf \"select id, created_at, applied_at, status, country_code, name from blog_monitors order by created_at desc limit 5;\")",
+      "Bash(printf \"select public.blog_monitor_sync\\(\\) as sync_test;\")",
+      "Bash(awk 'NR>=5440 && NR<=5545 && /<script|<\\\\/script>/ {print NR\": \"$0}' index.html)",
+      "Bash(./deploy.sh \"Blog monitor recruit: reset stale 30-day popup-hide \\(new localStorage key\\) so the launch-wave non-members see the invite again; shorten dismiss from 30 to 3 days\")"
     ],
     "additionalDirectories": [
       "\\tmp",

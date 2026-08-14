@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814095648';
+    var CV = '20260814101904';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5445,7 +5445,7 @@ window.addEventListener('load', function() {
 </div>
 <script>
 function _blogRecruitClose(){ var m=document.getElementById('blogRecruitModal'); if(m) m.remove(); }
-function _blogRecruitHide(days, silent){ try{ localStorage.setItem('_blogRecruitHideUntil', String(Date.now()+(days||1)*86400000)); }catch(e){} if(!silent) _blogRecruitClose(); }
+function _blogRecruitHide(days, silent){ try{ localStorage.setItem('_blogRecruitHideUntil2', String(Date.now()+(days||1)*86400000)); }catch(e){} if(!silent) _blogRecruitClose(); }
 function _blogRecruitDismiss(silent){ _blogRecruitHide(1, silent); }
 function _blogRecruitLogin(){ _blogRecruitClose(); if(window.openAuthModal){ window.openAuthModal('login', function(){ openBlogRecruitInfo(); }); } else { location.href='mypage.html'; } }
 
@@ -5494,7 +5494,7 @@ function _blogRecruitBuild(jp, loggedIn, status){
               + '<button onclick="_blogRecruitApply()" style="width:100%; margin-top:10px; padding:12px; background:#111; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">'+(jp?'🧵 スレ友ならクリック！2倍還元！':'🧵 쓰레드 친구라면 클릭! 2배 적립!')+'</button>'
               + '<div style="margin-top:14px; display:flex; gap:18px; justify-content:center;">'
               +   '<span onclick="_blogRecruitHide(1)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'今日は表示しない':'오늘 그만 보기')+'</span>'
-              +   '<span onclick="_blogRecruitHide(30)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'1ヶ月間表示しない':'한 달간 보지 않기')+'</span>'
+              +   '<span onclick="_blogRecruitHide(3)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'3日間表示しない':'3일간 보지 않기')+'</span>'
               + '</div>';
     }
     var imgSrc = jp ? '/sns_recruit_jp.jpg?v=3' : '/sns_recruit_kr.jpg?v=3';
@@ -5528,7 +5528,7 @@ async function _blogRecruitApply(){
 (function(){
     function _initRecruit(){
         if (window.__SITE_CODE !== 'KR' && window.__SITE_CODE !== 'JP') return;
-        try { var _hu = parseInt(localStorage.getItem('_blogRecruitHideUntil')||'0',10); if (_hu && Date.now() < _hu) return; } catch(e){}
+        try { var _hu = parseInt(localStorage.getItem('_blogRecruitHideUntil2')||'0',10); if (_hu && Date.now() < _hu) return; } catch(e){}
         if (!window.sb || !window.sb.auth) { setTimeout(_initRecruit, 1500); return; }
         window.sb.auth.getUser().then(function(u){
             var user = u && u.data && u.data.user; if(!user) return;
