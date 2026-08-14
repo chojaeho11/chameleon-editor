@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814140839';
+    var CV = '20260814141938';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1163,13 +1163,13 @@ window._tcmFallbackClick = function(code) {
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'<span class="hw-t-brand">첫 구매 무료!</span> <span class="hw-t-rest">무료쿠폰 팡팡</span>',
-                      sub:'회원가입만 하면 매달 최대 12만원 무료 선물',
+                kr: { title:'<span class="hw-t-rest">카멜레온</span> <span class="hw-t-brand">8월 여름 무료 이벤트</span>',
+                      sub:'8월 30일 삭제 · 눌러서 자세히 보기',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'<span class="hw-t-brand">初回購入 無料！</span> <span class="hw-t-rest">無料クーポンどんどん</span>',
-                      // 2026-08-14: 会員登録の無料クーポン訴求（1行タイトル＋1行サブ）
-                      sub:'会員登録だけで毎月最大12,000円分の無料プレゼント',
+                ja: { title:'<span class="hw-t-rest">カメレオン</span> <span class="hw-t-brand">8月 夏の無料イベント</span>',
+                      // 2026-08-14: 夏の無料イベント（1行タイトル＋1行サブ、タップで詳細ポップアップ）
+                      sub:'8月30日で終了 · タップで詳細',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
                 en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Global wholesale printer</span>',
@@ -1202,6 +1202,41 @@ window._tcmFallbackClick = function(code) {
             var t = T[lang] || T.en || T.kr;
             document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
+            // 2026-08-14: 8월 여름 무료 이벤트 — 타이틀 클릭 시 상세 팝업 (KR/JP)
+            window.openSummerEvent = function () {
+                var jp = (window.__SITE_CODE === 'JP');
+                var T2 = function (ko, ja) { return jp ? ja : ko; };
+                var old = document.getElementById('summerEventModal'); if (old) old.remove();
+                var ov = document.createElement('div');
+                ov.id = 'summerEventModal';
+                ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147483050; display:flex; align-items:center; justify-content:center; padding:18px;';
+                var rows = jp
+                    ? [['会員登録', '¥3,000', '登録後すぐ'], ['SNS体験団', '¥5,000', '毎月'], ['出席チェック', '¥100', '毎日'], ['しりとり', '¥150', '毎日']]
+                    : [['회원가입', '3만원', '가입 즉시'], ['SNS 체험단', '5만원', '매월'], ['출석체크', '1,000원', '매일'], ['끝말잇기', '1,500원', '매일']];
+                var cards = rows.map(function (r) {
+                    return '<div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">'
+                        + '<div><div style="font-size:13.5px; color:#7c2d12;">' + r[0] + '</div><div style="font-size:11px; color:#c2683a;">' + r[2] + '</div></div>'
+                        + '<div style="font-size:16px; color:#ea580c;">' + r[1] + '</div></div>';
+                }).join('');
+                ov.innerHTML = '<div style="background:#fff; border-radius:18px; max-width:400px; width:100%; max-height:92vh; overflow-y:auto; padding:24px 22px; color:#334155;">'
+                    + '<div style="text-align:center; font-size:19px; color:#ea580c; margin-bottom:6px;">' + T2('카멜레온 8월 여름 무료 이벤트', 'カメレオン 8月 夏の無料イベント') + '</div>'
+                    + '<div style="text-align:center; font-size:12.5px; color:#b91c1c; margin-bottom:16px;">' + T2('8월 30일, 미사용 무료쿠폰은 모두 사라져요', '8月30日、未使用の無料クーポンはすべて消えます') + '</div>'
+                    + '<div style="display:grid; gap:8px;">' + cards + '</div>'
+                    + '<div style="text-align:center; margin:16px 0 6px; padding:12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:12px; font-size:15px; color:#92400e;">' + T2('합쳐서 매달 최대 12만원 무료!', '合わせて毎月最大12,000円分 無料！') + '</div>'
+                    + '<div style="text-align:center; font-size:11px; color:#94a3b8; margin-bottom:16px;">' + T2('매월 새 무료쿠폰 지급 · 매월 말일 미사용분 소멸', '毎月 新しい無料クーポン · 毎月末に未使用分は消滅') + '</div>'
+                    + '<button id="summerSignupBtn" style="width:100%; padding:14px; background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer;">' + T2('회원가입하고 3만원 받기', '会員登録して¥3,000もらう') + '</button>'
+                    + '<button id="summerCloseBtn" style="width:100%; margin-top:8px; padding:11px; background:#f1f5f9; color:#334155; border:none; border-radius:12px; font-size:13.5px; cursor:pointer;">' + T2('닫기', '閉じる') + '</button>'
+                    + '</div>';
+                document.body.appendChild(ov);
+                var close = function () { try { ov.remove(); } catch (e) {} };
+                ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+                document.getElementById('summerCloseBtn').onclick = close;
+                document.getElementById('summerSignupBtn').onclick = function () { close(); if (window.openAuthModal) { try { window.openAuthModal('signup'); } catch (e) {} } };
+            };
+            if (lang === 'kr' || lang === 'ko' || lang === 'ja') {
+                var _hh = document.querySelector('#heroWorks .hw-head');
+                if (_hh) { _hh.style.cursor = 'pointer'; _hh.setAttribute('title', (lang === 'ja') ? 'タップで詳細' : '눌러서 자세히 보기'); _hh.onclick = function () { if (window.openSummerEvent) window.openSummerEvent(); }; }
+            }
             // 2026-07-27: 해외(비한국) 사이트는 타이틀이 길어 모바일에서 2줄로 넘어가 아래 이미지를 가림.
             //   hw-i18n 클래스로 모바일 타이틀 폰트를 줄여 한 줄에 들어오게 한다(한국어는 그대로).
             document.getElementById('heroWorks').classList.toggle('hw-i18n', lang !== 'kr' && lang !== 'ko');
