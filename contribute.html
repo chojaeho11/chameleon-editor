@@ -128,7 +128,16 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <h2 style="font-size:16px; font-weight:700;" id="i18nSettleH">디자이너 정산</h2>
         </div>
         <!-- v654: 명확한 흐름 - 적립 → 대기 → 지급 -->
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;">
+        <!-- 2026-08-14: 모바일에서 4칸이 너무 좁아 글자가 세로로 쌓임 → 좁은 화면은 2×2 로 -->
+        <style>
+            @media (max-width:560px){
+                #settlementCard .se-stat-grid{ grid-template-columns:repeat(2,1fr) !important; }
+            }
+            @media (max-width:340px){
+                #settlementCard .se-stat-grid{ grid-template-columns:1fr !important; }
+            }
+        </style>
+        <div class="se-stat-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;">
             <div style="background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.3); border-radius:10px; padding:12px;">
                 <div style="font-size:10.5px; color:#fde68a; font-weight:600; letter-spacing:0.5px;" id="i18nSeAssetLbl">자산 적립 (출금 가능)</div>
                 <div style="font-size:18px; font-weight:700; margin-top:4px; color:#fbbf24;" id="seAssetTotal">-</div>
