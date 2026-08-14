@@ -289,7 +289,7 @@
             bov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147482996; display:flex; align-items:center; justify-content:center; padding:14px;';
             bov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:430px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">'
                 + '<div style="padding:15px 18px 8px;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:16px;font-weight:700;color:#4c1d95;">' + T2('오늘의 잡담', '今日のひとこと', 'Today chat') + '</div><button id="rhTbX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
-                + '<div style="padding:0 18px 8px;font-size:11.5px;color:#94a3b8;">' + T2('한마디 남기면 출석 완료! (하루 1회 · ' + won(2000) + ')', 'ひとことで出席完了！', 'Post to check in!') + '</div>'
+                + '<div style="padding:0 18px 8px;font-size:11.5px;color:#7c3aed;line-height:1.5;">' + T2('한마디 남기면 출석 완료! (하루 1회 · ' + won(2000) + ')<br>가벼운 인사나 농담, 내 회사 홍보도 좋아요 :)', 'ひとことで出席完了！ 挨拶や冗談、自社PRもOK :)', 'Post to check in! A hello, a joke, or your own promo — all welcome :)') + '</div>'
                 + '<div id="rhTbList" style="flex:1;overflow-y:auto;padding:0 18px;min-height:120px;"><div style="text-align:center;color:#cbd5e1;padding:20px;font-size:12px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div></div>'
                 + '<div style="padding:12px 16px 16px;border-top:1px solid #f1f5f9;"><textarea id="rhTbInput" rows="2" placeholder="' + T2('오늘 하고 싶은 한마디 :)', '今日のひとこと :)', 'Say hi :)') + '" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;resize:none;"></textarea>'
                 + '<button id="rhTbGo" style="margin-top:6px;width:100%;padding:11px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">' + T2('글쓰고 출석하기', '投稿して出席', 'Post & check in') + '</button></div></div>';
@@ -332,7 +332,7 @@
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
                 + rowHtml(2, T2('이달 첫 접속', '今月の初ログイン', 'Monthly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
                 + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor'), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : (st.sns !== 'none' ? doneTag(st.sns === 'approved' ? T2('승인', '承認', 'Approved') : T2('신청됨', '申請済み', 'Applied')) : actBtn('rhAct3', T2('신청', '申請', 'Apply'))))
-                + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in'), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('오늘 완료', '本日完了', 'Done')) : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post'))))
+                + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post')))
                 + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
             var note = '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:14px 0 4px;">' + T2('합쳐서 매달 최대 16만원 · 매월 말일 미사용분 소멸', '合計 毎月最大¥16,000 · 毎月末に未使用分は消滅', 'Up to ~$160/mo · resets monthly') + '</div>';
             card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
@@ -340,17 +340,7 @@
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
             if (byId('rhAct1')) byId('rhAct1').onclick = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
             if (byId('rhAct2')) byId('rhAct2').onclick = async function () { this.disabled = true; try { var r = await sbc.rpc('monthly_gift_claim'); var d = r && r.data; if (d && d.ok && d.granted) celebrate(10000); } catch (e) {} render(); };
-            if (byId('rhAct3')) byId('rhAct3').onclick = function () {
-                var ex = byId('rhExtra3'); if (!ex) return;
-                ex.innerHTML = '<div style="margin-top:8px;display:flex;gap:6px;"><input id="rhSnsUrl" type="url" placeholder="https://blog/threads/insta…" style="flex:1;min-width:0;padding:8px 10px;border:1px solid #fed7aa;border-radius:8px;font-size:12px;"><button id="rhSnsGo" style="padding:8px 12px;background:#ea580c;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">' + T2('신청', '申請', 'Go') + '</button></div>';
-                byId('rhSnsGo').onclick = async function () {
-                    var url = (byId('rhSnsUrl').value || '').trim();
-                    if (!/^https?:\/\//i.test(url)) { alert(T2('http(s):// 주소를 입력해 주세요', 'http(s):// のURLを入力', 'Enter a valid URL')); return; }
-                    this.disabled = true;
-                    try { var r = await sbc.rpc('blog_monitor_apply', { _channel_url: url, _country: sc }); var d = r && r.data; if (d && d.ok) { alert(T2('신청 완료! 승인되면 매월 5만원이 지급돼요', '申請完了！承認されると毎月¥5,000', 'Applied! 50k/mo after approval')); } else { alert(T2('신청 실패', '申請失敗', 'Failed') + (d && d.error ? ': ' + d.error : '')); } } catch (e) { alert(T2('신청 실패', '申請失敗', 'Failed')); }
-                    render();
-                };
-            };
+            if (byId('rhAct3')) byId('rhAct3').onclick = function () { if (window.openBlogRecruitInfo) window.openBlogRecruitInfo(); else if (window.openSnsRankingModal) window.openSnsRankingModal(); };
             if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
             if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
         }
@@ -485,8 +475,8 @@
           + '.wc-need{text-align:center;font-size:14px;color:#0f172a;margin-bottom:12px}'
           + '.wc-need b{color:#4f46e5;font-size:19px}'
           + '.wc-inrow{display:flex;gap:8px}'
-          + '.wc-in{flex:1;padding:12px 14px;border:1.5px solid #d7dce5;border-radius:12px;font-size:16px;font-family:inherit;outline:none}'
-          + '.wc-go{padding:12px 18px;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:15px;cursor:pointer;white-space:nowrap}'
+          + '.wc-in{flex:1;min-width:0;padding:12px 12px;border:1.5px solid #d7dce5;border-radius:12px;font-size:15px;font-family:inherit;outline:none}'
+          + '.wc-go{flex:0 0 auto;padding:12px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:15px;cursor:pointer;white-space:nowrap}'
           + '.wc-msg{min-height:18px;font-size:13px;margin-top:10px;text-align:center}'
           + '.wc-foot{margin-top:12px;font-size:12px;color:#94a3b8;text-align:center}'
           + '.wc-x{position:absolute;top:9px;right:12px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(255,255,255,.28);color:#fff;font-size:20px;cursor:pointer}';
@@ -500,9 +490,9 @@
         var _l = lang();
         var gl = (_l === 'ja') ? 'ja' : (_l === 'ko' || _l === 'kr') ? 'kr' : 'en';
         var G = ({
-            kr: { re: /[^가-힣]/, title: '끝말잇기 🎮', desc: '단어를 이으면 마일리지 500원 + 생성권 1장! (하루 3회)', place: '단어 입력', go: '잇기', next: '다음 시작 글자: ', any: '아무 단어나 시작하세요!', empty: '아직 단어가 없어요. 첫 단어를 시작!', invalid: '순수 한글 단어만 가능해요', dup: '이미 사용된 단어예요', short: '2글자 이상 입력하세요', endn: '', today: '오늘 보상 ', success: '끝말잇기 성공!', maxed: '이어졌어요! (오늘 보상은 다 받았어요)', login: '로그인 후 이용해주세요', retry: '다시 시도해주세요', chain: function (c) { return '「' + c + '」(으)로 시작해야 해요'; } },
-            ja: { re: /[^ぁ-んァ-ヶー]/, title: 'しりとり 🎮', desc: '単語をつなぐと500 + チケット1枚！(1日3回)', place: 'ひらがな・カタカナ', go: 'つなぐ', next: '次の頭文字: ', any: '好きな単語で開始！', empty: 'まだ単語がありません。最初の単語を！', invalid: 'ひらがな・カタカナのみ', dup: '既に使われた単語です', short: '2文字以上入力してください', endn: '「ん」で終わる単語はダメ！', today: '本日 ', success: 'しりとり成功！', maxed: 'つながった！(本日の報酬は上限)', login: 'ログインしてください', retry: '再試行してください', chain: function (c) { return '「' + c + '」で始めてください'; } },
-            en: { re: /[^a-zA-Z]/, title: 'Word Chain 🎮', desc: 'Chain a word: +500 mileage & 1 credit! (3/day)', place: 'Type an English word', go: 'Chain', next: 'Next starts with: ', any: 'Start with any word!', empty: 'No words yet — start it!', invalid: 'English letters only', dup: 'Already used', short: 'At least 2 letters', endn: '', today: 'Today ', success: 'Word chained!', maxed: 'Chained! (daily reward maxed)', login: 'Please log in first.', retry: 'Try again', chain: function (c) { return 'Must start with "' + c + '"'; } }
+            kr: { re: /[^가-힣]/, title: '끝말잇기 🎮', desc: '단어를 이으면 마일리지 1,000원 + 생성권 1장! (하루 1회)', place: '단어 입력', go: '잇기', next: '다음 시작 글자: ', any: '아무 단어나 시작하세요!', empty: '아직 단어가 없어요. 첫 단어를 시작!', invalid: '순수 한글 단어만 가능해요', dup: '이미 사용된 단어예요', short: '2글자 이상 입력하세요', endn: '', today: '오늘 보상 ', success: '끝말잇기 성공!', maxed: '이어졌어요! (오늘 보상은 다 받았어요)', login: '로그인 후 이용해주세요', retry: '다시 시도해주세요', chain: function (c) { return '「' + c + '」(으)로 시작해야 해요'; } },
+            ja: { re: /[^ぁ-んァ-ヶー]/, title: 'しりとり 🎮', desc: '単語をつなぐと100円分 + チケット1枚！(1日1回)', place: 'ひらがな・カタカナ', go: 'つなぐ', next: '次の頭文字: ', any: '好きな単語で開始！', empty: 'まだ単語がありません。最初の単語を！', invalid: 'ひらがな・カタカナのみ', dup: '既に使われた単語です', short: '2文字以上入力してください', endn: '「ん」で終わる単語はダメ！', today: '本日 ', success: 'しりとり成功！', maxed: 'つながった！(本日の報酬は上限)', login: 'ログインしてください', retry: '再試行してください', chain: function (c) { return '「' + c + '」で始めてください'; } },
+            en: { re: /[^a-zA-Z]/, title: 'Word Chain 🎮', desc: 'Chain a word: +$1 & 1 credit! (1/day)', place: 'Type an English word', go: 'Chain', next: 'Next starts with: ', any: 'Start with any word!', empty: 'No words yet — start it!', invalid: 'English letters only', dup: 'Already used', short: 'At least 2 letters', endn: '', today: 'Today ', success: 'Word chained!', maxed: 'Chained! (daily reward maxed)', login: 'Please log in first.', retry: 'Try again', chain: function (c) { return 'Must start with "' + c + '"'; } }
         })[gl];
         var norm = function (s) { return gl === 'en' ? s.toLowerCase() : s; };
 
@@ -530,7 +520,7 @@
             }).join('') || ('<span style="color:#94a3b8;font-size:13px">' + G.empty + '</span>');
             nextChar = st && st.next_char;
             ov.querySelector('#wcNeed').innerHTML = nextChar ? (G.next + '<b>' + nextChar + '</b>') : G.any;
-            ov.querySelector('#wcFoot').textContent = G.today + ((st && st.plays_today) || 0) + ' / ' + ((st && st.cap) || 3);
+            ov.querySelector('#wcFoot').textContent = G.today + Math.min((st && st.plays_today) || 0, 1) + ' / ' + 1;
         }
 
         if (!sb) { msgEl.style.color = '#dc2626'; msgEl.textContent = G.login; }
