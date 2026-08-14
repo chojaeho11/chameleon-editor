@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814233252';
+    var CV = '20260815003641';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -19370,8 +19370,15 @@ if (w >= 20 && h >= 20) {
         // config.js에서 설정된 currentUser 변수 사용
         if (window.currentUser) {
             console.log("✅ 로그인 됨:", window.currentUser.email);
-            // 2026-07-28: 그날 첫 접속 시 오늘의 선물(접속보상) + 오늘의 미션(게임·자유게시판) 안내 팝업. 하루 1회.
-            try { if (window.dailyGiftPopup) window.dailyGiftPopup(); } catch (_dg) {}
+            // 2026-08-15: 그날 첫 접속 시 '오늘의 선물' 팝업 대신 이벤트 리워드 허브 자동 오픈 (사장님 요청). 하루 1회.
+            try {
+                var _rhDay = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); // KST 날짜 기준
+                var _rhKey = 'rewardHubShown_' + _rhDay;
+                if (!localStorage.getItem(_rhKey)) {
+                    localStorage.setItem(_rhKey, '1');
+                    setTimeout(function () { try { if (window.openRewardHub) window.openRewardHub(); } catch (e) {} }, 700);
+                }
+            } catch (_dg) {}
             // 2026-08-14: 매월 첫 접속 무료 선물 3만원 (월 1회, 서버에서 중복방지).
             try { if (window.claimMonthlyGift) window.claimMonthlyGift(); } catch (_mg) {}
             if (btnLogin) {
