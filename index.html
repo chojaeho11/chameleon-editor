@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815015205';
+    var CV = '20260815015900';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5469,14 +5469,14 @@ async function openBlogRecruitInfo(){
 function _blogRecruitBuild(jp, loggedIn, status){
     var ov=document.getElementById('blogRecruitModal'); if(ov) ov.remove();
     ov=document.createElement('div'); ov.id='blogRecruitModal';
-    ov.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(3px); z-index:2000000; display:flex; align-items:center; justify-content:center; padding:20px;';
+    ov.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(3px); z-index:2147483030; display:flex; align-items:center; justify-content:center; padding:20px;';
     var title = jp ? 'ブログ体験モニター募集' : '블로그 체험단 모집';
     var intro = jp
         ? 'SNS体験団の皆さまに毎月5,000円分（送料込み）の無料ポイントを進呈します。お好きな商品を無料で購入し、SNS・ブログにPRレビューを投稿してください。'
         : 'SNS 체험단에게 매월 5만 포인트(배송비 포함)를 드립니다. 원하는 제품을 무료로 구매하고 SNS·블로그에 홍보 후기를 남겨주세요.';
     var threadsMsg = jp
-        ? '🧵 Threads ユーザーは特典2倍！<br><br>- 応援イベント ポイント10,000円分！'
-        : '🧵 스레드(Threads) 이용자는 혜택 2배!<br><br>- 응원 이벤트 포인트 10만!';
+        ? '🎉 SNS体験団 全員に毎月5,000円分！<br><br>ブログ・Threads・Instagram など、お好きなSNSで宣伝レビューを投稿してください。'
+        : '🎉 SNS 체험단 누구나 매월 5만원!<br><br>블로그·스레드·인스타 등 원하는 SNS에 홍보 후기를 올려주세요.';
     var rankMsg = jp
         ? '🏆 SNS PRランキング 現金イベント <b>(〜10/15 16:00)</b><br>投稿1件1点・力作3点・バズり5点！ 上位 1位10万円…5位5千円 + バズり最多1件3万円！<br><span style="font-size:11px;color:#b91c1c;">※ カメレオン印刷と無関係、または雑な連投のみは対象外</span>'
         : '🏆 SNS 홍보 랭킹 현금 이벤트 <b>(~10/15 16:00)</b><br>게시글 1점·정성글 3점·조회수 터짐 5점! 상위 1위 100만…5위 5만원 + 조회수 최다 1건 30만원!<br><span style="font-size:11px;color:#b91c1c;">※ 카멜레온과 무관하거나 도배성 글만 있는 경우 지급 제외</span>';
@@ -5506,7 +5506,7 @@ function _blogRecruitBuild(jp, loggedIn, status){
               + '<div style="font-size:12.5px; color:#334155; margin-bottom:6px;">'+(jp?'あなたの宣伝チャンネルURL（ブログ / Threads / Instagram など）':'홍보채널 주소 (블로그 / 스레드 / 인스타 등)')+'</div>'
               + '<input id="blogApplyChannel" type="url" placeholder="https://..." style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box;">'
               + '<button id="blogApplyBtn" onclick="_blogRecruitApply()" style="'+btnStyle+'">'+(jp?'応募する':'신청하기')+'</button>'
-              + '<button onclick="_blogRecruitApply()" style="width:100%; margin-top:10px; padding:12px; background:#111; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">'+(jp?'🧵 スレ友ならクリック！2倍還元！':'🧵 쓰레드 친구라면 클릭! 2배 적립!')+'</button>'
+              + ''
               + '<div style="margin-top:14px; display:flex; gap:18px; justify-content:center;">'
               +   '<span onclick="_blogRecruitHide(1)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'今日は表示しない':'오늘 그만 보기')+'</span>'
               +   '<span onclick="_blogRecruitHide(3)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'3日間表示しない':'3일간 보지 않기')+'</span>'
