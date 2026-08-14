@@ -298,7 +298,7 @@
             bov.addEventListener('click', function (e) { if (e.target === bov) closeBoard(); });
             document.getElementById('rhTbX').onclick = closeBoard;
             try {
-                var pr = await sbc.from('blog_posts').select('author_name, title, content, created_at').eq('category', 'freetalk').order('created_at', { ascending: false }).limit(20);
+                var pr = await sbc.from('blog_posts').select('author_name, title, content, created_at').eq('category', 'freetalk').eq('country_code', sc).order('created_at', { ascending: false }).limit(20);
                 var list = document.getElementById('rhTbList');
                 if (list) {
                     var posts = (pr && pr.data) || [];
