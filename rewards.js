@@ -260,10 +260,10 @@
         ov.addEventListener('click', function (e) { if (e.target === ov) closeHub(); });
 
         async function getState() {
-            var st = { logged_in: false, mileage: 0, monthly_gift_done: false, attendance_done: false, sns: 'none', uid: null, email: '', name: '' };
+            var st = { logged_in: false, mileage: 0, monthly_gift_done: false, attendance_done: false, first_cashback_done: false, sns: 'none', uid: null, email: '', name: '' };
             try { var u = await sbc.auth.getUser(); var user = u && u.data && u.data.user; if (user) { st.logged_in = true; st.uid = user.id; st.email = user.email || ''; } } catch (e) {}
             if (st.logged_in) {
-                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.monthly_gift_done = !!d.monthly_gift_done; st.attendance_done = !!d.attendance_done; } } catch (e) {}
+                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.monthly_gift_done = !!d.monthly_gift_done; st.attendance_done = !!d.attendance_done; st.first_cashback_done = !!d.first_cashback_done; } } catch (e) {}
                 try { var s = await sbc.rpc('blog_monitor_sync'); if (s && s.data) st.sns = s.data.status || 'none'; } catch (e) {}
                 try { var pf = await sbc.from('profiles').select('username').eq('id', st.uid).maybeSingle(); st.name = (pf && pf.data && pf.data.username) || (st.email.split('@')[0]) || 'user'; } catch (e) { st.name = (st.email.split('@')[0]) || 'user'; }
             }
@@ -331,7 +331,8 @@
                 + '<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:12px;margin:8px 0 14px;">'
                 + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
                 + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + (st.logged_in ? won(st.mileage) : '—') + '</div>'
-                + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>';
+                + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>'
+                + (st.logged_in ? '<div style="background:linear-gradient(135deg,#fce7f3,#f3e8ff);border:1px solid #f5d0fe;border-radius:12px;padding:11px 13px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="min-width:0;"><div style="font-size:13.5px;color:#a21caf;font-weight:700;">' + T2('첫 구매 20% 페이백', '初回購入20%キャッシュバック', '20% first-purchase cashback') + '</div><div style="font-size:11px;color:#c026d3;">' + T2('최대 20만원 · 현금·카드 결제 시 자동', '最大20,000円分 · 現金/カード決済で自動', 'Up to ~$200 · auto on cash/card') + '</div></div><div style="font-size:12px;flex-shrink:0;color:' + (st.first_cashback_done ? '#16a34a' : '#a21caf') + ';">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>' : '');
             var rows = ''
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
                 + rowHtml(2, T2('이번주 접속', '今週のログイン', 'Weekly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
