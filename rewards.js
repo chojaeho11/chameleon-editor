@@ -235,7 +235,7 @@
                 var sc = (window.__SITE_CODE || 'KR');
                 var jp = (sc === 'JP'), us = (sc !== 'KR' && sc !== 'JP');
                 var disp = jp ? 3000 : (us ? 30 : 30000);   // showRewardPopup 는 통화접미사만 붙이므로 사이트별 환산액 전달
-                window.showRewardPopup({ kind: 'mileage', title: jp ? '今月の無料プレゼント！' : (us ? 'Your monthly free gift!' : '이번 달 무료 선물!'), mileage: disp });
+                window.showRewardPopup({ kind: 'mileage', title: jp ? '今週の無料プレゼント！' : (us ? 'Your weekly free gift!' : '이번 주 무료 선물!'), mileage: disp });
             }
         } catch (e) {}
     };
@@ -334,8 +334,8 @@
                 + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>';
             var rows = ''
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
-                + rowHtml(2, T2('이달 첫 접속', '今月の初ログイン', 'Monthly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
-                + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor'), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : (st.sns !== 'none' ? doneTag(st.sns === 'approved' ? T2('승인', '承認', 'Approved') : T2('신청됨', '申請済み', 'Applied')) : actBtn('rhAct3', T2('신청', '申請', 'Apply'))))
+                + rowHtml(2, T2('이번주 접속', '今週のログイン', 'Weekly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
+                + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor') + (st.sns !== 'none' ? ' ✓' : ''), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : actBtn('rhAct3', T2('이벤트 보기', 'イベント', 'View')))
                 + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post')))
                 + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
             var note = '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:14px 0 4px;">' + T2('합쳐서 매달 최대 16만원 · 매월 말일 미사용분 소멸', '合計 毎月最大¥16,000 · 毎月末に未使用分は消滅', 'Up to ~$160/mo · resets monthly') + '</div>';
