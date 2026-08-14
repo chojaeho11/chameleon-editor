@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814191827';
+    var CV = '20260814230302';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1164,12 +1164,12 @@ window._tcmFallbackClick = function(code) {
             lang = String(lang).toLowerCase();
             var T = {
                 kr: { title:'<span class="hw-t-rest">카멜레온</span> <span class="hw-t-brand">8월 여름 무료 이벤트</span>',
-                      sub:'8월 30일 삭제 · 눌러서 자세히 보기',
+                      sub:'총 16만원 현금 지급 · 눌러서 자세히 보기',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
                 ja: { title:'<span class="hw-t-rest">カメレオン</span> <span class="hw-t-brand">8月 夏の無料イベント</span>',
                       // 2026-08-14: 夏の無料イベント（1行タイトル＋1行サブ、タップで詳細ポップアップ）
-                      sub:'8月30日で終了 · タップで詳細',
+                      sub:'合計16,000円分の現金支給 · タップで詳細',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
                 en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Global wholesale printer</span>',
@@ -1211,8 +1211,8 @@ window._tcmFallbackClick = function(code) {
                 ov.id = 'summerEventModal';
                 ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147483050; display:flex; align-items:center; justify-content:center; padding:18px;';
                 var rows = jp
-                    ? [['会員登録', '¥3,000', '登録後すぐ'], ['SNS体験団', '¥5,000', '毎月'], ['出席チェック', '¥100', '毎日'], ['しりとり', '¥150', '毎日']]
-                    : [['회원가입', '3만원', '가입 즉시'], ['SNS 체험단', '5만원', '매월'], ['출석체크', '1,000원', '매일'], ['끝말잇기', '1,500원', '매일']];
+                    ? [['会員登録', '¥3,000', '登録後すぐ'], ['毎月ログイン', '¥3,000', '毎月'], ['SNS体験団', '¥5,000', '毎月'], ['出席チェック', '¥100', '毎日'], ['しりとり', '¥150', '毎日']]
+                    : [['회원가입', '3만원', '가입 즉시'], ['매월 접속', '3만원', '매월'], ['SNS 체험단', '5만원', '매월'], ['출석체크', '1,000원', '매일'], ['끝말잇기', '1,500원', '매일']];
                 var cards = rows.map(function (r) {
                     return '<div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">'
                         + '<div><div style="font-size:13.5px; color:#7c2d12;">' + r[0] + '</div><div style="font-size:11px; color:#c2683a;">' + r[2] + '</div></div>'
@@ -1222,7 +1222,7 @@ window._tcmFallbackClick = function(code) {
                     + '<div style="text-align:center; font-size:19px; color:#ea580c; margin-bottom:6px;">' + T2('카멜레온 8월 여름 무료 이벤트', 'カメレオン 8月 夏の無料イベント') + '</div>'
                     + '<div style="text-align:center; font-size:12.5px; color:#b91c1c; margin-bottom:16px;">' + T2('8월 30일, 미사용 무료쿠폰은 모두 사라져요', '8月30日、未使用の無料クーポンはすべて消えます') + '</div>'
                     + '<div style="display:grid; gap:8px;">' + cards + '</div>'
-                    + '<div style="text-align:center; margin:16px 0 6px; padding:12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:12px; font-size:15px; color:#92400e;">' + T2('합쳐서 매달 최대 12만원 무료!', '合わせて毎月最大12,000円分 無料！') + '</div>'
+                    + '<div style="text-align:center; margin:16px 0 6px; padding:12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:12px; font-size:15px; color:#92400e;">' + T2('합쳐서 매달 최대 16만원 현금처럼 지급!', '合わせて毎月最大16,000円分を現金のように支給！') + '</div>'
                     + '<div style="text-align:center; font-size:11px; color:#94a3b8; margin-bottom:16px;">' + T2('매월 새 무료쿠폰 지급 · 매월 말일 미사용분 소멸', '毎月 新しい無料クーポン · 毎月末に未使用分は消滅') + '</div>'
                     + '<button id="summerSignupBtn" style="width:100%; padding:14px; background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer;">' + T2('회원가입하고 3만원 받기', '会員登録して¥3,000もらう') + '</button>'
                     + '<button id="summerCloseBtn" style="width:100%; margin-top:8px; padding:11px; background:#f1f5f9; color:#334155; border:none; border-radius:12px; font-size:13.5px; cursor:pointer;">' + T2('닫기', '閉じる') + '</button>'
