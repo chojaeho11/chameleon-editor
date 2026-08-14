@@ -254,7 +254,7 @@
         var ov = document.createElement('div');
         ov.id = 'rewardHubModal';
         ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147482990; display:flex; align-items:center; justify-content:center; padding:14px;';
-        ov.innerHTML = '<div id="rhCard" style="background:#fff; border-radius:18px; max-width:430px; width:100%; max-height:94vh; overflow-y:auto; padding:20px 18px; color:#334155;"><div style="text-align:center; color:#94a3b8; padding:40px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div></div>';
+        ov.innerHTML = '<div id="rhCard" style="background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,#7c3aed,#a855f7) border-box; border:3px solid transparent; border-radius:18px; max-width:430px; width:100%; max-height:94vh; overflow-y:auto; padding:20px 18px; color:#334155;"><div style="text-align:center; color:#94a3b8; padding:40px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div></div>';
         document.body.appendChild(ov);
         var closeHub = function () { try { ov.remove(); } catch (e) {} };
         ov.addEventListener('click', function (e) { if (e.target === ov) closeHub(); });
@@ -273,34 +273,73 @@
         var doneTag = function (t) { return '<span style="font-size:12px;color:#16a34a;">✓ ' + t + '</span>'; };
         var lockTag = function () { return '<span style="font-size:11.5px;color:#cbd5e1;">' + T2('로그인 후', 'ログイン後', 'Login') + '</span>'; };
         var actBtn = function (id, t) { return '<button id="' + id + '" style="padding:8px 13px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:9px;font-size:12.5px;cursor:pointer;white-space:nowrap;">' + t + '</button>'; };
+        var esc = function (s) { return String(s == null ? '' : s).replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); };
         var rowHtml = function (n, title, amt, right) {
-            return '<div style="border:1px solid #fed7aa;border-radius:12px;padding:11px 12px;">'
+            return '<div style="border:1px solid #e9d5ff;border-radius:12px;padding:11px 12px;">'
                 + '<div style="display:flex;align-items:center;gap:10px;">' + badge(n)
-                + '<div style="flex:1;min-width:0;"><div style="font-size:13.5px;color:#7c2d12;">' + title + '</div><div style="font-size:11px;color:#ea580c;">' + amt + '</div></div>'
+                + '<div style="flex:1;min-width:0;"><div style="font-size:13.5px;color:#4c1d95;">' + title + '</div><div style="font-size:14px;font-weight:800;color:#7c3aed;">' + amt + '</div></div>'
                 + '<div style="flex-shrink:0;">' + right + '</div></div>'
                 + '<div id="rhExtra' + n + '"></div></div>';
         };
+        // 오늘의 잡담 게시판 모달 — 여러 사람 글 보기 + 글 쓰면 출석 완료(닫힘). 끝말잇기처럼 별도 모달.
+        async function openTodayTalk(st) {
+            var bov = document.getElementById('rhTalkBoard'); if (bov) bov.remove();
+            bov = document.createElement('div');
+            bov.id = 'rhTalkBoard';
+            bov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147482996; display:flex; align-items:center; justify-content:center; padding:14px;';
+            bov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:430px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">'
+                + '<div style="padding:15px 18px 8px;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:16px;font-weight:700;color:#4c1d95;">' + T2('오늘의 잡담', '今日のひとこと', 'Today chat') + '</div><button id="rhTbX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
+                + '<div style="padding:0 18px 8px;font-size:11.5px;color:#94a3b8;">' + T2('한마디 남기면 출석 완료! (하루 1회 · ' + won(2000) + ')', 'ひとことで出席完了！', 'Post to check in!') + '</div>'
+                + '<div id="rhTbList" style="flex:1;overflow-y:auto;padding:0 18px;min-height:120px;"><div style="text-align:center;color:#cbd5e1;padding:20px;font-size:12px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div></div>'
+                + '<div style="padding:12px 16px 16px;border-top:1px solid #f1f5f9;"><textarea id="rhTbInput" rows="2" placeholder="' + T2('오늘 하고 싶은 한마디 :)', '今日のひとこと :)', 'Say hi :)') + '" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;resize:none;"></textarea>'
+                + '<button id="rhTbGo" style="margin-top:6px;width:100%;padding:11px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">' + T2('글쓰고 출석하기', '投稿して出席', 'Post & check in') + '</button></div></div>';
+            document.body.appendChild(bov);
+            var closeBoard = function () { try { bov.remove(); } catch (e) {} };
+            bov.addEventListener('click', function (e) { if (e.target === bov) closeBoard(); });
+            document.getElementById('rhTbX').onclick = closeBoard;
+            try {
+                var pr = await sbc.from('blog_posts').select('author_name, title, content, created_at').eq('category', 'freetalk').order('created_at', { ascending: false }).limit(20);
+                var list = document.getElementById('rhTbList');
+                if (list) {
+                    var posts = (pr && pr.data) || [];
+                    list.innerHTML = posts.length ? posts.map(function (p) {
+                        return '<div style="padding:9px 0;border-bottom:1px solid #f1f5f9;"><div style="font-size:12.5px;color:#334155;line-height:1.5;word-break:break-word;">' + esc(p.content || p.title || '') + '</div><div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + esc(p.author_name || '') + '</div></div>';
+                    }).join('') : '<div style="text-align:center;color:#cbd5e1;padding:20px;font-size:12px;">' + T2('첫 글을 남겨보세요!', '最初のひとことを！', 'Be the first!') + '</div>';
+                }
+            } catch (e) {}
+            document.getElementById('rhTbGo').onclick = async function () {
+                var txt = (document.getElementById('rhTbInput').value || '').trim();
+                if (txt.length < 1) { document.getElementById('rhTbInput').focus(); return; }
+                this.disabled = true;
+                try { await sbc.from('blog_posts').insert({ category: 'freetalk', country_code: sc, author_id: st.uid, author_name: st.name, author_email: st.email, title: txt.slice(0, 80), content: txt }); } catch (e) {}
+                var got = false;
+                try { var r = await sbc.rpc('attendance_claim'); var d = r && r.data; if (d && d.ok && d.mileage_added) got = true; } catch (e) {}
+                closeBoard();
+                if (got) celebrate(2000, T2('출석 완료! 포인트 지급', '出席完了！', 'Checked in!'));
+                render();
+            };
+        }
         async function render() {
             var st = await getState();
             var card = document.getElementById('rhCard'); if (!card) return;
-            var top = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
-                + '<div style="font-size:17px;color:#ea580c;">' + T2('여름 무료 이벤트', '夏の無料イベント', 'Free Event') + '</div>'
+            var top = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">'
+                + '<div style="font-size:16px;font-weight:800;letter-spacing:2.5px;color:#7c3aed;">SUMMER EVENT</div>'
                 + '<button id="rhCloseX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
-                + '<div style="text-align:center;background:linear-gradient(135deg,#fff7ed,#ffedd5);border-radius:14px;padding:12px;margin-bottom:14px;">'
-                + '<div style="font-size:12px;color:#9a3412;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
-                + '<div style="font-size:26px;color:#ea580c;">' + (st.logged_in ? won(st.mileage) : '—') + '</div></div>';
+                + '<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:12px;margin:8px 0 14px;">'
+                + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
+                + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + (st.logged_in ? won(st.mileage) : '—') + '</div></div>';
             var rows = ''
-                + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(30000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
-                + rowHtml(2, T2('이달 첫 접속', '今月の初ログイン', 'Monthly login'), won(30000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
+                + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
+                + rowHtml(2, T2('이달 첫 접속', '今月の初ログイン', 'Monthly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
                 + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor'), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : (st.sns !== 'none' ? doneTag(st.sns === 'approved' ? T2('승인', '承認', 'Approved') : T2('신청됨', '申請済み', 'Applied')) : actBtn('rhAct3', T2('신청', '申請', 'Apply'))))
-                + rowHtml(4, T2('출석 · 오늘의 잡담', '出席 · 今日のひとこと', 'Check-in'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('오늘 완료', '本日完了', 'Done')) : actBtn('rhAct4', T2('한마디 쓰기', 'ひとこと', 'Post'))))
-                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1500) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
+                + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in'), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('오늘 완료', '本日完了', 'Done')) : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post'))))
+                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
             var note = '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:14px 0 4px;">' + T2('합쳐서 매달 최대 16만원 · 매월 말일 미사용분 소멸', '合計 毎月最大¥16,000 · 毎月末に未使用分は消滅', 'Up to ~$160/mo · resets monthly') + '</div>';
             card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
             var byId = function (id) { return document.getElementById(id); };
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
-            if (byId('rhAct1')) byId('rhAct1').onclick = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(30000, T2('가입 완료! 3만원 지급', '登録完了！¥3,000付与', 'Welcome! Reward granted')); render(); }); } };
-            if (byId('rhAct2')) byId('rhAct2').onclick = async function () { this.disabled = true; try { var r = await sbc.rpc('monthly_gift_claim'); var d = r && r.data; if (d && d.ok && d.granted) celebrate(30000); } catch (e) {} render(); };
+            if (byId('rhAct1')) byId('rhAct1').onclick = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
+            if (byId('rhAct2')) byId('rhAct2').onclick = async function () { this.disabled = true; try { var r = await sbc.rpc('monthly_gift_claim'); var d = r && r.data; if (d && d.ok && d.granted) celebrate(10000); } catch (e) {} render(); };
             if (byId('rhAct3')) byId('rhAct3').onclick = function () {
                 var ex = byId('rhExtra3'); if (!ex) return;
                 ex.innerHTML = '<div style="margin-top:8px;display:flex;gap:6px;"><input id="rhSnsUrl" type="url" placeholder="https://blog/threads/insta…" style="flex:1;min-width:0;padding:8px 10px;border:1px solid #fed7aa;border-radius:8px;font-size:12px;"><button id="rhSnsGo" style="padding:8px 12px;background:#ea580c;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">' + T2('신청', '申請', 'Go') + '</button></div>';
@@ -312,18 +351,7 @@
                     render();
                 };
             };
-            if (byId('rhAct4')) byId('rhAct4').onclick = function () {
-                var ex = byId('rhExtra4'); if (!ex) return;
-                ex.innerHTML = '<div style="margin-top:8px;"><textarea id="rhTalk" rows="2" placeholder="' + T2('오늘 하고 싶은 한마디를 남겨보세요 :)', '今日のひとこと :)', 'Say hi :)') + '" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #fed7aa;border-radius:8px;font-size:12.5px;resize:vertical;"></textarea><button id="rhTalkGo" style="margin-top:6px;width:100%;padding:9px;background:#ea580c;color:#fff;border:none;border-radius:8px;font-size:12.5px;cursor:pointer;">' + T2('등록하고 출석', '投稿して出席', 'Post & check-in') + '</button></div>';
-                byId('rhTalkGo').onclick = async function () {
-                    var txt = (byId('rhTalk').value || '').trim();
-                    if (txt.length < 1) { byId('rhTalk').focus(); return; }
-                    this.disabled = true;
-                    try { await sbc.from('blog_posts').insert({ category: 'freetalk', country_code: sc, author_id: st.uid, author_name: st.name, author_email: st.email, title: txt.slice(0, 80), content: txt }); } catch (e) {}
-                    try { var r = await sbc.rpc('attendance_claim'); var d = r && r.data; if (d && d.ok && d.mileage_added) celebrate(d.mileage_added, T2('출석 완료! 포인트 지급', '出席完了！ポイント付与', 'Checked in!')); } catch (e) {}
-                    render();
-                };
-            };
+            if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
             if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
         }
         render();
