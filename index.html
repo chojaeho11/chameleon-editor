@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815011739';
+    var CV = '20260815012054';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -885,10 +885,10 @@ if ('caches' in window) {
             #btnSnsTop{ display:none; }
             html[data-site="KR"] #btnSnsTop, html[data-site="JP"] #btnSnsTop{ display:inline-flex !important; align-items:center; }
         </style>
-        <button class="btn" id="btnSnsTop" onclick="window._tbRetry('openBlogRecruitInfo')" title="SNS 체험단 모집" style="margin-right:6px; background:linear-gradient(135deg,#f472b6,#c084fc); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; animation:snsTopPulse 1.7s ease-in-out infinite;">
-            <span id="snsTopLabel">🎉 SNS 체험단</span>
+        <button class="btn" id="btnSnsTop" onclick="window._tbRetry('openRewardHub')" title="무료쿠폰 이벤트" style="margin-right:6px; background:linear-gradient(135deg,#f472b6,#c084fc); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; animation:snsTopPulse 1.7s ease-in-out infinite;">
+            <span id="snsTopLabel">🎁 무료쿠폰!</span>
         </button>
-        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('snsTopLabel');if(el)el.textContent=(c==='JP')?'🎉 SNS体験団':'🎉 SNS 체험단';})();</script>
+        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('snsTopLabel');if(el)el.textContent=(c==='JP')?'🎁 無料クーポン!':'🎁 무료쿠폰!';})();</script>
 
         <button class="btn" id="btnCartTop" onclick="window._tbRetry('_soToggleCart', true)" style="position:relative; margin-right:5px; background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
             <span id="cartTopLabel">장바구니</span>
