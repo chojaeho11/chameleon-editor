@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260814140441';
+    var CV = '20260814140839';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1163,13 +1163,13 @@ window._tcmFallbackClick = function(code) {
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'<span class="hw-t-brand">첫 구매 무료!</span> <span class="hw-t-rest">회원가입만 하면 무료쿠폰 팡팡</span>',
-                      sub:'가입 즉시 3만원! SNS체험단 5만 · 출석 매일 1천 · 끝말잇기 매일 1,500원 — 매달 최대 12만원 무료. 매월매월 고객님께 드리는 무료 선물',
+                kr: { title:'<span class="hw-t-brand">첫 구매 무료!</span> <span class="hw-t-rest">무료쿠폰 팡팡</span>',
+                      sub:'회원가입만 하면 매달 최대 12만원 무료 선물',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'<span class="hw-t-rest">日本の卸売印刷所</span> <span class="hw-t-brand">カメレオン印刷</span>',
-                      // 2026-07-27: モバイルで折り返して下の画像を隠す → タイトル短縮＋フォント縮小で1行に
-                      sub:'文字だけでAIがプロ級に。',
+                ja: { title:'<span class="hw-t-brand">初回購入 無料！</span> <span class="hw-t-rest">無料クーポンどんどん</span>',
+                      // 2026-08-14: 会員登録の無料クーポン訴求（1行タイトル＋1行サブ）
+                      sub:'会員登録だけで毎月最大12,000円分の無料プレゼント',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
                 en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Global wholesale printer</span>',
