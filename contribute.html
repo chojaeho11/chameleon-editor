@@ -165,6 +165,13 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
         </div>
     </div>
 
+    <!-- 2026-08-14: 반려된 자산 + 사유 — 디자이너가 관리자 반려 메시지를 확인 (텍스트는 loadSettlement 에서 언어별 세팅) -->
+    <div id="seRejectedBox" style="display:none; background:#fff; border:1px solid #fecaca; border-radius:14px; padding:16px 20px; margin-bottom:18px;">
+        <h2 id="seRejH" style="font-size:15px; color:#b91c1c; margin-bottom:6px;">반려된 자산</h2>
+        <p id="seRejSub" style="font-size:12px; color:#7f1d1d; margin:0 0 12px; line-height:1.6;"></p>
+        <div id="seRejectedList"></div>
+    </div>
+
     <h2 class="section-title" id="i18nGuideH">적립금 가이드</h2>
     <p class="section-sub" id="i18nGuideSub">유형 별로 보상이 다릅니다.</p>
 
@@ -1151,6 +1158,37 @@ async function loadSettlement() {
         const totalLbl = _LANG === 'ja' ? '計' : _LANG === 'en' ? 'Total' : '총';
         document.getElementById('seAssetBreak').textContent =
             `T ${kBreak('template')}${kUnit} · V ${kBreak('vector')}${kUnit} · I ${kBreak('image')}${kUnit} · L ${kBreak('logo')}${kUnit} (${totalLbl} ${fmt(aTotal)})`;
+
+        // 2026-08-14: 반려된 자산 + 사유 — 디자이너가 관리자 반려 메시지를 직접 확인 (직접 디자인 아니면 반려 안내 포함)
+        try {
+            const rejH = _LANG === 'ja' ? '返却された作品' : _LANG === 'en' ? 'Returned submissions' : '반려된 자산';
+            const rejSub = _LANG === 'ja'
+                ? '以下の作品は返却されました。理由を確認し、修正して再度アップロードしてください。ご自身がデザインした画像でない場合は返却されます。'
+                : _LANG === 'en'
+                ? 'The submissions below were returned. Please review the reason, fix, and re-upload. Anything not designed by you will be rejected.'
+                : '아래 자산은 반려되었습니다. 사유를 확인하고 수정 후 다시 올려주세요. 자신이 직접 디자인한 이미지가 아니면 반려됩니다.';
+            const { data: rejs } = await sb.from('admin_templates')
+                .select('id, name, thumbnail_url, asset_url, rejection_reason, rejected_at')
+                .eq('submitted_by', uid)
+                .eq('status', 'rejected')
+                .order('rejected_at', { ascending: false })
+                .limit(30);
+            const rbox = document.getElementById('seRejectedBox');
+            const rlist = document.getElementById('seRejectedList');
+            if (rbox && rlist && rejs && rejs.length) {
+                const esc = s => String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+                document.getElementById('seRejH').textContent = rejH;
+                document.getElementById('seRejSub').textContent = rejSub;
+                rlist.innerHTML = rejs.map(r => {
+                    const thumb = r.thumbnail_url || r.asset_url || '';
+                    const img = thumb ? '<img src="' + esc(thumb) + '" style="width:52px; height:52px; object-fit:contain; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; flex-shrink:0;" alt="">' : '';
+                    const reason = r.rejection_reason ? '<div style="font-size:11.5px; color:#7f1d1d; line-height:1.55; white-space:pre-wrap; margin-top:4px;">' + esc(r.rejection_reason) + '</div>' : '';
+                    return '<div style="display:flex; gap:10px; padding:10px 0; border-top:1px solid #fee2e2;">' + img
+                        + '<div style="flex:1; min-width:0;"><div style="font-size:12.5px; color:#111; font-weight:600;">' + esc(r.name || '(무제)') + '</div>' + reason + '</div></div>';
+                }).join('');
+                rbox.style.display = 'block';
+            }
+        } catch (_rj) {}
 
         // 2) 고객 의뢰 — design_requests 에서 내가 작업한 (description 안에 [DESIGNER:uid] 포함) settled/completed
         const { data: orders } = await sb.from('design_requests')

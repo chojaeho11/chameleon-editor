@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260814102338';
+        var CV = '20260814105036';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -3126,7 +3126,10 @@ async function _tplRejectCore(id) {
     var sb = window.sb;
     if (!sb) throw new Error('Supabase 연결 실패');
     // 모든 자산 공통 — 배경 투명 PNG + 본인 창작물 (저작권) 두 조건 함께 안내
-    var msg = 'Your submission has been returned for the following reason(s):\n\n'
+    var msg = 'Your submission has been returned.\n\n'
+            + '⚠ IMPORTANT: We only accept artwork that YOU designed yourself. If the image is not your own original creation, it will be rejected.\n'
+            + '(자신이 직접 디자인한 이미지가 아니면 반려됩니다.)\n\n'
+            + 'Reason(s):\n\n'
             + '1) Please re-upload as a PNG with a TRANSPARENT background. Images with an opaque (solid color) background cannot be used as layered assets on customer designs.\n\n'
             + '2) Submissions must be your own original work. Any artwork that infringes copyright (logos, characters, illustrations, photographs from other creators or brands) will be rejected.\n\n'
             + 'Please fix the above and re-submit. Thank you.';

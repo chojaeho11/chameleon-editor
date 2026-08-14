@@ -154,23 +154,55 @@
         catch (e) { return null; }
     };
 
-    // 생성 전 사전 확인(차감 X) — { ok, reason?, ai_credit?, unlimited? }
+    // 유료 API(누끼+AI생성) 일일 게이트 — 하루 3회 무료 → 소진 시 적립권(ai_credit) → 그다음 구독. 구독자 무제한.
+    //   사전 확인(차감 X) — { ok, reason?('auth'|'limit'|'nosb'|'err'), daily_left?, ai_credit?, unlimited? }
     window.canGenerateAi = async function () {
         var sb = await sbReady(); if (!sb) return { ok: false, reason: 'nosb' };
         var uid = await loggedInUid(sb); if (!uid) return { ok: false, reason: 'auth' };
-        var st = await window.getRewardStatus();
-        if (!st || !st.ok) return { ok: false, reason: 'err' };
-        if (st.is_subscriber) return { ok: true, unlimited: true };
-        if ((st.ai_credit || 0) > 0) return { ok: true, ai_credit: st.ai_credit };
-        return { ok: false, reason: 'empty', ai_credit: 0 };
+        try {
+            var r = await sb.rpc('paid_api_status');
+            var st = (r && r.data) ? r.data : null;
+            if (!st || !st.ok) return { ok: false, reason: (st && st.reason) || 'err' };
+            if (st.is_subscriber) return { ok: true, unlimited: true };
+            if (st.can) return { ok: true, daily_left: st.daily_left, ai_credit: st.ai_credit };
+            return { ok: false, reason: 'limit', daily_left: 0, ai_credit: st.ai_credit || 0 };
+        } catch (e) { return { ok: false, reason: 'err' }; }
     };
+    window.canUsePaidApi = window.canGenerateAi;
 
-    // 생성 성공 후 실제 차감(구독자 무제한 통과) — { ok, reason?, ai_credit?, unlimited? }
-    window.consumeAiCredit = async function () {
+    // 성공 후 실제 차감(하루3 → 적립권 순, 구독자 no-op) — { ok, source?('daily'|'credit'|'subscriber'), daily_left?, ai_credit?, unlimited? }
+    window.consumeAiCredit = async function (kind) {
         var sb = await sbReady(); if (!sb) return { ok: false, reason: 'nosb' };
         var uid = await loggedInUid(sb); if (!uid) return { ok: false, reason: 'auth' };
-        try { var r = await sb.rpc('ai_credit_consume'); return (r && r.data) ? r.data : { ok: false, reason: 'err' }; }
+        try { var r = await sb.rpc('paid_api_consume', { p_kind: kind || 'paid' }); return (r && r.data) ? r.data : { ok: false, reason: 'err' }; }
         catch (e) { return { ok: false, reason: 'err' }; }
+    };
+    window.consumePaidApi = window.consumeAiCredit;
+
+    // 하루 한도 초과 시 구독 유도 모달 (누끼/AI생성 공용). 구독 흐름 없는 페이지(패브릭 등)에선 구독버튼 숨김.
+    window.showPaidApiUpsell = function () {
+        var sc = (window.__SITE_CODE || 'KR');
+        var jp = (sc === 'JP'), en = (sc !== 'KR' && sc !== 'JP');
+        var T = function (ko, ja, eng) { return jp ? ja : (en ? eng : ko); };
+        var old = document.getElementById('paidApiUpsell'); if (old) old.remove();
+        var ov = document.createElement('div');
+        ov.id = 'paidApiUpsell';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147483040; display:flex; align-items:center; justify-content:center; padding:20px;';
+        var hasSub = (typeof window.startSubscription === 'function');
+        var subBtn = hasSub
+            ? '<button id="_paidApiSubBtn" style="width:100%; padding:13px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:10px; font-size:15px; cursor:pointer; margin-bottom:10px;">' + T('구독하고 무제한 사용', '購読して無制限に使う', 'Subscribe for unlimited') + '</button>'
+            : '';
+        ov.innerHTML = '<div style="background:#fff; border-radius:16px; max-width:380px; width:100%; padding:26px 24px; color:#334155; text-align:center;">'
+            + '<div style="font-size:16px; color:#111; margin-bottom:10px;">' + T('오늘 무료 3회를 모두 사용했어요', '本日の無料3回を使い切りました', 'You have used all 3 free uses today') + '</div>'
+            + '<div style="font-size:13.5px; line-height:1.7; color:#475569; margin-bottom:18px;">' + T('배경 제거(누끼)·AI 이미지 생성은 하루 3회까지 무료예요. 구독하면 무제한으로 쓸 수 있고, 출석체크·게시판 글쓰기로 생성권을 더 모을 수도 있어요.', '背景除去（切り抜き）・AI画像生成は1日3回まで無料です。購読すれば無制限、出席チェックや掲示板投稿でチケットを追加で貯められます。', 'Background removal & AI image generation are free up to 3×/day. Subscribe for unlimited, or earn more credits via check-in and the community board.') + '</div>'
+            + subBtn
+            + '<button id="_paidApiCloseBtn" style="width:100%; padding:12px; background:#f1f5f9; color:#334155; border:none; border-radius:10px; font-size:14px; cursor:pointer;">' + T('닫기', '閉じる', 'Close') + '</button>'
+            + '</div>';
+        document.body.appendChild(ov);
+        var close = function () { try { ov.remove(); } catch (e) {} };
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        var cb = document.getElementById('_paidApiCloseBtn'); if (cb) cb.onclick = close;
+        var sb2 = document.getElementById('_paidApiSubBtn'); if (sb2) sb2.onclick = function () { close(); try { window.startSubscription('monthly'); } catch (e) {} };
     };
 
     // 간단 안내 토스트 (출석 이미 완료 등 — 선물팝업 아님)

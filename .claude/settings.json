@@ -478,7 +478,10 @@
       "Bash(awk 'NR>=5440 && NR<=5545 && /<script|<\\\\/script>/ {print NR\": \"$0}' index.html)",
       "Bash(./deploy.sh \"Blog monitor recruit: reset stale 30-day popup-hide \\(new localStorage key\\) so the launch-wave non-members see the invite again; shorten dismiss from 30 to 3 days\")",
       "Bash(awk 'NR>=5440 && NR<=5555 && /<script|<\\\\/script>/ {print NR\": \"$0}' index.html)",
-      "Bash(./deploy.sh \"Blog monitor recruit popup: add warm first-timer welcome line \\(free coupons ~150k KRW from signup event + SNS marketing, KR/JP\\) at top of the invite and apply screens\")"
+      "Bash(./deploy.sh \"Blog monitor recruit popup: add warm first-timer welcome line \\(free coupons ~150k KRW from signup event + SNS marketing, KR/JP\\) at top of the invite and apply screens\")",
+      "Bash(sed -i 's/rewards\\\\.js?v=7/rewards.js?v=8/g' board.html cotton_print.html index.html)",
+      "Bash(sed -i 's/mini-editor\\\\.js?v=555/mini-editor.js?v=556/g' cotton_print.html index.html)",
+      "Bash(./deploy.sh \"Paid-API daily cap: background-removal \\(nukki\\) + AI image-gen now limited to 3/day per user \\(login required\\), then earned credits, then subscribe \\(unlimited for subscribers\\) via new paid_api_status/consume RPCs; shared upsell modal. Designer reject message adds explicit self-design-only warning + designers now see returned assets and reasons on contribute page \\(mini-editor v556, rewards v8\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

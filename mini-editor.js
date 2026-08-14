@@ -5422,6 +5422,22 @@
             alert(_meT('me_alert_cutout','먼저 누끼를 따고 싶은 이미지를 선택해주세요'));
             return;
         }
+        // 2026-08-14: 유료 API 게이트 — 배경제거(누끼)도 하루 3회 무료/구독자 무제한. 로그인 필수(비회원 무제한 방지 = API 소진 원인).
+        //   fail-open: auth/limit 일 때만 차단, nosb/err(인프라)는 통과.
+        if (typeof window.canUsePaidApi === 'function') {
+            var _bgGate = await window.canUsePaidApi();
+            if (_bgGate && !_bgGate.ok && (_bgGate.reason === 'auth' || _bgGate.reason === 'limit' || _bgGate.reason === 'empty')) {
+                if (_bgGate.reason === 'auth') {
+                    alert(_meAiTr('로그인하면 배경 제거(누끼)를 하루 3회 무료로 쓸 수 있어요. 로그인 후 이용해주세요.',
+                                  'ログインすると背景除去（切り抜き）を1日3回まで無料でご利用いただけます。ログイン後にご利用ください。',
+                                  'Log in to remove backgrounds free up to 3x/day. Please log in first.'));
+                    if (window.openAuthModal) { try { window.openAuthModal('login'); } catch(_al){} }
+                } else if (window.showPaidApiUpsell) {
+                    window.showPaidApiUpsell();
+                }
+                return;
+            }
+        }
         var btn = $('meBgRemoveBtn');
         var origHtml = btn ? btn.innerHTML : '';
         if (btn) {
@@ -5453,6 +5469,8 @@
             var data = await resp.json();
             if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
             if (!data.image_base64) throw new Error('배경 제거 결과가 비어있습니다');
+            // 성공 → 유료 API 1회 차감(하루3 → 적립권 순, 구독자 no-op). fire&forget.
+            try { if (window.consumePaidApi) window.consumePaidApi('bgremove'); } catch(_cc){}
             var newSrc = 'data:image/png;base64,' + data.image_base64;
             // 선택된 이미지의 src 교체 — el 의 <img> 와 sel.src 동시 갱신.
             sel.src = newSrc;
@@ -7320,11 +7338,13 @@
         // 2026-07-28: 재생성도 이미지 생성권 1장 소비 — 생성 전 확인. fail-open(로그인안됨/소진 일 때만 차단).
         if (typeof window.canGenerateAi === 'function') {
             var _fgate = await window.canGenerateAi();
-            if (_fgate && !_fgate.ok && (_fgate.reason === 'auth' || _fgate.reason === 'empty')) {
-                say((_fgate.reason === 'auth')
-                        ? _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요.', 'ログインで無料の画像生成チケット3枚。', 'Log in to get 3 free image credits.')
-                        : _meAiTr('생성권을 다 썼어요. 출석·자유게시판 글쓰기로 충전하거나 구독하면 무제한이에요.', 'チケット切れ。出席・自由掲示板の投稿でチャージ、購読で無制限。', 'Out of credits — earn more via check-in or the free board, or subscribe.'),
-                    '#dc2626');
+            if (_fgate && !_fgate.ok && (_fgate.reason === 'auth' || _fgate.reason === 'limit' || _fgate.reason === 'empty')) {
+                if (_fgate.reason === 'auth') {
+                    say(_meAiTr('로그인하면 하루 3회 무료로 AI 이미지를 만들 수 있어요.', 'ログインすると1日3回まで無料でAI画像を作成できます。', 'Log in to create AI images free up to 3x/day.'), '#dc2626');
+                } else {
+                    say(_meAiTr('오늘 무료 3회를 다 썼어요. 구독하면 무제한, 출석·게시판 글쓰기로 더 받을 수도 있어요.', '本日の無料3回を使い切りました。購読で無制限、出席・掲示板投稿で追加も可能。', 'Used all 3 free today — subscribe for unlimited, or earn more via check-in/board.'), '#dc2626');
+                    if (window.showPaidApiUpsell) window.showPaidApiUpsell();
+                }
                 return;
             }
         }
@@ -7358,7 +7378,7 @@
             var d = await r.json();
             if (!r.ok || d.error) throw new Error(d.detail || d.error || ('HTTP ' + r.status));
             // 2026-07-28: 재생성 성공 → 생성권 1장 차감(구독자 no-op).
-            try { if (typeof window.consumeAiCredit === 'function') window.consumeAiCredit(); } catch (_cc) {}
+            try { if (typeof window.consumeAiCredit === 'function') window.consumeAiCredit('aigen'); } catch (_cc) {}
             // 2026-07-20 [중요] 원격 URL 을 그대로 대지에 올리면 canvas 가 taint 되어
             //   _meExportPNG(다운로드·주문 인쇄파일) 가 깨진다 → 반드시 dataURL 로 변환해서 넣는다.
             var outUrl = d.url;
@@ -7762,15 +7782,16 @@
         //   fail-open: 로그인안됨(auth)/소진(empty) 일 때만 차단. sb미준비·일시오류(nosb/err)는 통과시켜 정상 생성을 막지 않는다.
         if (typeof window.canGenerateAi === 'function') {
             var _gate = await window.canGenerateAi();
-            if (_gate && !_gate.ok && (_gate.reason === 'auth' || _gate.reason === 'empty')) {
+            if (_gate && !_gate.ok && (_gate.reason === 'auth' || _gate.reason === 'limit' || _gate.reason === 'empty')) {
                 var _gmsg = (_gate.reason === 'auth')
-                    ? _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요. 로그인 후 이용해주세요.',
-                              'ログインすると無料の画像生成チケット3枚をプレゼント。ログインしてご利用ください。',
-                              'Log in to get 3 free image credits. Please log in first.')
-                    : _meAiTr('이미지 생성권을 모두 사용했어요. 출석하거나 자유게시판에 글을 쓰면 충전되고, 구독하면 무제한이에요.',
-                              '画像生成チケットを使い切りました。出席や自由掲示板の投稿でチャージ、購読で無制限になります。',
-                              'You are out of image credits. Earn more with daily check-in or a free-board post, or subscribe for unlimited.');
+                    ? _meAiTr('로그인하면 하루 3회 무료로 AI 이미지를 만들 수 있어요. 로그인 후 이용해주세요.',
+                              'ログインすると1日3回まで無料でAI画像を作成できます。ログイン後にご利用ください。',
+                              'Log in to create AI images free up to 3x/day. Please log in first.')
+                    : _meAiTr('오늘 무료 3회를 모두 사용했어요. 구독하면 무제한, 출석·자유게시판 글쓰기로 더 받을 수도 있어요.',
+                              '本日の無料3回を使い切りました。購読で無制限、出席・自由掲示板の投稿で追加も可能です。',
+                              'You have used all 3 free uses today. Subscribe for unlimited, or earn more via check-in / the free board.');
                 if (err) { err.textContent = _gmsg; err.style.display = 'block'; try { err.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) {} }
+                if (_gate.reason !== 'auth' && window.showPaidApiUpsell) window.showPaidApiUpsell();
                 return;
             }
         }
@@ -8002,7 +8023,7 @@
             _meAiPendingUrl = url;
             _meAiLastUrl = url;
             // 2026-07-28: 생성 성공 → 생성권 1장 차감(구독자면 서버에서 no-op). 실패한 생성엔 과금 안 됨.
-            try { if (typeof window.consumeAiCredit === 'function') window.consumeAiCredit(); } catch (_cc) {}
+            try { if (typeof window.consumeAiCredit === 'function') window.consumeAiCredit('aigen'); } catch (_cc) {}
             // 2026-07-22: 결과는 왼쪽 무대에 꽉 차게 (max-height 260px 고정이던 것을 무대 높이에 맞춤)
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:100%; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
             try { _meAiStageShow('result'); } catch (_st) {}
