@@ -5351,6 +5351,8 @@ html, body { background: #ffffff !important; }
     //   수도권 용차 10만 / 지방 용차 20만. 칼선은 담당자 통해 받음 (인쇄 데이터 검증 후 작업).
     function _soIsPaperDisplayProduct(p) {
         if (!p) return false;
+        // 2026-08-14: 매니저 견적은 이름에 '종이매대' 가 들어가도 종이매대 제품으로 취급하지 않음(재가격 방지).
+        if (p.category === 'manager_quote' || (typeof p.code === 'string' && p.code.indexOf('manager_quote_') === 0)) return false;
         var code = (p.code || '').toLowerCase();
         var cat = (p.category || '').toLowerCase();
         var name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
@@ -19071,6 +19073,14 @@ html, body { background: #ffffff !important; }
         // 2026-06-08: 매니저견적 항목 — manager-set price 가 LINE total 진실. customSize.unit 등 계산 무시하고 그대로 사용.
         //   __pendingQuoteId 가 있으면 고객 결제창 (?quote=ID) 에서 로드된 것. it.price 사용.
         if (it && it.__pendingQuoteId && Number(it.price) > 0) return Number(it.price);
+        // 2026-08-14 [치명적 언더차징 fix]: _mgrQuoteOrder 로 만든 매니저 견적 항목(type/category/code=manager_quote)은
+        //   매니저가 입력한 금액이 LINE total 진실. 메모에 '종이매대/배너/현수막' 등 family 키워드가 들어가면
+        //   이름기반 감지(_soIsPaperDisplayProduct 5365 등)에 잡혀 재계산(150,000 등)돼 3백만원이 15만원으로 담기던 버그.
+        if (it && (it.type === 'manager_quote'
+                || (it.product && it.product.category === 'manager_quote')
+                || (it.product && typeof it.product.code === 'string' && it.product.code.indexOf('manager_quote_') === 0))) {
+            return (it._simple && Number(it._simple.final)) || (it.product && Number(it.product.price)) || 0;
+        }
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
         // 2026-07-03: early-return 상품(명함·리플렛·스티커·책자)도 일반 경로(하단 base += shipping.fee)와 동일하게
