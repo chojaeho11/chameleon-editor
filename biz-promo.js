@@ -142,7 +142,7 @@
             var rows = r.data || [];
             if (reset) feed.innerHTML = '';
             if (!rows.length && _offset === 0) {
-                feed.innerHTML = '<div class="bz-empty">' + T('아직 등록된 업체가 없어요.<br>맨 위 <b>+ 홍보</b> 로 첫 홍보를 올려보세요! (1만원 지급)', 'まだ登録された業者がありません。<br>上の <b>+ PR</b> から最初の投稿をしてみましょう！', 'No businesses yet.<br>Tap <b>+ Post</b> above to add the first one!') + '</div>';
+                feed.innerHTML = '<div class="bz-empty">' + T('아직 등록된 업체가 없어요.<br>맨 위 <b>+ 홍보</b> 로 첫 홍보를 올려보세요!', 'まだ登録された業者がありません。<br>上の <b>+ PR</b> から最初の投稿をしてみましょう！', 'No businesses yet.<br>Tap <b>+ Post</b> above to add the first one!') + '</div>';
                 _done = true; return;
             }
             // 내가 하트 누른 것 표시
@@ -264,7 +264,7 @@
             + '<div class="bz-reg-card">'
             +   '<button class="bz-reg-x" id="bzRegX">×</button>'
             +   '<h3>🏢 ' + T('내 업체 홍보 등록', '自社PRを登録', 'Post my business') + '</h3>'
-            +   '<div class="bz-reg-sub">' + T('등록하면 1만원 포인트를 드려요 (최초 1회)', '登録すると1,000円分ポイント進呈（初回1回）', 'Get ₩10,000 points on first post') + '</div>'
+            +   '<div class="bz-reg-sub">' + T('홍보하고 하트를 모아보세요. 받은 하트당 100원!', 'PRしてハートを集めましょう。ハート1つ100円！', 'Promote & collect hearts. ₩100 each!') + '</div>'
             +   '<label>' + T('업체명', '店名・会社名', 'Business name') + ' *</label><input type="text" id="bzrName" maxlength="60" placeholder="' + T('예: 카멜레온 프린팅', '例：カメレオンプリンティング', 'e.g. Chameleon Printing') + '">'
             +   '<label>' + T('전화번호', '電話番号', 'Phone') + '</label><input type="tel" id="bzrPhone" placeholder="' + T('010-0000-0000', '090-0000-0000', '+1 000-000-0000') + '">'
             +   '<label>' + T('검색어 (쉼표로 구분)', 'キーワード（カンマ区切り）', 'Keywords (comma-separated)') + '</label><input type="text" id="bzrKw" maxlength="120" placeholder="' + T('예: 인쇄, 현수막, 굿즈, 부천', '例：印刷, 看板, グッズ, 東京', 'e.g. printing, signage, goods') + '">'
@@ -272,7 +272,7 @@
             +   '<label>' + T('사진 올리기 (여러 장 가능)', '写真を追加（複数可）', 'Add photos (multiple)') + '</label>'
             +   '<input type="file" id="bzrFiles" accept="image/*" multiple style="font-size:13px;">'
             +   '<div class="bz-reg-photos" id="bzrThumbs"></div>'
-            +   '<button class="bz-reg-submit" id="bzrSubmit">' + T('등록하고 1만원 받기', '登録して1,000円分もらう', 'Post & get ₩10,000') + '</button>'
+            +   '<button class="bz-reg-submit" id="bzrSubmit">' + T('홍보 올리기', '投稿する', 'Post') + '</button>'
             + '</div>';
         document.body.appendChild(ov);
         ov.onclick = function (e) { if (e.target === ov) ov.classList.remove('open'); };
@@ -328,13 +328,12 @@
             var d = r && r.data;
             if (d && d.ok) {
                 document.getElementById('bizRegOv').classList.remove('open');
-                if (d.granted) { try { if (window.showRewardPopup) window.showRewardPopup({ kind: 'mileage', mileage: 10000 }); else toast(T('✅ 업체 등록 완료! 1만원 지급', '✅ 登録完了！1,000円分進呈', '✅ Posted! ₩10,000 granted')); } catch (e) { toast('✅'); } }
-                else toast(T('✅ 업체 홍보가 등록되었습니다.', '✅ 登録されました。', '✅ Your business is posted.'));
+                toast(T('✅ 커뮤니티에 등록되었어요!', '✅ コミュニティに投稿しました！', '✅ Posted to the community!'));
                 _q = ''; var si = document.getElementById('bzSearch'); if (si) si.value = '';
                 loadFeed(true);
             } else if (d && d.reason === 'auth') { needLogin(); }
             else { toast('등록 실패: ' + ((d && d.reason) || '오류')); }
         } catch (e) { console.warn('[bizPromo] create', e); toast('등록 실패: ' + (e.message || e)); }
-        finally { btn.disabled = false; btn.textContent = T('등록하고 1만원 받기', '登録して1,000円分もらう', 'Post & get ₩10,000'); }
+        finally { btn.disabled = false; btn.textContent = T('홍보 올리기', '投稿する', 'Post'); }
     }
 })();

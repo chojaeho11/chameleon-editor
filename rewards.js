@@ -272,7 +272,7 @@
         var badge = function (n) { return '<div style="width:26px;height:26px;border-radius:50%;background:#fed7aa;color:#c2410c;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + n + '</div>'; };
         var doneTag = function (t) { return '<span style="font-size:12px;color:#16a34a;">✓ ' + t + '</span>'; };
         var lockTag = function () { return '<span style="font-size:11.5px;color:#cbd5e1;">' + T2('로그인 후', 'ログイン後', 'Login') + '</span>'; };
-        var actBtn = function (id, t) { return '<button id="' + id + '" style="padding:8px 13px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;border-radius:9px;font-size:12.5px;cursor:pointer;white-space:nowrap;">' + t + '</button>'; };
+        var actBtn = function (id, t) { return '<button id="' + id + '" style="padding:8px 13px;background:#111827;color:#fff;border:none;border-radius:9px;font-size:12.5px;cursor:pointer;white-space:nowrap;">' + t + '</button>'; };
         var esc = function (s) { return String(s == null ? '' : s).replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); };
         var rowHtml = function (n, title, amt, right) {
             return '<div style="border:1px solid #e9d5ff;border-radius:12px;padding:11px 12px;">'
@@ -342,7 +342,7 @@
                 + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor') + (st.sns !== 'none' ? ' ✓' : ''), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : actBtn('rhAct3', T2('이벤트 보기', 'イベント', 'View')))
                 + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post')))
                 + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')))
-                + rowHtml(6, T2('커뮤니티', 'コミュニティ', 'Community'), won(10000), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('홍보하기', 'PRする', 'Promote')));
+                + rowHtml(6, T2('커뮤니티', 'コミュニティ', 'Community'), T2('하트당 100원', 'ハート1つ100円', '₩100/heart'), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('입장하기', '入場する', 'Enter')));
             var note = '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:14px 0 4px;">' + T2('합쳐서 매달 최대 16만원 · 매월 말일 미사용분 소멸', '合計 毎月最大¥16,000 · 毎月末に未使用分は消滅', 'Up to ~$160/mo · resets monthly') + '</div>';
             card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
             var byId = function (id) { return document.getElementById(id); };
