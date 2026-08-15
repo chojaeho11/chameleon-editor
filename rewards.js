@@ -352,7 +352,7 @@
             if (byId('rhAct3')) byId('rhAct3').onclick = function () { if (window.openBlogRecruitInfo) window.openBlogRecruitInfo(); else if (window.openSnsRankingModal) window.openSnsRankingModal(); };
             if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
             if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
-            if (byId('rhAct6')) byId('rhAct6').onclick = function () { closeHub(); if (window.openBizPromo) window.openBizPromo(); };
+            if (byId('rhAct6')) byId('rhAct6').onclick = function () { if (window.openBizPromo) window.openBizPromo(); };   // 허브는 그대로 두고 우측 패널로 열림(데스크톱)
         }
         render();
     };

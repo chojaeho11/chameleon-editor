@@ -31,15 +31,17 @@
         if (document.getElementById('bizPromoStyle')) return;
         var s = document.createElement('style'); s.id = 'bizPromoStyle';
         s.textContent = ''
-            + '#bizFeedOv{position:fixed;inset:0;z-index:100060;background:#0b0f1c;display:none;flex-direction:column;}'
+            /* 우측 도킹 패널(웹앱 스타일) — 데스크톱은 우측 460px, 모바일은 전체 */
+            + '#bizFeedOv{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100%;z-index:100060;background:#0b0f1c;display:none;flex-direction:column;box-shadow:-14px 0 44px rgba(0,0,0,0.45);border-left:1px solid rgba(148,163,184,0.18);}'
             + '#bizFeedOv.open{display:flex;}'
+            + '@media(max-width:640px){#bizFeedOv{width:100%;}}'
             + '.bz-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(148,163,184,0.15);background:#0f172a;}'
             + '.bz-head h3{margin:0;font-size:16px;font-weight:900;color:#fff;white-space:nowrap;}'
             + '.bz-search{flex:1;min-width:0;padding:9px 13px;border-radius:999px;border:1px solid rgba(148,163,184,0.3);background:rgba(255,255,255,0.06);color:#f8fafc;font-size:14px;font-family:inherit;outline:none;}'
             + '.bz-search::placeholder{color:#64748b;}'
             + '.bz-reg{flex:0 0 auto;padding:9px 14px;border:none;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}'
             + '.bz-x{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);color:#cbd5e1;border:none;font-size:18px;cursor:pointer;}'
-            + '.bz-feed{flex:1;overflow-y:auto;padding:14px;max-width:600px;margin:0 auto;width:100%;-webkit-overflow-scrolling:touch;}'
+            + '.bz-feed{flex:1;overflow-y:auto;padding:14px;width:100%;-webkit-overflow-scrolling:touch;}'
             + '.bz-card{background:linear-gradient(165deg,#1e293b,#0f172a);border:1px solid rgba(148,163,184,0.15);border-radius:18px;margin-bottom:16px;overflow:hidden;}'
             + '.bz-photos{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:#000;}'
             + '.bz-photos img{width:100%;flex:0 0 100%;scroll-snap-align:center;object-fit:cover;max-height:60vh;display:block;}'
@@ -86,7 +88,7 @@
             + '<div class="bz-head">'
             +   '<h3>🏢 업체 홍보</h3>'
             +   '<input class="bz-search" id="bzSearch" placeholder="내가 필요한 업체 찾기 (업체명·키워드)">'
-            +   '<button class="bz-reg" id="bzRegBtn">+ 내 업체 등록</button>'
+            +   '<button class="bz-reg" id="bzRegBtn">+ 등록</button>'
             +   '<button class="bz-x" id="bzCloseBtn">×</button>'
             + '</div>'
             + '<div class="bz-feed" id="bzFeed"></div>';
