@@ -3391,9 +3391,12 @@ html, body { background: #ffffff !important; }
       <!-- 2026-08-12: SNS 홍보 무료쿠폰 주문 (체험단 회원 전용) — 결제방법 바로 아래 크게 노출. 잘 보이는 색 + 홍보이벤트 참여 버튼. -->
       <div class="so-co-section" id="soSnsCouponBox" style="display:none;">
         <div style="display:flex; gap:8px; align-items:stretch;">
-          <button type="button" id="soSnsCouponBtn" onclick="window._soToggleSnsCoupon&&window._soToggleSnsCoupon()" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px; padding:13px 15px; border:2px solid #16a34a; background:linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
-            <span style="font-size:14px;">🎁 ${tr('SNS 홍보 무료쿠폰으로 주문','SNS PR無料クーポンで注文','Order with SNS free coupon')}</span>
-            <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 적용 · 1회 최대 5만원 (배송비 포함)','タップで適用 · 1回最大5,000円','Tap to apply · up to 50,000 KRW/order')}</span>
+          <button type="button" id="soSnsCouponBtn" onclick="window._soToggleSnsCoupon&&window._soToggleSnsCoupon()" style="flex:1; min-width:0; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:10px; padding:13px 15px; border:2px solid #16a34a; background:linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
+            <span style="display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0;">
+              <span style="font-size:14px;">🎁 ${tr('SNS 홍보 무료쿠폰으로 주문','SNS PR無料クーポンで注文','Order with SNS free coupon')}</span>
+              <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 적용 · 1회 최대 5만원 (배송비 포함)','タップで適用 · 1回最大5,000円','Tap to apply · up to 50,000 KRW/order')}</span>
+            </span>
+            <span id="soSnsCouponBal" style="flex-shrink:0; text-align:right; line-height:1.05;"></span>
           </button>
           <button type="button" onclick="if(window.openBlogRecruitInfo)window.openBlogRecruitInfo()" title="${tr('홍보이벤트 참여','PRイベント参加','Join event')}" style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:10px 14px; border:2px solid #e879f9; background:linear-gradient(135deg,#fae8ff,#f5d0fe); color:#a21caf; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12px; line-height:1.25; white-space:nowrap;">
             🏆 ${tr('홍보이벤트<br>참여','PRイベント<br>参加','Join<br>Event')}
@@ -19612,22 +19615,27 @@ html, body { background: #ffffff !important; }
         var chk = document.getElementById('soDiscBlogChk');
         var btn = document.getElementById('soSnsCouponBtn');
         var sub = document.getElementById('soSnsCouponSub');
+        var balEl = document.getElementById('soSnsCouponBal');
         if (!btn) return;
         var on = !!(chk && chk.checked);
-        // 2026-08-15: 고객 무료쿠폰(=통합 포인트) 잔액을 버튼에 표시
+        // 2026-08-15: 고객 무료쿠폰(=통합 포인트) 잔액을 버튼 우측에 크게 표시
         var bal = 0;
         try { bal = parseInt((window._soWallet && window._soWallet.blogCouponBalKRW) || 0) || 0; } catch (e) {}
-        var balTxt = tr('잔액 ', '残高 ', 'Balance ') + _soFormatPrice(bal);
+        var balLbl = tr('잔액', '残高', 'Balance');
+        if (balEl) {
+            balEl.innerHTML = '<span style="font-size:10.5px; font-weight:700; opacity:.85; display:block;">' + balLbl + '</span>'
+                            + '<span style="font-size:19px; font-weight:800; white-space:nowrap;">' + _soFormatPrice(bal) + '</span>';
+        }
         if (on) {
             btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
             btn.style.color = '#fff';
             btn.style.borderColor = '#15803d';
-            if (sub) sub.textContent = tr('✓ 적용됨 · ', '✓ 適用中 · ', '✓ Applied · ') + balTxt + tr(' · 1회 최대 5만원', ' · 1回最大5,000円', ' · up to 50,000 KRW/order');
+            if (sub) sub.textContent = tr('✓ 적용됨 · 1회 최대 5만원', '✓ 適用中 · 1回最大5,000円', '✓ Applied · up to 50,000 KRW/order');
         } else {
             btn.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
             btn.style.color = '#065f46';
             btn.style.borderColor = '#16a34a';
-            if (sub) sub.textContent = balTxt + tr(' · 눌러서 적용 · 1회 최대 5만원', ' · タップで適用 · 1回最大5,000円', ' · Tap to apply · up to 50,000 KRW');
+            if (sub) sub.textContent = tr('눌러서 적용 · 1회 최대 5만원', 'タップで適用 · 1回最大5,000円', 'Tap to apply · up to 50,000 KRW');
         }
     };
     window._soToggleSnsCoupon = function () {
