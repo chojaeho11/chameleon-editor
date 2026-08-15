@@ -3223,9 +3223,11 @@ async function autoLoadPatternFromUrl() {
                     state.bgColor = '#fde68a';                    // 연노랑
                     state.imgWcm = 20;                            // 한 패턴 단위 = 200mm
                     state.imgHcm = Math.round(20 / ratio * 10) / 10;
+                    state.imgScale = 0.6;                         // 이미지 축소 기본 60%
                     try {
                         document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
                         document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
+                        var _sp1 = document.getElementById('shrinkPct'); if (_sp1) _sp1.textContent = '60%';
                         document.getElementById('uploadZone').style.display = 'none';
                         document.getElementById('previewArea').classList.add('active');
                         document.getElementById('btnReset').style.display = '';
@@ -3294,8 +3296,10 @@ async function autoLoadPatternFromUrl() {
                 state.bgColor = '#fde68a';                    // 연노랑
                 state.imgWcm = 20;                            // 한 패턴 단위 = 200mm
                 state.imgHcm = Math.round(20 / ratio * 10) / 10;
+                state.imgScale = 0.6;                         // 이미지 축소 기본 60%
                 document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
                 document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
+                var _sp2 = document.getElementById('shrinkPct'); if (_sp2) _sp2.textContent = '60%';
                 document.getElementById('uploadZone').style.display = 'none';
                 document.getElementById('previewArea').classList.add('active');
                 document.getElementById('btnReset').style.display = '';
