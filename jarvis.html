@@ -140,6 +140,7 @@
             <h1>🤖 자비스 · 실시간 채팅관리</h1>
             <div class="sub">라이브 상담 개입 · AI 학습 · <span id="meLabel">-</span></div>
         </div>
+        <select id="mgrSelect" onchange="onMgrChange()" title="상담 매니저 선택" style="height:40px; border-radius:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(148,163,184,0.2); color:#e2e8f0; font-family:inherit; font-size:13px; font-weight:700; padding:0 8px; cursor:pointer; max-width:120px;"></select>
         <button class="alarm-btn on" id="alarmBtn" onclick="toggleAlarm()" title="채팅 알람">🔔 <span id="alarmLbl">알람 켜짐</span></button>
         <button class="refresh-btn" onclick="reloadAll()" title="새로고침">↻</button>
     </div>
@@ -235,7 +236,7 @@
             const el=document.getElementById('roomList');
             try{
                 const { data: rooms, error } = await sb.from('chat_rooms')
-                    .select('id, customer_name, nickname, customer_phone, site_lang, status, human_active, updated_at')
+                    .select('id, customer_name, nickname, customer_phone, site_lang, status, human_active, assigned_manager, updated_at')
                     .order('updated_at',{ascending:false}).limit(60);
                 if(error) throw error;
                 _roomsCache = rooms||[];
@@ -259,7 +260,7 @@
                     return `<div class="room ${fresh?'fresh':''}" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">
                         <div class="room-av">${av}</div>
                         <div class="room-mid">
-                            <div class="room-name">${esc(nm)} ${r.human_active?'<span class="badge-live">🟢 상담중</span>':''} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
+                            <div class="room-name">${esc(nm)} ${r.human_active?('<span class="badge-live">🟢 '+esc(r.assigned_manager||'')+' 상담중</span>'):''} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
                             <div class="room-prev">${esc(prev)}</div>
                         </div>
                         <div class="room-right"><div class="room-time">${fmtAgo(r.updated_at)}</div></div>
@@ -504,9 +505,42 @@
 
         function updateCount(){ const countEl=document.getElementById('countChip'); const remaining=document.querySelectorAll('.jx-item').length; countEl.textContent=remaining?remaining+' 건':'0 건'; countEl.className='chip '+(remaining?'warn':'ok'); document.getElementById('learnCount').textContent=remaining?'('+remaining+')':''; if(!remaining){ document.getElementById('list').innerHTML='<div class="empty">✅ 모든 상담을 처리했습니다.<br>깔끔합니다!</div>'; } }
 
+        // ── 상담 매니저 이름 선택 ──
+        let _acctName = '관리자';
+        function paintMe(){ document.getElementById('meLabel').textContent = '상담 매니저: ' + ME; }
+        async function buildMgrSelect(){
+            const sel = document.getElementById('mgrSelect');
+            let names = [];
+            try{ const { data } = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers'); names = (data||[]).filter(m=>m.is_active!==false).map(m=>(m.question||'').trim()).filter(Boolean); }catch(e){}
+            if(!names.length) names = ['조지숙','강은미','박성희','최연두'];   // 폴백 (managers.md)
+            // 계정 기본값 + 매니저 목록 + 직접입력. 중복 제거.
+            const opts = [];
+            if(_acctName && !names.includes(_acctName)) opts.push(_acctName);
+            names.forEach(n=>{ if(!opts.includes(n)) opts.push(n); });
+            if(ME && !opts.includes(ME)) opts.unshift(ME);
+            sel.innerHTML = opts.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('') + '<option value="__custom__">✏ 직접 입력…</option>';
+            sel.value = ME;
+        }
+        window.onMgrChange = function(){
+            const sel = document.getElementById('mgrSelect');
+            let v = sel.value;
+            if(v==='__custom__'){ const c=(prompt('상담 매니저 이름을 입력하세요','')||'').trim(); v = c || ME; }
+            ME = v;
+            try{ localStorage.setItem('jarvisMgrName', ME); }catch(e){}
+            // 목록에 없으면 추가
+            if(![...sel.options].some(o=>o.value===ME)){ const o=document.createElement('option'); o.value=ME; o.textContent=ME; sel.insertBefore(o, sel.firstChild); }
+            sel.value = ME;
+            paintMe();
+            toast('상담 매니저: ' + ME);
+        };
+
         window.addEventListener('DOMContentLoaded', async ()=>{
             await initConfig();
-            try{ const u=await sb.auth.getUser(); const em=u&&u.data&&u.data.user&&u.data.user.email; if(em){ ME=em.split('@')[0]; document.getElementById('meLabel').textContent=em; } }catch(e){}
+            try{ const u=await sb.auth.getUser(); const em=u&&u.data&&u.data.user&&u.data.user.email; if(em){ _acctName = em.split('@')[0]; } }catch(e){}
+            // 저장된 선택 우선, 없으면 계정명
+            ME = (localStorage.getItem('jarvisMgrName') || _acctName || '관리자');
+            await buildMgrSelect();
+            paintMe();
             paintAlarm();
             try{ if(ALARM_ON && window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
             loadRooms();
