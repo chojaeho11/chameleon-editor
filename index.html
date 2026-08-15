@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815221925';
+    var CV = '20260815222831';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -140,6 +140,9 @@
     document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') _verCheck(false); });
     window.addEventListener('online', function(){ _verCheck(false); });
     window.addEventListener('pageshow', function(e){ if (e && e.persisted) _verCheck(false); });
+    // 2026-08-15: 열어둔 탭도 주기적으로(90초) 자동 확인 → 리포커스/새로고침 없이도 새 배포를 스스로 최신화.
+    //   (_verCheck(false) 는 입력·에디터 작업 중이면 보류 → 작업 방해 없음. 버전당 2회 재시도 상한으로 무한루프 방지.)
+    setInterval(function(){ if (document.visibilityState === 'visible') _verCheck(false); }, 90000);
 })();
 // [Service Worker] 2026-07-29: PWA 앱 설치를 위해 무캐시 sw.js 등록. 레거시(캐싱) SW 는 제거.
 if ('serviceWorker' in navigator) {
