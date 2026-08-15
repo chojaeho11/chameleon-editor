@@ -131,6 +131,26 @@
         .toast.err { background: #dc2626; }
         .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #475569; }
         .footer a { color: #64748b; text-decoration: none; }
+
+        /* 우측 담당 매니저 선택 패널 (데스크톱 넓은 화면 전용 — 680px 본문 옆 여백) */
+        #mgrPanel {
+            position: fixed; top: 100px; right: 28px; width: 190px; z-index: 50;
+            background: linear-gradient(165deg,#1e293b 0%,#0f172a 100%);
+            border: 1px solid rgba(148,163,184,0.18); border-radius: 16px; padding: 14px;
+            box-shadow: 0 12px 30px -12px rgba(0,0,0,0.5);
+        }
+        #mgrPanel h4 { margin: 0 0 4px; font-size: 13px; color: #fff; font-weight: 900; }
+        #mgrPanel .mp-sub { font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
+        .mgr-pick {
+            display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 6px;
+            border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(148,163,184,0.15);
+            color: #e2e8f0; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+            transition: all 0.12s;
+        }
+        .mgr-pick:hover { background: rgba(255,255,255,0.1); }
+        .mgr-pick.active { background: linear-gradient(135deg,#16a34a,#15803d); color: #fff; border-color: transparent; }
+        .mgr-pick.active::before { content: '✓ '; }
+        @media (max-width: 1180px) { #mgrPanel { display: none; } }
     </style>
 </head>
 <body>
@@ -185,6 +205,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 우측 담당 매니저 선택 패널 -->
+    <div id="mgrPanel">
+        <h4>👤 담당 매니저</h4>
+        <div class="mp-sub">본인 이름을 눌러 선택하세요</div>
+        <div id="mgrPickList"></div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -505,41 +532,44 @@
 
         function updateCount(){ const countEl=document.getElementById('countChip'); const remaining=document.querySelectorAll('.jx-item').length; countEl.textContent=remaining?remaining+' 건':'0 건'; countEl.className='chip '+(remaining?'warn':'ok'); document.getElementById('learnCount').textContent=remaining?'('+remaining+')':''; if(!remaining){ document.getElementById('list').innerHTML='<div class="empty">✅ 모든 상담을 처리했습니다.<br>깔끔합니다!</div>'; } }
 
-        // ── 상담 매니저 이름 선택 ──
+        // ── 상담 매니저 이름 선택 (헤더 드롭다운 + 우측 패널 연동) ──
         let _acctName = '관리자';
+        let _mgrNames = [];
         function paintMe(){ document.getElementById('meLabel').textContent = '상담 매니저: ' + ME; }
-        async function buildMgrSelect(){
+        function repaintMgrUI(){
             const sel = document.getElementById('mgrSelect');
+            if(sel){ if(![...sel.options].some(o=>o.value===ME)){ const o=document.createElement('option'); o.value=ME; o.textContent=ME; sel.insertBefore(o, sel.firstChild); } sel.value=ME; }
+            document.querySelectorAll('.mgr-pick').forEach(b=>b.classList.toggle('active', b.dataset.name===ME));
+        }
+        window.setManager = function(name){
+            name=(name||'').trim(); if(!name) return;
+            ME=name; try{ localStorage.setItem('jarvisMgrName', ME); }catch(e){}
+            paintMe(); repaintMgrUI(); toast('상담 매니저: ' + ME);
+        };
+        async function buildMgrUI(){
             let names = [];
             try{ const { data } = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers'); names = (data||[]).filter(m=>m.is_active!==false).map(m=>(m.question||'').trim()).filter(Boolean); }catch(e){}
             if(!names.length) names = ['조지숙','강은미','박성희','최연두'];   // 폴백 (managers.md)
-            // 계정 기본값 + 매니저 목록 + 직접입력. 중복 제거.
             const opts = [];
             if(_acctName && !names.includes(_acctName)) opts.push(_acctName);
             names.forEach(n=>{ if(!opts.includes(n)) opts.push(n); });
             if(ME && !opts.includes(ME)) opts.unshift(ME);
-            sel.innerHTML = opts.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('') + '<option value="__custom__">✏ 직접 입력…</option>';
-            sel.value = ME;
-        }
-        window.onMgrChange = function(){
+            _mgrNames = opts;
             const sel = document.getElementById('mgrSelect');
-            let v = sel.value;
-            if(v==='__custom__'){ const c=(prompt('상담 매니저 이름을 입력하세요','')||'').trim(); v = c || ME; }
-            ME = v;
-            try{ localStorage.setItem('jarvisMgrName', ME); }catch(e){}
-            // 목록에 없으면 추가
-            if(![...sel.options].some(o=>o.value===ME)){ const o=document.createElement('option'); o.value=ME; o.textContent=ME; sel.insertBefore(o, sel.firstChild); }
-            sel.value = ME;
-            paintMe();
-            toast('상담 매니저: ' + ME);
-        };
+            if(sel){ sel.innerHTML = opts.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('') + '<option value="__custom__">✏ 직접 입력…</option>'; sel.value=ME; }
+            const list = document.getElementById('mgrPickList');
+            if(list){ list.innerHTML = opts.map(n=>`<button class="mgr-pick" data-name="${n.replace(/"/g,'&quot;')}" onclick="setManager(this.dataset.name)">${n}</button>`).join('') + `<button class="mgr-pick" style="opacity:.85;" onclick="onMgrCustom()">✏ 직접 입력…</button>`; }
+            repaintMgrUI();
+        }
+        window.onMgrChange = function(){ const sel=document.getElementById('mgrSelect'); const v=sel.value; if(v==='__custom__'){ onMgrCustom(); return; } setManager(v); };
+        window.onMgrCustom = function(){ const c=(prompt('상담 매니저 이름을 입력하세요','')||'').trim(); if(c){ if(!_mgrNames.includes(c)){ _mgrNames.push(c); buildMgrUI().then(()=>setManager(c)); } else setManager(c); } else repaintMgrUI(); };
 
         window.addEventListener('DOMContentLoaded', async ()=>{
             await initConfig();
             try{ const u=await sb.auth.getUser(); const em=u&&u.data&&u.data.user&&u.data.user.email; if(em){ _acctName = em.split('@')[0]; } }catch(e){}
             // 저장된 선택 우선, 없으면 계정명
             ME = (localStorage.getItem('jarvisMgrName') || _acctName || '관리자');
-            await buildMgrSelect();
+            await buildMgrUI();
             paintMe();
             paintAlarm();
             try{ if(ALARM_ON && window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
