@@ -7502,6 +7502,8 @@
     }
 
     window._meGalleryLoad = _meGalleryLoad;
+    // 2026-08-15: 「내가 만든 디자인」 모달에서 재사용 — 디자인 골라 제품 카테고리 픽커 바로 열기
+    window._meHeroProductPicker = _meHeroProductPicker;
     window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(v || ''); }, 300); }; })();
 
     // 생성 이미지를 대지에 cover(꽉 채움, 넘치는 부분만 잘림)로 삽입 + 뒤로 보내기(배경/풀블리드).

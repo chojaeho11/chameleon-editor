@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815232123';
+    var CV = '20260815233517';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -6104,7 +6104,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=557"></script>
+<script src="./mini-editor.js?v=558"></script>
 <script src="./rewards.js?v=19"></script>
 
 <!-- 2026-08-15: 「내가 만든 디자인」 모달 (히어로 + 마이페이지에서 진입) — 고른 디자인을 에디터에 올려 제품 주문으로 연결 -->
@@ -6147,23 +6147,13 @@ window.openMyDesignsModal = async function(){
         grid.querySelectorAll('.myDesignOrderBtn').forEach(function(b){ b.addEventListener('click', function(){ window._myDesignOrder(b.getAttribute('data-durl')); }); });
     } catch(e){ note.textContent='불러오지 못했어요: '+((e&&e.message)||e); note.style.display='block'; }
 };
-window._myDesignOrder = async function(url){
+window._myDesignOrder = function(url){
     if(!url) return;
     var modal = document.getElementById('myDesignsModal'); if(modal) modal.style.display='none';
-    try {
-        // 디자인을 미니에디터 대지에 올린다 → 제품/사이즈 정하고 주문 (에디터가 주문 연결점)
-        if (window._meShowToolbar) window._meShowToolbar();
-        var intro = document.getElementById('meIntro'); if (intro) intro.scrollIntoView({ behavior:'smooth', block:'center' });
-        var blob = await (await fetch(url, { mode:'cors' })).blob();
-        var dataUrl = await new Promise(function(rs,rj){ var fr=new FileReader(); fr.onload=function(){ rs(String(fr.result)); }; fr.onerror=rj; fr.readAsDataURL(blob); });
-        if (window._meAddImage) {
-            window._meAddImage(dataUrl, { fillCanvas:true, toBack:true }, function(it){ if(it) it._isAiBg = true; });
-            try { if (window.showToast) window.showToast('디자인을 편집기에 올렸어요. 제품·사이즈를 정하고 주문하세요.'); } catch(e){}
-        } else {
-            // 에디터 미탑재 컨텍스트 대비: 다운로드로 폴백
-            window.open(url, '_blank');
-        }
-    } catch(e){ console.warn('[myDesignOrder]', e); window.open(url, '_blank'); }
+    // AI 이미지 생성 후 나오는 것과 동일한 '제품 카테고리(재질 골라서 인쇄하기)' 픽커를 연다.
+    if (window._meHeroProductPicker) { try { window._meHeroProductPicker(url); return; } catch(e){ console.warn('[myDesignOrder]', e); } }
+    // 폴백: 편집기 미탑재 시 이미지 새 탭
+    window.open(url, '_blank');
 };
 // ?mydesigns=1 진입(마이페이지 링크 등) → 자동으로 모달 열기
 (function(){ try { if (new URLSearchParams(location.search).get('mydesigns')==='1') { var _t=setInterval(function(){ if(window.openMyDesignsModal){ clearInterval(_t); window.openMyDesignsModal(); } },300); setTimeout(function(){ clearInterval(_t); },9000); } } catch(e){} })();
