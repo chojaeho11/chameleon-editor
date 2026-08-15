@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815222831';
+    var CV = '20260815223308';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1131,7 +1131,7 @@ window._tcmFallbackClick = function(code) {
         <!-- 2026-07-20: 히어로 = 고객작품 갤러리 + AI 프롬프트 (기존 6장 홍보 캐러셀 대체).
              홍보 문구 대신 고객이 미니에디터로 실제 만든 결과물(design_gallery)을 2줄 마퀴로 보여주고,
              그 자리에서 바로 "나도 만들어보기" 로 이어지게 한다.
-             마퀴 CSS 는 mini-editor.css 의 .me-gal-marquee 계열을 그대로 재사용 (위=우향/아래=좌향). -->
+             마퀴 CSS 는 mini-editor.css 의 .me-gal-marquee 계열을 그대로 재사용 (2026-08-15: 위=좌향/아래=우향). -->
         <div id="heroWorks">
             <div class="hw-head">
                 <h2 class="hw-title" id="hwTitle">고객님들이 만든 디자인</h2>
@@ -1149,8 +1149,8 @@ window._tcmFallbackClick = function(code) {
                 <button type="button" id="hwGoBtn">만들기</button>
             </div>
             <div class="me-gal-marquee" id="hwMarquee">
-                <div class="me-gal-row"><div class="me-gal-track me-marq-right" id="hwTrackTop"></div></div>
-                <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="hwTrackBot"></div></div>
+                <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="hwTrackTop"></div></div>
+                <div class="me-gal-row"><div class="me-gal-track me-marq-right" id="hwTrackBot"></div></div>
             </div>
         </div>
 
