@@ -195,6 +195,7 @@
         let ALARM_ON = (localStorage.getItem('chatAlarmOn') !== '0');
         let _globalSub = null, _roomSub = null;
         let _curRoom = null;          // {id, name, human_active}
+        let _curRoomMgrSent = false;  // 이 방에서 매니저가 답을 보냈는가(→ 닫을 때 자동 증류 학습)
         let _roomsCache = [];
         let _freshRooms = {};         // roomId -> true (새 고객메시지 미확인)
         let _reloadRoomsTimer = null;
@@ -271,6 +272,7 @@
         // ════════════════ 대화 열기 ════════════════
         window.openConv = async function(roomId, name){
             _curRoom = { id: roomId, name: name||'고객', human_active:false };
+            _curRoomMgrSent = false;
             delete _freshRooms[roomId];
             document.getElementById('convName').textContent = name||'고객';
             document.getElementById('convBody').innerHTML = '<div style="text-align:center;color:#64748b;padding:30px;">불러오는 중...</div>';
@@ -302,7 +304,21 @@
         }
         function appendConvBubble(m){ const body=document.getElementById('convBody'); const near=(body.scrollHeight-body.scrollTop-body.clientHeight)<80; body.insertAdjacentHTML('beforeend', convBubble(m)); if(near) body.scrollTop=body.scrollHeight; }
 
-        window.closeConv = function(){ document.getElementById('convOv').classList.remove('open'); if(_roomSub){ try{_roomSub.unsubscribe();}catch(e){} _roomSub=null; } _curRoom=null; loadRooms(); };
+        window.closeConv = function(){
+            document.getElementById('convOv').classList.remove('open');
+            if(_roomSub){ try{_roomSub.unsubscribe();}catch(e){} _roomSub=null; }
+            if(_curRoom && _curRoomMgrSent){ distillRoom(_curRoom.id); }   // 닫을 때 매니저 답변 자동 증류 학습
+            _curRoomMgrSent=false; _curRoom=null; loadRooms();
+        };
+        // 매니저가 개입한 대화 → AI가 재사용 지식으로 자동 증류(전자동)
+        async function distillRoom(roomId){
+            if(!roomId) return;
+            try{
+                const { data, error } = await sb.functions.invoke('distill-chat', { body:{ room_id: roomId } });
+                if(error){ console.warn('[distill]', error); return; }
+                if(data && data.ok && data.count>0) toast('🧠 '+data.count+'개 지식 자동 학습됨');
+            }catch(e){ console.warn('[distill]', e); }
+        }
 
         function paintJoinBar(){
             const joinBar=document.getElementById('joinBar'), replyWrap=document.getElementById('replyWrap');
@@ -325,6 +341,7 @@
                 await sb.from('chat_rooms').update({ human_active:false, status:'open' }).eq('id',_curRoom.id);
                 _curRoom.human_active=false; paintJoinBar();
                 toast('🤖 AI 응답 재개');
+                if(_curRoomMgrSent){ distillRoom(_curRoom.id); _curRoomMgrSent=false; }   // 매니저 답변 자동 증류 학습
             }catch(e){ toast('처리 실패: '+(e?.message||e), true); }
         };
         window.managerSend = async function(){
@@ -339,6 +356,7 @@
                 });
                 if(error) throw error;
                 await sb.from('chat_rooms').update({ updated_at:new Date().toISOString() }).eq('id',_curRoom.id);
+                _curRoomMgrSent = true;
                 ta.value='';
                 // 내 화면에도 즉시 표시 (구독이 늦을 수 있어 낙관적 렌더 — 중복 시 구독쪽은 동일내용이라 무해)
             }catch(e){ toast('전송 실패: '+(e?.message||e), true); }
