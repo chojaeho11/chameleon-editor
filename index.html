@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815214702';
+    var CV = '20260815215155';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1627,7 +1627,7 @@ window._tcmFallbackClick = function(code) {
             }
             /* 2026-07-28: 8 버튼 1줄 (자유게시판·출석체크 추가) */
             #mgrActionsGrid {
-                display:grid; grid-template-columns:repeat(8, 1fr); gap:10px;
+                display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;
                 margin-bottom:4px; justify-content:center;
             }
             .mgr-action {
@@ -2143,15 +2143,7 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-pen-nib"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_designer_recruit_btn">블로그</span>
                 </a>
-                <!-- 2026-07-28: 자유게시판(글 쓰면 보상) + 출석체크(하루 1회 보상) -->
-                <a class="mgr-action mgr-freetalk" href="/board.html?cat=freetalk" style="text-decoration:none;">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-bullhorn"></i></span>
-                    <span class="mgr-action-label" data-i18n="menu_freetalk">홍보하기</span>
-                </a>
-                <button type="button" class="mgr-action mgr-attend" onclick="window.openWordChain && window.openWordChain()">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-dice"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_wordchain">끝말잇기</span>
-                </button>
+                <!-- 2026-08-15: 탑바에서 홍보하기·끝말잇기 삭제 (사장님 요청). 리워드 허브(무료쿠폰)에서 이용 가능. -->
             </div>
             <!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 밖으로 이동됨. 아래 hotDealSection 직전 참고. -->
 
