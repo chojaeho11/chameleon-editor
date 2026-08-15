@@ -341,7 +341,8 @@
                 + rowHtml(2, T2('이번주 접속', '今週のログイン', 'Weekly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
                 + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor') + (st.sns !== 'none' ? ' ✓' : ''), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : actBtn('rhAct3', T2('이벤트 보기', 'イベント', 'View')))
                 + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post')))
-                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
+                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')))
+                + rowHtml(6, T2('내 업체 홍보', '自社PR', 'Promote my business'), won(10000), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('홍보하기', 'PRする', 'Promote')));
             var note = '<div style="text-align:center;font-size:11px;color:#94a3b8;margin:14px 0 4px;">' + T2('합쳐서 매달 최대 16만원 · 매월 말일 미사용분 소멸', '合計 毎月最大¥16,000 · 毎月末に未使用分は消滅', 'Up to ~$160/mo · resets monthly') + '</div>';
             card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
             var byId = function (id) { return document.getElementById(id); };
@@ -351,6 +352,7 @@
             if (byId('rhAct3')) byId('rhAct3').onclick = function () { if (window.openBlogRecruitInfo) window.openBlogRecruitInfo(); else if (window.openSnsRankingModal) window.openSnsRankingModal(); };
             if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
             if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
+            if (byId('rhAct6')) byId('rhAct6').onclick = function () { closeHub(); if (window.openBizPromo) window.openBizPromo(); };
         }
         render();
     };
