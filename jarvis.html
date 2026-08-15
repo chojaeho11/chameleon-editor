@@ -132,25 +132,27 @@
         .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #475569; }
         .footer a { color: #64748b; text-decoration: none; }
 
-        /* 우측 담당 매니저 선택 패널 (데스크톱 넓은 화면 전용 — 680px 본문 옆 여백) */
-        #mgrPanel {
-            position: fixed; top: 100px; right: 28px; width: 190px; z-index: 50;
-            background: linear-gradient(165deg,#1e293b 0%,#0f172a 100%);
-            border: 1px solid rgba(148,163,184,0.18); border-radius: 16px; padding: 14px;
-            box-shadow: 0 12px 30px -12px rgba(0,0,0,0.5);
+        /* 채팅방별 담당자 칩 + 클릭 시 아래로 펼쳐지는 드롭다운 */
+        .room-mgr-wrap { position: relative; margin-top: 6px; }
+        .room-mgr {
+            display: inline-block; font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 8px;
+            background: rgba(148,163,184,0.15); color: #cbd5e1; cursor: pointer; white-space: nowrap; user-select: none;
         }
-        #mgrPanel h4 { margin: 0 0 4px; font-size: 13px; color: #fff; font-weight: 900; }
-        #mgrPanel .mp-sub { font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
-        .mgr-pick {
-            display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 6px;
-            border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(148,163,184,0.15);
-            color: #e2e8f0; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
-            transition: all 0.12s;
+        .room-mgr.assigned { background: rgba(34,197,94,0.2); color: #86efac; }
+        .room-mgr:hover { filter: brightness(1.15); }
+        .room-mgr-dd {
+            display: none; position: absolute; right: 0; top: 100%; margin-top: 5px; z-index: 200;
+            background: #1e293b; border: 1px solid rgba(148,163,184,0.25); border-radius: 11px; padding: 6px;
+            min-width: 150px; box-shadow: 0 16px 36px -10px rgba(0,0,0,0.7);
         }
-        .mgr-pick:hover { background: rgba(255,255,255,0.1); }
-        .mgr-pick.active { background: linear-gradient(135deg,#16a34a,#15803d); color: #fff; border-color: transparent; }
-        .mgr-pick.active::before { content: '✓ '; }
-        @media (max-width: 1180px) { #mgrPanel { display: none; } }
+        .room-mgr-dd.open { display: block; }
+        .room-mgr-dd button {
+            display: block; width: 100%; text-align: left; padding: 8px 11px; border-radius: 8px;
+            background: none; border: none; color: #e2e8f0; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .room-mgr-dd button:hover { background: rgba(255,255,255,0.09); }
+        .room-mgr-dd button.cur { background: rgba(34,197,94,0.18); color: #86efac; }
+        .room-mgr-dd .dd-rel { color: #94a3b8; border-top: 1px solid rgba(148,163,184,0.15); margin-top: 4px; padding-top: 8px; }
     </style>
 </head>
 <body>
@@ -205,13 +207,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- 우측 담당 매니저 선택 패널 -->
-    <div id="mgrPanel">
-        <h4>👤 담당 매니저</h4>
-        <div class="mp-sub">본인 이름을 눌러 선택하세요</div>
-        <div id="mgrPickList"></div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -284,29 +279,60 @@
                     const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+(lm.message||'').slice(0,40)) : '';
                     const fresh = _freshRooms[r.id];
                     const av = esc(nm.slice(0,1).toUpperCase());
+                    const am = (r.assigned_manager||'').trim();
+                    const chip = `<span class="room-mgr ${am?'assigned':''}" onclick="event.stopPropagation(); toggleRoomMgr('${r.id}')">${am?('👤 '+esc(am)+(r.human_active?' 상담중':'')):'담당 지정'} ▾</span>`;
                     return `<div class="room ${fresh?'fresh':''}" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">
                         <div class="room-av">${av}</div>
                         <div class="room-mid">
-                            <div class="room-name">${esc(nm)} ${r.human_active?('<span class="badge-live">🟢 '+esc(r.assigned_manager||'')+' 상담중</span>'):''} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
+                            <div class="room-name">${esc(nm)} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
                             <div class="room-prev">${esc(prev)}</div>
                         </div>
-                        <div class="room-right"><div class="room-time">${fmtAgo(r.updated_at)}</div></div>
+                        <div class="room-right">
+                            <div class="room-time">${fmtAgo(r.updated_at)}</div>
+                            <div class="room-mgr-wrap">${chip}<div class="room-mgr-dd" id="rmdd-${r.id}" onclick="event.stopPropagation()">${mgrDdOptions(r.id, am)}</div></div>
+                        </div>
                     </div>`;
                 }).join('');
             }catch(e){ console.error('[rooms]',e); el.innerHTML='<div style="text-align:center;color:#fca5a5;padding:40px 0;">불러오기 실패: '+esc(e?.message||e)+'</div>'; }
         };
         function scheduleRoomsReload(){ clearTimeout(_reloadRoomsTimer); _reloadRoomsTimer=setTimeout(loadRooms, 600); }
 
+        // 채팅방별 담당자 드롭다운 (클릭하면 아래로 펼쳐짐)
+        function mgrDdOptions(roomId, current){
+            const names = (_mgrNames && _mgrNames.length) ? _mgrNames : ['조지숙','강은미','박성희','최연두'];
+            let h = names.map(n=>`<button class="${n===current?'cur':''}" onclick="assignRoomMgr('${roomId}', ${JSON.stringify(esc(n)).replace(/"/g,'&quot;')})">${esc(n)}${n===current?' ✓':''}</button>`).join('');
+            h += `<button class="dd-rel" onclick="assignRoomMgr('${roomId}','')">🤖 AI 에게 맡김 (해제)</button>`;
+            return h;
+        }
+        window.toggleRoomMgr = function(roomId){
+            const dd = document.getElementById('rmdd-'+roomId);
+            const wasOpen = dd && dd.classList.contains('open');
+            document.querySelectorAll('.room-mgr-dd.open').forEach(d=>d.classList.remove('open'));
+            if(dd && !wasOpen) dd.classList.add('open');
+        };
+        window.assignRoomMgr = async function(roomId, name){
+            name=(name||'').trim();
+            const dd=document.getElementById('rmdd-'+roomId); if(dd) dd.classList.remove('open');
+            try{
+                if(name){ await sb.from('chat_rooms').update({ assigned_manager:name, human_active:true, status:'human' }).eq('id',roomId); toast('👤 '+name+' 담당 지정 (상담중 · AI 정지)'); }
+                else { await sb.from('chat_rooms').update({ assigned_manager:'', human_active:false, status:'open' }).eq('id',roomId); toast('🤖 AI 에게 맡김'); }
+            }catch(e){ toast('지정 실패: '+(e?.message||e), true); return; }
+            if(_curRoom && _curRoom.id===roomId){ _curRoom.assigned_manager=name; _curRoom.human_active=!!name; paintJoinBar(); }
+            loadRooms();
+        };
+        // 바깥 클릭 → 열린 드롭다운 닫기
+        document.addEventListener('click', function(){ document.querySelectorAll('.room-mgr-dd.open').forEach(d=>d.classList.remove('open')); });
+
         // ════════════════ 대화 열기 ════════════════
         window.openConv = async function(roomId, name){
-            _curRoom = { id: roomId, name: name||'고객', human_active:false };
+            _curRoom = { id: roomId, name: name||'고객', human_active:false, assigned_manager:'' };
             _curRoomMgrSent = false;
             delete _freshRooms[roomId];
             document.getElementById('convName').textContent = name||'고객';
             document.getElementById('convBody').innerHTML = '<div style="text-align:center;color:#64748b;padding:30px;">불러오는 중...</div>';
             document.getElementById('convOv').classList.add('open');
             // 방 상태
-            try{ const { data: rm } = await sb.from('chat_rooms').select('human_active, customer_name, nickname').eq('id',roomId).maybeSingle(); if(rm){ _curRoom.human_active=!!rm.human_active; if(!name) document.getElementById('convName').textContent=rm.customer_name||rm.nickname||'고객'; } }catch(e){}
+            try{ const { data: rm } = await sb.from('chat_rooms').select('human_active, assigned_manager, customer_name, nickname').eq('id',roomId).maybeSingle(); if(rm){ _curRoom.human_active=!!rm.human_active; _curRoom.assigned_manager=(rm.assigned_manager||''); const _cn=(name||rm.customer_name||rm.nickname||'고객'); document.getElementById('convName').textContent = _cn + (_curRoom.assigned_manager?('  ·  👤 '+_curRoom.assigned_manager):''); } }catch(e){}
             await renderConvMessages(roomId);
             paintJoinBar();
             subscribeRoom(roomId);
@@ -358,9 +384,9 @@
             if(!_curRoom) return;
             try{
                 await sb.from('chat_rooms').update({ human_active:true, assigned_manager:ME, status:'human' }).eq('id',_curRoom.id);
-                _curRoom.human_active=true; paintJoinBar();
+                _curRoom.human_active=true; _curRoom.assigned_manager=ME; paintJoinBar();
                 document.getElementById('replyTa').focus();
-                toast('🙋 매니저 참여 — 이제 AI 대신 직접 답변합니다');
+                toast('🙋 매니저 참여 ('+ME+') — 이제 AI 대신 직접 답변합니다');
             }catch(e){ toast('참여 실패: '+(e?.message||e), true); }
         };
         window.managerLeave = async function(){
@@ -377,10 +403,11 @@
             const ta=document.getElementById('replyTa'); const txt=(ta.value||'').trim();
             if(!txt) return;
             ta.disabled=true;
+            const sender = (_curRoom.assigned_manager || ME);   // 이 방의 담당자 이름으로 발송
             try{
-                if(!_curRoom.human_active){ await sb.from('chat_rooms').update({ human_active:true, assigned_manager:ME, status:'human' }).eq('id',_curRoom.id); _curRoom.human_active=true; paintJoinBar(); }
+                if(!_curRoom.human_active || !_curRoom.assigned_manager){ await sb.from('chat_rooms').update({ human_active:true, assigned_manager:sender, status:'human' }).eq('id',_curRoom.id); _curRoom.human_active=true; _curRoom.assigned_manager=sender; paintJoinBar(); }
                 const { error } = await sb.from('chat_messages').insert({
-                    room_id:_curRoom.id, sender_type:'chatbot', sender_name:'관리자 '+ME, message:txt, created_at:new Date().toISOString()
+                    room_id:_curRoom.id, sender_type:'chatbot', sender_name:'관리자 '+sender, message:txt, created_at:new Date().toISOString()
                 });
                 if(error) throw error;
                 await sb.from('chat_rooms').update({ updated_at:new Date().toISOString() }).eq('id',_curRoom.id);
