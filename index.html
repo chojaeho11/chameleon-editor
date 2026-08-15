@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815215155';
+    var CV = '20260815215825';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2126,9 +2126,9 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-wallet"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_scrap_pay">상담 후 금액주문</span>
                 </button>
-                <button type="button" class="mgr-action mgr-design" onclick="window.openDesignRequestPopup && window.openDesignRequestPopup()">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-palette"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_design_request">디자인 의뢰하기</span>
+                <button type="button" class="mgr-action mgr-design" onclick="window.openVipInquiry && window.openVipInquiry()">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dollar"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_bulk_inquiry">대량문의</span>
                 </button>
                 <!-- 2026-07-20: 회원가입 → 디자이너(모집) 로 교체.
                      아래 긴 배너 2개(디자이너 모집·추천인 이벤트)를 없애면서 디자이너 모집 링크를
@@ -2619,7 +2619,7 @@ window._tcmFallbackClick = function(code) {
         setI18n('[data-i18n="btn_mgr_chat"]', t.btnChat);
         setI18n('[data-i18n="btn_vip_pay"]', t.btnVip);
         setI18n('[data-i18n="btn_scrap_pay"]', t.btnScrap);
-        setI18n('[data-i18n="btn_design_request"]', t.btnDesign);
+        setI18n('[data-i18n="btn_bulk_inquiry"]', ({kr:'대량문의',ja:'大量問い合わせ',en:'Bulk Inquiry',zh:'批量咨询',ar:'استفسار بالجملة',es:'Consulta al por mayor',de:'Großanfrage',fr:'Demande en gros'}[lang] || '대량문의'));
         setI18n('[data-i18n="btn_event_coupon"]', t.btnCoupon);
         // 2026-06-14: 7번째 디자이너 신청 버튼
         setI18n('[data-i18n="btn_designer_apply"]', t.btnDapply || '디자이너 신청');
@@ -4584,6 +4584,16 @@ window.addEventListener('load', function() {
                 document.getElementById('qqSurveyModal').style.display = 'flex';
             });
         });
+        // 2026-08-15: 대량문의 버튼 → 예전 VIP문의(빠른견적서 → vip_orders) 열기 (카테고리='대량문의')
+        window.openVipInquiry = function(){
+            var cat = '대량문의';
+            var form = document.getElementById('qqSurveyForm'); if (form) form.reset();
+            var catEl = document.getElementById('qqCategory'); if (catEl) catEl.value = cat;
+            var titleEl = document.getElementById('qqModalTitle'); if (titleEl) titleEl.textContent = '🚀 ' + cat;
+            var bv = document.getElementById('qqBudgetValue'); if (bv) bv.value = '';
+            document.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(function(b){ b.style.background = b.dataset.budget==='1000만원' ? '#fef3c7' : '#fff'; b.style.color = b.dataset.budget==='1000만원' ? '#78350f' : ''; });
+            var modal = document.getElementById('qqSurveyModal'); if (modal) modal.style.display = 'flex';
+        };
         // 예산 버튼 선택
         document.querySelectorAll('#qqBudgetBtns .qq-budget-btn').forEach(btn => {
             btn.addEventListener('click', () => {
