@@ -6478,15 +6478,15 @@
                         '画像を追加したら、位置を動かしてより美しい構図に整えてみましょう。ベクターや素材を使って、さらに素敵に飾ってみてください。',
                         'After adding the image, move it to get a nicer composition. Use vectors or elements to decorate it even more beautifully.') +
               '</div>' +
-              // 2026-07-27 (사장님 지시): 만든 작품이 메인 갤러리에 올라간다는 안내 + [사용 금지] 옵트아웃.
+              // 2026-08-15 (사장님 지시): 옵트인으로 전환 — 기본은 비공개, [내 작품 공개하기] 눌러야 메인 갤러리에 노출.
               '<div id="meAiGalleryNotice" style="display:none; margin-top:10px; font-size:12px; color:#475569; line-height:1.6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:11px 13px;">' +
                 '<div style="margin-bottom:9px;">' +
-                _meAiTr('고객님께서 만드신 작품은 <b>메인 화면</b>에 소개됩니다. 공개를 원하지 않으시면 아래 <b>내 작품 공개 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">공개하지 않아도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
-                        'お作りいただいた作品は <b>メイン画面</b> に紹介されます。公開をご希望でなければ下の <b>作品を公開しない</b> ボタンを押してください。<span style="color:#64748b;">公開しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
-                        'Your design will be featured on the <b>main page</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
+                _meAiTr('🎁 <b>내 작품 공개하기</b> — 공개하시면 행사 알림·내 업체 등이 함께 홍보됩니다. 고객님이 만든 멋진 디자인을 레퍼런스로 공유해 주세요. <span style="color:#64748b;">공개하지 않아도 이 디자인은 그대로 사용하실 수 있어요.</span>',
+                        '🎁 <b>作品を公開する</b> — 公開すると、イベント告知やお店の宣伝にもつながります。素敵なデザインをレファレンスとして共有してください。<span style="color:#64748b;">公開しなくても、このデザインはそのままご利用いただけます。</span>',
+                        '🎁 <b>Publish my design</b> — Publishing helps promote your event or business too. Share your great design as a reference. <span style="color:#64748b;">You can still use it either way.</span>') +
                 '</div>' +
-                '<button type="button" id="meAiOptOutBtn" onclick="window._meAiOptOutGallery(this)" style="width:100%; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">' +
-                _meAiTr('메인 화면에 올리지 않기', 'メイン画面に載せない', 'Don\'t show on the main page') +
+                '<button type="button" id="meAiPublishBtn" onclick="window._meAiPublishGallery(this)" style="width:100%; padding:10px; border:none; background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">' +
+                _meAiTr('내 작품 공개하기', '作品を公開する', 'Publish my design') +
                 '</button>' +
               '</div>' +
               '<div id="meAiErr" style="display:none; margin-top:10px; font-size:12.5px; color:#dc2626; line-height:1.5;"></div>' +
@@ -7663,7 +7663,10 @@
             //   pending 행은 RLS(dg_read = status='public')로 anon 이 못 읽음 → 관리자만 RPC 로 조회/승인.
             //   안전한 일반 디자인은 status='public' 로 바로 갤러리 노출.
             var needsReview = (ratio === 'namecard') || _meHasPII(rawPrompt);
-            var status = needsReview ? 'pending' : 'public';
+            // 2026-08-15: 옵트인 전환 — 기본은 비공개(hidden). 고객이 [내 작품 공개하기] 눌러야 갤러리 노출.
+            //   PII/명함은 공개 시 pending(관리자 승인 후 노출) 으로 라우팅 (_meLastGalleryNeedsReview 로 전달).
+            var status = 'hidden';
+            _meLastGalleryNeedsReview = needsReview;
             var sb = window.sb; if (!sb || !imageUrl) return;
             var scrubbed = _meScrubPII(rawPrompt).slice(0, 300);
             // 2026-07-20: 예전엔 여기서 return 해 등록 자체를 건너뛰었다 →
@@ -7715,7 +7718,38 @@
             if (!_ins.error && _ins.data) _meLastGalleryId = _ins.data.id;
         } catch (e) { console.warn('[meGallery] register failed', e); }
     }
-    var _meLastGalleryId = null;   // 방금 등록한 작품 id (사용 금지 대상)
+    var _meLastGalleryId = null;   // 방금 등록한 작품 id (공개 대상)
+    var _meLastGalleryNeedsReview = false;   // 방금 작품이 PII/명함 → 공개 시 관리자 승인(pending) 필요
+    // 2026-08-15 (사장님 지시): 옵트인 — 고객이 방금 만든 작품을 메인 갤러리에 공개(본인은 항상 사용 가능).
+    window._meAiPublishGallery = async function (btn) {
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+        // 갤러리 등록은 비동기라 방금 눌렀을 때 아직 id 가 안 잡혔을 수 있다 → 잠깐 기다린다.
+        if (!_meLastGalleryId) {
+            for (var _w = 0; _w < 30 && !_meLastGalleryId; _w++) { await new Promise(function (r) { setTimeout(r, 200); }); }
+        }
+        if (!_meLastGalleryId) {
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = _meAiTr('잠시 후 다시 시도', '少し後で再試行', 'Try again shortly'); }
+            return;
+        }
+        var id = _meLastGalleryId;
+        try {
+            var sb = window.sb;
+            if (sb) {
+                var _r = await sb.rpc('dg_publish', { p_id: id, p_pending: !!_meLastGalleryNeedsReview });
+                if (_r.error) throw _r.error;
+            }
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = _meLastGalleryNeedsReview
+                    ? _meAiTr('✓ 검토 후 공개돼요', '✓ 確認後に公開されます', '✓ Published after review')
+                    : _meAiTr('✓ 공개되었습니다 · 감사합니다', '✓ 公開しました · ありがとうございます', '✓ Published · thank you');
+                btn.style.background = '#f0fdf4'; btn.style.borderColor = '#86efac'; btn.style.color = '#15803d'; btn.style.opacity = '1';
+            }
+        } catch (e) {
+            console.warn('[meGallery] publish', e);
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = _meAiTr('다시 시도', 'もう一度', 'Retry'); }
+        }
+    };
     // 2026-07-27 (사장님 지시): 고객이 방금 만든 작품을 메인 갤러리에서 빼기 (본인은 계속 사용 가능).
     window._meAiOptOutGallery = async function (btn) {
         if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
@@ -8037,13 +8071,13 @@
                 var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
                 // 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget
                 try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {}
-                // 2026-07-27: 갤러리 등록 안내 + [사용 금지] 노출 (히어로 세션 아닐 때만 — 히어로는 곧 제품으로 넘어감)
+                // 2026-08-15: 갤러리 옵트인 안내 + [내 작품 공개하기] 노출 (새 생성마다 버튼 상태 초기화)
                 try {
                     var _gn = document.getElementById('meAiGalleryNotice');
-                    var _gb = document.getElementById('meAiOptOutBtn');
-                    if (_gb) { _gb.disabled = false; _gb.style.opacity = '1'; _gb.style.background='#fff'; _gb.style.borderColor='#cbd5e1'; _gb.style.color='#475569';
-                        _gb.textContent = _meAiTr('내 작품 공개 금지', '作品を公開しない', 'Keep my design private'); }
-                    if (_gn) _gn.style.display = 'block';   // 2026-07-27: 히어로 흐름에서도 노출 (사장님 지시)
+                    var _gb = document.getElementById('meAiPublishBtn');
+                    if (_gb) { _gb.disabled = false; _gb.style.opacity = '1'; _gb.style.background='linear-gradient(135deg,#7c3aed,#6d28d9)'; _gb.style.borderColor='transparent'; _gb.style.color='#fff';
+                        _gb.textContent = _meAiTr('내 작품 공개하기', '作品を公開する', 'Publish my design'); }
+                    if (_gn) _gn.style.display = 'block';
                 } catch (_gne) {}
             }
         } catch (e) {
