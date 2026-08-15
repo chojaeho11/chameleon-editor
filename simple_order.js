@@ -21343,10 +21343,31 @@ html, body { background: #ffffff !important; }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            injectStyles(); injectModal(); setupRouting();
+            injectStyles(); injectModal(); setupRouting(); _soMaybeAutoOpenCart();
         });
     } else {
-        injectStyles(); injectModal(); setupRouting();
+        injectStyles(); injectModal(); setupRouting(); _soMaybeAutoOpenCart();
+    }
+
+    // 2026-08-15: 패브릭/원지 등 별도 페이지에서 '주문하기/장바구니'를 누르면 메인(/?cart=open)으로 이동 →
+    //   여기서 통합 장바구니 드로어를 자동으로 연다. (패브릭 항목은 이미 chameleon_cart_current 공유 카트에 들어있음)
+    //   cart=checkout 이면 결제창까지 바로 진입.
+    function _soMaybeAutoOpenCart() {
+        try {
+            var v = new URLSearchParams(location.search).get('cart');
+            if (v !== 'open' && v !== 'checkout') return;
+            // cart_sync 가 서버 카트를 병합할 시간을 준 뒤 연다. (병합 지연 대비 1회 재시도)
+            var _tries = 0;
+            var _openIt = function () {
+                try {
+                    var n = (typeof _soReadAllCart === 'function' ? _soReadAllCart() : []).length;
+                    if (n <= 0) { if (_tries++ < 2) { setTimeout(_openIt, 900); } return; }
+                    if (v === 'checkout') { window._soOpenCheckout(); }
+                    else { window._soToggleCart(true); }
+                } catch (e) { console.warn('[so autoOpenCart]', e); }
+            };
+            setTimeout(_openIt, 600);
+        } catch (e) {}
     }
 
     // 2026-06-11: 견적서/작업지시서 등 외부 모듈에서 정확한 라인 총액 사용 위함 — _soCalcItemPrice 전역 노출

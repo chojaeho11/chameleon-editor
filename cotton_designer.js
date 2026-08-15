@@ -2285,6 +2285,12 @@ window._cdAddToCart = async function() {
 // 2026-06-06: 바로주문 대신 장바구니 보기 — 다른 상품과 묶음 (무료배송 carryover 활용)
 window._cdViewCart = function() {
     try {
+        // 2026-08-15: cafe 메인 도메인(공유 카트)에선 메인 통합 장바구니로 이동 — 명함/스티커 등과 한 카트/한 결제.
+        if (CART_KEY === 'chameleon_cart_current') {
+            try { window.cartSync && window.cartSync.forceSync && window.cartSync.forceSync(); } catch (e) {}
+            location.href = _cpMainCartUrl('open');
+            return;
+        }
         if (typeof window._cpCartOpen === 'function') return window._cpCartOpen();
         if (typeof window._soToggleCart === 'function') return window._soToggleCart(true);
     } catch (e) { console.warn('[cd] viewCart', e); }
@@ -2363,13 +2369,32 @@ window._cdBuyNow = async function() {
 
 // 2026-05-22: 결제창 라우터 — cafe2626 에선 통합 결제창(_soOpenCheckout: 패브릭+일반+마일리지 한 번에),
 //   단독 패브릭 도메인(cotton-print/printer.com)에선 simple_order 미로드 → 패브릭 전용(_cpOpenCheckout).
+// 2026-08-15: cafe 메인 도메인은 페이지가 달라도(=/fabric) 같은 공유 카트(chameleon_cart_current)를 쓰므로
+//   메인(/?cart=checkout)으로 이동해 통합 결제창을 그대로 사용 — SNS 홍보 무료쿠폰 버튼·포인트 잔액 등 완전히 동일.
 window._cpGoCheckout = function () {
     try { if (window._cpCartClose) window._cpCartClose(); } catch (e) {}
+    // 같은 페이지에 통합 결제창이 로드돼 있으면 그대로 사용 (안전망)
     if (typeof window._soOpenCheckout === 'function' && document.getElementById('soCheckoutOverlay')) {
         try { window._soOpenCheckout(); return; } catch (e) { console.warn('[cpGoCheckout] _soOpenCheckout 실패, 패브릭 전용으로', e); }
     }
-    window._cpOpenCheckout();
+    // cafe 메인 도메인(공유 카트): 메인의 통합 카트/결제로 이동
+    if (CART_KEY === 'chameleon_cart_current') {
+        try { window.cartSync && window.cartSync.forceSync && window.cartSync.forceSync(); } catch (e) {}
+        location.href = _cpMainCartUrl('checkout');
+        return;
+    }
+    window._cpOpenCheckout();  // 단독 패브릭 도메인 전용 결제창
 };
+
+// 2026-08-15: 메인 통합 카트 URL 빌더 — 현재 lang 파라미터 보존.
+function _cpMainCartUrl(mode) {
+    var q = 'cart=' + (mode || 'open');
+    try {
+        var lang = new URLSearchParams(location.search).get('lang');
+        if (lang) q += '&lang=' + encodeURIComponent(lang);
+    } catch (e) {}
+    return '/?' + q;
+}
 
 // 2026-05-13: 최소주문금액 제도 폐지 — 사용자 결정 (KR/JP/EN 모두 제한 없음)
 function checkMinOrderAmount(_total_krw) {
