@@ -19614,16 +19614,20 @@ html, body { background: #ffffff !important; }
         var sub = document.getElementById('soSnsCouponSub');
         if (!btn) return;
         var on = !!(chk && chk.checked);
+        // 2026-08-15: 고객 무료쿠폰(=통합 포인트) 잔액을 버튼에 표시
+        var bal = 0;
+        try { bal = parseInt((window._soWallet && window._soWallet.blogCouponBalKRW) || 0) || 0; } catch (e) {}
+        var balTxt = tr('잔액 ', '残高 ', 'Balance ') + _soFormatPrice(bal);
         if (on) {
             btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
             btn.style.color = '#fff';
             btn.style.borderColor = '#15803d';
-            if (sub) sub.textContent = tr('✓ 적용됨 · 1회 최대 5만원 (배송비 포함)', '✓ 適用中 · 1回最大5,000円', '✓ Applied · up to 50,000 KRW/order');
+            if (sub) sub.textContent = tr('✓ 적용됨 · ', '✓ 適用中 · ', '✓ Applied · ') + balTxt + tr(' · 1회 최대 5만원', ' · 1回最大5,000円', ' · up to 50,000 KRW/order');
         } else {
             btn.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
             btn.style.color = '#065f46';
             btn.style.borderColor = '#16a34a';
-            if (sub) sub.textContent = tr('눌러서 적용 · 1회 최대 5만원 (배송비 포함)', 'タップで適用 · 1回最大5,000円', 'Tap to apply · up to 50,000 KRW/order');
+            if (sub) sub.textContent = balTxt + tr(' · 눌러서 적용 · 1회 최대 5만원', ' · タップで適用 · 1回最大5,000円', ' · Tap to apply · up to 50,000 KRW');
         }
     };
     window._soToggleSnsCoupon = function () {
