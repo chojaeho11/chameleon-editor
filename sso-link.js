@@ -97,30 +97,65 @@
         } catch (e) {}
     }, true);
 
-    // ---- 도착: #sso= 소비 → setSession → (신규 로그인 시) 리로드 ----
+    // ---- 도착: #sso= (로그인) / #sso_none=1 (세션없음 응답) 소비 ----
+    //   반환: 'logged-in' | 'none' | 'nothing'
     async function consumeIncoming() {
         try {
+            var hasNone = /[#&]sso_none=/.test(location.hash);
             var m = location.hash.match(/[#&]sso=([^&]+)/);
-            if (!m) return;
-            var obj = null;
-            try { obj = JSON.parse(b64d(m[1])); } catch (e) { obj = null; }
-            // 재소비 방지: 토큰을 URL 에서 먼저 제거
-            var cleanHash = location.hash.replace(/([#&])sso=[^&]*/, '$1').replace(/^#&/, '#').replace(/[#&]$/, '');
+            if (!m && !hasNone) return 'nothing';
+            // 재소비 방지: 해시에서 sso 관련 토큰 먼저 제거
+            var cleanHash = location.hash
+                .replace(/([#&])sso=[^&]*/, '$1')
+                .replace(/([#&])sso_none=[^&]*/, '$1')
+                .replace(/^#&/, '#').replace(/&&/g, '&').replace(/[#&]$/, '');
             if (cleanHash === '#') cleanHash = '';
             try { history.replaceState(null, '', location.pathname + location.search + cleanHash); } catch (e) {}
-            if (!obj || !obj.at || !obj.rt) return;
-            var sb = await waitForSb(); if (!sb) return;
+            if (hasNone && !m) return 'none';
+            var obj = null;
+            try { obj = JSON.parse(b64d(m[1])); } catch (e) { obj = null; }
+            if (!obj || !obj.at || !obj.rt) return 'nothing';
+            var sb = await waitForSb(); if (!sb) return 'nothing';
             // 이미 로그인돼 있으면 스킵 (덮어쓰기 방지)
-            try { var cur = await sb.auth.getSession(); if (cur && cur.data && cur.data.session) { cacheSession(cur.data.session); return; } } catch (e) {}
+            try { var cur = await sb.auth.getSession(); if (cur && cur.data && cur.data.session) { cacheSession(cur.data.session); return 'logged-in'; } } catch (e) {}
             var r = await sb.auth.setSession({ access_token: obj.at, refresh_token: obj.rt });
             if (r && r.data && r.data.session) {
                 cacheSession(r.data.session);
-                // 페이지는 로그아웃 상태로 렌더됐으므로 한번 새로고침해 로그인 UI 반영 (URL 은 이미 정리됨)
-                location.reload();
+                location.reload();   // 로그아웃 상태로 렌더됐으므로 새로고침해 로그인 UI 반영 (URL 은 이미 정리됨)
+                return 'logged-in';
             }
+            return 'nothing';
+        } catch (e) { return 'nothing'; }
+    }
+
+    // ---- 직접 접속(우리 링크 경유 아님) 대비: cafe2626 허브로 세션당 1회 조용히 확인 ----
+    var SILENT_HOSTS = /(^|\.)(cotton-print\.com|cotton-printer\.com|hexa-board\.com)$/i;
+    var HUB_URL = 'https://www.cafe2626.com/sso-hub.html';
+    function isBot() {
+        try { return /bot|crawl|spider|slurp|bing|google|baidu|yandex|duckduck|facebookexternal|embed|preview|lighthouse|headless/i.test(navigator.userAgent || ''); }
+        catch (e) { return false; }
+    }
+    function ssChecked() { try { return sessionStorage.getItem('_ssoChecked') === '1'; } catch (e) { return true; } } // 스토리지 불가 시 확인 스킵(루프 방지)
+    function ssMark() { try { sessionStorage.setItem('_ssoChecked', '1'); } catch (e) {} }
+    async function maybeSilentCheck() {
+        try {
+            if (!SILENT_HOSTS.test(location.hostname)) return;   // 단독 도메인만 (cafe2626 은 허브 자신이라 제외)
+            if (isBot()) return;                                 // 봇/프리렌더는 리다이렉트 안 함(SEO 보호)
+            if (ssChecked()) return;                             // 세션당 1회
+            var sb = await waitForSb();
+            if (!sb) return;
+            var cur = await sb.auth.getSession();
+            if (cur && cur.data && cur.data.session) { ssMark(); return; }   // 이미 로그인 → 확인 불필요
+            ssMark();                                            // 리다이렉트 전에 표시 (왕복 후 재확인 방지)
+            location.replace(HUB_URL + '?return=' + encodeURIComponent(location.href));
         } catch (e) {}
     }
 
-    consumeIncoming();
+    (async function main() {
+        var st = await consumeIncoming();
+        if (st === 'logged-in') return;              // 완료(또는 리로드 중)
+        if (st === 'none') { ssMark(); return; }     // 방금 허브 확인 결과 세션 없음 → 재확인 안 함
+        await maybeSilentCheck();
+    })();
     initSessionCache();
 })();

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815155258';
+    var CV = '20260815160210';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -647,7 +647,7 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js" defer></script>
 <!-- 2026-08-15: 크로스도메인 로그인 공유 (링크 이동 SSO) — cafe2626 ↔ cotton-print ↔ hexa-board -->
-<script src="/sso-link.js?v=1" defer></script>
+<script src="/sso-link.js?v=2" defer></script>
 <!-- 2026-07-16: 주문에러/관리자 알림 팝업 (메인+패브릭 공용). supabase UMD 뒤에 와야 함. -->
 <script src="/order-error-popup.js?v=2" defer></script>
 

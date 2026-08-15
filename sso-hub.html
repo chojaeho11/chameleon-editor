@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> </title>
+<style>html,body{margin:0;height:100%;background:#faf6ed;}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* sso-hub.html — 크로스도메인 SSO 허브 (cafe2626).  2026-08-15
+ * 단독 도메인(cotton-print/hexa-board)이 로그아웃 상태로 직접 접속하면 ?return=<url> 로 이 페이지에 옴.
+ * 여기(cafe2626)의 세션을 읽어, 있으면 return URL 로 #sso=<token> 을 붙여 되돌리고, 없으면 #sso_none=1 로 되돌린다.
+ * (top-level 리다이렉트라 브라우저 스토리지 파티셔닝 영향 없음.) */
+(function () {
+    'use strict';
+    var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    var STORAGE_KEY = 'sb-qinvtnhiidtmrzosyvys-auth-token';
+    var OWN = /(^|\.)(cafe2626\.com|cafe0101\.com|cafe3355\.com|chameleon\.design|cotton-print\.com|cotton-printer\.com|hexa-board\.com)$/i;
+
+    function b64e(str) {
+        return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function backTo(retUrl, hashAdd) {
+        var base = retUrl.origin + retUrl.pathname + retUrl.search;
+        var h = retUrl.hash && retUrl.hash !== '#' ? (retUrl.hash + '&' + hashAdd) : ('#' + hashAdd);
+        location.replace(base + h);
+    }
+    try {
+        var ret = new URLSearchParams(location.search).get('return') || '';
+        var retUrl = null;
+        try { retUrl = new URL(ret); } catch (e) { retUrl = null; }
+        // 우리 소유 https 도메인만 허용 (오픈 리다이렉트 방지)
+        if (!retUrl || retUrl.protocol !== 'https:' || !OWN.test(retUrl.hostname)) {
+            document.title = ' ';
+            location.replace('https://www.cafe2626.com/');
+            return;
+        }
+        var sb = window.supabase.createClient(SB_URL, SB_KEY, {
+            auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false, storage: localStorage, storageKey: STORAGE_KEY }
+        });
+        sb.auth.getSession().then(function (r) {
+            var s = r && r.data && r.data.session;
+            if (s && s.access_token && s.refresh_token) {
+                backTo(retUrl, 'sso=' + b64e(JSON.stringify({ at: s.access_token, rt: s.refresh_token })));
+            } else {
+                backTo(retUrl, 'sso_none=1');
+            }
+        }).catch(function () { backTo(retUrl, 'sso_none=1'); });
+    } catch (e) {
+        location.replace('https://www.cafe2626.com/');
+    }
+})();
+</script>
+</head>
+<body></body>
+</html>
