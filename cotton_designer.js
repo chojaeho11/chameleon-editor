@@ -3218,15 +3218,14 @@ async function autoLoadPatternFromUrl() {
                     state.imgFileName = (params.get('patternname') || 'pattern') + '.png';
                     const ratio = im.width / im.height;
                     state.imgAspect = ratio;
-                    state.layout = 'centered';
-                    state.imgWcm = state.orderWcm || 130;
-                    state.imgHcm = Math.round(state.imgWcm / ratio * 10) / 10;
-                    state.orderHcm = state.imgHcm;
+                    // 2026-08-15: 패턴 픽 진입 기본값 = 패턴원단인쇄 · 하프드롭 · 200mm · 연노랑
+                    state.layout = 'centered';                    // 아래 _cdSelectLayout('halfdrop') 의 centered→패턴 스냅용 시작값
+                    state.bgColor = '#fde68a';                    // 연노랑
+                    state.imgWcm = 20;                            // 한 패턴 단위 = 200mm
+                    state.imgHcm = Math.round(20 / ratio * 10) / 10;
                     try {
                         document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
                         document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
-                        const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
-                        const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
                         document.getElementById('uploadZone').style.display = 'none';
                         document.getElementById('previewArea').classList.add('active');
                         document.getElementById('btnReset').style.display = '';
@@ -3235,6 +3234,8 @@ async function autoLoadPatternFromUrl() {
                         document.getElementById('orderBtn').disabled = false;
                         const _bn = document.getElementById('buyNowBtn'); if (_bn) _bn.disabled = false;
                     } catch (_ui) { console.warn('[cd] patternimg ui', _ui); }
+                    try { if (window._cdSelectLayout) window._cdSelectLayout('halfdrop'); } catch (_l) {}   // 패턴원단인쇄 + 하프드롭 (+롤폭 스냅)
+                    try { if (window._cdSelectBgColor) window._cdSelectBgColor('#fde68a'); } catch (_c) {}  // 연노랑 스와치 활성
                     try { window._cdRender(); } catch (_r) {}
                     rs();
                 };
@@ -3288,15 +3289,13 @@ async function autoLoadPatternFromUrl() {
                 // 2026-05-28: 기본 패턴 크기를 캔버스 가로폭(orderWcm)에 맞춤
                 // + aspect 비율 저장 → 사용자가 출력 사이즈 변경하면 _cdCalcHoebae 가 이미지도 비례 조정
                 state.imgAspect = ratio;
-                state.layout = 'centered'; // 이미지가 캔버스를 꽉 채우는 모드 — 출력 사이즈와 동기화
-                state.imgWcm = state.orderWcm || 130;            // 캔버스 가로폭 (기본 130cm = 1300mm)
-                state.imgHcm = Math.round(state.imgWcm / ratio * 10) / 10;
-                // 출력 세로도 이미지 비율에 맞춰 조정 (가로 폭은 그대로)
-                state.orderHcm = state.imgHcm;
+                // 2026-08-15: 패턴 픽 진입 기본값 = 패턴원단인쇄 · 하프드롭 · 200mm · 연노랑
+                state.layout = 'centered';                    // 아래 _cdSelectLayout('halfdrop') 의 centered→패턴 스냅용 시작값
+                state.bgColor = '#fde68a';                    // 연노랑
+                state.imgWcm = 20;                            // 한 패턴 단위 = 200mm
+                state.imgHcm = Math.round(20 / ratio * 10) / 10;
                 document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
                 document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
-                const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
-                const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
                 document.getElementById('uploadZone').style.display = 'none';
                 document.getElementById('previewArea').classList.add('active');
                 document.getElementById('btnReset').style.display = '';
@@ -3306,9 +3305,8 @@ async function autoLoadPatternFromUrl() {
                 document.getElementById('orderBtn').disabled = false;
                 const _bn = document.getElementById('buyNowBtn'); if (_bn) _bn.disabled = false;
 
-                // 2026-05-11: 디자이너 패턴 배지 제거 (사용자 요청 — 캔버스 위에 떠있는 둥근 라벨이 거슬림)
-                // 패턴 이름은 캔버스 헤더 영역에 자연스럽게 노출되도록 별도 처리하거나 그냥 토스트로만 안내.
-
+                try { if (window._cdSelectLayout) window._cdSelectLayout('halfdrop'); } catch (_l) {}   // 패턴원단인쇄 + 하프드롭 (+롤폭 스냅)
+                try { if (window._cdSelectBgColor) window._cdSelectBgColor('#fde68a'); } catch (_c) {}  // 연노랑 스와치 활성
                 window._cdRender();
                 showToast(window.cdT ? window.cdT('pattern_loaded_toast') : '✅ 패턴 로드 완료! 원단을 선택하고 사이즈를 조정해보세요.');
             };
