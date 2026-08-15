@@ -18006,6 +18006,8 @@ html, body { background: #ffffff !important; }
         if (!ov || !dr) return;
         if (open === undefined) open = !dr.classList.contains('open');
         if (open) {
+            // 2026-08-15: 레거시 전체화면 카트(#cartPage)가 뒤에 겹쳐 보이지 않도록 닫는다 (통합 드로어가 정식 카트).
+            try { var _lc = document.getElementById('cartPage'); if (_lc) _lc.style.display = 'none'; } catch (e) {}
             ov.classList.add('open');
             dr.classList.add('open');
             // 2026-08-10: 스티커 단가 캐시 없으면 선로딩 후 재렌더 (카트 총액 0원 방지)
@@ -19947,6 +19949,9 @@ html, body { background: #ffffff !important; }
                 if (_rbMemoItem) _memoEl.value = (_rbMemoItem.item_note || _rbMemoItem.itemNote || '').trim();
             }
         } catch (_me) {}
+        // 2026-08-15: 결제창 열 땐 레거시 전체화면 카트(#cartPage)와 통합 드로어를 모두 닫아 겹침 방지.
+        try { var _lc2 = document.getElementById('cartPage'); if (_lc2) _lc2.style.display = 'none'; } catch (e) {}
+        try { if (typeof window._soToggleCart === 'function') window._soToggleCart(false); } catch (e) {}
         document.getElementById('soCheckoutOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';
         _soApplyFranchisePay();
