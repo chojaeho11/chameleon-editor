@@ -2290,6 +2290,25 @@ window._cdViewCart = function() {
     } catch (e) { console.warn('[cd] viewCart', e); }
 };
 
+// 2026-08-15: 무료 원단 스와치 — 이것만 담아도 무료 주문(택배비만). 일반 fabric 아이템 흐름 재사용(price 0, __source cotton-print → 체크아웃이 fabric 으로 인식).
+window._cdAddSwatch = function () {
+    var lang = window.__CD_LANG || 'ko';
+    var title = lang === 'ja' ? '無料 生地スウォッチ（サンプル）' : lang === 'en' ? 'Free fabric swatch (sample)' : '무료 원단 스와치 (샘플)';
+    var shipLbl = lang === 'ja' ? '送料' : lang === 'en' ? 'Shipping' : '택배비';
+    var item = {
+        id: 'swatch_' + Date.now(), uid: Date.now(),
+        __source: 'cotton-print', isSwatch: true,
+        title: title, fabricName: title, fabricCode: 'SWATCH',
+        orderSize: '-', orderWcm: 0, orderHcm: 0,
+        qty: 1, qtyLabel: '1', finishCode: '', finishName: '-',
+        price: 0, shipping: { fee: 2500, label: shipLbl }
+    };
+    try { var cart = getCart(); cart.push(item); saveCart(cart); } catch (e) { console.warn('[swatch] cart', e); return; }
+    try { window.gtagTrackAddToCart && window.gtagTrackAddToCart(0); } catch (e) {}
+    try { window._cpUpdateCartUI && window._cpUpdateCartUI(); } catch (e) {}
+    window._cpGoCheckout();
+};
+
 window._cdBuyNow = async function() {
     // 2026-05-22: 이미지 없이도 바로 주문 허용 (디자인 추후 전달)
     if (!state.img || !state.imgDataUrl) {

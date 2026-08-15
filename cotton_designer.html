@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260815025907';
+    var CV = '20260815134847';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -295,6 +295,9 @@ window.__CD_I18N = {
     finish_rolledhem_sub: { ko:'고급 접어박기', ja:'高級折り縫い', en:'Premium fold-stitch' },
     side_hook: { ko:'끈고리 · 봉끼움 · 미싱', ja:'ヒモ吊り・棒通し・縫製', en:'String loops · Rod sleeve · Stitching' },
     side_acc: { ko:'실색상변경 · 목봉', ja:'糸色変更・木棒', en:'Thread color · Wood rod' },
+    swatch_title: { ko:'무료 원단 스와치', ja:'無料 生地スウォッチ', en:'Free Fabric Swatch' },
+    swatch_desc: { ko:'여러 원단을 실물로 확인하세요. 스와치는 무료이며 택배비(2,500원)만 결제됩니다. 이것만 담아 주문할 수 있어요.', ja:'いろいろな生地を実物で確認できます。スウォッチは無料、送料（¥250）のみのお支払いです。これだけでも注文できます。', en:'Check fabrics in person. Swatches are free — you only pay shipping (~$2.5). You can order this alone.' },
+    swatch_btn: { ko:'무료 스와치 신청 (택배비만)', ja:'無料スウォッチを申込む（送料のみ）', en:'Request free swatch (shipping only)' },
     acc_thread_color: { ko:'실색상 변경', ja:'糸の色変更', en:'Thread color change' },
     acc_thread_color_sub: { ko:'기본 외 컬러 마감사', ja:'標準以外のカラー糸', en:'Non-default color thread' },
     acc_rod_30: { ko:'목봉 30cm', ja:'木棒 30cm', en:'Wood rod 30cm' },
@@ -1760,6 +1763,13 @@ window._cpAuthClick = async function() {
             </div>
         </div>
 
+        <!-- 2026-08-15: 무료 원단 스와치 신청 — 이것만 담아도 무료 주문(택배비만) -->
+        <div class="side-card" id="swatchCard" style="border:1.5px solid #c7d2fe; background:linear-gradient(135deg,#eef2ff,#faf5ff);">
+            <div class="side-card-title" style="color:#4338ca;" data-cdi18n="swatch_title">무료 원단 스와치</div>
+            <div style="font-size:12px; color:#4b5563; line-height:1.55; margin:6px 0 10px;" data-cdi18n="swatch_desc">여러 원단을 실물로 확인하세요. 스와치는 무료이며 택배비(2,500원)만 결제됩니다. 이것만 담아 주문할 수 있어요.</div>
+            <button type="button" onclick="window._cdAddSwatch && window._cdAddSwatch()" style="width:100%; padding:12px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer;" data-cdi18n="swatch_btn">무료 스와치 신청 (택배비만)</button>
+        </div>
+
         <!-- 2026-05-31: 택배비 / 무료샘플북 시각 박스 제거 (사용자 요청).
              배송비 5,000원은 getShippingFeeKrw() 가 합계 계산 시 별도 적용되므로 유지. -->
         <input type="checkbox" id="sampleBookCheck" style="display:none;">
@@ -2130,7 +2140,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=123"></script>
+<script src="/cotton_designer.js?v=124"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
