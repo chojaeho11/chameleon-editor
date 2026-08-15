@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815234018';
+    var CV = '20260815234443';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1145,7 +1145,7 @@ window._tcmFallbackClick = function(code) {
                      contenteditable 에는 암호관리자가 붙지 않는다 — 값은 textContent 로 읽는다. -->
                 <div id="hwPrompt" contenteditable="true" role="textbox" tabindex="0"
                      spellcheck="false" autocorrect="off" autocapitalize="off"
-                     data-ph="내용 적기"></div>
+                     data-ph="무엇을 만들까?"></div>
                 <button type="button" id="hwGoBtn">만들기</button>
                 <button type="button" id="hwMineBtn" onclick="window.openMyDesignsModal && window.openMyDesignsModal()">🖼️ MY디자인</button>
             </div>
@@ -1171,7 +1171,7 @@ window._tcmFallbackClick = function(code) {
             var T = {
                 kr: { title:'<span class="hw-t-rest">최대 39만원</span> <span class="hw-t-brand">카멜레온 쿠폰받기</span>',
                       sub:'여름 무료 이벤트 · 눌러서 받기',
-                      ph:'내용 적기', go:'만들기',
+                      ph:'무엇을 만들까?', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
                 ja: { title:'<span class="hw-t-rest">最大</span> <span class="hw-t-brand">3.9万円分 無料クーポン</span>',
                       // 2026-08-15: 夏の無料イベント（カメレオンからのプレゼント）
