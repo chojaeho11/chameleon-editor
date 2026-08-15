@@ -42,20 +42,24 @@
             + '.bz-reg{flex:0 0 auto;padding:9px 14px;border:none;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}'
             + '.bz-x{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);color:#cbd5e1;border:none;font-size:18px;cursor:pointer;}'
             + '.bz-feed{flex:1;overflow-y:auto;padding:14px;width:100%;-webkit-overflow-scrolling:touch;}'
-            + '.bz-card{background:linear-gradient(165deg,#1e293b,#0f172a);border:1px solid rgba(148,163,184,0.15);border-radius:18px;margin-bottom:16px;overflow:hidden;}'
-            + '.bz-photos{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:#000;}'
-            + '.bz-photos img{width:100%;flex:0 0 100%;scroll-snap-align:center;object-fit:cover;max-height:60vh;display:block;}'
-            + '.bz-body{padding:14px 16px;}'
-            + '.bz-name{font-size:17px;font-weight:900;color:#f8fafc;display:flex;align-items:center;gap:8px;}'
-            + '.bz-when{font-size:11px;color:#64748b;font-weight:600;}'
-            + '.bz-kw{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0;}'
-            + '.bz-kw span{font-size:11px;font-weight:700;color:#c7d2fe;background:rgba(99,102,241,0.18);padding:3px 9px;border-radius:999px;}'
-            + '.bz-intro{font-size:13.5px;color:#cbd5e1;line-height:1.6;white-space:pre-wrap;word-break:break-word;margin-bottom:8px;}'
-            + '.bz-phone{font-size:13px;color:#86efac;font-weight:700;margin-bottom:10px;}'
+            /* 스레드풍 포스트 (아바타+업체명 상단 · 구분선 · 가로 사진 줄) */
+            + '.bz-post{display:flex;gap:11px;padding:15px 4px 13px;border-bottom:1px solid rgba(255,255,255,0.08);}'
+            + '.bz-av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;}'
+            + '.bz-col{flex:1;min-width:0;}'
+            + '.bz-phead{display:flex;align-items:center;gap:6px;margin-bottom:3px;}'
+            + '.bz-uname{font-size:14.5px;font-weight:800;color:#f8fafc;}'
+            + '.bz-time{font-size:12px;color:#71767b;}'
+            + '.bz-text{font-size:14px;color:#e7e9ea;line-height:1.55;white-space:pre-wrap;word-break:break-word;margin-bottom:9px;}'
+            + '.bz-hash{color:#7da3ff;}'
+            + '.bz-photos{display:flex;gap:8px;overflow-x:auto;margin:2px 0 10px;scrollbar-width:none;}'
+            + '.bz-photos::-webkit-scrollbar{display:none;}'
+            + '.bz-photos img{flex:0 0 auto;width:200px;height:250px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,0.1);}'
+            + '.bz-photos img.single{width:auto;max-width:100%;height:auto;max-height:64vh;}'
+            + '.bz-phone{font-size:13px;color:#86efac;font-weight:700;margin-bottom:9px;}'
             + '.bz-phone a{color:#86efac;text-decoration:none;}'
-            + '.bz-acts{display:flex;gap:18px;align-items:center;border-top:1px solid rgba(148,163,184,0.12);padding-top:10px;}'
-            + '.bz-act{display:flex;align-items:center;gap:6px;background:none;border:none;color:#94a3b8;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}'
-            + '.bz-act.liked{color:#fb7185;}'
+            + '.bz-acts{display:flex;gap:22px;align-items:center;}'
+            + '.bz-act{display:flex;align-items:center;gap:6px;background:none;border:none;color:#71767b;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;}'
+            + '.bz-act.liked{color:#f91880;}'
             + '.bz-cmts{margin-top:12px;border-top:1px solid rgba(148,163,184,0.12);padding-top:10px;display:none;}'
             + '.bz-cmts.open{display:block;}'
             + '.bz-cmt{font-size:13px;color:#e2e8f0;margin-bottom:7px;line-height:1.5;}'
@@ -146,16 +150,19 @@
     function renderCard(p) {
         var photos = [];
         try { photos = Array.isArray(p.photos) ? p.photos : (typeof p.photos === 'string' ? JSON.parse(p.photos) : []); } catch (e) { photos = []; }
-        var photoHtml = photos.length ? '<div class="bz-photos">' + photos.map(function (u) { return '<img src="' + esc(u) + '" loading="lazy" alt="">'; }).join('') + '</div>' : '';
-        var kws = (p.keywords || '').split(/[,#\s]+/).filter(Boolean).slice(0, 8);
-        var kwHtml = kws.length ? '<div class="bz-kw">' + kws.map(function (k) { return '<span>#' + esc(k) + '</span>'; }).join('') + '</div>' : '';
+        var single = photos.length === 1;
+        var photoHtml = photos.length ? '<div class="bz-photos">' + photos.map(function (u) { return '<img class="' + (single ? 'single' : '') + '" src="' + esc(u) + '" loading="lazy" alt="">'; }).join('') + '</div>' : '';
+        var kws = (p.keywords || '').split(/[,#\s]+/).filter(Boolean).slice(0, 10);
+        var hashLine = kws.length ? '  ' + kws.map(function (k) { return '<span class="bz-hash">#' + esc(k) + '</span>'; }).join(' ') : '';
         var liked = !!_likedSet[p.id];
-        return '<div class="bz-card" data-id="' + p.id + '">'
-            + photoHtml
-            + '<div class="bz-body">'
-            +   '<div class="bz-name">' + esc(p.name) + ' <span class="bz-when">· ' + fmtAgo(p.created_at) + '</span></div>'
-            +   kwHtml
-            +   (p.intro ? '<div class="bz-intro">' + esc(p.intro) + '</div>' : '')
+        var av = esc((p.name || '?').slice(0, 1).toUpperCase());
+        var textHtml = (p.intro || hashLine) ? '<div class="bz-text">' + esc(p.intro || '') + hashLine + '</div>' : '';
+        return '<div class="bz-post" data-id="' + p.id + '">'
+            + '<div class="bz-av">' + av + '</div>'
+            + '<div class="bz-col">'
+            +   '<div class="bz-phead"><span class="bz-uname">' + esc(p.name) + '</span><span class="bz-time">· ' + fmtAgo(p.created_at) + '</span></div>'
+            +   textHtml
+            +   photoHtml
             +   (p.phone ? '<div class="bz-phone">📞 <a href="tel:' + esc((p.phone || '').replace(/[^0-9+]/g, '')) + '">' + esc(p.phone) + '</a></div>' : '')
             +   '<div class="bz-acts">'
             +     '<button class="bz-act bz-like' + (liked ? ' liked' : '') + '" data-id="' + p.id + '">' + (liked ? '❤' : '🤍') + ' <span class="bz-like-n">' + (p.like_count || 0) + '</span></button>'
