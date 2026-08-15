@@ -31,10 +31,13 @@
         if (document.getElementById('bizPromoStyle')) return;
         var s = document.createElement('style'); s.id = 'bizPromoStyle';
         s.textContent = ''
-            /* 우측 도킹 패널(웹앱 스타일) — 데스크톱은 우측 460px, 모바일은 전체 */
-            + '#bizFeedOv{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100%;z-index:100060;background:#0b0f1c;display:none;flex-direction:column;box-shadow:-14px 0 44px rgba(0,0,0,0.45);border-left:1px solid rgba(148,163,184,0.18);}'
+            /* 라운딩 모달 + 배경 살짝 비침 (SUMMER EVENT 창처럼) */
+            + '#bizFeedOv{position:fixed;inset:0;z-index:100060;background:rgba(2,6,23,0.55);display:none;align-items:center;justify-content:center;padding:20px;}'
             + '#bizFeedOv.open{display:flex;}'
-            + '@media(max-width:640px){#bizFeedOv{width:100%;}}'
+            + '.bz-panel{position:relative;background:#0b0f1c;width:460px;max-width:100%;height:86vh;max-height:900px;border-radius:22px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(148,163,184,0.18);box-shadow:0 24px 60px rgba(0,0,0,0.55);}'
+            + '@media(max-width:640px){#bizFeedOv{padding:0;} .bz-panel{height:100%;border-radius:0;}}'
+            + '.bz-desc{flex:0 0 auto;padding:11px 16px;font-size:11.5px;color:#94a3b8;line-height:1.65;border-bottom:1px solid rgba(148,163,184,0.12);background:#0f172a;}'
+            + '.bz-desc b{color:#c7d2fe;font-weight:800;}'
             + '.bz-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(148,163,184,0.15);background:#0f172a;}'
             + '.bz-head h3{margin:0;font-size:16px;font-weight:900;color:#fff;white-space:nowrap;}'
             + '.bz-search{flex:1;min-width:0;padding:9px 13px;border-radius:999px;border:1px solid rgba(148,163,184,0.3);background:rgba(255,255,255,0.06);color:#f8fafc;font-size:14px;font-family:inherit;outline:none;}'
@@ -51,7 +54,9 @@
             + '.bz-time{font-size:12px;color:#71767b;}'
             + '.bz-text{font-size:14px;color:#e7e9ea;line-height:1.55;white-space:pre-wrap;word-break:break-word;margin-bottom:9px;}'
             + '.bz-hash{color:#7da3ff;}'
-            + '.bz-photos{display:flex;gap:8px;overflow-x:auto;margin:2px 0 10px;scrollbar-width:none;}'
+            + '.bz-photos{display:flex;gap:8px;overflow-x:auto;margin:2px 0 10px;scrollbar-width:none;cursor:grab;user-select:none;-webkit-user-select:none;}'
+            + '.bz-photos.dragging{cursor:grabbing;}'
+            + '.bz-photos img{pointer-events:none;}'
             + '.bz-photos::-webkit-scrollbar{display:none;}'
             + '.bz-photos img{flex:0 0 auto;width:200px;height:250px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,0.1);}'
             + '.bz-photos img.single{width:auto;max-width:100%;height:auto;max-height:64vh;}'
@@ -89,14 +94,18 @@
         if (document.getElementById('bizFeedOv')) return;
         var ov = document.createElement('div'); ov.id = 'bizFeedOv';
         ov.innerHTML = ''
-            + '<div class="bz-head">'
-            +   '<h3>🏢 업체 홍보</h3>'
-            +   '<input class="bz-search" id="bzSearch" placeholder="내가 필요한 업체 찾기 (업체명·키워드)">'
-            +   '<button class="bz-reg" id="bzRegBtn">+ 등록</button>'
-            +   '<button class="bz-x" id="bzCloseBtn">×</button>'
-            + '</div>'
-            + '<div class="bz-feed" id="bzFeed"></div>';
+            + '<div class="bz-panel">'
+            +   '<div class="bz-head">'
+            +     '<h3>🏢 커뮤니티</h3>'
+            +     '<input class="bz-search" id="bzSearch" placeholder="업체 검색">'
+            +     '<button class="bz-reg" id="bzRegBtn">+ 홍보</button>'
+            +     '<button class="bz-x" id="bzCloseBtn">×</button>'
+            +   '</div>'
+            +   '<div class="bz-desc">내 업체를 홍보하고 다른 사장님들과 소통해요. <b>하트를 받을 때마다 마일리지 100원</b>이 쌓입니다. 내가 필요했던 업체를 검색할 수 있어요. 카멜레온과 함께하는 업체들은 열심히 하시는 분들이라 믿을 수 있어요 ❤</div>'
+            +   '<div class="bz-feed" id="bzFeed"></div>'
+            + '</div>';
         document.body.appendChild(ov);
+        ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.remove('open'); });   // 배경 클릭 시 닫기
         document.getElementById('bzCloseBtn').onclick = function () { ov.classList.remove('open'); };
         document.getElementById('bzRegBtn').onclick = openRegister;
         var feed = document.getElementById('bzFeed');
@@ -176,6 +185,17 @@
     function bindCards() {
         document.querySelectorAll('#bzFeed .bz-like').forEach(function (b) { if (b._bound) return; b._bound = 1; b.onclick = function () { toggleLike(b.getAttribute('data-id'), b); }; });
         document.querySelectorAll('#bzFeed .bz-cmt-btn').forEach(function (b) { if (b._bound) return; b._bound = 1; b.onclick = function () { toggleComments(b.getAttribute('data-id')); }; });
+        document.querySelectorAll('#bzFeed .bz-photos').forEach(bindDragScroll);
+    }
+    // 사진 줄 — 마우스로 잡고 끌어서 이동(스레드처럼). 터치는 네이티브 스크롤.
+    function bindDragScroll(el) {
+        if (el._dragBound) return; el._dragBound = 1;
+        var down = false, startX = 0, startL = 0, moved = false;
+        el.addEventListener('mousedown', function (e) { down = true; moved = false; startX = e.pageX; startL = el.scrollLeft; el.classList.add('dragging'); });
+        var end = function () { if (down) { down = false; el.classList.remove('dragging'); } };
+        window.addEventListener('mouseup', end);
+        el.addEventListener('mouseleave', end);
+        el.addEventListener('mousemove', function (e) { if (!down) return; e.preventDefault(); var d = e.pageX - startX; if (Math.abs(d) > 3) moved = true; el.scrollLeft = startL - d; });
     }
 
     async function toggleLike(id, btn) {
