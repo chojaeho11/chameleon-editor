@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815220416';
+    var CV = '20260815220922';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -4531,13 +4531,13 @@ window.addEventListener('load', function() {
     </div>
 
     <!-- ★ 빠른견적서 설문 모달 -->
-    <div id="qqSurveyModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:99999;align-items:center;justify-content:center;padding:12px;">
+    <div id="qqSurveyModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:99999;align-items:center;justify-content:center;padding:12px;">
         <div style="background:#fff;border-radius:20px;padding:24px;width:480px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
                 <h3 id="qqModalTitle" style="margin:0;font-size:18px;font-weight:800;color:#1e293b;">🚀 빠른견적서</h3>
-                <button type="button" onclick="document.getElementById('qqSurveyModal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;">&times;</button>
+                <button type="button" onclick="document.getElementById('qqSurveyModal').style.display='none'" aria-label="닫기" title="닫기" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:none;font-size:20px;line-height:1;cursor:pointer;color:#475569;">✕</button>
             </div>
-            <div style="font-size:12px;color:#64748b;margin-bottom:14px;">아래 항목을 입력하시면 담당 매니저가 빠르게 견적을 보내드립니다.</div>
+            <div style="font-size:12.5px;color:#475569;margin-bottom:14px;line-height:1.6;">허니콤보드 및 종이매대·대량 굿즈 등을 <b style="color:#312e81;">대량 주문</b>하시는 VIP 고객 문의입니다. 내용을 남겨주시면 담당 매니저가 즉시 배치되어 전화로 고객님께 연락드립니다.</div>
             <form id="qqSurveyForm" onsubmit="return window.submitQuickQuote(event)">
                 <input type="hidden" id="qqCategory" name="category" value="">
                 <div style="margin-bottom:10px;">
@@ -4551,8 +4551,7 @@ window.addEventListener('load', function() {
                 <div style="margin-bottom:10px;">
                     <label style="font-size:12px;font-weight:700;color:#334155;">예산금액</label>
                     <input type="hidden" name="budget" id="qqBudgetValue" value="">
-                    <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;">
-                        <button type="button" class="qq-budget-btn" data-budget="10만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">10만원</button>
+                    <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;">
                         <button type="button" class="qq-budget-btn" data-budget="100만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">100만원</button>
                         <button type="button" class="qq-budget-btn" data-budget="500만원" style="padding:10px 4px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;">500만원</button>
                         <button type="button" class="qq-budget-btn" data-budget="1000만원" style="padding:10px 4px;border:1.5px solid #fbbf24;border-radius:10px;background:#fef3c7;color:#78350f;font-weight:800;font-size:13px;cursor:pointer;">1000만원</button>
