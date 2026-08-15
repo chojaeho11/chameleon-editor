@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815152916';
+    var CV = '20260815155258';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -646,6 +646,8 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js" defer></script>
+<!-- 2026-08-15: 크로스도메인 로그인 공유 (링크 이동 SSO) — cafe2626 ↔ cotton-print ↔ hexa-board -->
+<script src="/sso-link.js?v=1" defer></script>
 <!-- 2026-07-16: 주문에러/관리자 알림 팝업 (메인+패브릭 공용). supabase UMD 뒤에 와야 함. -->
 <script src="/order-error-popup.js?v=2" defer></script>
 
@@ -994,7 +996,7 @@ window._tcmFallbackClick = function(code) {
     var lm = { ja:'ja', us:'en', en:'en', cn:'zh', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'ko', ko:'ko' };
     var psLang = lm[lang] || '';
     if (code === 'paper_display') { location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : ''); return; }
-    if (code === 'Wholesale Board Prices') { location.href = 'https://www.hexa-board.com/' + (psLang && psLang !== 'ko' ? psLang : ''); return; }
+    if (code === 'Wholesale Board Prices') { var _hbU = 'https://www.hexa-board.com/' + (psLang && psLang !== 'ko' ? psLang : ''); location.href = window.ssoDecorate ? window.ssoDecorate(_hbU) : _hbU; return; }
     if (code === '22222') { location.href = (psLang === 'ja') ? 'https://www.cotton-printer.com/' : ('https://www.cotton-print.com/' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '')); return; }
     // honeycomb_board / 44444 / printe_product: 같은 페이지 상단 카테고리로 스크롤. (DB 로드 후 동적 핸들러로 교체됨)
     var grid = document.getElementById('cpHomePatterns') || document.getElementById('hotDealSection') || document.getElementById('bizDealSection');
@@ -13577,7 +13579,7 @@ async function renderQuickMenu() {
                 if (top.code === 'Wholesale Board Prices') {
                     const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
                     const rbLang = langMap[CURRENT_LANG] || '';
-                    location.href = 'https://www.hexa-board.com/' + (rbLang && rbLang !== 'ko' ? rbLang : '');
+                    var _hbU1 = 'https://www.hexa-board.com/' + (rbLang && rbLang !== 'ko' ? rbLang : ''); location.href = window.ssoDecorate ? window.ssoDecorate(_hbU1) : _hbU1;
                     return;
                 }
                 // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (2026-05-14: 별도 도메인으로 이동, 해외는 ?lang=)
@@ -13694,7 +13696,7 @@ async function renderQuickMenu() {
                     if (top.code === 'Wholesale Board Prices') {
                         const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
                         const rbLang = langMap[CURRENT_LANG];
-                        location.href = 'https://www.hexa-board.com/' + (rbLang ? rbLang : '');
+                        var _hbU2 = 'https://www.hexa-board.com/' + (rbLang ? rbLang : ''); location.href = window.ssoDecorate ? window.ssoDecorate(_hbU2) : _hbU2;
                         return;
                     }
                     // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (2026-05-14: 별도 도메인으로 이동, 해외는 ?lang=)
@@ -14476,7 +14478,7 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             //   (hexa-board 의 상품 클릭은 이 상세를 그대로 열어야 함 — 정상 sub-category 제품처럼.)
             try {
                 if ((product.category || '') === 'Honeycomb Board' && (location.hostname || '').indexOf('hexa-board') < 0) {
-                    location.replace('https://www.hexa-board.com/');
+                    location.replace(window.ssoDecorate ? window.ssoDecorate('https://www.hexa-board.com/') : 'https://www.hexa-board.com/');
                     return;
                 }
             } catch (e) {}
