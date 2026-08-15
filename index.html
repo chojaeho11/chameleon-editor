@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260815230400';
+    var CV = '20260815232123';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1147,6 +1147,7 @@ window._tcmFallbackClick = function(code) {
                      spellcheck="false" autocorrect="off" autocapitalize="off"
                      data-ph="어떤 디자인이 필요하세요?"></div>
                 <button type="button" id="hwGoBtn">만들기</button>
+                <button type="button" id="hwMineBtn" onclick="window.openMyDesignsModal && window.openMyDesignsModal()">🖼️ 내가 만든 디자인</button>
             </div>
             <div class="me-gal-marquee" id="hwMarquee">
                 <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="hwTrackTop"></div></div>
@@ -1834,7 +1835,7 @@ window._tcmFallbackClick = function(code) {
                 margin:7px 0 0; font-size:14.5px; color:#64748b; line-height:1.6;
             }
             #heroWorks .hw-prompt {
-                display:flex; gap:8px; max-width:620px;
+                display:flex; gap:8px; max-width:720px; flex-wrap:wrap;
             }
             #heroWorks #hwPrompt {
                 flex:1; min-width:0; padding:14px 18px; font-size:15px; font-family:inherit;
@@ -1859,6 +1860,12 @@ window._tcmFallbackClick = function(code) {
             }
             #heroWorks #hwGoBtn:hover { background:#4338ca; }
             #heroWorks #hwGoBtn:disabled { background:#a5b4fc; cursor:default; }
+            #heroWorks #hwMineBtn {
+                flex:0 0 auto; padding:14px 18px; font-size:14px; font-family:inherit; font-weight:700;
+                border:1.5px solid #c7d2fe; border-radius:999px; background:#eef2ff; color:#4338ca;
+                cursor:pointer; transition:all .18s; white-space:nowrap;
+            }
+            #heroWorks #hwMineBtn:hover { background:#e0e7ff; }
             #heroWorks .hw-tip {
                 margin:0; text-align:center; font-size:12.5px; color:#94a3b8;
             }
@@ -6099,6 +6106,68 @@ function scrollHotdeal(gridId, dir) {
 
 <script src="./mini-editor.js?v=557"></script>
 <script src="./rewards.js?v=19"></script>
+
+<!-- 2026-08-15: 「내가 만든 디자인」 모달 (히어로 + 마이페이지에서 진입) — 고른 디자인을 에디터에 올려 제품 주문으로 연결 -->
+<div id="myDesignsModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:100000;align-items:center;justify-content:center;padding:14px;">
+  <div style="position:relative;background:#fff;border-radius:20px;padding:22px;width:760px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+    <button type="button" onclick="document.getElementById('myDesignsModal').style.display='none'" aria-label="닫기" title="닫기" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#1e293b;color:#fff;border:none;font-size:20px;line-height:34px;text-align:center;cursor:pointer;z-index:5;padding:0;">×</button>
+    <h3 style="margin:0 0 4px;font-size:19px;font-weight:900;color:#1e293b;">🖼️ <span>내가 만든 디자인</span></h3>
+    <div style="font-size:12.5px;color:#64748b;margin-bottom:16px;">디자인을 고르면 그 디자인으로 제품을 주문할 수 있어요.</div>
+    <div id="myDesignsNote" style="text-align:center;color:#64748b;padding:40px 0;">불러오는 중...</div>
+    <div id="myDesignsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;"></div>
+  </div>
+</div>
+<script>
+window.openMyDesignsModal = async function(){
+    var modal = document.getElementById('myDesignsModal'); if(!modal) return;
+    modal.style.display='flex';
+    var grid = document.getElementById('myDesignsGrid');
+    var note = document.getElementById('myDesignsNote');
+    grid.innerHTML=''; note.style.display='block'; note.textContent='불러오는 중...';
+    try {
+        var sb = window.sb;
+        if(!sb){ try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
+        if(!sb){ note.textContent='잠시 후 다시 시도해주세요.'; return; }
+        var u = await sb.auth.getUser();
+        var uid = u && u.data && u.data.user && u.data.user.id;
+        if(!uid){ note.textContent='로그인하시면 만드신 디자인이 여기에 보관됩니다.'; return; }
+        var r = await sb.from('design_gallery').select('id,image_url,thumb_url,prompt,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(30);
+        if(r.error) throw r.error;
+        var rows = r.data || [];
+        if(!rows.length){ note.textContent='아직 만드신 디자인이 없어요. 위 입력창에 문구를 적고 [만들기] 로 만들어 보세요.'; return; }
+        note.style.display='none';
+        grid.innerHTML = rows.map(function(row){
+            var img = row.thumb_url || row.image_url;
+            var url = row.image_url || row.thumb_url;
+            return '<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#f8fafc;display:flex;flex-direction:column;">'
+                + '<img src="'+String(img).replace(/"/g,'&quot;')+'" loading="lazy" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;">'
+                + '<button type="button" data-durl="'+String(url).replace(/"/g,'&quot;')+'" class="myDesignOrderBtn" style="width:100%;padding:10px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:12.5px;font-weight:800;cursor:pointer;">이 디자인으로 주문</button>'
+                + '</div>';
+        }).join('');
+        grid.querySelectorAll('.myDesignOrderBtn').forEach(function(b){ b.addEventListener('click', function(){ window._myDesignOrder(b.getAttribute('data-durl')); }); });
+    } catch(e){ note.textContent='불러오지 못했어요: '+((e&&e.message)||e); note.style.display='block'; }
+};
+window._myDesignOrder = async function(url){
+    if(!url) return;
+    var modal = document.getElementById('myDesignsModal'); if(modal) modal.style.display='none';
+    try {
+        // 디자인을 미니에디터 대지에 올린다 → 제품/사이즈 정하고 주문 (에디터가 주문 연결점)
+        if (window._meShowToolbar) window._meShowToolbar();
+        var intro = document.getElementById('meIntro'); if (intro) intro.scrollIntoView({ behavior:'smooth', block:'center' });
+        var blob = await (await fetch(url, { mode:'cors' })).blob();
+        var dataUrl = await new Promise(function(rs,rj){ var fr=new FileReader(); fr.onload=function(){ rs(String(fr.result)); }; fr.onerror=rj; fr.readAsDataURL(blob); });
+        if (window._meAddImage) {
+            window._meAddImage(dataUrl, { fillCanvas:true, toBack:true }, function(it){ if(it) it._isAiBg = true; });
+            try { if (window.showToast) window.showToast('디자인을 편집기에 올렸어요. 제품·사이즈를 정하고 주문하세요.'); } catch(e){}
+        } else {
+            // 에디터 미탑재 컨텍스트 대비: 다운로드로 폴백
+            window.open(url, '_blank');
+        }
+    } catch(e){ console.warn('[myDesignOrder]', e); window.open(url, '_blank'); }
+};
+// ?mydesigns=1 진입(마이페이지 링크 등) → 자동으로 모달 열기
+(function(){ try { if (new URLSearchParams(location.search).get('mydesigns')==='1') { var _t=setInterval(function(){ if(window.openMyDesignsModal){ clearInterval(_t); window.openMyDesignsModal(); } },300); setTimeout(function(){ clearInterval(_t); },9000); } } catch(e){} })();
+</script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">

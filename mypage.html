@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260815230400';
+    var CV = '20260815232123';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -214,6 +214,10 @@
         <!-- 2026-05-31: 사용자 요청 — 주문 내역을 최상단 + 기본 활성 탭으로 -->
         <div class="mp-nav-item active" onclick="switchTab('orders')">
             <i class="fa-solid fa-receipt" style="width:20px;"></i> <span data-i18n="mp_menu_orders">Orders</span>
+        </div>
+        <!-- 2026-08-15: 내가 만든 디자인 — 메인 페이지 모달로 진입(디자인 → 제품 주문) -->
+        <div class="mp-nav-item" onclick="location.href='/?mydesigns=1'">
+            <i class="fa-solid fa-palette" style="width:20px;"></i> <span>내가 만든 디자인</span>
         </div>
         <div class="mp-nav-item mp-mobile-hide" onclick="switchTab('dashboard')">
             <i class="fa-solid fa-chart-pie" style="width:20px;"></i> <span data-i18n="mp_menu_dashboard">Dashboard</span>
