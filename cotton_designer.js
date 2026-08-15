@@ -1811,7 +1811,7 @@ window._cpUpdateCartUI = function() {
                         (it.seamExtra && it.seamExtra > 0) ? L.seam + ' (+' + cdFmtPrice(it.seamExtra) + ')' : null
                     ].filter(Boolean).join(' · ');
                     return '<div class="cart-item">' +
-                        '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || '') + '" alt="">' +
+                        '<img class="cart-item-thumb" src="' + (it.thumbDataUrl || it.thumb || '/mascot-character.png') + '" alt="" onerror="this.onerror=null;this.src=\'/mascot-character.png\';" style="background:#f8fafc;">' +
                         '<div class="cart-item-info">' +
                             '<div class="cart-item-name">' + it.title + '</div>' +
                             '<div class="cart-item-opts">' + opts + '</div>' +
