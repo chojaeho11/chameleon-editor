@@ -2309,6 +2309,23 @@ window._cdAddSwatch = function () {
     window._cpGoCheckout();
 };
 
+// 2026-08-15: 주문 요약(체크아웃)에서 항목 개별 삭제
+window._cdRemoveCheckoutItem = function (idx, id) {
+    try {
+        var cart = getCart();
+        var pos = -1;
+        if (id) { for (var k = 0; k < cart.length; k++) { if (cart[k] && String(cart[k].id || cart[k].uid) === String(id)) { pos = k; break; } } }
+        if (pos < 0 && idx != null && idx >= 0 && idx < cart.length) pos = idx;
+        if (pos < 0) return;
+        cart.splice(pos, 1);
+        saveCart(cart);
+        try { window._cpUpdateCartUI && window._cpUpdateCartUI(); } catch (e) {}
+        try { window.cartSync && window.cartSync.forceSync && window.cartSync.forceSync(); } catch (e) {}
+        if (cart.length === 0) { try { window._cpCloseCheckout(); } catch (e) {} return; }
+        try { window._cpOpenCheckout(); } catch (e) {}   // 요약/합계 재렌더 (입력 폼은 정적 DOM 이라 유지)
+    } catch (e) { console.warn('[cd removeCheckoutItem]', e); }
+};
+
 window._cdBuyNow = async function() {
     // 2026-05-22: 이미지 없이도 바로 주문 허용 (디자인 추후 전달)
     if (!state.img || !state.imgDataUrl) {
@@ -2384,7 +2401,7 @@ window._cpOpenCheckout = function() {
         }
         return fallback || '';
     }
-    list.innerHTML = cart.map(function(it){
+    list.innerHTML = cart.map(function(it, i){
         var finTxt = _trByCode('finish', it.finishCode, it.finishName || L.raw);
         var hookTxt = _trByCode('hook', it.hookCode, it.hookName);
         var accTxt = _trByCode('acc', it.accCode, it.accName);
@@ -2392,7 +2409,11 @@ window._cpOpenCheckout = function() {
         if (it.hookCode) parts.push(L.hook + ': ' + hookTxt);
         if (it.accCode) parts.push(L.acc + ': ' + accTxt);
         const opts = parts.filter(Boolean).join(' · ');
-        return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + cdFmtPrice(it.price) + '</div></div>';
+        // 2026-08-15: 항목별 삭제 버튼 (주문 요약에서 개별 제거)
+        var _delId = String(it.id || it.uid || '');
+        return '<div class="co-summary-item" style="position:relative;">' +
+            '<button type="button" onclick="window._cdRemoveCheckoutItem(' + i + ',\'' + _delId + '\')" title="삭제" style="position:absolute; top:8px; right:8px; width:26px; height:26px; padding:0; border:none; background:#f3f4f6; color:#9ca3af; font-size:17px; cursor:pointer; border-radius:50%; line-height:24px;" onmouseover="this.style.background=\'#fee2e2\';this.style.color=\'#dc2626\';" onmouseout="this.style.background=\'#f3f4f6\';this.style.color=\'#9ca3af\';">&times;</button>' +
+            '<div class="co-summary-item-name" style="padding-right:30px;">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + cdFmtPrice(it.price) + '</div></div>';
     }).join('');
     // 2026-05-22: 배송비 라인 — 합계엔 포함되는데 요약에 안 보여 금액이 안 맞아 보이던 문제.
     var _shipFee = cart.length > 0 ? getShippingFeeKrw() : 0;
