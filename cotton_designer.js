@@ -2301,7 +2301,7 @@ window._cdAddSwatch = function () {
         title: title, fabricName: title, fabricCode: 'SWATCH',
         orderSize: '-', orderWcm: 0, orderHcm: 0,
         qty: 1, qtyLabel: '1', finishCode: '', finishName: '-',
-        price: 0, shipping: { fee: 2500, label: shipLbl }
+        price: 0, shipping: { fee: 0, label: shipLbl }   // 2026-08-15: 택배비까지 완전 무료(카멜레온 부담)
     };
     try { var cart = getCart(); cart.push(item); saveCart(cart); } catch (e) { console.warn('[swatch] cart', e); return; }
     try { window.gtagTrackAddToCart && window.gtagTrackAddToCart(0); } catch (e) {}

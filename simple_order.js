@@ -20911,9 +20911,12 @@ html, body { background: #ffffff !important; }
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
             if (_useBlogCoupon > 0) discountSummary += '\n포인트 사용 (-' + _useBlogCoupon.toLocaleString() + '원)';
             // 마일리지/예치금/SNS포인트로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
-            var _fullyCovered = (_useMileage > 0 || _useDeposit > 0 || _useBlogCoupon > 0) && _finalTotal <= 0;
+            var _walletUsed = (_useMileage > 0 || _useDeposit > 0 || _useBlogCoupon > 0);
+            // 2026-08-15: 무료 스와치처럼 지불액 0 인 주문도 결제 없이 완료. (일반 상품 0원 버그가 무료완료로 위장되지 않게 스와치/월렛 주문만)
+            var _isSwatchOrder = items.length > 0 && items.every(function (it) { return it && (it.isSwatch || it.fabricCode === 'SWATCH'); });
+            var _fullyCovered = _finalTotal <= 0 && (_walletUsed || _isSwatchOrder);
             // SNS 포인트 사용 시 결제수단 '블로그체험단쿠폰' (매출집계 제외 구분용) 우선
-            var _walletPayLabel = _useBlogCoupon > 0 ? '포인트' : (_useDeposit > 0 ? '예치금' : '마일리지');
+            var _walletPayLabel = _useBlogCoupon > 0 ? '포인트' : (_useDeposit > 0 ? '예치금' : (_walletUsed ? '마일리지' : '무료'));
             // 2026-06-13: 디자인 의뢰 정보 요약 (작업지시서/관리자가 한눈에 보도록)
             var _dreqSummary = '';
             try {
