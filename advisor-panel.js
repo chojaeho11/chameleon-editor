@@ -1781,6 +1781,15 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
 
         typingEl.remove();
 
+        // 2026-08-15: 매니저 실시간 개입 중 — AI 버블 대신 1회 안내 (매니저 답변은 realtime 으로 옴). return 금지(하단 isProcessing 정리 필요)
+        if (data.human_active && !window._advHumanNoticeShown) {
+            window._advHumanNoticeShown = true;
+            var _hl = getLang();
+            addBubble(_hl === 'ja' ? '担当マネージャーにおつなぎしました。少々お待ちください 🙌'
+                    : _hl === 'en' ? 'Connected to a human agent. One moment please 🙌'
+                    : '상담 매니저가 연결되었어요. 잠시만 기다려 주세요 🙌', 'ai');
+            scrollChat();
+        }
         let chatMsg = data.chat_message || data.summary || '';
         // ★ [QUOTE_FORM] 태그 감지 → 태그 제거 후 견적 폼 표시
         const _hasQuoteForm = chatMsg.includes('[QUOTE_FORM]');

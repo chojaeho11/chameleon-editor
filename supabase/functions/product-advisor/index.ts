@@ -81,6 +81,30 @@ serve(async (req) => {
 
         // DB 조회
         const sb = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
+
+        // 2026-08-15: 매니저 실시간 개입 중(human_active)인 방이면 AI 응답을 건너뛴다.
+        //   고객 메시지는 chat_messages 에 기록(매니저가 관제 콘솔에서 봄) + 빈 응답 반환(위젯이 버블 안 띄움).
+        //   매니저의 답변은 chat_messages realtime 으로 고객에게 전달됨.
+        if (clientRoomId) {
+            try {
+                const { data: _hr } = await sb.from('chat_rooms').select('human_active').eq('id', clientRoomId).maybeSingle();
+                if (_hr && _hr.human_active) {
+                    const _cn = (clientCustName || '').trim() || 'Guest';
+                    try {
+                        await sb.from('chat_messages').insert({
+                            room_id: clientRoomId, sender_type: 'customer', sender_name: _cn,
+                            message: trimmedMsg || '(이미지)', created_at: new Date().toISOString()
+                        });
+                        await sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', clientRoomId);
+                    } catch (_e) {}
+                    return new Response(
+                        JSON.stringify({ type: 'chat', chat_message: '', products: [], room_id: clientRoomId, human_active: true }),
+                        { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+                    );
+                }
+            } catch (_e) {}
+        }
+
         const [prodRes, baseRes, catRes, qaRes, addonRes, addonCatRes] = await Promise.all([
             sb.from("admin_products")
                 .select("code,name,name_jp,name_us,price,price_jp,price_us,width_mm,height_mm,is_custom_size,is_general_product,is_file_upload,is_bulk_order,quantity_options,category,description,img_url,addons")

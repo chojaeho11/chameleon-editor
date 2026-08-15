@@ -378,7 +378,10 @@ window.showSection = function(){};
                 <div>📦 검색된 주문: <b id="sumCount">0건</b></div>
                 <div class="divider"></div>
                 <div>💰 총 매출(검색기준): <b id="sumRevenue" style="font-size:17px;">0원</b></div>
-                <div style="margin-left:auto; font-size:12px; color:#94a3b8;">* 페이지네이션과 관계없이 검색된 전체 합계</div>
+                <!-- 2026-08-15: 실시간 채팅관리(자비스) 진입 + 새 문의 알림 배지 + 알람 토글 -->
+                <button onclick="window.open('/jarvis','_blank')" title="실시간 채팅관리 (자비스)" style="margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">💬 실시간 채팅관리 <span id="omChatBadge" style="display:none; background:#ef4444; color:#fff; border-radius:10px; padding:1px 7px; font-size:11px;">0</span></button>
+                <button id="omAlarmBtn" onclick="window._omToggleAlarm && window._omToggleAlarm()" title="채팅 알람 켜기/끄기" style="display:inline-flex; align-items:center; justify-content:center; background:#ecfdf5; color:#059669; border:1px solid #6ee7b7; padding:9px 12px; border-radius:10px; font-size:14px; cursor:pointer;">🔔</button>
+                <div style="font-size:12px; color:#94a3b8;">* 페이지네이션과 관계없이 검색된 전체 합계</div>
             </div>
 
             <div class="order-table-wrap">
@@ -743,5 +746,35 @@ import './manager_quote.js?v=4';
 </script>
 
     <script src="/jp-nanami-fab.js?v=2" defer></script>
+
+    <!-- 2026-08-15: 실시간 고객 문의 알림 — chat_messages(customer) INSERT 구독 → 소리/토스트/배지. 알람 토글은 jarvis 와 localStorage 공유. -->
+    <script>
+    (function(){
+        var ALARM = (localStorage.getItem('chatAlarmOn') !== '0');
+        var unread = 0;
+        function paintAlarm(){ var b=document.getElementById('omAlarmBtn'); if(!b)return; b.textContent = ALARM?'🔔':'🔕'; b.style.background = ALARM?'#ecfdf5':'#fef2f2'; b.style.color = ALARM?'#059669':'#dc2626'; b.style.borderColor = ALARM?'#6ee7b7':'#fca5a5'; }
+        window._omToggleAlarm = function(){ ALARM=!ALARM; localStorage.setItem('chatAlarmOn', ALARM?'1':'0'); paintAlarm(); if(ALARM){ try{ if(window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){} beep(); } };
+        function beep(){ if(!ALARM)return; try{ var ac=new (window.AudioContext||window.webkitAudioContext)(); var o=ac.createOscillator(),g=ac.createGain(); o.connect(g); g.connect(ac.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.12,ac.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.35); o.start(); o.stop(ac.currentTime+0.36); setTimeout(function(){try{ac.close();}catch(e){}},500);}catch(e){} }
+        function badge(){ var el=document.getElementById('omChatBadge'); if(!el)return; if(unread>0){ el.textContent=unread; el.style.display=''; } else el.style.display='none'; }
+        function toastMsg(txt){ try{ if(window.showToast){ window.showToast(txt); return; } }catch(e){} }
+        function subscribe(){
+            var sb = window.sb;
+            if(!sb || !sb.channel){ setTimeout(subscribe, 800); return; }
+            paintAlarm();
+            try{ if(ALARM && window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+            sb.channel('om-chat-global')
+              .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_messages' }, function(p){
+                  var m=p.new; if(!m || m.sender_type!=='customer') return;
+                  unread++; badge(); beep();
+                  toastMsg('💬 새 고객 문의: ' + (m.message||'').slice(0,26));
+                  try{ if(ALARM && window.Notification && Notification.permission==='granted') new Notification('새 고객 문의', { body:(m.message||'').slice(0,60), icon:'/mascot-character.png' }); }catch(e){}
+              })
+              .subscribe();
+        }
+        // 채팅관리 버튼 누르면 배지 리셋
+        document.addEventListener('click', function(e){ var b=e.target.closest && e.target.closest('#omChatBadge'); var btn=e.target.closest && e.target.closest('button'); if(btn && btn.textContent && btn.textContent.indexOf('실시간 채팅관리')>=0){ unread=0; badge(); } });
+        if(document.readyState!=='loading') subscribe(); else document.addEventListener('DOMContentLoaded', subscribe);
+    })();
+    </script>
 </body>
 </html>

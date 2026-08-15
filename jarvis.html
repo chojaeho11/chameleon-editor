@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🤖 자비스 리포트 — AI 학습</title>
+    <title>🤖 자비스 — 실시간 채팅관리 · AI 학습</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -15,111 +15,120 @@
             background: #0b0f1c; color: #e2e8f0;
             font-family: 'Pretendard', sans-serif;
             margin: 0; padding: 16px 14px 60px;
-            max-width: 640px; margin: 0 auto;
+            max-width: 680px; margin: 0 auto;
             min-height: 100vh; -webkit-font-smoothing: antialiased;
         }
-        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-        .header h1 { font-size: 20px; font-weight: 900; color: #fff; margin: 0; flex: 1; letter-spacing: -0.5px; }
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .header h1 { font-size: 19px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.5px; }
         .header .sub { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
-        .refresh-btn {
+        .refresh-btn, .alarm-btn {
             background: rgba(255,255,255,0.06); border: 1px solid rgba(148,163,184,0.2);
-            width: 40px; height: 40px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            color: #cbd5e1; cursor: pointer; font-size: 16px;
+            height: 40px; min-width: 40px; padding: 0 10px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            color: #cbd5e1; cursor: pointer; font-size: 14px; font-weight: 700;
             transition: all 0.15s;
         }
-        .refresh-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
+        .refresh-btn:active, .alarm-btn:active { transform: scale(0.94); }
+        .alarm-btn.on { background: rgba(34,197,94,0.15); color: #86efac; border-color: rgba(34,197,94,0.4); }
+        .alarm-btn.off { background: rgba(239,68,68,0.12); color: #fca5a5; border-color: rgba(239,68,68,0.35); }
 
-        .summary { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .chip {
-            background: rgba(99,102,241,0.18); color: #c7d2fe;
-            padding: 6px 13px; border-radius: 18px; font-size: 12px; font-weight: 800;
+        /* 탭 */
+        .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .tab {
+            flex: 1; text-align: center; padding: 11px 8px; border-radius: 12px; cursor: pointer;
+            font-size: 13.5px; font-weight: 800; letter-spacing: -0.3px;
+            background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(148,163,184,0.15);
+            transition: all 0.15s; position: relative;
         }
+        .tab.active { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; border-color: transparent; }
+        .tab .tcount { font-size: 11px; margin-left: 4px; opacity: 0.85; }
+        .tab-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-left:6px; vertical-align:middle; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        .summary { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .chip { background: rgba(99,102,241,0.18); color: #c7d2fe; padding: 6px 13px; border-radius: 18px; font-size: 12px; font-weight: 800; }
         .chip.warn { background: rgba(239,68,68,0.18); color: #fca5a5; }
         .chip.ok { background: rgba(34,197,94,0.18); color: #86efac; }
 
-        .empty {
-            text-align: center; padding: 80px 20px; color: #86efac;
-            font-size: 17px; font-weight: 800; line-height: 1.6;
-        }
+        .empty { text-align: center; padding: 70px 20px; color: #86efac; font-size: 16px; font-weight: 800; line-height: 1.6; }
 
-        .jx-item {
-            background: linear-gradient(165deg, #1e1b4b 0%, #0f172a 100%);
-            border: 1px solid rgba(148,163,184,0.15);
-            border-radius: 16px; padding: 14px; margin-bottom: 14px;
-            box-shadow: 0 8px 20px -8px rgba(0,0,0,0.4);
-            transition: opacity 0.35s, transform 0.35s;
+        /* 라이브 방 목록 */
+        .room {
+            display: flex; align-items: center; gap: 12px; padding: 13px 14px; margin-bottom: 10px;
+            background: linear-gradient(165deg,#1e293b 0%,#0f172a 100%);
+            border: 1px solid rgba(148,163,184,0.15); border-radius: 14px; cursor: pointer;
+            transition: transform 0.1s, border-color 0.15s;
         }
+        .room:active { transform: scale(0.99); }
+        .room.fresh { border-color: rgba(239,68,68,0.55); box-shadow: 0 0 0 1px rgba(239,68,68,0.35); }
+        .room-av { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; }
+        .room-mid { flex: 1; min-width: 0; }
+        .room-name { font-size: 14px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 6px; }
+        .room-prev { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .room-right { text-align: right; flex-shrink: 0; }
+        .room-time { font-size: 11px; color: #64748b; }
+        .badge-live { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 8px; background: rgba(34,197,94,0.2); color: #86efac; }
+        .badge-new { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 8px; background: #ef4444; color: #fff; }
+
+        /* 대화 오버레이 */
+        .conv-ov { position: fixed; inset: 0; background: rgba(2,6,23,0.75); backdrop-filter: blur(3px); z-index: 9000; display: none; align-items: flex-end; justify-content: center; }
+        .conv-ov.open { display: flex; }
+        .conv-card { background: #0f172a; width: 100%; max-width: 680px; height: 92vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; border: 1px solid rgba(148,163,184,0.2); }
+        .conv-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid rgba(148,163,184,0.15); }
+        .conv-head .cn { flex: 1; font-size: 15px; font-weight: 900; color: #fff; }
+        .conv-head .cx { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; line-height: 1; }
+        .conv-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .cmsg { max-width: 82%; padding: 9px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+        .cmsg .cwho { font-size: 10.5px; font-weight: 800; opacity: 0.7; margin-bottom: 3px; }
+        .cmsg .ct { font-size: 10px; opacity: 0.5; margin-top: 4px; }
+        .cmsg.customer { align-self: flex-start; background: #1e293b; color: #e2e8f0; border-bottom-left-radius: 4px; }
+        .cmsg.ai { align-self: flex-end; background: rgba(99,102,241,0.22); color: #dbeafe; border-bottom-right-radius: 4px; }
+        .cmsg.mgr { align-self: flex-end; background: rgba(34,197,94,0.22); color: #dcfce7; border-bottom-right-radius: 4px; }
+        .cmsg img { max-width: 180px; border-radius: 8px; margin-top: 6px; display: block; }
+        .conv-foot { padding: 12px 14px; border-top: 1px solid rgba(148,163,184,0.15); }
+        .join-bar { display: flex; gap: 8px; }
+        .reply-wrap { display: none; gap: 8px; align-items: flex-end; }
+        .reply-wrap.show { display: flex; }
+        .reply-ta { flex: 1; border-radius: 12px; border: 1px solid rgba(148,163,184,0.3); background: rgba(255,255,255,0.06); color: #f8fafc; font-family: inherit; font-size: 14px; padding: 10px 12px; resize: none; min-height: 44px; max-height: 120px; line-height: 1.4; }
+        .reply-ta:focus { outline: none; border-color: #34d399; }
+
+        /* 학습 아이템 (기존) */
+        .jx-item { background: linear-gradient(165deg,#1e1b4b 0%,#0f172a 100%); border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 20px -8px rgba(0,0,0,0.4); transition: opacity 0.35s, transform 0.35s; }
         .jx-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
         .jx-lang { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 7px; letter-spacing: 0.3px; }
         .jx-lang.kr { background: rgba(99,102,241,0.25); color: #c7d2fe; }
         .jx-lang.ja { background: rgba(236,72,153,0.25); color: #fbcfe8; }
         .jx-lang.us { background: rgba(34,197,94,0.25); color: #86efac; }
         .jx-time { font-size: 11px; color: #94a3b8; }
-
-        .jx-q { font-size: 14px; font-weight: 700; color: #f8fafc; line-height: 1.5; margin-bottom: 6px; word-break: break-word; }
+        .jx-convbtn { margin-left:auto; font-size:11px; font-weight:800; color:#93c5fd; background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:4px 9px; cursor:pointer; }
+        .jx-q { font-size: 14px; font-weight: 700; color: #f8fafc; line-height: 1.5; margin-bottom: 6px; word-break: break-word; cursor:pointer; }
         .jx-q .lbl { color: #fca5a5; font-weight: 900; margin-right: 5px; font-size: 11px; vertical-align: 2px; }
-        .jx-q-tr {
-            font-size: 12.5px; color: #cbd5e1; line-height: 1.5;
-            margin-bottom: 10px; padding: 8px 11px;
-            background: rgba(99,102,241,0.08); border-left: 3px solid rgba(99,102,241,0.5);
-            border-radius: 6px; word-break: break-word;
-        }
+        .jx-q-tr { font-size: 12.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 10px; padding: 8px 11px; background: rgba(99,102,241,0.08); border-left: 3px solid rgba(99,102,241,0.5); border-radius: 6px; word-break: break-word; }
         .jx-q-tr.loading { color: #64748b; font-style: italic; }
-
-        .jx-a {
-            font-size: 12.5px; color: #cbd5e1; line-height: 1.45; margin-bottom: 12px;
-            padding: 8px 11px;
-            background: rgba(239,68,68,0.08); border-left: 3px solid rgba(239,68,68,0.5);
-            border-radius: 6px; white-space: pre-wrap; word-break: break-word;
-            max-height: 200px; overflow-y: auto;
-        }
+        .jx-a { font-size: 12.5px; color: #cbd5e1; line-height: 1.45; margin-bottom: 12px; padding: 8px 11px; background: rgba(239,68,68,0.08); border-left: 3px solid rgba(239,68,68,0.5); border-radius: 6px; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; }
         .jx-a .lbl { color: #fca5a5; font-weight: 900; margin-right: 5px; font-size: 11px; vertical-align: 2px; }
-
-        .jx-input {
-            width: 100%; border-radius: 10px;
-            border: 1px solid rgba(148,163,184,0.3); background: rgba(255,255,255,0.06);
-            color: #f8fafc; font-family: 'Pretendard', sans-serif; font-size: 14px;
-            padding: 10px 12px; resize: vertical; min-height: 80px; line-height: 1.55;
-        }
+        .jx-input { width: 100%; border-radius: 10px; border: 1px solid rgba(148,163,184,0.3); background: rgba(255,255,255,0.06); color: #f8fafc; font-family: inherit; font-size: 14px; padding: 10px 12px; resize: vertical; min-height: 80px; line-height: 1.55; }
         .jx-input::placeholder { color: #64748b; font-size: 13px; }
         .jx-input:focus { outline: none; border-color: #818cf8; background: rgba(255,255,255,0.1); }
-
         .jx-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
         .jx-actions-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
         .jx-actions-row .btn { padding: 11px 4px; font-size: 12px; }
-        .btn {
-            border: none; border-radius: 10px; padding: 12px 8px;
-            font-family: 'Pretendard', sans-serif; font-size: 13px; font-weight: 800;
-            cursor: pointer; transition: transform 0.1s, opacity 0.15s;
-        }
+        .btn { border: none; border-radius: 10px; padding: 12px 8px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; transition: transform 0.1s, opacity 0.15s; }
         .btn:active { transform: scale(0.97); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-save { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.5); }
+        .btn-save { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; }
         .btn-mgr { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
         .btn-ok { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.35); }
         .btn-pass { background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
-
+        .btn-join { flex:1; background: linear-gradient(135deg,#16a34a,#15803d); color:#fff; }
+        .btn-leave { background: rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.35); }
+        .btn-send { background: linear-gradient(135deg,#34d399,#059669); color:#fff; min-width:70px; }
         .jx-status { font-size: 11px; color: #64748b; margin-top: 8px; min-height: 15px; padding: 0 2px; }
-        .jx-status.busy { color: #c7d2fe; }
-        .jx-status.ok { color: #86efac; }
-        .jx-status.err { color: #fca5a5; }
-
+        .jx-status.busy { color: #c7d2fe; } .jx-status.ok { color: #86efac; } .jx-status.err { color: #fca5a5; }
         .fade-out { opacity: 0; transform: scale(0.95); }
-
-        .toast {
-            position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
-            background: #16a34a; color: #fff;
-            padding: 13px 22px; border-radius: 14px;
-            font-weight: 800; font-size: 14px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            z-index: 10000; opacity: 0;
-            transition: opacity 0.2s, transform 0.2s; pointer-events: none;
-            max-width: 90vw; text-align: center;
-        }
+        .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: #16a34a; color: #fff; padding: 13px 22px; border-radius: 14px; font-weight: 800; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 10000; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; max-width: 90vw; text-align: center; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast.err { background: #dc2626; }
-
         .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #475569; }
         .footer a { color: #64748b; text-decoration: none; }
     </style>
@@ -128,23 +137,53 @@
 
     <div class="header">
         <div style="flex:1;">
-            <h1>🤖 자비스 리포트</h1>
-            <div class="sub">AI가 헷갈린 상담 · 정답 학습</div>
+            <h1>🤖 자비스 · 실시간 채팅관리</h1>
+            <div class="sub">라이브 상담 개입 · AI 학습 · <span id="meLabel">-</span></div>
         </div>
-        <button class="refresh-btn" onclick="loadJarvis()" title="새로고침">↻</button>
+        <button class="alarm-btn on" id="alarmBtn" onclick="toggleAlarm()" title="채팅 알람">🔔 <span id="alarmLbl">알람 켜짐</span></button>
+        <button class="refresh-btn" onclick="reloadAll()" title="새로고침">↻</button>
     </div>
 
-    <div class="summary">
-        <span class="chip" id="dateChip">-</span>
-        <span class="chip warn" id="countChip">- 건</span>
+    <div class="tabs">
+        <div class="tab active" id="tabLive" onclick="switchTab('live')">🔴 실시간 채팅 <span class="tcount" id="liveCount"></span><span id="liveDot"></span></div>
+        <div class="tab" id="tabLearn" onclick="switchTab('learn')">🧠 AI 학습 <span class="tcount" id="learnCount"></span></div>
     </div>
 
-    <div id="list">
-        <div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>
+    <!-- 라이브 패널 -->
+    <div id="livePanel">
+        <div id="roomList"><div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div></div>
     </div>
 
-    <div class="footer">
-        <a href="/admin_m_secret_882">← 관리자 대시보드</a>
+    <!-- 학습 패널 -->
+    <div id="learnPanel" style="display:none;">
+        <div class="summary">
+            <span class="chip" id="dateChip">-</span>
+            <span class="chip warn" id="countChip">- 건</span>
+        </div>
+        <div id="list"><div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div></div>
+    </div>
+
+    <div class="footer"><a href="/order_management">← 통합 주문 관리</a> · <a href="/admin_m_secret_882">관리자 대시보드</a></div>
+
+    <!-- 대화 오버레이 -->
+    <div class="conv-ov" id="convOv" onclick="if(event.target===this)closeConv()">
+        <div class="conv-card">
+            <div class="conv-head">
+                <div class="cn" id="convName">고객</div>
+                <button class="cx" onclick="closeConv()">×</button>
+            </div>
+            <div class="conv-body" id="convBody"></div>
+            <div class="conv-foot">
+                <div class="join-bar" id="joinBar">
+                    <button class="btn btn-join" id="joinBtn" onclick="managerJoin()">🙋 매니저 참여 (직접 답변)</button>
+                </div>
+                <div class="reply-wrap" id="replyWrap">
+                    <textarea class="reply-ta" id="replyTa" placeholder="고객에게 보낼 답변 입력..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();managerSend();}"></textarea>
+                    <button class="btn btn-send" onclick="managerSend()">보내기</button>
+                    <button class="btn btn-leave" onclick="managerLeave()" title="AI 재개">AI 재개</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -152,116 +191,236 @@
     <script type="module">
         import { sb, initConfig } from './config.js?v=445';
 
-        const LANG_MAP = {
-            kr: { tag: 'KR 🇰🇷', kb: 'ko', cls: 'kr' },
-            ko: { tag: 'KR 🇰🇷', kb: 'ko', cls: 'kr' },
-            ja: { tag: 'JP 🇯🇵', kb: 'ja', cls: 'ja' },
-            jp: { tag: 'JP 🇯🇵', kb: 'ja', cls: 'ja' },
-            us: { tag: 'US 🇺🇸', kb: 'en', cls: 'us' },
-            en: { tag: 'EN 🇺🇸', kb: 'en', cls: 'us' }
+        let ME = '관리자';
+        let ALARM_ON = (localStorage.getItem('chatAlarmOn') !== '0');
+        let _globalSub = null, _roomSub = null;
+        let _curRoom = null;          // {id, name, human_active}
+        let _roomsCache = [];
+        let _freshRooms = {};         // roomId -> true (새 고객메시지 미확인)
+        let _reloadRoomsTimer = null;
+
+        // ── 공통 유틸 ──
+        function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function fmtTime(iso){ try{ const d=new Date(iso); const m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2),h=('0'+d.getHours()).slice(-2),mi=('0'+d.getMinutes()).slice(-2); return `${m}/${dd} ${h}:${mi}`; }catch(e){return '';} }
+        function fmtAgo(iso){ try{ const s=Math.floor((Date.now()-new Date(iso).getTime())/1000); if(s<60)return '방금'; if(s<3600)return Math.floor(s/60)+'분전'; if(s<86400)return Math.floor(s/3600)+'시간전'; return fmtTime(iso);}catch(e){return '';} }
+        function toast(msg,isErr){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':''); setTimeout(()=>{t.className='toast'+(isErr?' err':'');},2600); }
+        function beep(){ if(!ALARM_ON)return; try{ const ac=new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(),g=ac.createGain(); o.connect(g); g.connect(ac.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.12,ac.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.35); o.start(); o.stop(ac.currentTime+0.36); setTimeout(()=>{try{ac.close();}catch(e){}},500); }catch(e){} }
+        function notify(title,body){ if(!ALARM_ON)return; try{ if(window.Notification && Notification.permission==='granted'){ new Notification(title,{body:body,icon:'/mascot-character.png'}); } }catch(e){} }
+
+        // ── 알람 토글 ──
+        window.toggleAlarm = function(){
+            ALARM_ON = !ALARM_ON;
+            localStorage.setItem('chatAlarmOn', ALARM_ON?'1':'0');
+            const b=document.getElementById('alarmBtn'); const l=document.getElementById('alarmLbl');
+            b.className='alarm-btn '+(ALARM_ON?'on':'off'); l.textContent=ALARM_ON?'알람 켜짐':'알람 꺼짐';
+            b.firstChild.textContent = ALARM_ON?'🔔 ':'🔕 ';
+            if(ALARM_ON){ try{ if(window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){} beep(); }
+        };
+        function paintAlarm(){ const b=document.getElementById('alarmBtn'),l=document.getElementById('alarmLbl'); b.className='alarm-btn '+(ALARM_ON?'on':'off'); l.textContent=ALARM_ON?'알람 켜짐':'알람 꺼짐'; b.firstChild.textContent=ALARM_ON?'🔔 ':'🔕 '; }
+
+        // ── 탭 ──
+        window.switchTab = function(which){
+            document.getElementById('tabLive').classList.toggle('active', which==='live');
+            document.getElementById('tabLearn').classList.toggle('active', which==='learn');
+            document.getElementById('livePanel').style.display = which==='live'?'':'none';
+            document.getElementById('learnPanel').style.display = which==='learn'?'':'none';
+            if(which==='learn') loadJarvis();
+            else loadRooms();
+        };
+        window.reloadAll = function(){ loadRooms(); if(document.getElementById('learnPanel').style.display!=='none') loadJarvis(); };
+
+        // ════════════════ 라이브 방 목록 ════════════════
+        window.loadRooms = async function(){
+            const el=document.getElementById('roomList');
+            try{
+                const { data: rooms, error } = await sb.from('chat_rooms')
+                    .select('id, customer_name, nickname, customer_phone, site_lang, status, human_active, updated_at')
+                    .order('updated_at',{ascending:false}).limit(60);
+                if(error) throw error;
+                _roomsCache = rooms||[];
+                // 각 방 마지막 메시지 프리뷰 — 최근 메시지 일괄 조회
+                const ids=_roomsCache.map(r=>r.id);
+                let lastMap={};
+                if(ids.length){
+                    const { data: msgs } = await sb.from('chat_messages')
+                        .select('room_id, sender_type, message, created_at')
+                        .in('room_id', ids).order('created_at',{ascending:false}).limit(300);
+                    (msgs||[]).forEach(m=>{ if(!lastMap[m.room_id]) lastMap[m.room_id]=m; });
+                }
+                document.getElementById('liveCount').textContent = _roomsCache.length ? '('+_roomsCache.length+')' : '';
+                if(!_roomsCache.length){ el.innerHTML='<div class="empty">아직 대화가 없습니다.</div>'; return; }
+                el.innerHTML = _roomsCache.map(r=>{
+                    const nm = (r.customer_name||r.nickname||'게스트');
+                    const lm = lastMap[r.id];
+                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+(lm.message||'').slice(0,40)) : '';
+                    const fresh = _freshRooms[r.id];
+                    const av = esc(nm.slice(0,1).toUpperCase());
+                    return `<div class="room ${fresh?'fresh':''}" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">
+                        <div class="room-av">${av}</div>
+                        <div class="room-mid">
+                            <div class="room-name">${esc(nm)} ${r.human_active?'<span class="badge-live">🟢 상담중</span>':''} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
+                            <div class="room-prev">${esc(prev)}</div>
+                        </div>
+                        <div class="room-right"><div class="room-time">${fmtAgo(r.updated_at)}</div></div>
+                    </div>`;
+                }).join('');
+            }catch(e){ console.error('[rooms]',e); el.innerHTML='<div style="text-align:center;color:#fca5a5;padding:40px 0;">불러오기 실패: '+esc(e?.message||e)+'</div>'; }
+        };
+        function scheduleRoomsReload(){ clearTimeout(_reloadRoomsTimer); _reloadRoomsTimer=setTimeout(loadRooms, 600); }
+
+        // ════════════════ 대화 열기 ════════════════
+        window.openConv = async function(roomId, name){
+            _curRoom = { id: roomId, name: name||'고객', human_active:false };
+            delete _freshRooms[roomId];
+            document.getElementById('convName').textContent = name||'고객';
+            document.getElementById('convBody').innerHTML = '<div style="text-align:center;color:#64748b;padding:30px;">불러오는 중...</div>';
+            document.getElementById('convOv').classList.add('open');
+            // 방 상태
+            try{ const { data: rm } = await sb.from('chat_rooms').select('human_active, customer_name, nickname').eq('id',roomId).maybeSingle(); if(rm){ _curRoom.human_active=!!rm.human_active; if(!name) document.getElementById('convName').textContent=rm.customer_name||rm.nickname||'고객'; } }catch(e){}
+            await renderConvMessages(roomId);
+            paintJoinBar();
+            subscribeRoom(roomId);
+        };
+        async function renderConvMessages(roomId){
+            const body=document.getElementById('convBody');
+            try{
+                const { data: msgs, error } = await sb.from('chat_messages')
+                    .select('sender_type, sender_name, message, file_url, created_at')
+                    .eq('room_id',roomId).order('created_at',{ascending:true}).limit(500);
+                if(error) throw error;
+                body.innerHTML = (msgs||[]).map(convBubble).join('') || '<div style="text-align:center;color:#64748b;padding:30px;">메시지가 없습니다.</div>';
+                body.scrollTop = body.scrollHeight;
+            }catch(e){ body.innerHTML='<div style="text-align:center;color:#fca5a5;padding:30px;">'+esc(e?.message||e)+'</div>'; }
+        }
+        function convBubble(m){
+            const isCust = m.sender_type==='customer';
+            const isMgr = !isCust && String(m.sender_name||'').includes('관리자');
+            const cls = isCust?'customer':(isMgr?'mgr':'ai');
+            const who = isCust?('👤 '+(m.sender_name||'고객')):(isMgr?('🙋 '+(m.sender_name||'관리자')):('🤖 '+(m.sender_name||'AI')));
+            const img = m.file_url ? `<img src="${esc(m.file_url)}" alt="">` : '';
+            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${esc(m.message||'')}${img}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
+        }
+        function appendConvBubble(m){ const body=document.getElementById('convBody'); const near=(body.scrollHeight-body.scrollTop-body.clientHeight)<80; body.insertAdjacentHTML('beforeend', convBubble(m)); if(near) body.scrollTop=body.scrollHeight; }
+
+        window.closeConv = function(){ document.getElementById('convOv').classList.remove('open'); if(_roomSub){ try{_roomSub.unsubscribe();}catch(e){} _roomSub=null; } _curRoom=null; loadRooms(); };
+
+        function paintJoinBar(){
+            const joinBar=document.getElementById('joinBar'), replyWrap=document.getElementById('replyWrap');
+            if(_curRoom && _curRoom.human_active){ joinBar.style.display='none'; replyWrap.classList.add('show'); }
+            else { joinBar.style.display='flex'; replyWrap.classList.remove('show'); }
+        }
+
+        window.managerJoin = async function(){
+            if(!_curRoom) return;
+            try{
+                await sb.from('chat_rooms').update({ human_active:true, assigned_manager:ME, status:'human' }).eq('id',_curRoom.id);
+                _curRoom.human_active=true; paintJoinBar();
+                document.getElementById('replyTa').focus();
+                toast('🙋 매니저 참여 — 이제 AI 대신 직접 답변합니다');
+            }catch(e){ toast('참여 실패: '+(e?.message||e), true); }
+        };
+        window.managerLeave = async function(){
+            if(!_curRoom) return;
+            try{
+                await sb.from('chat_rooms').update({ human_active:false, status:'open' }).eq('id',_curRoom.id);
+                _curRoom.human_active=false; paintJoinBar();
+                toast('🤖 AI 응답 재개');
+            }catch(e){ toast('처리 실패: '+(e?.message||e), true); }
+        };
+        window.managerSend = async function(){
+            if(!_curRoom) return;
+            const ta=document.getElementById('replyTa'); const txt=(ta.value||'').trim();
+            if(!txt) return;
+            ta.disabled=true;
+            try{
+                if(!_curRoom.human_active){ await sb.from('chat_rooms').update({ human_active:true, assigned_manager:ME, status:'human' }).eq('id',_curRoom.id); _curRoom.human_active=true; paintJoinBar(); }
+                const { error } = await sb.from('chat_messages').insert({
+                    room_id:_curRoom.id, sender_type:'chatbot', sender_name:'관리자 '+ME, message:txt, created_at:new Date().toISOString()
+                });
+                if(error) throw error;
+                await sb.from('chat_rooms').update({ updated_at:new Date().toISOString() }).eq('id',_curRoom.id);
+                ta.value='';
+                // 내 화면에도 즉시 표시 (구독이 늦을 수 있어 낙관적 렌더 — 중복 시 구독쪽은 동일내용이라 무해)
+            }catch(e){ toast('전송 실패: '+(e?.message||e), true); }
+            finally{ ta.disabled=false; ta.focus(); }
         };
 
-        // 매니저 안내 템플릿 (언어별)
+        function subscribeRoom(roomId){
+            if(_roomSub){ try{_roomSub.unsubscribe();}catch(e){} _roomSub=null; }
+            _roomSub = sb.channel('mgr-room-'+roomId)
+                .on('postgres_changes',{ event:'INSERT', schema:'public', table:'chat_messages', filter:'room_id=eq.'+roomId }, (p)=>{
+                    const m=p.new; if(!m) return; appendConvBubble(m);
+                })
+                .subscribe();
+        }
+
+        // ════════════════ 전역 알림 (모든 새 고객 메시지) ════════════════
+        function subscribeGlobal(){
+            if(_globalSub){ try{_globalSub.unsubscribe();}catch(e){} }
+            _globalSub = sb.channel('admin-chat-global')
+                .on('postgres_changes',{ event:'INSERT', schema:'public', table:'chat_messages' }, (p)=>{
+                    const m=p.new; if(!m || m.sender_type!=='customer') return;
+                    // 현재 열린 방이면 알림 생략(대화창에서 이미 보임)
+                    if(_curRoom && m.room_id===_curRoom.id) return;
+                    _freshRooms[m.room_id]=true;
+                    beep(); notify('새 고객 문의', (m.message||'').slice(0,60));
+                    toast('💬 새 고객 문의: '+(m.message||'').slice(0,24));
+                    scheduleRoomsReload();
+                })
+                .subscribe();
+        }
+
+        // ════════════════ AI 학습 (기존) ════════════════
+        const LANG_MAP = { kr:{tag:'KR 🇰🇷',kb:'ko',cls:'kr'},ko:{tag:'KR 🇰🇷',kb:'ko',cls:'kr'},ja:{tag:'JP 🇯🇵',kb:'ja',cls:'ja'},jp:{tag:'JP 🇯🇵',kb:'ja',cls:'ja'},us:{tag:'US 🇺🇸',kb:'en',cls:'us'},en:{tag:'EN 🇺🇸',kb:'en',cls:'us'} };
         const MGR_TPL = {
-            ko: `안녕하세요 고객님 😊\n\n빠른 안내를 위해 매니저에게 직접 연락 주시거나 본사로 문의 부탁드립니다!\n\n📞 본사: 031-366-1984 (평일 09:00~18:00)\n• 지숙 매니저: 010-3455-1946\n• 은미 매니저: 010-7793-5393\n• 성희 매니저: 010-4994-5950\n• 연두 매니저: 010-2525-9943\n\n편하신 분께 연락 주세요!`,
-            ja: `お問い合わせありがとうございます 😊\n\n詳しいご案内は担当者に直接ご連絡いただくのが最も早いです。\n\n📞 ナナミ (海外担当): 090-5397-0420\n\nお気軽にご連絡ください!`,
-            en: `Hello! Thank you for your inquiry 😊\n\nFor the fastest response, please contact our overseas representative directly:\n\n📞 Hyerim Seo (CEO, Overseas): +82-10-3491-3535\n\nFeel free to reach out anytime!`
+            ko:`안녕하세요 고객님 😊\n\n빠른 안내를 위해 매니저에게 직접 연락 주시거나 본사로 문의 부탁드립니다!\n\n📞 본사: 031-366-1984 (평일 09:00~18:00)\n• 지숙 매니저: 010-3455-1946\n• 은미 매니저: 010-7793-5393\n• 성희 매니저: 010-4994-5950\n• 연두 매니저: 010-2525-9943\n\n편하신 분께 연락 주세요!`,
+            ja:`お問い合わせありがとうございます 😊\n\n詳しいご案内は担当者に直接ご連絡いただくのが最も早いです。\n\n📞 ナナミ (海外担当): 090-5397-0420\n\nお気軽にご連絡ください!`,
+            en:`Hello! Thank you for your inquiry 😊\n\nFor the fastest response, please contact our overseas representative directly:\n\n📞 Hyerim Seo (CEO, Overseas): +82-10-3491-3535\n\nFeel free to reach out anytime!`
         };
+        async function translate(text,to_lang){ try{ const {data,error}=await sb.functions.invoke('translate',{body:{text,to:to_lang}}); if(error){return '';} return (data&&data.translated)?data.translated:''; }catch(e){return '';} }
 
-        function esc(s) {
-            return String(s == null ? '' : s)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-        function fmtTime(iso) {
-            try {
-                const d = new Date(iso);
-                const m = ('0' + (d.getMonth() + 1)).slice(-2), dd = ('0' + d.getDate()).slice(-2);
-                const h = ('0' + d.getHours()).slice(-2), mi = ('0' + d.getMinutes()).slice(-2);
-                return `${m}/${dd} ${h}:${mi}`;
-            } catch (e) { return ''; }
-        }
-        function toast(msg, isErr) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = 'toast show' + (isErr ? ' err' : '');
-            setTimeout(() => { t.className = 'toast' + (isErr ? ' err' : ''); }, 2600);
-        }
-        async function translate(text, to_lang) {
-            try {
-                const { data, error } = await sb.functions.invoke('translate', { body: { text, to: to_lang } });
-                if (error) { console.warn('[translate] err', error); return ''; }
-                return (data && data.translated) ? data.translated : '';
-            } catch (e) { console.warn('[translate] failed', e); return ''; }
-        }
-
-        window.loadJarvis = async function () {
-            const listEl = document.getElementById('list');
-            const countEl = document.getElementById('countChip');
-            const dateEl = document.getElementById('dateChip');
-            const now = new Date();
-            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-            dateEl.textContent = `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} (${dayNames[now.getDay()]})`;
-            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>';
-            try {
+        window.loadJarvis = async function(){
+            const listEl=document.getElementById('list'), countEl=document.getElementById('countChip'), dateEl=document.getElementById('dateChip');
+            const now=new Date(); const dn=['일','월','화','수','목','금','토'];
+            dateEl.textContent=`${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} (${dn[now.getDay()]})`;
+            listEl.innerHTML='<div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>';
+            try{
                 const { data: logs, error } = await sb.from('advisor_qa_log')
                     .select('id, room_id, lang, customer_message, customer_message_ko, ai_response, created_at')
-                    .eq('needs_learning', true).eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(100);
-                if (error) throw error;
-                const items = (logs || []).filter(l => l.customer_message || l.customer_message_ko);
-                countEl.textContent = items.length ? items.length + ' 건' : '0 건';
-                countEl.className = 'chip ' + (items.length ? 'warn' : 'ok');
-                if (!items.length) {
-                    listEl.innerHTML = '<div class="empty">✅ AI가 헷갈린 상담이 없습니다.<br>깔끔합니다!</div>';
-                    return;
-                }
-                listEl.innerHTML = items.map(renderItem).join('');
-                // 외국어 자동 번역 (한국어로) — 비동기로 채워짐
-                items.forEach(async (it) => {
-                    const lang = (it.lang || 'kr').toLowerCase();
-                    if (lang === 'kr' || lang === 'ko') return;
-                    const el = document.getElementById('jxqtr-' + it.id);
-                    if (!el) return;
-                    if (it.customer_message_ko) {
-                        el.textContent = '🇰🇷 ' + it.customer_message_ko;
-                        el.classList.remove('loading'); return;
-                    }
-                    const tr = await translate(it.customer_message || '', 'ko');
-                    el.textContent = tr ? ('🇰🇷 ' + tr) : '(번역 실패 — 원문만 확인하세요)';
-                    el.classList.remove('loading');
-                });
-            } catch (e) {
-                console.error('[jarvis] load failed', e);
-                listEl.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:40px 0;">불러오기 실패: ' + esc(e?.message || e) + '</div>';
-            }
+                    .eq('needs_learning',true).eq('is_active',true).order('created_at',{ascending:false}).limit(100);
+                if(error) throw error;
+                const items=(logs||[]).filter(l=>l.customer_message||l.customer_message_ko);
+                countEl.textContent=items.length?items.length+' 건':'0 건'; countEl.className='chip '+(items.length?'warn':'ok');
+                document.getElementById('learnCount').textContent=items.length?'('+items.length+')':'';
+                if(!items.length){ listEl.innerHTML='<div class="empty">✅ AI가 헷갈린 상담이 없습니다.<br>깔끔합니다!</div>'; return; }
+                listEl.innerHTML=items.map(renderItem).join('');
+                items.forEach(async(it)=>{ const lang=(it.lang||'kr').toLowerCase(); if(lang==='kr'||lang==='ko')return; const el=document.getElementById('jxqtr-'+it.id); if(!el)return; if(it.customer_message_ko){ el.textContent='🇰🇷 '+it.customer_message_ko; el.classList.remove('loading'); return; } const tr=await translate(it.customer_message||'','ko'); el.textContent=tr?('🇰🇷 '+tr):'(번역 실패 — 원문만 확인하세요)'; el.classList.remove('loading'); });
+            }catch(e){ console.error('[jarvis] load failed',e); listEl.innerHTML='<div style="text-align:center; color:#fca5a5; padding:40px 0;">불러오기 실패: '+esc(e?.message||e)+'</div>'; }
         };
 
-        function renderItem(it) {
-            const L = LANG_MAP[(it.lang || 'kr').toLowerCase()] || LANG_MAP.kr;
-            const q = it.customer_message || it.customer_message_ko || '';
-            const a = (it.ai_response || '').trim() || '(AI 응답 없음 / 답변 회피)';
-            const isForeign = !['kr', 'ko'].includes((it.lang || 'kr').toLowerCase());
-            const trBlock = isForeign
-                ? `<div class="jx-q-tr loading" id="jxqtr-${it.id}">🇰🇷 한국어로 번역 중...</div>`
-                : '';
-            const placeholder = isForeign
-                ? `한국어로 정답을 적으세요. ${L.tag.split(' ')[0]} 로 자동 번역되어 저장됩니다.`
-                : `정답을 적으세요. 다음부터 AI가 이렇게 답합니다.`;
+        function renderItem(it){
+            const L=LANG_MAP[(it.lang||'kr').toLowerCase()]||LANG_MAP.kr;
+            const q=it.customer_message||it.customer_message_ko||'';
+            const a=(it.ai_response||'').trim()||'(AI 응답 없음 / 답변 회피)';
+            const isForeign=!['kr','ko'].includes((it.lang||'kr').toLowerCase());
+            const trBlock=isForeign?`<div class="jx-q-tr loading" id="jxqtr-${it.id}">🇰🇷 한국어로 번역 중...</div>`:'';
+            const placeholder=isForeign?`한국어로 정답을 적으세요. ${L.tag.split(' ')[0]} 로 자동 번역되어 저장됩니다.`:`정답을 적으세요. 다음부터 AI가 이렇게 답합니다.`;
+            const convBtn = it.room_id ? `<span class="jx-convbtn" onclick="event.stopPropagation(); openConv('${it.room_id}','고객')">💬 전체 대화</span>` : '';
             return `<div class="jx-item" id="jx-${it.id}">
                 <div class="jx-meta">
                     <span class="jx-lang ${L.cls}">${L.tag}</span>
                     <span class="jx-time">${fmtTime(it.created_at)}</span>
+                    ${convBtn}
                 </div>
-                <div class="jx-q"><span class="lbl">고객</span>${esc(q)}</div>
+                <div class="jx-q" ${it.room_id?`onclick="openConv('${it.room_id}','고객')"`:''} title="${it.room_id?'클릭하면 이 고객과의 전체 대화 보기':''}"><span class="lbl">고객</span>${esc(q)}</div>
                 ${trBlock}
                 <div class="jx-a"><span class="lbl">AI</span>${esc(a)}</div>
                 <textarea class="jx-input" id="jxa-${it.id}" placeholder="${placeholder}"></textarea>
                 <div class="jx-actions">
-                    <button class="btn btn-save" onclick="jxSave('${it.id}')">💾 저장 · AI 학습</button>
+                    <button class="btn btn-save" onclick="jxSave('${it.id}')">💾 이 답변으로 챗봇 학습 (내 답변)</button>
                 </div>
                 <div class="jx-actions-row">
-                    <button class="btn btn-ok" onclick="jxOk('${it.id}')">✅ 답변 OK</button>
+                    <button class="btn btn-ok" onclick="jxOk('${it.id}')">✅ 이 답변으로 챗봇 학습 (AI답변)</button>
                     <button class="btn btn-mgr" onclick="jxMgrAnswer('${it.id}')">🏢 매니저 안내</button>
                     <button class="btn btn-pass" onclick="jxPass('${it.id}')">⏭ 패스 (코드)</button>
                 </div>
@@ -269,142 +428,71 @@
             </div>`;
         }
 
-        // 매니저 안내 답변 자동 채우기 + 저장
-        window.jxMgrAnswer = async function (id) {
-            const ta = document.getElementById('jxa-' + id);
-            if (!ta) return;
-            try {
-                const { data: row } = await sb.from('advisor_qa_log').select('lang').eq('id', id).maybeSingle();
-                const lang = (row && row.lang || 'kr').toLowerCase();
-                const kb = (LANG_MAP[lang] || LANG_MAP.kr).kb;
-                ta.value = MGR_TPL[kb] || MGR_TPL.ko;
-                // 자동 저장 (매니저 템플릿은 이미 해당 언어이므로 번역 스킵 표시 안 함, jxSave 가 알아서 처리)
-                await window.jxSave(id, true);
-            } catch (e) {
-                toast('매니저 안내 처리 실패: ' + (e?.message || e), true);
-            }
+        window.jxMgrAnswer = async function(id){
+            const ta=document.getElementById('jxa-'+id); if(!ta)return;
+            try{ const {data:row}=await sb.from('advisor_qa_log').select('lang').eq('id',id).maybeSingle(); const lang=(row&&row.lang||'kr').toLowerCase(); const kb=(LANG_MAP[lang]||LANG_MAP.kr).kb; ta.value=MGR_TPL[kb]||MGR_TPL.ko; await window.jxSave(id,true); }catch(e){ toast('매니저 안내 처리 실패: '+(e?.message||e),true); }
         };
 
-        window.jxSave = async function (id, fromMgrBtn) {
-            const ta = document.getElementById('jxa-' + id);
-            const item = document.getElementById('jx-' + id);
-            const statusEl = document.getElementById('jxs-' + id);
-            const saveBtn = item && item.querySelector('.btn-save');
-            const ans = (ta && ta.value || '').trim();
-            if (!ans) {
-                ta && ta.focus();
-                toast('정답을 입력해주세요', true);
-                return;
-            }
-            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '저장 중...'; }
-            if (statusEl) { statusEl.className = 'jx-status busy'; statusEl.textContent = '저장 준비 중...'; }
-            try {
-                const { data: row, error: rowErr } = await sb.from('advisor_qa_log')
-                    .select('room_id, lang, customer_message, customer_message_ko').eq('id', id).maybeSingle();
-                if (rowErr) throw rowErr;
-                const lang = (row && row.lang || 'kr').toLowerCase();
-                const kb = (LANG_MAP[lang] || LANG_MAP.kr).kb;
-                const q = (row && (row.customer_message || row.customer_message_ko)) || '';
-
-                // 한국어 답변 → 고객 언어 번역 (매니저 템플릿은 이미 해당 언어라 스킵)
-                let finalAns = ans;
-                if (kb !== 'ko' && !fromMgrBtn) {
-                    if (statusEl) statusEl.textContent = '✈️ ' + kb.toUpperCase() + ' 로 번역 중...';
-                    const tr = await translate(ans, kb);
-                    if (tr) finalAns = tr;
-                    else if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '번역 실패 — 한국어 그대로 저장합니다.'; }
-                }
-
-                if (statusEl) { statusEl.className = 'jx-status busy'; statusEl.textContent = '📥 chatbot_knowledge 저장 중...'; }
-                const { data: ins, error: insErr } = await sb.from('chatbot_knowledge').insert({
-                    category: 'general', question: q, answer: finalAns,
-                    language: kb, priority: 50, is_active: true
-                }).select().single();
-                if (insErr) throw insErr;
-
-                // 학습 로그 마킹 (room_id 기준이 있으면 우선, 없으면 id)
-                const upd = { needs_learning: false, admin_answer: ans, admin_answer_ko: ans, is_reviewed: true, reviewed_at: new Date().toISOString() };
-                if (row && row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id', row.room_id);
-                else await sb.from('advisor_qa_log').update(upd).eq('id', id);
-
-                // ✅ 반영 검증 — 방금 넣은 row 가 실제 활성 상태로 존재하는지 재조회
-                if (statusEl) statusEl.textContent = '🔍 AI 반영 확인 중...';
-                const { data: verify } = await sb.from('chatbot_knowledge')
-                    .select('id, answer, language, is_active').eq('id', ins.id).maybeSingle();
-                const ok = !!(verify && verify.is_active && verify.answer === finalAns);
-
-                if (ok) {
-                    toast('✅ AI 학습 완료 — 반영 확인됨');
-                    if (item) {
-                        item.classList.add('fade-out');
-                        setTimeout(() => { item.remove(); updateCount(); }, 380);
-                    }
-                } else {
-                    if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '⚠️ 저장은 됐으나 반영 검증 실패 — 챗봇 학습 페이지에서 확인하세요.'; }
-                    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 저장 · AI 학습'; }
-                }
-            } catch (e) {
-                console.error('[jarvis] save failed', e);
-                if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '저장 실패: ' + (e?.message || e); }
-                toast('저장 실패: ' + (e?.message || e), true);
-                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 저장 · AI 학습'; }
-            }
+        window.jxSave = async function(id, fromMgrBtn){
+            const ta=document.getElementById('jxa-'+id), item=document.getElementById('jx-'+id), statusEl=document.getElementById('jxs-'+id);
+            const saveBtn=item&&item.querySelector('.btn-save'); const ans=(ta&&ta.value||'').trim();
+            if(!ans){ ta&&ta.focus(); toast('정답을 입력해주세요',true); return; }
+            if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='저장 중...'; }
+            if(statusEl){ statusEl.className='jx-status busy'; statusEl.textContent='저장 준비 중...'; }
+            try{
+                const {data:row,error:rowErr}=await sb.from('advisor_qa_log').select('room_id, lang, customer_message, customer_message_ko').eq('id',id).maybeSingle();
+                if(rowErr) throw rowErr;
+                const lang=(row&&row.lang||'kr').toLowerCase(); const kb=(LANG_MAP[lang]||LANG_MAP.kr).kb; const q=(row&&(row.customer_message||row.customer_message_ko))||'';
+                let finalAns=ans;
+                if(kb!=='ko'&&!fromMgrBtn){ if(statusEl)statusEl.textContent='✈️ '+kb.toUpperCase()+' 로 번역 중...'; const tr=await translate(ans,kb); if(tr)finalAns=tr; else if(statusEl){statusEl.className='jx-status err'; statusEl.textContent='번역 실패 — 한국어 그대로 저장합니다.';} }
+                if(statusEl){ statusEl.className='jx-status busy'; statusEl.textContent='📥 chatbot_knowledge 저장 중...'; }
+                const {data:ins,error:insErr}=await sb.from('chatbot_knowledge').insert({ category:'general', question:q, answer:finalAns, language:kb, priority:50, is_active:true }).select().single();
+                if(insErr) throw insErr;
+                const upd={ needs_learning:false, admin_answer:ans, admin_answer_ko:ans, is_reviewed:true, reviewed_at:new Date().toISOString() };
+                if(row&&row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id',row.room_id); else await sb.from('advisor_qa_log').update(upd).eq('id',id);
+                if(statusEl) statusEl.textContent='🔍 AI 반영 확인 중...';
+                const {data:verify}=await sb.from('chatbot_knowledge').select('id, answer, language, is_active').eq('id',ins.id).maybeSingle();
+                const ok=!!(verify&&verify.is_active&&verify.answer===finalAns);
+                if(ok){ toast('✅ AI 학습 완료 — 반영 확인됨'); if(item){ item.classList.add('fade-out'); setTimeout(()=>{item.remove(); updateCount();},380); } }
+                else{ if(statusEl){ statusEl.className='jx-status err'; statusEl.textContent='⚠️ 저장은 됐으나 반영 검증 실패 — 다시 확인하세요.'; } if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 이 답변으로 챗봇 학습 (내 답변)'; } }
+            }catch(e){ console.error('[jarvis] save failed',e); if(statusEl){ statusEl.className='jx-status err'; statusEl.textContent='저장 실패: '+(e?.message||e); } toast('저장 실패: '+(e?.message||e),true); if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 이 답변으로 챗봇 학습 (내 답변)'; } }
         };
 
-        window.jxOk = async function (id) {
-            const item = document.getElementById('jx-' + id);
-            try {
-                const { data: row } = await sb.from('advisor_qa_log').select('room_id').eq('id', id).maybeSingle();
-                const upd = {
-                    needs_learning: false, is_reviewed: true, reviewed_at: new Date().toISOString(),
-                    admin_answer: '[OK · AI 답변 양호]', admin_answer_ko: '[OK · AI 답변 양호]'
-                };
-                if (row && row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id', row.room_id);
-                else await sb.from('advisor_qa_log').update(upd).eq('id', id);
-                toast('✅ 답변 OK 처리됨');
-                if (item) {
-                    item.classList.add('fade-out');
-                    setTimeout(() => { item.remove(); updateCount(); }, 380);
+        // ✅ AI 답변을 그대로 학습 (AI 답변이 좋았음 → 지식으로 저장)
+        window.jxOk = async function(id){
+            const item=document.getElementById('jx-'+id), statusEl=document.getElementById('jxs-'+id);
+            if(statusEl){ statusEl.className='jx-status busy'; statusEl.textContent='AI 답변을 학습 중...'; }
+            try{
+                const {data:row}=await sb.from('advisor_qa_log').select('room_id, lang, customer_message, customer_message_ko, ai_response').eq('id',id).maybeSingle();
+                const lang=(row&&row.lang||'kr').toLowerCase(); const kb=(LANG_MAP[lang]||LANG_MAP.kr).kb;
+                const q=(row&&(row.customer_message||row.customer_message_ko))||'';
+                const aiAns=(row&&row.ai_response||'').trim();
+                if(aiAns && q){
+                    // AI 답변은 이미 고객 언어이므로 번역 없이 저장
+                    await sb.from('chatbot_knowledge').insert({ category:'general', question:q, answer:aiAns, language:kb, priority:50, is_active:true });
                 }
-            } catch (e) {
-                toast('처리 실패: ' + (e?.message || e), true);
-            }
+                const upd={ needs_learning:false, is_reviewed:true, reviewed_at:new Date().toISOString(), admin_answer:'[AI답변 학습]', admin_answer_ko:'[AI답변 학습]' };
+                if(row&&row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id',row.room_id); else await sb.from('advisor_qa_log').update(upd).eq('id',id);
+                toast('✅ AI 답변을 챗봇 지식으로 학습했습니다');
+                if(item){ item.classList.add('fade-out'); setTimeout(()=>{item.remove(); updateCount();},380); }
+            }catch(e){ if(statusEl){ statusEl.className='jx-status err'; statusEl.textContent='처리 실패: '+(e?.message||e); } toast('처리 실패: '+(e?.message||e),true); }
         };
 
-        window.jxPass = async function (id) {
-            if (!confirm('이 상담은 코드 수정 / 별도 처리 건으로 패스합니다. (AI 학습 없이 목록에서 제거)\n진행할까요?')) return;
-            const item = document.getElementById('jx-' + id);
-            try {
-                const { data: row } = await sb.from('advisor_qa_log').select('room_id').eq('id', id).maybeSingle();
-                const upd = {
-                    needs_learning: false, is_reviewed: true, reviewed_at: new Date().toISOString(),
-                    admin_answer: '[PASS · 코드 수정 필요]', admin_answer_ko: '[PASS · 코드 수정 필요]'
-                };
-                if (row && row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id', row.room_id);
-                else await sb.from('advisor_qa_log').update(upd).eq('id', id);
-                toast('⏭ 패스 처리됨');
-                if (item) {
-                    item.classList.add('fade-out');
-                    setTimeout(() => { item.remove(); updateCount(); }, 380);
-                }
-            } catch (e) {
-                toast('처리 실패: ' + (e?.message || e), true);
-            }
+        window.jxPass = async function(id){
+            if(!confirm('이 상담은 코드 수정 / 별도 처리 건으로 패스합니다. (AI 학습 없이 목록에서 제거)\n진행할까요?')) return;
+            const item=document.getElementById('jx-'+id);
+            try{ const {data:row}=await sb.from('advisor_qa_log').select('room_id').eq('id',id).maybeSingle(); const upd={ needs_learning:false, is_reviewed:true, reviewed_at:new Date().toISOString(), admin_answer:'[PASS · 코드 수정 필요]', admin_answer_ko:'[PASS · 코드 수정 필요]' }; if(row&&row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id',row.room_id); else await sb.from('advisor_qa_log').update(upd).eq('id',id); toast('⏭ 패스 처리됨'); if(item){ item.classList.add('fade-out'); setTimeout(()=>{item.remove(); updateCount();},380); } }catch(e){ toast('처리 실패: '+(e?.message||e),true); }
         };
 
-        function updateCount() {
-            const countEl = document.getElementById('countChip');
-            const remaining = document.querySelectorAll('.jx-item').length;
-            countEl.textContent = remaining ? remaining + ' 건' : '0 건';
-            countEl.className = 'chip ' + (remaining ? 'warn' : 'ok');
-            if (!remaining) {
-                document.getElementById('list').innerHTML = '<div class="empty">✅ 모든 상담을 처리했습니다.<br>깔끔합니다!</div>';
-            }
-        }
+        function updateCount(){ const countEl=document.getElementById('countChip'); const remaining=document.querySelectorAll('.jx-item').length; countEl.textContent=remaining?remaining+' 건':'0 건'; countEl.className='chip '+(remaining?'warn':'ok'); document.getElementById('learnCount').textContent=remaining?'('+remaining+')':''; if(!remaining){ document.getElementById('list').innerHTML='<div class="empty">✅ 모든 상담을 처리했습니다.<br>깔끔합니다!</div>'; } }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', async ()=>{
             await initConfig();
-            loadJarvis();
+            try{ const u=await sb.auth.getUser(); const em=u&&u.data&&u.data.user&&u.data.user.email; if(em){ ME=em.split('@')[0]; document.getElementById('meLabel').textContent=em; } }catch(e){}
+            paintAlarm();
+            try{ if(ALARM_ON && window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+            loadRooms();
+            subscribeGlobal();
         });
     </script>
 </body>
