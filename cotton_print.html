@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260815160210';
+    var CV = '20260815172836';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -514,6 +514,11 @@ img, video, canvas { max-width: 100%; height: auto; }
             <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰</span>
         </a>
         <nav class="nav-links">
+            <!-- 2026-08-15: 무료쿠폰(리워드 허브) 작은 버튼 — 메인과 동일 기능 -->
+            <button type="button" id="cpRewardTop" onclick="window.openRewardHub && window.openRewardHub()"
+                style="padding:7px 13px; border:none; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                🎁 <span id="cpRewardTopLbl" data-i18n="reward_top">무료쿠폰</span>
+            </button>
             <!-- 2026-07-15: 로그인/회원가입 버튼 재노출 (사용자 요청). cotton-printer.com 에서 직접 가입/로그인
                  → 일본 카멜레온(cafe0101)과 동일 계정(공유 Supabase). 가입 시 site='JP' 귀속. -->
             <button type="button" id="cpAuthLoginBtn" onclick="window._cpOpenAuth && window._cpOpenAuth()"
@@ -1519,6 +1524,18 @@ async function submitRollFabricRequest() {
         </div>
     </button>
 
+    <!-- 2026-08-15: 무료쿠폰(리워드 허브) — 메인과 동일 기능 (출석·끝말잇기·SNS체험단 등). 중복 없음(서버 RPC 한도) -->
+    <button type="button" id="ctaRewardHub" onclick="window.openRewardHub && window.openRewardHub()"
+        style="display:block; width:100%; background:linear-gradient(135deg,#d97706 0%,#f59e0b 50%,#fbbf24 100%); border:none; border-radius:20px; padding:32px; cursor:pointer; color:#fff; text-align:left; box-shadow:0 12px 32px rgba(217,119,6,0.30); font-family:inherit;">
+        <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
+            <div>
+                <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px; color:#fff;" data-i18n="cta_reward_title">🎁 무료쿠폰 받기</h2>
+                <p style="margin:8px 0 0; font-size:13px; color:#fff7ed; line-height:1.5;" data-i18n="cta_reward_sub">출석·끝말잇기·SNS 체험단 등 참여하고 포인트를 받으세요</p>
+            </div>
+            <div style="background:#fff; color:#d97706; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(0,0,0,0.18); white-space:nowrap;" data-i18n="cta_reward_btn">참여하기</div>
+        </div>
+    </button>
+
     <!-- 2026-06-11: 4-card adv 섹션 삭제 — 동일 콘텐츠가 hero 캐러셀 슬라이드 4 장으로 이전됨 -->
 </section>
 
@@ -2019,6 +2036,8 @@ async function submitRollFabricRequest() {
 
 <script src="./editor-libs.js?v=1"></script>
 <script src="./rewards.js?v=19"></script>
+<!-- 2026-08-15: SNS 체험단 팝업 (리워드 허브의 SNS체험단 행에서 호출) — 메인과 공용 -->
+<script src="/blog-recruit.js?v=1"></script>
 <script src="./mini-editor.js?v=556"></script>
 <script src="./editor-rail.js?v=4"></script>
 <script>
@@ -4569,6 +4588,11 @@ cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en
 cta_event_title: { ko:'회원가입이벤트', ja:'会員登録イベント', en:'Signup Event', zh:'注册活动', ar:'حدث التسجيل', es:'Evento de registro', de:'Anmelde-Event', fr:'Événement d\'inscription' },
 cta_event_sub: { ko:'가입하면 3만원 · 친구 추천하면 추천인과 나 각 3만원', ja:'登録で3,000円 · 友達紹介で紹介者と私に各3,000円', en:'$30 on signup · Refer a friend: $30 each for you both', zh:'注册得3万韩元 · 推荐好友双方各得3万韩元', ar:'30$ عند التسجيل · أحِل صديقاً واحصلا على 30$ لكليكما', es:'30$ al registrarse · Recomienda y ganan 30$ cada uno', de:'30$ bei Anmeldung · Freund werben: je 30$', fr:'30$ à l\'inscription · Parrainez: 30$ chacun' },
 cta_event_btn: { ko:'이벤트 참여', ja:'イベント参加', en:'Join event', zh:'参加活动', ar:'شارك', es:'Participar', de:'Teilnehmen', fr:'Participer' },
+// 2026-08-15: 무료쿠폰(리워드 허브) CTA
+cta_reward_title: { ko:'🎁 무료쿠폰 받기', ja:'🎁 無料クーポン', en:'🎁 Free coupons', zh:'🎁 免费优惠券', ar:'🎁 قسائم مجانية', es:'🎁 Cupones gratis', de:'🎁 Gratis-Coupons', fr:'🎁 Coupons gratuits' },
+cta_reward_sub: { ko:'출석·끝말잇기·SNS 체험단 등 참여하고 포인트를 받으세요', ja:'出席・SNS体験団など参加してポイントGET', en:'Attend, play & join to earn points', zh:'签到·参与活动赚取积分', ar:'شارك واكسب النقاط', es:'Participa y gana puntos', de:'Mitmachen & Punkte sammeln', fr:'Participez et gagnez des points' },
+cta_reward_btn: { ko:'참여하기', ja:'参加する', en:'Join', zh:'参与', ar:'شارك', es:'Participar', de:'Teilnehmen', fr:'Participer' },
+reward_top: { ko:'무료쿠폰', ja:'無料クーポン', en:'Coupons', zh:'优惠券', ar:'قسائم', es:'Cupones', de:'Coupons', fr:'Coupons' },
 // 2026-05-23: 코튼프린트 장점 설명
 adv_title: { ko:'왜 코튼프린트일까요?', ja:'なぜコットンプリントなのか', en:'Why Cotton Print?' },
 adv_subtitle: { ko:'소량부터 안전하게 — 세계 최고 수준의 패브릭 인쇄', ja:'小ロットから安全に — 世界最高水準のファブリック印刷', en:'From small runs, safely — world-class fabric printing' },
