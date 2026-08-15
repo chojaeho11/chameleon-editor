@@ -2146,9 +2146,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             // 1순위: 클라이언트가 보낸 room_id (확실한 캐시)
             if (clientRoomId) {
                 roomId = clientRoomId;
-                // 고객이 이름을 입력했으면 기존 방 이름 업데이트
+                // 고객이 이름을 입력했으면 기존 방 이름/전화 업데이트
                 if (clientCustName) {
-                    await sb.from('chat_rooms').update({ customer_name: custName }).eq('id', roomId);
+                    const _u: any = { customer_name: custName };
+                    if (clientCustPhone) _u.customer_phone = clientCustPhone;
+                    await sb.from('chat_rooms').update(_u).eq('id', roomId);
                 }
                 console.log("[chat] reusing client room_id:", roomId);
             }
@@ -2165,7 +2167,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             // 3순위: 새 방 생성
             if (!roomId) {
                 const { data: newRoom, error: createErr } = await sb.from('chat_rooms').insert({
-                    customer_name: custName, status: 'ai_chatting',
+                    customer_name: custName, customer_phone: clientCustPhone || null, status: 'ai_chatting',
                     source: _sid ? 'bot-' + _sid : 'chatbot',
                     site_lang: _lang, assigned_manager: '',
                 }).select('id').single();

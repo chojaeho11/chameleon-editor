@@ -234,18 +234,50 @@ function _renderSearchResults(rows, query, lang) {
     if (si) si.value = '';
 }
 
+// 2026-08-15: 챗봇 시작 시 성함+연락처 먼저 받기 → 관리자 관제(자비스)에 고객정보로 노출
 function showEntryForm() {
     if (!chatArea) return;
-    _custName = 'Guest';
-    try { localStorage.setItem('kapu_customer', JSON.stringify({ name: 'Guest', phone: '' })); } catch(e) {}
     const lang = getLang();
-    const msgs = {
-        kr: '안녕하세요! 무엇을 도와드릴까요? 😊\n원하시는 제품에 대해 물어보시면 설명과 제품을 구매할 수 있는 링크를 드릴게요.',
-        ja: 'こんにちは！何かお手伝いできることはありますか？😊\nご希望の商品についてお尋ねいただければ、説明と購入リンクをお送りいたします。',
-        en: 'Hello! How can I help you? 😊\nAsk me about any product and I\'ll provide a description and a purchase link for you.'
-    };
-    addBubble(msgs[lang] || msgs['en'], 'ai');
+    const L = ({
+        kr: { title:'상담 전 정보를 남겨주세요 😊', desc:'담당자가 더 정확히 도와드릴 수 있어요.', name:'성함', phone:'연락처 (선택)', start:'상담 시작', skip:'그냥 둘러볼게요' },
+        ja: { title:'ご相談の前に情報をご入力ください 😊', desc:'担当者がより正確にご案内できます。', name:'お名前', phone:'電話番号 (任意)', start:'相談を始める', skip:'まずは見るだけ' },
+        en: { title:'A quick intro before we chat 😊', desc:'Helps our team assist you better.', name:'Name', phone:'Phone (optional)', start:'Start chat', skip:'Just browsing' },
+        zh: { title:'咨询前请留下您的信息 😊', desc:'方便负责人更准确地为您服务。', name:'姓名', phone:'联系方式 (选填)', start:'开始咨询', skip:'随便看看' }
+    })[lang] || { title:'A quick intro before we chat 😊', desc:'Helps our team assist you better.', name:'Name', phone:'Phone (optional)', start:'Start chat', skip:'Just browsing' };
+    chatArea.insertAdjacentHTML('beforeend', `
+        <div class="adv-row adv-row-ai" id="advEntryRow">
+            <div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="adv-bubble adv-bubble-ai" style="max-width:90%; width:290px;">
+                <div style="font-weight:800; margin-bottom:3px;">${L.title}</div>
+                <div style="font-size:12px; color:#64748b; margin-bottom:10px;">${L.desc}</div>
+                <input id="advEntryName" placeholder="${L.name}" style="width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid #cbd5e1; border-radius:9px; font-size:14px; margin-bottom:7px; color:#1e293b;">
+                <input id="advEntryPhone" type="tel" inputmode="tel" placeholder="${L.phone}" style="width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid #cbd5e1; border-radius:9px; font-size:14px; margin-bottom:10px; color:#1e293b;"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault(); window._advSubmitEntry();}">
+                <button onclick="window._advSubmitEntry()" style="width:100%; padding:11px; background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; border:none; border-radius:9px; font-size:14px; font-weight:800; cursor:pointer;">${L.start}</button>
+                <div onclick="window._advSkipEntry()" style="text-align:center; margin-top:9px; font-size:12px; color:#94a3b8; cursor:pointer;">${L.skip}</div>
+            </div>
+        </div>
+    `);
+    scrollChat();
+    setTimeout(() => { const n = document.getElementById('advEntryName'); if (n) n.focus(); }, 120);
 }
+window._advSubmitEntry = function() {
+    const nEl = document.getElementById('advEntryName');
+    const pEl = document.getElementById('advEntryPhone');
+    const name = ((nEl && nEl.value) || '').trim();
+    const phone = ((pEl && pEl.value) || '').trim();
+    if (!name) { if (nEl) { nEl.focus(); nEl.style.borderColor = '#ef4444'; } return; }
+    _custName = name; _custPhone = phone;
+    try { localStorage.setItem('kapu_customer', JSON.stringify({ name: name, phone: phone })); } catch(e) {}
+    const row = document.getElementById('advEntryRow'); if (row) row.remove();
+    showWelcomeMessage();
+};
+window._advSkipEntry = function() {
+    _custName = ''; _custPhone = '';
+    try { localStorage.setItem('kapu_customer', JSON.stringify({ name: '', phone: '' })); } catch(e) {}
+    const row = document.getElementById('advEntryRow'); if (row) row.remove();
+    showWelcomeMessage();
+};
 
 // ─── 에디터로 디자인하기 (사이즈 입력 후 에디터 열기) ───
 window._advOpenEditor = function() {
