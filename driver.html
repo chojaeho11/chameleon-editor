@@ -294,6 +294,13 @@
                             if (o.is_province_install) {
                                 parts.push(`<span style="display:inline-block;padding:6px 12px;border-radius:8px;background:#fee2e2;color:#991b1b;font-weight:900;font-size:13px;">🚨 지방 하루종일</span>`);
                             }
+                            // 2026-08-16: 팀 변경 버튼 (현재 팀 제외 나머지 → 클릭 시 재배정)
+                            {
+                                const _tn = { seoul:'1팀', hwaseong:'2팀', north:'3팀' };
+                                const _others = Object.keys(_tn).filter(k => k !== o.assigned_team);
+                                const _tb = _others.map(k => `<button onclick="changeDriverTeam('${o.id}','${k}')" style="padding:5px 11px;border-radius:8px;background:#fff;border:1.5px solid #cbd5e1;color:#475569;font-weight:700;font-size:12px;cursor:pointer;">→${_tn[k]}</button>`).join('');
+                                parts.push(`<span style="display:inline-flex;gap:4px;align-items:center;"><span style="font-size:11px;color:#94a3b8;">팀변경</span>${_tb}</span>`);
+                            }
                             return parts.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${parts.join('')}</div>` : '';
                         })()}
                         <!-- 전화/지도 -->
@@ -420,6 +427,18 @@
             showToast(checked ? '✓ 표시 (관리자 즉시 반영)' : '해제됨', 'success', 1500);
             loadMyTasks();
         } catch (e) { showToast('실패: ' + e.message, 'error'); }
+    };
+
+    // 2026-08-16: 팀 변경 — 드라이버 앱에서 다른 팀으로 재배정 (관리자 즉시 반영)
+    window.changeDriverTeam = async function(orderId, team) {
+        const names = { seoul:'1팀', hwaseong:'2팀', north:'3팀' };
+        if (!confirm(`이 주문을 ${names[team]||team}(으)로 옮길까요?`)) return;
+        try {
+            const { error } = await sb.from('orders').update({ assigned_team: team }).eq('id', orderId);
+            if (error) throw error;
+            showToast(`✓ ${names[team]||team}(으)로 이동`, 'success', 1500);
+            loadMyTasks();
+        } catch (e) { showToast('팀 변경 실패: ' + e.message, 'error'); }
     };
 
     // 사진 업로드 (Storage 'install-photos' 버킷)
