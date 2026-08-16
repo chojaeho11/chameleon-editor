@@ -3128,7 +3128,7 @@ html, body { background: #ffffff !important; }
             <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
               <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 희망일', '配送希望日', 'Delivery date')}</label>
-              <input type="date" id="soScheduleDate" onchange="window._soUpdateShipBreakdown(); if(window._soApplyScheduleCapacity)window._soApplyScheduleCapacity();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+              <input type="date" id="soScheduleDate" onchange="window._soUpdateShipBreakdown(); if(window._soApplyScheduleCapacity)window._soApplyScheduleCapacity({force:true});" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
             </div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
               <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 시간', '配送時間', 'Time')}</label>
@@ -5176,6 +5176,9 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
         // 합계
         setText('soTotal', fmtPrice(final));
+        // 2026-08-16: 설치 시간지정 게이트용 현재 상품 합계(KRW) 저장 + 시간대 캐파/게이트 갱신
+        window._soScheduleGateTotalKRW = final;
+        if (window._soApplyScheduleCapacity) { try { window._soApplyScheduleCapacity(); } catch (e) {} }
 
         // 2026-06-04: 원판 — 우측 카드 수량 기반 라이브 미리보기로 덮어쓰기 (단가 row 숨김 + 합계 재산정)
         if (state.isRawBoard && typeof window._soUpdateRawBoardPreview === 'function') {
@@ -9188,9 +9191,12 @@ html, body { background: #ffffff !important; }
         if (dateWrap && dateWrap.style.display !== 'none' && window._soApplyScheduleCapacity) window._soApplyScheduleCapacity();
     };
 
-    // ── 2026-08-16: 성수기 설치/배송 시간대 캐파(오전8·오후8·야간8) — 제품페이지 마감 차단 ──
+    // ── 2026-08-16: 성수기 설치/배송 시간대 캐파(오전4·오후4·야간3·시간무관12) + 시간지정 100만원↑만 ──
     //   order.js PERIOD_CAPACITY / fetchPeriodBookings 와 동일 로직. 값 변경 시 양쪽 동기화.
-    window._SO_PERIOD_CAP = { am: 8, pm: 8, night: 8 };
+    window._SO_PERIOD_CAP = { am: 4, pm: 4, night: 3, any: 12 };
+    window._SO_TIME_MIN_KRW = 1000000;   // 이 금액 이상만 시간 지정 가능(그 미만은 날짜만)
+    window._soScheduleGateTotalKRW = 0;  // recalc 가 현재 상품 합계(KRW)로 갱신
+    var _soCapCache = { date: null, book: null };
     window._soFetchPeriodBookings = async function (date) {
         var res = { am: 0, pm: 0, night: 0, any: 0 };
         if (!date) return res;
@@ -9201,31 +9207,50 @@ html, body { background: #ffffff !important; }
                 var p = o.delivery_period;
                 if (!p && o.installation_time) { var t = o.installation_time; p = (t < '12:00') ? 'am' : (t < '18:00') ? 'pm' : 'night'; }
                 if (!p) return;
-                if (p === 'any') { res.any++; res.pm++; return; }   // 시간무관은 오후에 가산(order.js 동일)
+                if (p === 'any') { res.any++; return; }   // 시간무관은 자체 버킷(cap 12)
                 if (res[p] !== undefined) res[p]++;
             });
         } catch (e) { console.warn('[soFetchPeriodBookings]', e); }
         return res;
     };
-    window._soApplyScheduleCapacity = async function () {
+    window._soApplyScheduleCapacity = async function (opts) {
         // 원지(허니콤보드 원판)는 택배 발송 — 설치 캐파 대상 아님 → 게이트 스킵
         if (state && state.isRawBoard) return;
+        var wrap = document.getElementById('soScheduleDateWrap');
         var sd = document.getElementById('soScheduleDate');
         var stSel = document.getElementById('soScheduleTime');
-        if (!sd || !stSel || !sd.value) return;
-        var cap = window._SO_PERIOD_CAP || { am: 8, pm: 8, night: 8 };
-        var book = await window._soFetchPeriodBookings(sd.value);
-        var labels = { am: tr('오전 (08-12)', '午前 (08-12)', 'AM (08-12)'), pm: tr('오후 (12-18)', '午後 (12-18)', 'PM (12-18)'), night: tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)') };
-        var icons = { am: '🌅 ', pm: '☀️ ', night: '' };
+        if (!wrap || wrap.style.display === 'none' || !sd || !stSel) return;
+        var ph = stSel.querySelector('option[value=""]');
+        // ── 100만원 이상만 시간 지정 가능 (미만은 날짜만) ──
+        if ((window._soScheduleGateTotalKRW || 0) < window._SO_TIME_MIN_KRW) {
+            stSel.value = ''; stSel.disabled = true;
+            if (ph) ph.textContent = tr('100만원 이상 구매 시 시간 지정 가능', '100万ウォン以上で時間指定可', 'Time selectable on orders ≥ ₩1,000,000');
+            ['am', 'pm', 'night', 'any'].forEach(function (k) { var o = stSel.querySelector('option[value="' + k + '"]'); if (o) o.disabled = true; });
+            return;
+        }
+        stSel.disabled = false;
+        if (ph) ph.textContent = tr('시간 선택', '時間選択', 'Select');
+        if (!sd.value) return;
+        // ── 시간대별 마감(캐파) — 같은 날짜는 캐시 재사용(recalc 연타 시 DB 스팸 방지) ──
+        var book;
+        if (_soCapCache.date === sd.value && _soCapCache.book && !(opts && opts.force)) { book = _soCapCache.book; }
+        else { book = await window._soFetchPeriodBookings(sd.value); _soCapCache = { date: sd.value, book: book }; }
+        var cap = window._SO_PERIOD_CAP;
+        var labels = {
+            am: tr('오전 (08-12)', '午前 (08-12)', 'AM (08-12)'), pm: tr('오후 (12-18)', '午後 (12-18)', 'PM (12-18)'),
+            night: tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)'), any: tr('시간 상관없음', '時間指定なし', 'Any time')
+        };
+        var icons = { am: '🌅 ', pm: '☀️ ', night: '', any: '📅 ' };
         var fullTag = tr(' (마감)', ' (満員)', ' (Full)');
         var leftTag = function (n) { return ' · ' + n + tr('건 남음', '件', ' left'); };
-        ['am', 'pm', 'night'].forEach(function (k) {
+        ['am', 'pm', 'night', 'any'].forEach(function (k) {
             var opt = stSel.querySelector('option[value="' + k + '"]');
             if (!opt) return;
             var used = book[k] || 0;
-            var isFull = used >= (cap[k] || 8);
+            var c = cap[k] || 0;
+            var isFull = used >= c;
             opt.disabled = isFull;
-            opt.textContent = icons[k] + labels[k] + (isFull ? fullTag : leftTag(Math.max(0, (cap[k] || 8) - used)));
+            opt.textContent = icons[k] + labels[k] + (isFull ? fullTag : leftTag(Math.max(0, c - used)));
             if (isFull && stSel.value === k) { stSel.value = ''; }   // 선택돼있던 시간대가 마감이면 해제
         });
     };

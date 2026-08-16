@@ -924,10 +924,10 @@ function getInstallationSlotInfo(totalKRW) {
 const BASE_OCCUPIED_TEAMS = 1;
 
 // ========================================================================
-// [Phase 1] 시간대 모델: 오전 8건 / 오후 8건 / 야간 8건 / 시간상관없음
-// 2026-08-16: 성수기 캐파 오전6/오후6/야간3 → 8/8/8 (하루 ~3천만원 목표, 원지 판매 제외)
+// [Phase 1] 시간대 모델: 오전 4건 / 오후 4건 / 야간 3건 / 시간상관없음 12건
+// 2026-08-16: 성수기 캐파 오전4/오후4/야간3/시간무관12 (원지 판매 제외, 시간지정은 100만원↑만)
 // ========================================================================
-const PERIOD_CAPACITY = { am: 8, pm: 8, night: 8 };
+const PERIOD_CAPACITY = { am: 4, pm: 4, night: 3, any: 12 };
 const PERIOD_TIME_MIDPOINT = { am: '09:00', pm: '14:00', night: '19:00' };  // 기사앱/관리자 하위호환용
 
 // installation_time HH:MM → am / pm / night 매핑 (레거시 주문 집계용)
@@ -952,8 +952,8 @@ async function fetchPeriodBookings(date) {
             let p = o.delivery_period;
             if (!p) p = _timeToPeriod(o.installation_time);
             if (!p) return;
-            // 'any' 는 캐파에서 1건 분배 — 관리자가 배정 전까지 PM에 가산
-            if (p === 'any') { result.any++; result.pm++; return; }
+            // 2026-08-16: '시간 상관없음'은 자체 버킷(cap 12) — 더 이상 PM에 가산 안 함
+            if (p === 'any') { result.any++; return; }
             if (result[p] !== undefined) result[p]++;
             if (isBlock) { /* 관리자차단도 캐파 차감으로 사용 */ }
         });
@@ -1015,7 +1015,7 @@ function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange, mod
         { key:'am',    title:T.am,    sub:T.amSub,    cap:PERIOD_CAPACITY.am,    blocked: isRemoval },
         { key:'pm',    title:T.pm,    sub:T.pmSub,    cap:PERIOD_CAPACITY.pm,    blocked: isRemoval },
         { key:'night', title:T.night, sub:T.nightSub, cap:PERIOD_CAPACITY.night, blocked: false },
-        { key:'any',   title:T.any,   sub:T.anySub,   cap:null,                  blocked: false }
+        { key:'any',   title:T.any,   sub:T.anySub,   cap:PERIOD_CAPACITY.any,   blocked: false }
     ];
     grid.innerHTML = '';
     grid.style.display = 'grid';
