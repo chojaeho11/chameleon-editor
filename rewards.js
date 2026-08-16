@@ -260,10 +260,10 @@
         ov.addEventListener('click', function (e) { if (e.target === ov) closeHub(); });
 
         async function getState() {
-            var st = { logged_in: false, mileage: 0, monthly_gift_done: false, attendance_done: false, first_cashback_done: false, sns: 'none', uid: null, email: '', name: '' };
+            var st = { logged_in: false, mileage: 0, monthly_gift_done: false, attendance_done: false, first_cashback_done: false, first_ever_cashback_done: false, sns: 'none', uid: null, email: '', name: '' };
             try { var u = await sbc.auth.getUser(); var user = u && u.data && u.data.user; if (user) { st.logged_in = true; st.uid = user.id; st.email = user.email || ''; } } catch (e) {}
             if (st.logged_in) {
-                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.monthly_gift_done = !!d.monthly_gift_done; st.attendance_done = !!d.attendance_done; st.first_cashback_done = !!d.first_cashback_done; } } catch (e) {}
+                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.monthly_gift_done = !!d.monthly_gift_done; st.attendance_done = !!d.attendance_done; st.first_cashback_done = !!d.first_cashback_done; st.first_ever_cashback_done = !!d.first_ever_cashback_done; } } catch (e) {}
                 try { var s = await sbc.rpc('blog_monitor_sync'); if (s && s.data) st.sns = s.data.status || 'none'; } catch (e) {}
                 try { var pf = await sbc.from('profiles').select('username').eq('id', st.uid).maybeSingle(); st.name = (pf && pf.data && pf.data.username) || (st.email.split('@')[0]) || 'user'; } catch (e) { st.name = (st.email.split('@')[0]) || 'user'; }
             }
@@ -335,7 +335,11 @@
                 + (st.logged_in ? '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
                     + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('매월 첫구매 20% 페이백 (최대 20만원)', '毎月 初回購入20%還元（最大2万円）', '20% cashback on your first purchase each month (up to ~$200)') + '</div>'
                     + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('말일 초기화 후 그달 첫 구매에 페이백 적용', '月末リセット後、その月の初回購入に還元適用', 'Applies to the first purchase after each month-end reset') + '</div></div>'
-                    + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>' : '');
+                    + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>'
+                    + '<div style="background:linear-gradient(135deg,#db2777,#9d174d);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
+                    + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('첫구매 페이백 (최대 10만원)', '初回購入還元（最大1万円）', 'First-purchase cashback (up to ~$100)') + '</div>'
+                    + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('첫 구매 실입금액 100% 페이백 · 평생 1회', '初回購入の実支払額100%還元 · 生涯1回', '100% of your first purchase · once in a lifetime') + '</div></div>'
+                    + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_ever_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>' : '');
             var rows = ''
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
                 + rowHtml(2, T2('이번주 접속', '今週のログイン', 'Weekly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
