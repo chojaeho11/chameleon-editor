@@ -938,23 +938,27 @@ function _timeToPeriod(hhmm) {
     return 'night';
 }
 
-// 당일 기간별 예약 건수 조회 (orders.delivery_period + 레거시 installation_time 합산)
+// 2026-08-16: 금액 비례 차감 — 100만원당 1건 (200~299만=2건 …), 시간지정 주문은 최소 1건.
+function _slotWeight(krw) { return Math.max(1, Math.floor((krw || 0) / 1000000)); }
+
+// 당일 기간별 예약 건수 조회 (orders.delivery_period + 레거시 installation_time, 금액비례 합산)
 async function fetchPeriodBookings(date) {
     const result = { am: 0, pm: 0, night: 0, any: 0 };
     if (!date) return result;
     try {
         const _sb = window.sb || sb;
         const { data } = await _sb.from('orders')
-            .select('delivery_period, installation_time, status, manager_name')
+            .select('delivery_period, installation_time, status, manager_name, total_amount')
             .eq('delivery_target_date', date);
         (data || []).forEach(o => {
             const isBlock = o.status === '관리자차단' || (o.manager_name || '').startsWith('[차단]');
             let p = o.delivery_period;
             if (!p) p = _timeToPeriod(o.installation_time);
             if (!p) return;
+            const w = _slotWeight(o.total_amount);   // 100만원당 1건
             // 2026-08-16: '시간 상관없음'은 자체 버킷(cap 12) — 더 이상 PM에 가산 안 함
-            if (p === 'any') { result.any++; return; }
-            if (result[p] !== undefined) result[p]++;
+            if (p === 'any') { result.any += w; return; }
+            if (result[p] !== undefined) result[p] += w;
             if (isBlock) { /* 관리자차단도 캐파 차감으로 사용 */ }
         });
     } catch(e) { console.warn('[fetchPeriodBookings]', e); }
@@ -992,8 +996,9 @@ function _calcInstallDurationMin(totalKRW, isProvince) {
 
 // 공통: 3개 기간 카드 + "시간 상관없음" 렌더러
 // opts: { hiddenId, gridId, dateId, bookings, onSelect(value), initialValue }
-function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange, mode }) {
+function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange, mode, curWeight }) {
     if (!grid) return;
+    const _cw = Math.max(1, curWeight || 1);   // 이 주문이 차지하는 건수(100만원당 1)
     const lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) ? CURRENT_LANG : 'kr';
     const T = {
         am:       { kr:'🌅 오전',   ja:'🌅 午前',   en:'🌅 Morning',   zh:'🌅 上午' }[lang] || '🌅 Morning',
@@ -1037,7 +1042,8 @@ function renderPeriodCards({ grid, hidden, bookings, initialValue, onChange, mod
 
     periods.forEach(p => {
         const used = (bookings && bookings[p.key]) || 0;
-        const isFull = p.cap !== null && used >= p.cap;
+        // 2026-08-16: 이 주문(건수 _cw)이 들어갈 자리가 남아야 선택 가능
+        const isFull = p.cap !== null && (used + _cw > p.cap);
         const isBlocked = !!p.blocked;
         const isDisabled = isFull || isBlocked;
         const card = document.createElement('button');
@@ -1145,6 +1151,7 @@ async function _renderCartTimeGrid({ hiddenId, gridId, dateId, prefix }) {
         bookings,
         initialValue: hidden.value || '',
         mode: prefix, // 'delivery' or 'removal' — removal disables AM/PM
+        curWeight: _slotWeight(cartTotalKRW),   // 2026-08-16: 이 주문 건수(100만원당 1)
         onChange: () => { if (prefix === 'delivery') _updateRemovalGate(); }
     });
 }

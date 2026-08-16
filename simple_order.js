@@ -9197,18 +9197,21 @@ html, body { background: #ffffff !important; }
     window._SO_TIME_MIN_KRW = 1000000;   // 이 금액 이상만 시간 지정 가능(그 미만은 날짜만)
     window._soScheduleGateTotalKRW = 0;  // recalc 가 현재 상품 합계(KRW)로 갱신
     var _soCapCache = { date: null, book: null };
+    // 2026-08-16: 금액 비례 차감 — 100만원당 1건 (order.js _slotWeight 와 동일)
+    window._soSlotWeight = function (krw) { return Math.max(1, Math.floor((krw || 0) / 1000000)); };
     window._soFetchPeriodBookings = async function (date) {
         var res = { am: 0, pm: 0, night: 0, any: 0 };
         if (!date) return res;
         try {
             var sb = getSb(); if (!sb) return res;
-            var r = await sb.from('orders').select('delivery_period, installation_time').eq('delivery_target_date', date);
+            var r = await sb.from('orders').select('delivery_period, installation_time, total_amount').eq('delivery_target_date', date);
             (r.data || []).forEach(function (o) {
                 var p = o.delivery_period;
                 if (!p && o.installation_time) { var t = o.installation_time; p = (t < '12:00') ? 'am' : (t < '18:00') ? 'pm' : 'night'; }
                 if (!p) return;
-                if (p === 'any') { res.any++; return; }   // 시간무관은 자체 버킷(cap 12)
-                if (res[p] !== undefined) res[p]++;
+                var w = window._soSlotWeight(o.total_amount);   // 100만원당 1건
+                if (p === 'any') { res.any += w; return; }   // 시간무관은 자체 버킷(cap 12)
+                if (res[p] !== undefined) res[p] += w;
             });
         } catch (e) { console.warn('[soFetchPeriodBookings]', e); }
         return res;
@@ -9243,12 +9246,13 @@ html, body { background: #ffffff !important; }
         var icons = { am: '🌅 ', pm: '☀️ ', night: '', any: '📅 ' };
         var fullTag = tr(' (마감)', ' (満員)', ' (Full)');
         var leftTag = function (n) { return ' · ' + n + tr('건 남음', '件', ' left'); };
+        var cw = Math.max(1, window._soSlotWeight(window._soScheduleGateTotalKRW || 0));   // 이 주문 건수(100만원당 1)
         ['am', 'pm', 'night', 'any'].forEach(function (k) {
             var opt = stSel.querySelector('option[value="' + k + '"]');
             if (!opt) return;
             var used = book[k] || 0;
             var c = cap[k] || 0;
-            var isFull = used >= c;
+            var isFull = (used + cw > c);   // 이 주문이 들어갈 자리(cw건)가 있어야 선택 가능
             opt.disabled = isFull;
             opt.textContent = icons[k] + labels[k] + (isFull ? fullTag : leftTag(Math.max(0, c - used)));
             if (isFull && stSel.value === k) { stSel.value = ''; }   // 선택돼있던 시간대가 마감이면 해제
