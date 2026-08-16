@@ -3430,7 +3430,7 @@ html, body { background: #ffffff !important; }
           <label class="so-disc-card" data-disc="pro" style="cursor:pointer; padding:10px 12px; border:2px solid #ddd6fe; background:#f5f3ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <input type="radio" name="soDiscChoice" value="pro" onchange="window._soOnDiscountSelect()" style="margin:0;">
-              <b style="font-size:12px; color:#6d28d9;">👑 ${tr('PRO 구독할인','PRO会員割引','PRO Subscriber')}</b>
+              <b style="font-size:12px; color:#6d28d9;">👑 ${tr('PRO 구독할인','PRO会員割引','PRO Subscriber')} <span style="font-size:9.5px; color:#7c3aed; font-weight:800;">${tr('포인트 중복','ポイント併用','+ points')}</span></b>
             </div>
             <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="soDiscProAmount">-</div>
             <div style="font-size:10.5px; color:#7c3aed;" id="soDiscProHint">${tr('주문의 10%','注文金額の10%','10% of order')}</div>
@@ -3442,6 +3442,11 @@ html, body { background: #ffffff !important; }
         <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
           * ${tr('포인트·예치금은 전액 사용 가능 (배송비 포함) · PRO는 구독 할인','ポイント·預り金は全額利用可(送料込み) · PROは会員割引','Points / Deposit: full balance (incl. shipping) · PRO: member discount')}
         </div>
+        <!-- 2026-08-16: 구독 서비스 링크 — 비구독자에게 노출 (구독하면 모든 구매 10% + 포인트 동시 사용). isPro 면 _soInitWallet 에서 숨김 -->
+        <a id="soSubLink" href="javascript:void(0)" onclick="if(window.openSubPopup){window.openSubPopup();}else{location.href='/#subscriptionSection';}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; padding:10px 12px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:2px solid #7c3aed; border-radius:10px; text-decoration:none; color:#5b21b6; font-weight:800; font-size:12.5px; cursor:pointer;">
+          <span>👑 ${tr('구독하면 모든 구매 10% 할인 · 포인트와 동시 사용','購読で全商品10%割引 · ポイント併用可','Subscribe: 10% off everything · stacks with points')}</span>
+          <span style="background:#fff; color:#7c3aed; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:900; flex-shrink:0;">${tr('구독하기 →','購読 →','Subscribe →')}</span>
+        </a>
         <!-- legacy hidden inputs — 기존 코드 호환용 (값은 _soOnDiscountSelect 에서 동기화) -->
         <input id="soUseMileage" type="hidden" value="0">
         <input id="soUseDepositAll" type="checkbox" style="display:none;">
@@ -19740,6 +19745,8 @@ html, body { background: #ffffff !important; }
         var depositBal = parseInt(prof.deposit || 0) || 0;
         var eventCouponBal = parseInt(prof.event_coupon || 0) || 0;
         var isPro = !!window.isProSubscriber;
+        // 2026-08-16: 구독 서비스 링크는 비구독자에게만 (구독자는 이미 10% 자동적용)
+        var _subLinkEl = document.getElementById('soSubLink'); if (_subLinkEl) _subLinkEl.style.display = isPro ? 'none' : 'flex';
         // 2026-06-04: 로그인 + 0잔액 + 비PRO 도 박스 표시 (사용자가 어떤 할인이 있는지 인지 + PRO 가입 유도)
         var cart = _soReadAllCart();
         var excludedSet = window.excludedCategoryCodes || new Set();
@@ -19887,6 +19894,10 @@ html, body { background: #ffffff !important; }
             }
             if ((w.useBlogCoupon || 0) > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#4338ca;"><span>· ' + tr('포인트 사용','ポイント使用','Points') + '</span><span>-' + _soFormatPrice(w.useBlogCoupon) + '</span></div>';
+            }
+            // 2026-08-16: 자동 PRO 10% 할인은 grand 에 이미 녹아있어 명세에 안 보였음 → 포인트/예치금과 "동시 적용"이 보이도록 라인 표시(총액 불변, 표시만)
+            if (!w.proSuppressed && proDisc > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(proDisc) + '</span></div>';
             }
             if (w.source === 'pro' && (w.proApplied || 0) > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(w.proApplied) + '</span></div>';
