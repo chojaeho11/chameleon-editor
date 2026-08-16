@@ -198,11 +198,15 @@
     function bindDragScroll(el) {
         if (el._dragBound) return; el._dragBound = 1;
         var down = false, startX = 0, startL = 0, moved = false;
-        el.addEventListener('mousedown', function (e) { down = true; moved = false; startX = e.pageX; startL = el.scrollLeft; el.classList.add('dragging'); });
-        var end = function () { if (down) { down = false; el.classList.remove('dragging'); if (moved) { window._bzSuppressClick = true; setTimeout(function () { window._bzSuppressClick = false; }, 150); } } };
-        window.addEventListener('mouseup', end);
-        el.addEventListener('mouseleave', end);
-        el.addEventListener('mousemove', function (e) { if (!down) return; e.preventDefault(); var d = e.pageX - startX; if (Math.abs(d) > 3) { moved = true; window._bzSuppressClick = true; } el.scrollLeft = startL - d; });
+        el.addEventListener('mousedown', function (e) { down = true; moved = false; startX = e.pageX; startL = el.scrollLeft; el.classList.add('dragging'); e.preventDefault(); });
+        // 드래그가 요소 밖으로 확 벗어나도 끊기지 않도록 이동/종료는 window 에서 추적.
+        // mouseleave 로 조기 종료하지 않는다(빠르게 밖으로 끌면 클릭억제 타이머가 미리 풀려 배경클릭→창닫힘 버그).
+        window.addEventListener('mousemove', function (e) { if (!down) return; e.preventDefault(); var d = e.pageX - startX; if (Math.abs(d) > 3) { moved = true; window._bzSuppressClick = true; } el.scrollLeft = startL - d; });
+        window.addEventListener('mouseup', function () {
+            if (!down) return;
+            down = false; el.classList.remove('dragging');
+            if (moved) { window._bzSuppressClick = true; setTimeout(function () { window._bzSuppressClick = false; }, 400); }
+        });
     }
 
     async function toggleLike(id, btn) {
