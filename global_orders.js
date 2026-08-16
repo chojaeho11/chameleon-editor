@@ -1929,7 +1929,7 @@ window.loadOrders = async () => {
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px; cursor:pointer; text-decoration:underline dotted;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','${order.delivery_target_date}')" title="클릭하여 배송일 변경">(배)${delDate}</div>`;
                 // 시간대 + 팀 + 지방 뱃지
                 const periodLabels = { am:'🌅오전', pm:'☀️오후', night:'🌙야간', any:'📅무관' };
-                const teamInfo = { seoul:{name:'김팀장', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{name:'서부장', bg:'#fef3c7', fg:'#92400e'}, north:{name:'3팀', bg:'#e0e7ff', fg:'#4338ca'} };
+                const teamInfo = { seoul:{name:'1팀', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{name:'2팀', bg:'#fef3c7', fg:'#92400e'}, north:{name:'3팀', bg:'#e0e7ff', fg:'#4338ca'} };
                 const badges = [];
                 if (order.delivery_period) badges.push(`<span style="background:#f1f5f9;color:#475569;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">${periodLabels[order.delivery_period] || order.delivery_period}</span>`);
                 if (order.assigned_team && teamInfo[order.assigned_team]) {
@@ -4374,17 +4374,34 @@ window.openAdminSlotModal = async (dateStr) => {
         const _isLocalInstall   = (fee) => fee === 700000;    // 지방 설치배송
         const _isMetroRemoval   = (fee) => fee === 100001;    // 수도권 철거
         const _isAnyKnown = (fee) => _isBoardCourier(fee)||_isStdCourier(fee)||_isMetroPaidInst(fee)||_isLocalTruck(fee)||_isLocalInstall(fee)||_isMetroRemoval(fee);
-        const dlvFreeMetro      = deliveryOnly.filter(o => { const f=_parseShipFee(o); return !_isAnyKnown(f) && isMetroArea(o.address); });
+        // 2026-08-16: 원지(허니콤보드 원판)는 items 로 판정 → 「보드류」로 확실히 분리 (배송비 의존 X)
+        const _isRawBoardOrder = (o) => {
+            try {
+                const items = Array.isArray(o.items) ? o.items : [];
+                return items.some(it => {
+                    const p = (it && it.product) || {};
+                    const cat = (p.category || '').toLowerCase();
+                    const code = (p.code || '').toLowerCase();
+                    const name = ((p.name||'') + ' ' + (p.name_kr||'')).toLowerCase();
+                    return cat === 'wholesale board prices' || cat.indexOf('원판') >= 0 || cat.indexOf('raw') >= 0
+                        || code.indexOf('hb_rb') === 0 || code.indexOf('hb_raw') === 0
+                        || /원판|raw\s*board|raw\s*sheet/.test(name);
+                });
+            } catch(e) { return false; }
+        };
+        const dlvFreeMetro      = deliveryOnly.filter(o => { const f=_parseShipFee(o); return !_isRawBoardOrder(o) && !_isAnyKnown(f) && isMetroArea(o.address); });
         const dlvMetroPaidInst  = deliveryOnly.filter(o => _isMetroPaidInst(_parseShipFee(o)));
-        // 지방 용차배송: 명시적 용차(200000) + 비수도권 주소의 기타(fee 미상) 주문 포함
+        // 지방 용차배송: 명시적 용차(200000) + 비수도권 주소의 기타(fee 미상) 주문 포함 (원지 제외)
         const dlvLocalTruck     = deliveryOnly.filter(o => {
+            if (_isRawBoardOrder(o)) return false;
             const f = _parseShipFee(o);
             if (_isLocalTruck(f)) return true;
             if (!_isAnyKnown(f) && !isMetroArea(o.address)) return true;
             return false;
         });
         const dlvLocalInstall   = deliveryOnly.filter(o => _isLocalInstall(_parseShipFee(o)));
-        const dlvBoardCourier   = deliveryOnly.filter(o => _isBoardCourier(_parseShipFee(o)));
+        // 보드류: 원지 주문(items) OR 보드류 택배비(30000)
+        const dlvBoardCourier   = deliveryOnly.filter(o => _isRawBoardOrder(o) || _isBoardCourier(_parseShipFee(o)));
         const dlvStdCourier     = deliveryOnly.filter(o => _isStdCourier(_parseShipFee(o)));
         const dlvMetroRemoval   = deliveryOnly.filter(o => _isMetroRemoval(_parseShipFee(o)));
         const dlvOther          = []; // 기타 배송 → 지방 용차배송으로 통합
@@ -4401,9 +4418,9 @@ window.openAdminSlotModal = async (dateStr) => {
             any:   { label:'📅 시간 무관', sub:'기사가 경로 최적화', cap:12, bg:'#f3f4f6', fg:'#374151' }
         };
         const TEAM_META = {
-            seoul:      { label:'🔵 김팀장 (1팀)', shortLabel:'김팀장', color:'#1d4ed8', bg:'#dbeafe' },
-            hwaseong:   { label:'🟡 서부장 (2팀)', shortLabel:'서부장', color:'#92400e', bg:'#fef3c7' },
-            north:      { label:'🟣 3팀',          shortLabel:'3팀',   color:'#4338ca', bg:'#e0e7ff' },
+            seoul:      { label:'🔵 1팀', shortLabel:'1팀', color:'#1d4ed8', bg:'#dbeafe' },
+            hwaseong:   { label:'🟡 2팀', shortLabel:'2팀', color:'#92400e', bg:'#fef3c7' },
+            north:      { label:'🟣 3팀', shortLabel:'3팀', color:'#4338ca', bg:'#e0e7ff' },
             unassigned: { label:'⚪ 미배정',        shortLabel:'미배정', color:'#64748b', bg:'#f1f5f9' }
         };
         const TEAM_ORDER = ['seoul', 'hwaseong', 'north'];

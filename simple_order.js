@@ -9223,26 +9223,30 @@ html, body { background: #ffffff !important; }
     // 카트 항목의 설치 스케줄(shipping.delivery_date/time)로 주문 컬럼 필드 산출. 설치 항목(원지·택배 제외) 있을 때만.
     window._soDeriveScheduleFields = function (cartItems, address, totalKRW) {
         var out = {};
-        var si = null;
+        var si = null, ri = null;   // si=설치항목(비원지), ri=원지항목
         (cartItems || []).forEach(function (it) {
-            if (si) return;
             var sh = it && it.shipping;
             if (!sh || !sh.delivery_date) return;
             var isRaw = window._soIsRawBoardProduct && window._soIsRawBoardProduct(it.product);
-            if (!isRaw) si = sh;   // 설치 스케줄 픽커를 거친 항목(택배는 delivery_date='' 이라 제외됨)
+            if (isRaw) { if (!ri) ri = sh; }
+            else { if (!si) si = sh; }   // 택배는 delivery_date='' 이라 자동 제외
         });
-        if (!si) return out;
-        out.delivery_target_date = si.delivery_date;
-        var t = si.delivery_time || '';
-        if (['am', 'pm', 'night', 'any'].indexOf(t) >= 0) {
-            out.delivery_period = t;
-            out.delivery_time_flexible = (t === 'any');
-            out.installation_time = (t !== 'any') ? ({ am: '09:00', pm: '14:00', night: '19:00' })[t] : null;
+        if (si) {
+            // 설치 주문 — 팀 배차. 2026-08-16: 시간 없으면(100만↓ date-only 포함) period='any' 로 팀잡 편입.
+            out.delivery_target_date = si.delivery_date;
+            var t = si.delivery_time || '';
+            var per = (['am', 'pm', 'night', 'any'].indexOf(t) >= 0) ? t : 'any';
+            out.delivery_period = per;
+            out.delivery_time_flexible = (per === 'any');
+            out.installation_time = (per !== 'any') ? ({ am: '09:00', pm: '14:00', night: '19:00' })[per] : null;
+            var prov = window._soIsProvinceInstall(address, totalKRW);
+            out.assigned_team = window._soAssignDeliveryTeam(address);
+            out.is_province_install = prov;
+            out.install_duration_min = window._soCalcInstallDurationMin(totalKRW, prov);
+        } else if (ri) {
+            // 원지(보드류) 주문 — 날짜만(팀/시간대 없음) → 택배 보드류 섹션에 표시
+            out.delivery_target_date = ri.delivery_date;
         }
-        var prov = window._soIsProvinceInstall(address, totalKRW);
-        out.assigned_team = window._soAssignDeliveryTeam(address);
-        out.is_province_install = prov;
-        out.install_duration_min = window._soCalcInstallDurationMin(totalKRW, prov);
         return out;
     };
     window._soFetchPeriodBookings = async function (date) {
