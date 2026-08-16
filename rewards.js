@@ -333,8 +333,8 @@
                 + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + (st.logged_in ? won(st.mileage) : '—') + '</div>'
                 + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>'
                 + (st.logged_in ? '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                    + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('첫 구매 20% 페이백 (최대 20만원)', '初回20%還元（最大2万円）', '20% first-purchase cashback (up to ~$200)') + '</div>'
-                    + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('모든 이벤트 쿠폰(페이백 포함) 매월 말일 초기화됩니다', 'すべてのイベントクーポン（キャッシュバック含む）は毎月末にリセットされます', 'All event coupons (incl. cashback) reset at month-end') + '</div></div>'
+                    + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('매월 첫구매 20% 페이백 (최대 20만원)', '毎月 初回購入20%還元（最大2万円）', '20% cashback on your first purchase each month (up to ~$200)') + '</div>'
+                    + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('말일 초기화 후 그달 첫 구매에 페이백 적용', '月末リセット後、その月の初回購入に還元適用', 'Applies to the first purchase after each month-end reset') + '</div></div>'
                     + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>' : '');
             var rows = ''
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
