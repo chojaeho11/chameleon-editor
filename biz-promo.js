@@ -112,7 +112,7 @@
             +   '<div class="bz-feed" id="bzFeed"></div>'
             + '</div>';
         document.body.appendChild(ov);
-        ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.remove('open'); });   // 배경 클릭 시 닫기
+        ov.addEventListener('click', function (e) { if (window._bzSuppressClick) { window._bzSuppressClick = false; return; } if (e.target === ov) ov.classList.remove('open'); });   // 배경 클릭 시 닫기 (드래그 직후 클릭은 무시)
         document.getElementById('bzCloseBtn').onclick = function () { ov.classList.remove('open'); };
         document.getElementById('bzRegBtn').onclick = openRegister;
         var feed = document.getElementById('bzFeed');
@@ -199,10 +199,10 @@
         if (el._dragBound) return; el._dragBound = 1;
         var down = false, startX = 0, startL = 0, moved = false;
         el.addEventListener('mousedown', function (e) { down = true; moved = false; startX = e.pageX; startL = el.scrollLeft; el.classList.add('dragging'); });
-        var end = function () { if (down) { down = false; el.classList.remove('dragging'); } };
+        var end = function () { if (down) { down = false; el.classList.remove('dragging'); if (moved) { window._bzSuppressClick = true; setTimeout(function () { window._bzSuppressClick = false; }, 150); } } };
         window.addEventListener('mouseup', end);
         el.addEventListener('mouseleave', end);
-        el.addEventListener('mousemove', function (e) { if (!down) return; e.preventDefault(); var d = e.pageX - startX; if (Math.abs(d) > 3) moved = true; el.scrollLeft = startL - d; });
+        el.addEventListener('mousemove', function (e) { if (!down) return; e.preventDefault(); var d = e.pageX - startX; if (Math.abs(d) > 3) { moved = true; window._bzSuppressClick = true; } el.scrollLeft = startL - d; });
     }
 
     async function toggleLike(id, btn) {

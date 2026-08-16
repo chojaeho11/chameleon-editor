@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260816023056';
+    var CV = '20260816101628';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1888,22 +1888,23 @@ window._tcmFallbackClick = function(code) {
                    JS 가 #mgrActionsGrid 를 .topbar 안으로 이동시키고(아래 스크립트), 여기선 탑바용 축소 스타일만.
                    ※ 모달(#mgrPhoneModal 등)은 #mgrQuoteHero 에 그대로 남아 position:fixed 로 정상 동작한다. */
                 .topbar #mgrActionsGrid {
-                    display:flex !important; align-items:center; gap:2px !important;
+                    display:flex !important; align-items:center; gap:6px !important;
                     margin:0 !important; padding:0 !important; grid-template-columns:none !important;
                 }
+                /* 2026-08-16: PC 탑바 — 검정 알약 버튼 + 흰 글씨 */
                 .topbar #mgrActionsGrid .mgr-action {
                     flex-direction:row !important; gap:0 !important;
-                    padding:6px 9px !important; min-height:0 !important; height:auto !important;
-                    background:transparent !important; border:none !important; border-radius:7px !important;
+                    padding:7px 14px !important; min-height:0 !important; height:auto !important;
+                    background:#111827 !important; border:none !important; border-radius:999px !important;
                     width:auto !important; cursor:pointer;
                 }
-                .topbar #mgrActionsGrid .mgr-action:hover { background:#eef2ff !important; }
+                .topbar #mgrActionsGrid .mgr-action:hover { background:#1f2937 !important; }
                 /* 탑바에선 아이콘 칩을 빼고 글씨만 — 공간이 좁고, 텍스트가 더 읽힌다 */
                 .topbar #mgrActionsGrid .mgr-action-icon-wrap { display:none !important; }
                 .topbar #mgrActionsGrid .mgr-action-label {
-                    font-size:13px !important; color:#475569 !important; white-space:nowrap;
+                    font-size:13px !important; color:#fff !important; white-space:nowrap;
                 }
-                .topbar #mgrActionsGrid .mgr-action:hover .mgr-action-label { color:#4338ca !important; }
+                .topbar #mgrActionsGrid .mgr-action:hover .mgr-action-label { color:#fff !important; }
                 /* 2026-07-20: 갤러리 ↔ 제품 섹션 여백.
                    #heroWorks 에 margin-bottom 을 줬더니 전혀 안 먹었다 — .hero-section 이
                    style.css 의 overflow:hidden + 고정 min-height 때문에 내용을 잘라내고 있어서,
@@ -2048,8 +2049,10 @@ window._tcmFallbackClick = function(code) {
             #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#ffffff !important; }
             @media (max-width: 700px) {
                 /* 2026-07-28: 모바일에서는 홍보하기·끝말잇기 숨김 (남는 6버튼이 1줄에 딱 맞음) */
+                /* 2026-08-16: 커뮤 버튼은 PC 전용 → 모바일 숨김 */
                 #mgrActionsGrid .mgr-freetalk,
-                #mgrActionsGrid .mgr-attend { display:none !important; }
+                #mgrActionsGrid .mgr-attend,
+                #mgrActionsGrid .mgr-community { display:none !important; }
                 /* 2026-06-19 v641: 모바일 6버튼 1줄 — 아이콘 작게 줄여서 6개 모두 한 줄에 */
                 #mgrQuoteHero { margin:8px auto 20px !important; padding:0 8px !important; min-height:80px !important; }
                 #mgrActionsGrid {
@@ -2153,6 +2156,11 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-pen-nib"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_designer_recruit_btn">블로그</span>
                 </a>
+                <!-- 2026-08-16: 커뮤(커뮤니티/업체홍보 피드) — PC 탑바 전용 -->
+                <button type="button" class="mgr-action mgr-community" onclick="window.openBizPromo && window.openBizPromo()">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-users"></i></span>
+                    <span class="mgr-action-label">커뮤</span>
+                </button>
                 <!-- 2026-08-15: 탑바에서 홍보하기·끝말잇기 삭제 (사장님 요청). 리워드 허브(무료쿠폰)에서 이용 가능. -->
             </div>
             <!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 밖으로 이동됨. 아래 hotDealSection 직전 참고. -->
@@ -6106,7 +6114,7 @@ function scrollHotdeal(gridId, dir) {
 
 <script src="./mini-editor.js?v=558"></script>
 <script src="./rewards.js?v=24"></script>
-<script src="/biz-promo.js?v=6"></script>
+<script src="/biz-promo.js?v=7"></script>
 
 <!-- 2026-08-15: 「내가 만든 디자인」 모달 (히어로 + 마이페이지에서 진입) — 고른 디자인을 에디터에 올려 제품 주문으로 연결 -->
 <div id="myDesignsModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:100000;align-items:center;justify-content:center;padding:14px;">
