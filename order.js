@@ -924,9 +924,10 @@ function getInstallationSlotInfo(totalKRW) {
 const BASE_OCCUPIED_TEAMS = 1;
 
 // ========================================================================
-// [Phase 1] 시간대 모델: 오전 6건 / 오후 6건 / 야간 3건 / 시간상관없음
+// [Phase 1] 시간대 모델: 오전 8건 / 오후 8건 / 야간 8건 / 시간상관없음
+// 2026-08-16: 성수기 캐파 오전6/오후6/야간3 → 8/8/8 (하루 ~3천만원 목표, 원지 판매 제외)
 // ========================================================================
-const PERIOD_CAPACITY = { am: 6, pm: 6, night: 3 };
+const PERIOD_CAPACITY = { am: 8, pm: 8, night: 8 };
 const PERIOD_TIME_MIDPOINT = { am: '09:00', pm: '14:00', night: '19:00' };  // 기사앱/관리자 하위호환용
 
 // installation_time HH:MM → am / pm / night 매핑 (레거시 주문 집계용)
@@ -1085,6 +1086,10 @@ window._cartHasHoneycomb = function() {
         const cat = (p.category || '').toLowerCase();
         const code = (p.code || '').toLowerCase();
         const name = (p.name || '').toLowerCase();
+        // 2026-08-16: 원지(허니콤보드 원판) 는 택배 발송 — 설치 캐파에서 제외 (사장님 요청).
+        //   원지도 이름에 '허니콤' 이 들어가 여기 걸려 설치 스케줄러를 띄우던 것을 차단.
+        if (typeof window._soIsRawBoardProduct === 'function' && window._soIsRawBoardProduct(p)) return false;
+        if (cat === 'wholesale board prices' || cat.includes('원판') || cat.includes('raw board')) return false;
         return cat.includes('honeycomb') || cat.includes('hb_') || code.startsWith('hb_')
             || name.includes('허니콤') || name.includes('honeycomb') || name.includes('ハニカム') || name.includes('リボード');
     });

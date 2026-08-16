@@ -3128,7 +3128,7 @@ html, body { background: #ffffff !important; }
             <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
               <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 희망일', '配送希望日', 'Delivery date')}</label>
-              <input type="date" id="soScheduleDate" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
+              <input type="date" id="soScheduleDate" onchange="window._soUpdateShipBreakdown(); if(window._soApplyScheduleCapacity)window._soApplyScheduleCapacity();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
             </div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
               <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 시간', '配送時間', 'Time')}</label>
@@ -5534,6 +5534,8 @@ html, body { background: #ffffff !important; }
         if (/원판|raw\s*board|raw\s*sheet/i.test(name)) return true;
         return false;
     }
+    // 2026-08-16: order.js(_cartHasHoneycomb 설치캐파 제외)에서 재사용하도록 노출
+    window._soIsRawBoardProduct = _soIsRawBoardProduct;
 
     // 2026-05-13: 원판인쇄 양면 여부 (이름에 "양면" 포함 시)
     function _soIsRawBoardDoubleSided(p) {
@@ -9182,6 +9184,50 @@ html, body { background: #ffffff !important; }
         }
         recalcWithShipping();
         _soUpdateShipBreakdown();
+        // 2026-08-16: 설치일정 픽커 노출 시 시간대별 마감(캐파) 반영 (원지는 스킵)
+        if (dateWrap && dateWrap.style.display !== 'none' && window._soApplyScheduleCapacity) window._soApplyScheduleCapacity();
+    };
+
+    // ── 2026-08-16: 성수기 설치/배송 시간대 캐파(오전8·오후8·야간8) — 제품페이지 마감 차단 ──
+    //   order.js PERIOD_CAPACITY / fetchPeriodBookings 와 동일 로직. 값 변경 시 양쪽 동기화.
+    window._SO_PERIOD_CAP = { am: 8, pm: 8, night: 8 };
+    window._soFetchPeriodBookings = async function (date) {
+        var res = { am: 0, pm: 0, night: 0, any: 0 };
+        if (!date) return res;
+        try {
+            var sb = getSb(); if (!sb) return res;
+            var r = await sb.from('orders').select('delivery_period, installation_time').eq('delivery_target_date', date);
+            (r.data || []).forEach(function (o) {
+                var p = o.delivery_period;
+                if (!p && o.installation_time) { var t = o.installation_time; p = (t < '12:00') ? 'am' : (t < '18:00') ? 'pm' : 'night'; }
+                if (!p) return;
+                if (p === 'any') { res.any++; res.pm++; return; }   // 시간무관은 오후에 가산(order.js 동일)
+                if (res[p] !== undefined) res[p]++;
+            });
+        } catch (e) { console.warn('[soFetchPeriodBookings]', e); }
+        return res;
+    };
+    window._soApplyScheduleCapacity = async function () {
+        // 원지(허니콤보드 원판)는 택배 발송 — 설치 캐파 대상 아님 → 게이트 스킵
+        if (state && state.isRawBoard) return;
+        var sd = document.getElementById('soScheduleDate');
+        var stSel = document.getElementById('soScheduleTime');
+        if (!sd || !stSel || !sd.value) return;
+        var cap = window._SO_PERIOD_CAP || { am: 8, pm: 8, night: 8 };
+        var book = await window._soFetchPeriodBookings(sd.value);
+        var labels = { am: tr('오전 (08-12)', '午前 (08-12)', 'AM (08-12)'), pm: tr('오후 (12-18)', '午後 (12-18)', 'PM (12-18)'), night: tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)') };
+        var icons = { am: '🌅 ', pm: '☀️ ', night: '' };
+        var fullTag = tr(' (마감)', ' (満員)', ' (Full)');
+        var leftTag = function (n) { return ' · ' + n + tr('건 남음', '件', ' left'); };
+        ['am', 'pm', 'night'].forEach(function (k) {
+            var opt = stSel.querySelector('option[value="' + k + '"]');
+            if (!opt) return;
+            var used = book[k] || 0;
+            var isFull = used >= (cap[k] || 8);
+            opt.disabled = isFull;
+            opt.textContent = icons[k] + labels[k] + (isFull ? fullTag : leftTag(Math.max(0, (cap[k] || 8) - used)));
+            if (isFull && stSel.value === k) { stSel.value = ''; }   // 선택돼있던 시간대가 마감이면 해제
+        });
     };
 
     // 2026-05-13: 가격 breakdown 박스 갱신 (시간 변경 등에서 호출)
