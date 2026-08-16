@@ -1918,6 +1918,8 @@ window.loadOrders = async () => {
                 managerOpts = createStaffSelectHTML(order.id, 'manager', order.staff_manager_id, isHqOrder);
             }
             const driverOpts = createStaffSelectHTML(order.id, 'driver', order.staff_driver_id);
+            // 2026-08-16: 배송팀 드롭다운 (1팀/2팀/3팀) — assigned_team 연동
+            const teamSelectHtml = createTeamSelectHTML(order.id, order.assigned_team);
 
             // 날짜 (월.일 + 배송일)
             const d = new Date(order.created_at);
@@ -1927,14 +1929,19 @@ window.loadOrders = async () => {
                 const dd = new Date(order.delivery_target_date);
                 const delDate = `${dd.getMonth() + 1}.${dd.getDate()}`;
                 deliveryHtml = `<div style="font-size:11px; color:#e11d48; font-weight:bold; margin-top:2px; letter-spacing:-0.5px; cursor:pointer; text-decoration:underline dotted;" onclick="event.stopPropagation(); openDeliveryDateEdit('${order.id}','${order.delivery_target_date}')" title="클릭하여 배송일 변경">(배)${delDate}</div>`;
-                // 시간대 + 팀 + 지방 뱃지
-                const periodLabels = { am:'🌅오전', pm:'☀️오후', night:'🌙야간', any:'📅무관' };
+                // 2026-08-16: 시간대(시간) 크게 보이게 + 팀 + 지방 뱃지
+                const periodLabels = { am:'🌅 오전(08-12)', pm:'☀️ 오후(12-18)', night:'🌙 야간(18-22)', any:'📅 시간무관' };
                 const teamInfo = { seoul:{name:'1팀', bg:'#dbeafe', fg:'#1e40af'}, hwaseong:{name:'2팀', bg:'#fef3c7', fg:'#92400e'}, north:{name:'3팀', bg:'#e0e7ff', fg:'#4338ca'} };
+                // 시간 라인 — period 우선, 없으면 installation_time(HH:MM)
+                if (order.delivery_period && periodLabels[order.delivery_period]) {
+                    deliveryHtml += `<div style="font-size:11px;font-weight:800;color:#4338ca;margin-top:2px;">${periodLabels[order.delivery_period]}</div>`;
+                } else if (order.installation_time) {
+                    deliveryHtml += `<div style="font-size:11px;font-weight:800;color:#991b1b;margin-top:2px;">⏰ ${order.installation_time}</div>`;
+                }
                 const badges = [];
-                if (order.delivery_period) badges.push(`<span style="background:#f1f5f9;color:#475569;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">${periodLabels[order.delivery_period] || order.delivery_period}</span>`);
                 if (order.assigned_team && teamInfo[order.assigned_team]) {
                     const t = teamInfo[order.assigned_team];
-                    badges.push(`<span style="background:${t.bg};color:${t.fg};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;">${t.name}팀</span>`);
+                    badges.push(`<span style="background:${t.bg};color:${t.fg};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;">${t.name}</span>`);
                 }
                 if (order.is_province_install) badges.push(`<span style="background:#fee2e2;color:#991b1b;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;">지방</span>`);
                 if (badges.length) deliveryHtml += `<div style="display:flex;gap:2px;margin-top:2px;flex-wrap:wrap;">${badges.join('')}</div>`;
@@ -2095,7 +2102,7 @@ window.loadOrders = async () => {
                     <td style="text-align:right; color:#ef4444;">${fmtAmt(order.discount_amount || 0)}</td>
                     <td style="text-align:right; color:#d97706;">${fmtAmt(order.used_deposit || 0)}</td>
                     <td style="text-align:right; font-weight:bold; color:#15803d;">${fmtAmt(order.actual_payment || total)}</td>
-                    <td>${managerOpts} <div style="margin-top:2px;">${driverOpts}</div></td>
+                    <td>${managerOpts} <div style="margin-top:2px;">${teamSelectHtml}</div></td>
                     
                     <td style="padding:2px 4px;">${fileBtn}${zipBtn}${addBtn}</td>
 
@@ -2160,6 +2167,24 @@ function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
                 ${opts}
             </select>`;
 }
+// 2026-08-16: 배송팀 선택 (1팀/2팀/3팀) — assigned_team 에 직접 연동 (기사앱·배송관리 스케줄과 동일 필드)
+function createTeamSelectHTML(orderId, team) {
+    const teams = [['','미지정'],['seoul','1팀'],['hwaseong','2팀'],['north','3팀']];
+    const colors = { seoul:'#dbeafe', hwaseong:'#fef3c7', north:'#e0e7ff' };
+    const cur = team || '';
+    const style = colors[cur] ? `background:${colors[cur]};color:#1e293b;border:1px solid #cbd5e1;font-weight:700;` : `background:#fff;color:#334155;border:1px solid #e2e8f0;`;
+    const opts = teams.map(([v,l]) => `<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('');
+    return `<select class="staff-select" style="${style}" onchange="updateOrderTeam('${orderId}', this)">${opts}</select>`;
+}
+window.updateOrderTeam = async function(orderId, sel) {
+    const team = sel.value || null;
+    const names = { seoul:'1팀', hwaseong:'2팀', north:'3팀' };
+    try {
+        const { error } = await sb.from('orders').update({ assigned_team: team }).eq('id', orderId);
+        if (error) throw error;
+        showToast(team ? `✓ ${names[team]}(으)로 배정 (기사앱 반영)` : '팀 미지정', 'success', 1500);
+    } catch (e) { showToast('팀 변경 실패: ' + e.message, 'error'); }
+};
 // [사이트 코드 수정] 관리자가 site_code를 직접 변경
 window.fixSiteCode = async (orderId) => {
     const newCode = prompt('사이트 코드 변경 (KR / JP / US / STORE / GODO):', '');
