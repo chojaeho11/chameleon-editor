@@ -9199,6 +9199,52 @@ html, body { background: #ffffff !important; }
     var _soCapCache = { date: null, book: null };
     // 2026-08-16: 금액 비례 차감 — 100만원당 1건 (order.js _slotWeight 와 동일)
     window._soSlotWeight = function (krw) { return Math.max(1, Math.floor((krw || 0) / 1000000)); };
+    // 2026-08-16: 기사앱·배송관리 팀스케줄 연동 헬퍼 (order.js 모듈-로컬 함수 복제 — 값 변경 시 order.js 와 동기화)
+    window._soAssignDeliveryTeam = function (address) {
+        if (!address) return null;
+        var a = String(address).replace(/\s+/g, '');
+        var hw = /화성|수원|오산|평택|안성|용인|이천|여주|광주시|하남|안양|군포|안산|시흥|과천|의왕|성남|강남|서초|송파|동작/;
+        var no = /의정부|양주|고양|파주|동두천|포천|남양주|구리|가평|연천|강북구|도봉|노원|중랑|광진|성북|동대문/;
+        if (hw.test(a)) return 'hwaseong';
+        if (no.test(a)) return 'north';
+        return 'seoul';
+    };
+    window._soIsProvinceInstall = function (address, totalKRW) {
+        if (!address) return false;
+        var a = String(address).replace(/\s+/g, '');
+        if (/서울|경기|인천/.test(a)) return false;
+        return (totalKRW || 0) >= 700000;
+    };
+    window._soCalcInstallDurationMin = function (totalKRW, isProvince) {
+        if (isProvince) return 480;
+        var m = Math.max(60, Math.floor((totalKRW || 0) / 1000000) * 60);
+        return m + 60;   // +이동 1시간
+    };
+    // 카트 항목의 설치 스케줄(shipping.delivery_date/time)로 주문 컬럼 필드 산출. 설치 항목(원지·택배 제외) 있을 때만.
+    window._soDeriveScheduleFields = function (cartItems, address, totalKRW) {
+        var out = {};
+        var si = null;
+        (cartItems || []).forEach(function (it) {
+            if (si) return;
+            var sh = it && it.shipping;
+            if (!sh || !sh.delivery_date) return;
+            var isRaw = window._soIsRawBoardProduct && window._soIsRawBoardProduct(it.product);
+            if (!isRaw) si = sh;   // 설치 스케줄 픽커를 거친 항목(택배는 delivery_date='' 이라 제외됨)
+        });
+        if (!si) return out;
+        out.delivery_target_date = si.delivery_date;
+        var t = si.delivery_time || '';
+        if (['am', 'pm', 'night', 'any'].indexOf(t) >= 0) {
+            out.delivery_period = t;
+            out.delivery_time_flexible = (t === 'any');
+            out.installation_time = (t !== 'any') ? ({ am: '09:00', pm: '14:00', night: '19:00' })[t] : null;
+        }
+        var prov = window._soIsProvinceInstall(address, totalKRW);
+        out.assigned_team = window._soAssignDeliveryTeam(address);
+        out.is_province_install = prov;
+        out.install_duration_min = window._soCalcInstallDurationMin(totalKRW, prov);
+        return out;
+    };
     window._soFetchPeriodBookings = async function (date) {
         var res = { am: 0, pm: 0, night: 0, any: 0 };
         if (!date) return res;
@@ -21071,6 +21117,10 @@ html, body { background: #ffffff !important; }
             // 2026-05-14: 무통장 입금 증빙 정보 (세금계산서/현금영수증) — 관리자 페이지 receipt_info 컬럼과 연결
             if (receiptInfo) orderRow.receipt_info = receiptInfo;
 
+            // 2026-08-16: 설치/배송 스케줄 필드 — 기사앱·배송관리 팀스케줄 연동 (간편주문도 기록. 이전엔 누락).
+            var _soSchedFields = window._soDeriveScheduleFields(cart, fullAddr, _finalTotal);
+            Object.assign(orderRow, _soSchedFields);
+
             // 2026-05-14: 매니저 견적 결제 (?quote=ID 로 들어온 경우) → 기존 주문 UPDATE
             var insertedOrder, insertErr, newOrderId;
             if (window._soPendingQuoteId) {
@@ -21092,6 +21142,8 @@ html, body { background: #ffffff !important; }
                 updateRow.discount_amount = _useMileage + _useDeposit + _useBlogCoupon;
                 if (receiptInfo) updateRow.receipt_info = receiptInfo;
                 if (!_fullyCovered && payMethod === 'bank') updateRow.depositor_name = depositorName;
+                // 2026-08-16: 매니저 견적 결제도 설치/배송 스케줄 필드 기록 (기사앱 연동)
+                Object.assign(updateRow, _soSchedFields);
                 // 2026-08-05: 매니저견적을 고객이 결제 → 고객 유입경로 기록(생성은 관리자라 null 이었음)
                 if (_soAttr.attribution_channel) { updateRow.attribution_channel = _soAttr.attribution_channel; updateRow.attribution = _soAttr.attribution || null; }
                 var upRes = await sb.from('orders').update(updateRow).eq('id', pendingId).select().single();
