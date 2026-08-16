@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260816163401';
+    var CV = '20260817015032';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -552,6 +552,19 @@ img, video, canvas { max-width: 100%; height: auto; }
             url.searchParams.set('lang', lang);
             location.href = url.toString();
         };
+        // 2026-08-17: 신규(그날 첫) 접속 시 이벤트 리워드 허브 자동 오픈 — 메인(index.html)과 동일. 하루 1회, 로그인 무관.
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var _rhDay = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); // KST 날짜 기준
+                var _rhKey = 'cpRewardHubShown_' + _rhDay;
+                if (localStorage.getItem(_rhKey)) return;
+                localStorage.setItem(_rhKey, '1');
+                setTimeout(function tryOpen(n) {
+                    if (window.openRewardHub) { try { window.openRewardHub(); } catch (e) {} }
+                    else if (n > 0) setTimeout(function () { tryOpen(n - 1); }, 400);
+                }, 900, 6);
+            } catch (_e) {}
+        });
         // 현재 언어 활성 표시 + 모든 내부 링크에 ?lang= 자동 부착
         document.addEventListener('DOMContentLoaded', function(){
             var cur = window.__PS_LANG || 'ko';
