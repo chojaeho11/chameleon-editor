@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260817015933';
+    var CV = '20260817022442';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -3256,12 +3256,12 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
                           : { vector:'Vector', image:'Background', logo:'Element' };
                 var cat = _CATS[p.asset_type] || _CATS.logo;
                 var rawThumb = p.thumbnail_url || p.asset_url || p.background_url || 'https://placehold.co/400?text=Asset';
-                // 2026-05-11: Supabase image transform으로 320px 리사이즈 → 50KB↓ (3배 가속)
-                //   /storage/v1/object/public/... → /storage/v1/render/image/public/...?width=320&resize=contain&quality=72
-                //   단일 객체 PNG(library/graphic)에는 contain이 맞음 — cover는 객체를 확대 크롭함
-                // 2026-07-23: Supabase 이미지 변환(render) 을 거치지 않고 원본 public URL 을 그대로 쓴다.
-                //   변환 엔드포인트가 실패하면 갤러리 전체가 깨진 이미지로 보였다(사장님 제보).
-                var thumb = rawThumb;
+                // 2026-08-17: 썸네일이 원본 풀해상도라 느리게 뜨거나 빈 카드로 남던 문제 →
+                //   Supabase 이미지 변환(render, width=400)으로 작게 받아 빠르게. 실패 시 원본→플레이스홀더로 폴백해
+                //   과거 '변환 실패 시 전체 깨짐' 회귀 없이 속도+안정성 확보. (index.html·board.html 등에서 이미 정상 사용중인 방식)
+                var thumb = (rawThumb.indexOf('/storage/v1/object/public/') >= 0)
+                    ? (rawThumb.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + (rawThumb.indexOf('?') >= 0 ? '&' : '?') + 'width=400&resize=contain&quality=72')
+                    : rawThumb;
                 var author = '';
                 var langSfx = window._cpLangSuffix || '';
                 // 2026-05-11: '/designer' → '/cotton-designer' — cafe2626.com에서 '/designer'는 SPA가 product 코드로 해석함.
@@ -3272,8 +3272,11 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
                          + '&patternname=' + encodeURIComponent(_title || p.name || '') + langSfx;
                 // 2026-05-11: <div onclick>에서 <a href>로 변경 — 트래킹 방지/캐시 깨짐/JS 에러 등으로
                 //   onclick이 안 먹는 환경에서도 네이티브 네비게이션은 100% 동작.
+                var _rawEsc = rawThumb.replace(/'/g, "\\'");
+                // 폴백: (변환)썸네일 실패 → 원본 풀해상도 → 플레이스홀더 (같은 URL 재시도로 빈 카드 남던 버그 수정)
+                var _onerr = "if(this.dataset.f){this.onerror=null;this.src='https://placehold.co/400?text=Asset'}else{this.dataset.f=1;this.src='" + _rawEsc + "'}";
                 return '<a href="' + href + '" class="pattern-card" data-pid="' + p.id + '">' +
-                    '<div class="pattern-thumb"><img src="' + thumb + '" loading="lazy" decoding="async" alt="' + _title.replace(/"/g,'') + '" onerror="this.onerror=null; this.src=\'' + rawThumb.replace(/'/g, "\\'") + '\'"></div>' +
+                    '<div class="pattern-thumb"><img src="' + thumb + '" loading="lazy" decoding="async" alt="' + _title.replace(/"/g,'') + '" onerror="' + _onerr + '"></div>' +
                     '<div class="pattern-meta">' +
                         (cat ? '<div class="pattern-cat-badge">' + cat + '</div>' : '') +
                         '<div class="pattern-name">' + (_title || '(이름 없음)') + '</div>' +
