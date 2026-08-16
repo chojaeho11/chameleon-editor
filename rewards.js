@@ -328,18 +328,29 @@
             var top = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">'
                 + '<div style="font-size:16px;font-weight:800;letter-spacing:2.5px;color:#7c3aed;">SUMMER EVENT</div>'
                 + '<button id="rhCloseX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
-                + '<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:12px;margin:8px 0 14px;">'
-                + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
-                + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + (st.logged_in ? won(st.mileage) : '—') + '</div>'
-                + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>'
-                + (st.logged_in ? '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                    + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('매월 첫구매 20% 페이백 (최대 20만원)', '毎月 初回購入20%還元（最大2万円）', '20% cashback on your first purchase each month (up to ~$200)') + '</div>'
-                    + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('말일 초기화 후 그달 첫 구매에 페이백 적용', '月末リセット後、その月の初回購入に還元適用', 'Applies to the first purchase after each month-end reset') + '</div></div>'
-                    + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>'
-                    + '<div style="background:linear-gradient(135deg,#db2777,#9d174d);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                    + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('첫구매 페이백 (최대 10만원)', '初回購入還元（最大1万円）', 'First-purchase cashback (up to ~$100)') + '</div>'
-                    + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('첫 구매 실입금액 100% 페이백 · 평생 1회', '初回購入の実支払額100%還元 · 生涯1回', '100% of your first purchase · once in a lifetime') + '</div></div>'
-                    + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_ever_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>' : '');
+                + (st.logged_in
+                    ? ('<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:12px;margin:8px 0 14px;">'
+                        + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
+                        + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + won(st.mileage) + '</div>'
+                        + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>'
+                        + '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
+                        + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('매월 첫구매 20% 페이백 (최대 20만원)', '毎月 初回購入20%還元（最大2万円）', '20% cashback on your first purchase each month (up to ~$200)') + '</div>'
+                        + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('말일 초기화 후 그달 첫 구매에 페이백 적용', '月末リセット後、その月の初回購入に還元適用', 'Applies to the first purchase after each month-end reset') + '</div></div>'
+                        + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>'
+                        + '<div style="background:linear-gradient(135deg,#db2777,#9d174d);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
+                        + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('첫구매 페이백 (최대 10만원)', '初回購入還元（最大1万円）', 'First-purchase cashback (up to ~$100)') + '</div>'
+                        + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('첫 구매 실입금액 100% 페이백 · 평생 1회', '初回購入の実支払額100%還元 · 生涯1回', '100% of your first purchase · once in a lifetime') + '</div></div>'
+                        + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_ever_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>')
+                    : ('<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:14px 12px;margin:8px 0 12px;">'
+                        + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
+                        + '<div style="font-size:31px;font-weight:900;color:#7c3aed;line-height:1.1;">' + won(10000) + '</div>'
+                        + '<div style="font-size:11px;color:#9333ea;font-weight:700;margin-top:3px;">' + T2('회원가입하면 바로 지급 · 현금처럼 사용', '会員登録で即進呈 · 現金のように使える', 'Instant on sign-up · use like cash') + '</div></div>'
+                        + '<div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#7c2d12;line-height:1.8;">'
+                        + '<div style="font-weight:800;color:#c2410c;font-size:12.5px;margin-bottom:5px;">' + T2('처음 오셨나요? 이렇게 즐겨요', '初めての方へ', 'New here? Here\'s how') + '</div>'
+                        + T2('· 매일 게임하듯 출석·끝말잇기·업체홍보로 포인트를 모아요<br>· 모은 포인트는 <b>현금처럼</b> 주문에 사용 (월 최대 <b>16만원</b>)<br>· 소호·1인 창업자라면 <b>무료 포인트만으로</b> 명함·스티커·굿즈까지 부담 없이 주문해볼 수 있어요<br>· 카멜레온과 가장 쉽게 친해지는 방법이에요',
+                            '· 毎日ゲーム感覚で出席·しりとり·PRしてポイントを貯めて、<br>· <b>現金のように</b>ご注文に使えます（月最大16万ウォン）<br>· 無料ポイントだけで名刺·ステッカー·グッズも気軽に注文できます',
+                            '· Collect points daily like a game (check-in, word chain, promote your shop)<br>· Spend them <b>like cash</b> on orders (up to ₩160,000/mo)<br>· SOHO founders can order cards, stickers & goods with free points only') + '</div>'
+                        + '<button id="rhSignupHero" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:12px;">' + T2('회원가입하고 1만원 받기 →', '会員登録して1万ウォン受取 →', 'Sign up & get ₩10,000 →') + '</button>'));
             var rows = ''
                 + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
                 + rowHtml(2, T2('이번주 접속', '今週のログイン', 'Weekly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
@@ -355,7 +366,9 @@
             card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note + subLink;
             var byId = function (id) { return document.getElementById(id); };
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
-            if (byId('rhAct1')) byId('rhAct1').onclick = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
+            var _doSignup = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
+            if (byId('rhAct1')) byId('rhAct1').onclick = _doSignup;
+            if (byId('rhSignupHero')) byId('rhSignupHero').onclick = _doSignup;   // 비회원 히어로 버튼 → 가입 후 render()로 아래 창들 열림
             if (byId('rhAct2')) byId('rhAct2').onclick = async function () { this.disabled = true; try { var r = await sbc.rpc('monthly_gift_claim'); var d = r && r.data; if (d && d.ok && d.granted) celebrate(10000); } catch (e) {} render(); };
             if (byId('rhAct3')) byId('rhAct3').onclick = function () { if (window.openBlogRecruitInfo) window.openBlogRecruitInfo(); else if (window.openSnsRankingModal) window.openSnsRankingModal(); };
             if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
