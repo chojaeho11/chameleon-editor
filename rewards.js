@@ -348,7 +348,11 @@
                 + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')))
                 + rowHtml(6, T2('카멜SNS', 'カメレオンSNS', 'Chameleon SNS'), T2('내 업체 홍보하고 하트받기', '自分の店をPRしてハートをもらおう', 'Promote your shop & earn hearts'), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('입장하기', '入場する', 'Enter')));
             var note = '<div style="text-align:center;font-size:11px;color:#dc2626;margin:14px 0 4px;">' + T2('매월 말일 미사용분 소멸됩니다. 말일전 꼭 사용해주세요!', '毎月末に未使用分は消滅します。月末までに必ずご利用ください！', 'Unused balance expires at month-end — please use it before then!') + '</div>';
-            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
+            // 2026-08-16: 하단 구독 링크 — 누르면 구독 페이지로
+            var subLink = '<a id="rhSubLink" href="javascript:void(0)" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 2px;padding:11px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:2px solid #7c3aed;border-radius:12px;text-decoration:none;color:#5b21b6;font-weight:800;font-size:12.5px;cursor:pointer;">'
+                + '<span>👑 ' + T2('PRO 구독 · 모든 구매 10% 할인', 'PRO購読 · 全商品10%割引', 'PRO subscription · 10% off everything') + '</span>'
+                + '<span style="background:#fff;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:900;flex-shrink:0;">' + T2('구독하기 →', '購読 →', 'Subscribe →') + '</span></a>';
+            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note + subLink;
             var byId = function (id) { return document.getElementById(id); };
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
             if (byId('rhAct1')) byId('rhAct1').onclick = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
@@ -357,6 +361,7 @@
             if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
             if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
             if (byId('rhAct6')) byId('rhAct6').onclick = function () { closeHub(); if (window.openBizPromo) window.openBizPromo(); };   // 이벤트 모달 닫고 우측 홍보 패널만 남김
+            if (byId('rhSubLink')) byId('rhSubLink').onclick = function () { closeHub(); if (window.openSubPopup) window.openSubPopup(); else location.href = '/#subscriptionSection'; };
         }
         render();
     };
