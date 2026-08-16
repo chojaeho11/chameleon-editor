@@ -2282,7 +2282,7 @@ html, body { background: #ffffff !important; }
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
             <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')"
               style="padding:12px 10px; border:1.5px solid transparent; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; box-shadow:0 4px 12px -4px rgba(79,70,229,0.45); line-height:1.3;">
-              ${tr('단면', '片面', 'Single')}<br><span id="soBannerSinglePriceLabel" style="font-size:11px; font-weight:600; color:#fff;">${fmtPrice(45000)}</span>
+              ${tr('단면', '片面', 'Single')}<br><span id="soBannerSinglePriceLabel" style="font-size:11px; font-weight:600; color:#fff;">${fmtPrice(55000)}</span>
             </button>
             <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')"
               style="padding:12px 10px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.3;">
@@ -2321,7 +2321,7 @@ html, body { background: #ffffff !important; }
             <div style="flex:1.6; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
               <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')"
                 style="padding:12px 10px; border:1.5px solid transparent; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; box-shadow:0 4px 12px -4px rgba(79,70,229,0.45); line-height:1.3;">
-                ${tr('단면', '片面', 'Single')}<br><span style="font-size:11px; font-weight:600; color:#fff;">${fmtPrice(45000)}</span>
+                ${tr('단면', '片面', 'Single')}<br><span style="font-size:11px; font-weight:600; color:#fff;">${fmtPrice(55000)}</span>
               </button>
               <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')"
                 style="padding:12px 10px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.3;">
@@ -4609,7 +4609,7 @@ html, body { background: #ffffff !important; }
             qty = state.qty;
             // 2026-06-01: 허니콤배너 — 단면 55K / 양면 80K flat (사이즈 무관, 사용자 요청)
             if (state.isBanner) {
-                unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 45000);
+                unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 55000);
             } else if (state.isBizCard) {
                 // 2026-06-24 v726: 명함 — qty = 각(1각=100매). 총 장수 = 각 × 명수.
                 //   첫 100장 정가 + 초과분 반값 (_bizSheetTotal). 직원수 % 할인 폐지.
@@ -5864,11 +5864,11 @@ html, body { background: #ffffff !important; }
 
     // 2026-06-05: 허니콤 배너 family (hb_bn_*) — 단일 배너 / 연결형 배너 등 한 페이지에서 선택
     // 2026-06-15: 코드별 단면/양면 가격 매핑 (한 곳에서 관리).
-    //   hb_bn_1 (허니콤배너 단면): 단면 45K / 양면 80K
+    //   hb_bn_1 (허니콤배너 단면): 단면 55K / 양면 80K  (2026-08-16 단면 45K→55K 인상)
     //   hb_bn_2 (연결형 배너):     단면 33K / 양면 70K
     //   hb_bn_3 (legacy 양면):     단면 80K / 양면 80K — 사실상 양면 only
     var _BANNER_PRICES = {
-        'hb_bn_1': { single: 45000, double: 80000 },
+        'hb_bn_1': { single: 55000, double: 80000 },
         'hb_bn_2': { single: 33000, double: 70000 },
         'hb_bn_3': { single: 80000, double: 80000 }
     };
@@ -13767,9 +13767,9 @@ html, body { background: #ffffff !important; }
 
         state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code)) && !state.isBannerStandless;
         if (state.isBanner) {
-            // 2026-06-15: DB 가격 신뢰 (hb_bn_1=45K, hb_bn_2=33K, hb_bn_3=80K). DB 없을 때만 폴백 45K.
-            if (!(Number(p.price) > 0)) p.price = 45000;
-            state._bannerSinglePrice = Number(p.price) || 45000;
+            // 2026-06-15: DB 가격 신뢰 (hb_bn_1=55K, hb_bn_2=33K, hb_bn_3=80K). DB 없을 때만 폴백 55K. (2026-08-16 단면 45K→55K)
+            if (!(Number(p.price) > 0)) p.price = 55000;
+            state._bannerSinglePrice = Number(p.price) || 55000;
             state._bannerDoublePrice = 80000;
             state.wallSide = 'single';
             // isHoneycomb 인 채로 두지만 wall/queue 흐름 차단용 플래그
