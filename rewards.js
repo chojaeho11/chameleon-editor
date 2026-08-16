@@ -346,7 +346,7 @@
                 + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor') + (st.sns !== 'none' ? ' ✓' : ''), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : actBtn('rhAct3', T2('이벤트 보기', 'イベント', 'View')))
                 + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post')))
                 + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')))
-                + rowHtml(6, T2('카멜SNS', 'カメレオンSNS', 'Chameleon SNS'), T2('내 업체 홍보하고 하트받기', '自分の店をPRしてハートをもらおう', 'Promote your shop & earn hearts'), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('입장하기', '入場する', 'Enter')));
+                + rowHtml(6, T2('카멜SNS', 'カメレオンSNS', 'Chameleon SNS'), T2('내 업체 홍보하고 현금받기', '自分の店をPRして現金をもらおう', 'Promote your shop & earn cash'), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('입장하기', '入場する', 'Enter')));
             var note = '<div style="text-align:center;font-size:11px;color:#dc2626;margin:14px 0 4px;">' + T2('매월 말일 미사용분 소멸됩니다. 말일전 꼭 사용해주세요!', '毎月末に未使用分は消滅します。月末までに必ずご利用ください！', 'Unused balance expires at month-end — please use it before then!') + '</div>';
             // 2026-08-16: 하단 구독 링크 — 누르면 구독 페이지로
             var subLink = '<a id="rhSubLink" href="javascript:void(0)" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 2px;padding:11px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:2px solid #7c3aed;border-radius:12px;text-decoration:none;color:#5b21b6;font-weight:800;font-size:12.5px;cursor:pointer;">'
