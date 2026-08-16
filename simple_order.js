@@ -1627,8 +1627,8 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-26: 허니콤보드 원판 커팅 에디터 — 좌측 메인 영역 (다른 제품 에디터와 같은 자리). -->
         <div id="soRbCutEditorMain" style="display:none;">
           <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
-            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 ¥1,000', 'Cutting service · 10,000/board')} <span style="font-size:12px; font-weight:800; color:#dc2626;">· ${tr('커팅서비스만 가능합니다', 'カットサービスのみ', 'cutting service only')}</span></div>
-            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('대지 <b>2400×1200</b>에 <b>네모/원형</b>을 추가 → <b>클릭해 선택</b>(위 칸에서 크기 수정) · <b>모서리</b>로 크기조절 · <b>Delete</b>로 삭제. 인쇄 안 됨(커팅라인) · 최소 <b>10cm</b> · 1판 <b>최대 50개</b>.<br>또는 일러스트(.ai)/PDF로 <b>커팅·V커팅라인 별도 레이어</b>로 올려도 됩니다. 커팅비 <b>1판 1만원</b>.', '台紙 <b>2400×1200</b> に <b>四角/円</b> を追加 → <b>クリックで選択</b>(上の欄でサイズ変更)·<b>角</b>でリサイズ·<b>Delete</b>で削除。印刷なし · 最小 <b>10cm</b> · 1枚 <b>最大50個</b>。<br>または .ai/PDF を別レイヤーでアップロード可。カット費 <b>1枚1万</b>。', 'Add <b>rect/circle</b> to the <b>2400×1200</b> board → <b>click to select</b> (edit size above) · resize from the <b>corner</b> · <b>Delete</b> to remove. Cut-line only · min <b>10cm</b> · max <b>50</b>.<br>Or upload .ai/PDF with cut lines on a separate layer. Fee <b>10,000/board</b>.')}</div>
+            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('원판 커팅서비스 · 1판 기준 3만원', '原板カットサービス · 1枚 ¥3,000', 'Cutting service · 30,000/board')} <span style="font-size:12px; font-weight:800; color:#dc2626;">· ${tr('커팅서비스만 가능합니다', 'カットサービスのみ', 'cutting service only')}</span></div>
+            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('대지 <b>2400×1200</b>에 <b>네모/원형</b>을 추가 → <b>클릭해 선택</b>(위 칸에서 크기 수정) · <b>모서리</b>로 크기조절 · <b>Delete</b>로 삭제. 인쇄 안 됨(커팅라인) · 최소 <b>10cm</b> · 1판 <b>최대 50개</b>.<br>또는 일러스트(.ai)/PDF로 <b>커팅·V커팅라인 별도 레이어</b>로 올려도 됩니다. 커팅비 <b>1판 3만원</b>.', '台紙 <b>2400×1200</b> に <b>四角/円</b> を追加 → <b>クリックで選択</b>(上の欄でサイズ変更)·<b>角</b>でリサイズ·<b>Delete</b>で削除。印刷なし · 最小 <b>10cm</b> · 1枚 <b>最大50個</b>。<br>または .ai/PDF を別レイヤーでアップロード可。カット費 <b>1枚3万</b>。', 'Add <b>rect/circle</b> to the <b>2400×1200</b> board → <b>click to select</b> (edit size above) · resize from the <b>corner</b> · <b>Delete</b> to remove. Cut-line only · min <b>10cm</b> · max <b>50</b>.<br>Or upload .ai/PDF with cut lines on a separate layer. Fee <b>30,000/board</b>.')}</div>
 
             <!-- 도구 -->
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
@@ -1663,8 +1663,8 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-26: 허니콤보드 원판 — HP 라텍스 프린팅 서비스 (PDF 전용, 1장당 3만원) -->
         <div id="soRbLatexSec" style="display:none; margin-top:14px;">
           <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
-            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('HP 라텍스 프린팅 서비스 · 1장당 3만원', 'HPラテックス印刷サービス · 1枚3万', 'HP Latex printing · 30,000/sheet')}</div>
-            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('<b>PDF 파일만</b> 가능합니다 · 대지 사이즈는 <b>2400×1200</b> · 커팅 시 <b>칼선 레이어를 별도로 분리</b>해 주세요. 프린팅비 <b>1장당 3만원</b>.', '<b>PDFのみ</b> · 台紙サイズ <b>2400×1200</b> · カット時は<b>カットラインを別レイヤー</b>に。印刷費 <b>1枚3万</b>。', '<b>PDF only</b> · board <b>2400×1200</b> · keep <b>cut lines on a separate layer</b>. Fee <b>30,000/sheet</b>.')}</div>
+            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('HP 라텍스 프린팅 서비스 · 1장당 5만원', 'HPラテックス印刷サービス · 1枚5万', 'HP Latex printing · 50,000/sheet')}</div>
+            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('<b>PDF 파일만</b> 가능합니다 · 대지 사이즈는 <b>2400×1200</b> · 커팅 시 <b>칼선 레이어를 별도로 분리</b>해 주세요. 프린팅비 <b>1장당 5만원</b>.', '<b>PDFのみ</b> · 台紙サイズ <b>2400×1200</b> · カット時は<b>カットラインを別レイヤー</b>に。印刷費 <b>1枚5万</b>。', '<b>PDF only</b> · board <b>2400×1200</b> · keep <b>cut lines on a separate layer</b>. Fee <b>50,000/sheet</b>.')}</div>
             <input type="file" id="soRbLatexFile" accept=".pdf,application/pdf" style="display:none;" onchange="window._soRbLatexFileUpload && window._soRbLatexFileUpload(this)">
             <button type="button" onclick="document.getElementById('soRbLatexFile').click()" style="width:100%; padding:12px; border:1.5px dashed #0ea5e9; background:#f0f9ff; color:#075985; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프린팅 PDF 올리기', '印刷PDFをアップロード', 'Upload print PDF')}</button>
             <div id="soRbLatexStatus" style="font-size:11.5px; color:#475569; margin-top:8px; min-height:16px;"></div>
@@ -7685,12 +7685,12 @@ html, body { background: #ffffff !important; }
             // PRO 10%
             var proPct = (!!window.isProSubscriber) ? 10 : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
-            // 2026-06-26: 커팅비 — 유닛(도형) 개수 구간제 1장당 단가 (1~10:1만 / 11~20:2만 / 21~50:3만) × 원판 장수.
+            // 2026-08-16: 커팅비 — 판당 3만원 flat × 원판 장수 (기존 개수 구간제 폐지).
             var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
             var _rbPerBoard = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_rbUnits) : 0;
             var _rbCutFee = _rbPerBoard * totalQty;
-            // HP 라텍스 프린팅 — 1장당 3만원 × 장수
-            var _rbLatexFee = (state.rbLatexFileUrl && totalQty > 0) ? (30000 * totalQty) : 0;
+            // HP 라텍스 프린팅 — 1장당 5만원 × 장수
+            var _rbLatexFee = (state.rbLatexFileUrl && totalQty > 0) ? (50000 * totalQty) : 0;
             var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee + _rbLatexFee;
             // 미리보기 라인 HTML
             var lineHtml = picks.map(function (it) {
@@ -7717,7 +7717,7 @@ html, body { background: #ffffff !important; }
             // HP 라텍스 프린팅비 라인 (1장당 3만원 × 장수)
             if (_rbLatexFee > 0) {
                 lineHtml += '<div class="so-price-row" style="font-size:12.5px;">' +
-                    '<span style="color:#075985; font-weight:700;">' + tr('HP 라텍스 프린팅', 'HPラテックス印刷', 'HP Latex printing') + ' (' + fmtPrice(30000) + tr('/장', '/枚', '/sheet') + ' × ' + totalQty + tr('장', '枚', '') + ')</span>' +
+                    '<span style="color:#075985; font-weight:700;">' + tr('HP 라텍스 프린팅', 'HPラテックス印刷', 'HP Latex printing') + ' (' + fmtPrice(50000) + tr('/장', '/枚', '/sheet') + ' × ' + totalQty + tr('장', '枚', '') + ')</span>' +
                     '<span style="font-weight:800; color:#075985;">+' + fmtPrice(_rbLatexFee) + '</span>' +
                     '</div>';
             }
@@ -7784,10 +7784,9 @@ html, body { background: #ffffff !important; }
         return 0;
     };
     window._rbCutFeeFor = function (n) {
+        // 2026-08-16: 판당 무조건 3만원 flat (기존 개수 구간제 10/20/30k 폐지 — 사장님 인상)
         if (!n || n <= 0) return 0;
-        if (n <= 10) return 10000;   // 1~10 유닛
-        if (n <= 20) return 20000;   // 11~20 유닛
-        return 30000;                // 21~50 유닛
+        return 30000;
     };
     window._rbCutHasShapes = function () { return _rbCutItems.length; };
     window._rbCutInit = function () { _rbCutItems = []; _rbCutSeq = 0; _rbCutSel = null; _rbBoardW = 2400; _rbBoardH = 1200; _rbUndo = []; _rbRedo = []; _rbClip = null; _rbCutRender(); _rbCutHidePdf(); };
@@ -8040,7 +8039,7 @@ html, body { background: #ffffff !important; }
             state.rbCutFileUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
             state.rbCutFileName = f.name;
             // 2026-06-26: 파일에 들어있는 커팅 도형(유닛) 개수를 입력받아 구간제 커팅비 산정
-            var _ans = prompt(tr('이 파일에 들어있는 커팅 도형(유닛)의 개수를 입력해주세요.\n(1~10=1만원 · 11~20=2만원 · 21~50=3만원)', 'このファイルのカット図形(ユニット)の数を入力してください。\n(1~10=1万 · 11~20=2万 · 21~50=3万)', 'How many cut shapes (units) are in this file?\n(1-10=10,000 · 11-20=20,000 · 21-50=30,000)'), '1');
+            var _ans = prompt(tr('이 파일에 들어있는 커팅 도형(유닛)의 개수를 입력해주세요.\n(커팅비 1판 3만원 · 최대 50개)', 'このファイルのカット図形(ユニット)の数を入力してください。\n(カット費 1枚3万 · 最大50個)', 'How many cut shapes (units) are in this file?\n(30,000/board · max 50)'), '1');
             var _u = parseInt(_ans, 10);
             state.rbCutUnitCount = (_u > 0) ? Math.min(_u, 50) : 1;
             var _fee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(state.rbCutUnitCount) : 0;
@@ -8069,7 +8068,7 @@ html, body { background: #ffffff !important; }
             if (up.error) throw up.error;
             state.rbLatexFileUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
             state.rbLatexFileName = f.name;
-            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('1장당 프린팅비 ₩30,000 적용', '1枚 印刷費 ₩30,000', 'printing ₩30,000/sheet');
+            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('1장당 프린팅비 ₩50,000 적용', '1枚 印刷費 ₩50,000', 'printing ₩50,000/sheet');
             var box = document.getElementById('rbLatexPdfPreview');
             if (box) { box.style.display = ''; box.innerHTML = '<iframe src="' + state.rbLatexFileUrl + '" style="width:100%; height:360px; border:1px solid #cbd5e1; border-radius:8px; background:#fff;"></iframe>'; }
             if (typeof window._soUpdateRawBoardPreview === 'function') window._soUpdateRawBoardPreview();
@@ -8201,7 +8200,7 @@ html, body { background: #ffffff !important; }
             if (state.rbLatexFileUrl && newQtySum > 0) {
                 cur.push({
                     uid: Date.now() + 88888,
-                    product: { code: 'rb_latex_print', name: tr('HP 라텍스 프린팅 (1장당)', 'HPラテックス印刷 (1枚)', 'HP Latex printing (per sheet)'), category: 'Wholesale Board Prices', price: 30000 },
+                    product: { code: 'rb_latex_print', name: tr('HP 라텍스 프린팅 (1장당)', 'HPラテックス印刷 (1枚)', 'HP Latex printing (per sheet)'), category: 'Wholesale Board Prices', price: 50000 },
                     type: 'file_upload',
                     fileName: state.rbLatexFileName || 'latex-print.pdf',
                     mimeType: 'application/pdf', fileData: null,
