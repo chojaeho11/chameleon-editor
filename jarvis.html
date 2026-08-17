@@ -123,6 +123,8 @@
         .btn-join { flex:1; background: linear-gradient(135deg,#16a34a,#15803d); color:#fff; }
         .btn-leave { background: rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.35); }
         .btn-send { background: linear-gradient(135deg,#34d399,#059669); color:#fff; min-width:70px; }
+        .btn-file { background: rgba(148,163,184,0.15); color:#cbd5e1; border:1px solid rgba(148,163,184,0.3); min-width:52px; }
+        .cmsg a.cfile { display:inline-block; margin-top:6px; padding:7px 11px; background:rgba(255,255,255,0.1); border-radius:8px; color:#93c5fd; text-decoration:none; font-size:12.5px; }
         .jx-status { font-size: 11px; color: #64748b; margin-top: 8px; min-height: 15px; padding: 0 2px; }
         .jx-status.busy { color: #c7d2fe; } .jx-status.ok { color: #86efac; } .jx-status.err { color: #fca5a5; }
         .fade-out { opacity: 0; transform: scale(0.95); }
@@ -201,6 +203,8 @@
                     <button class="btn btn-join" id="joinBtn" onclick="managerJoin()">🙋 매니저 참여 (직접 답변)</button>
                 </div>
                 <div class="reply-wrap" id="replyWrap">
+                    <input type="file" id="replyFile" style="display:none" onchange="if(this.files[0])managerSendFile(this.files[0]); this.value='';">
+                    <button class="btn btn-file" onclick="document.getElementById('replyFile').click()" title="이미지·파일 첨부 (최대 20MB)">첨부</button>
                     <textarea class="reply-ta" id="replyTa" placeholder="고객에게 보낼 답변 입력..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();managerSend();}"></textarea>
                     <button class="btn btn-send" onclick="managerSend()">보내기</button>
                     <button class="btn btn-leave" onclick="managerLeave()" title="AI 재개">AI 재개</button>
@@ -341,7 +345,7 @@
             const body=document.getElementById('convBody');
             try{
                 const { data: msgs, error } = await sb.from('chat_messages')
-                    .select('sender_type, sender_name, message, file_url, created_at')
+                    .select('sender_type, sender_name, message, file_url, file_name, file_type, created_at')
                     .eq('room_id',roomId).order('created_at',{ascending:true}).limit(500);
                 if(error) throw error;
                 body.innerHTML = (msgs||[]).map(convBubble).join('') || '<div style="text-align:center;color:#64748b;padding:30px;">메시지가 없습니다.</div>';
@@ -353,8 +357,14 @@
             const isMgr = !isCust && String(m.sender_name||'').includes('관리자');
             const cls = isCust?'customer':(isMgr?'mgr':'ai');
             const who = isCust?('👤 '+(m.sender_name||'고객')):(isMgr?('🙋 '+(m.sender_name||'관리자')):('🤖 '+(m.sender_name||'AI')));
-            const img = m.file_url ? `<img src="${esc(m.file_url)}" alt="">` : '';
-            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${esc(m.message||'')}${img}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
+            let fileHtml = '';
+            if(m.file_url){
+                const ft = String(m.file_type||'').toLowerCase();
+                const isImg = ft.indexOf('image')===0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url);
+                if(isImg) fileHtml = `<img src="${esc(m.file_url)}" alt="" onclick="window.open('${esc(m.file_url)}','_blank')" style="cursor:pointer;">`;
+                else fileHtml = `<a class="cfile" href="${esc(m.file_url)}" target="_blank" rel="noopener">첨부파일: ${esc(m.file_name||'다운로드')}</a>`;
+            }
+            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${esc(m.message||'')}${fileHtml}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
         }
         function appendConvBubble(m){ const body=document.getElementById('convBody'); const near=(body.scrollHeight-body.scrollTop-body.clientHeight)<80; body.insertAdjacentHTML('beforeend', convBubble(m)); if(near) body.scrollTop=body.scrollHeight; }
 
@@ -416,6 +426,29 @@
                 // 내 화면에도 즉시 표시 (구독이 늦을 수 있어 낙관적 렌더 — 중복 시 구독쪽은 동일내용이라 무해)
             }catch(e){ toast('전송 실패: '+(e?.message||e), true); }
             finally{ ta.disabled=false; ta.focus(); }
+        };
+        // 2026-08-17: 매니저 파일/이미지 첨부 — chat-files 버킷 업로드 후 chat_messages 에 file_url 저장.
+        window.managerSendFile = async function(file){
+            if(!_curRoom || !file) return;
+            if(file.size > 20*1024*1024){ toast('파일이 너무 큽니다 (최대 20MB)', true); return; }
+            const sender = (_curRoom.assigned_manager || ME);
+            try{
+                if(!_curRoom.human_active || !_curRoom.assigned_manager){ await sb.from('chat_rooms').update({ human_active:true, assigned_manager:sender, status:'human' }).eq('id',_curRoom.id); _curRoom.human_active=true; _curRoom.assigned_manager=sender; paintJoinBar(); }
+                toast('업로드 중...');
+                const ext = ((file.name||'').split('.').pop()||'bin').toLowerCase();
+                const safe = Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+                const path = 'room-'+_curRoom.id+'/'+safe;
+                const up = await sb.storage.from('chat-files').upload(path, file, { upsert:true });
+                if(up.error) throw up.error;
+                const url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
+                const { error } = await sb.from('chat_messages').insert({
+                    room_id:_curRoom.id, sender_type:'chatbot', sender_name:'관리자 '+sender, message:'', file_url:url, file_name:file.name, file_type:(file.type||''), created_at:new Date().toISOString()
+                });
+                if(error) throw error;
+                await sb.from('chat_rooms').update({ updated_at:new Date().toISOString() }).eq('id',_curRoom.id);
+                _curRoomMgrSent = true;
+                toast('첨부 전송 완료');
+            }catch(e){ toast('첨부 전송 실패: '+(e?.message||e), true); }
         };
 
         function subscribeRoom(roomId){

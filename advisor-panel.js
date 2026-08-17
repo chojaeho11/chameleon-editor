@@ -1359,7 +1359,9 @@ function sendFromInput() {
 
     const img = pendingImage;
     clearPendingImage();
-    sendMessage(val, img);
+    let sendText = val;
+    if (!sendText && img && !img.isImage) sendText = '파일을 첨부했어요: ' + img.name;   // 비이미지 파일만 보낼 때 기본 문구
+    sendMessage(sendText, img);
 }
 
 // ─── 파일 선택 처리 ───
@@ -1368,21 +1370,45 @@ function handleFileSelect(e) {
     if (!file) return;
     e.target.value = '';
 
-    // AI 채팅 모드: 10MB 제한
-    if (file.size > 10 * 1024 * 1024) {
-        addBubble(t('tooBig'), 'ai');
+    // 2026-08-17: 이미지 = AI 분석(base64) + 채팅 첨부 저장 / 그 외 모든 파일 = 채팅 첨부 저장 (매니저가 다운로드)
+    const isImage = (file.type || '').indexOf('image') === 0;
+    const maxMB = isImage ? 10 : 20;
+    if (file.size > maxMB * 1024 * 1024) {
+        addBubble(isImage ? t('tooBig') : ('파일이 너무 큽니다 (최대 ' + maxMB + 'MB)'), 'ai');
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-        const dataUrl = reader.result;
-        const base64 = dataUrl.split(',')[1];
-        const type = file.type || 'image/jpeg';
-        pendingImage = { base64, type, name: file.name, previewUrl: dataUrl };
+    if (isImage) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            const base64 = dataUrl.split(',')[1];
+            pendingImage = { base64, type: file.type || 'image/jpeg', name: file.name, previewUrl: dataUrl, file: file, isImage: true };
+            showImagePreview();
+        };
+        reader.readAsDataURL(file);
+    } else {
+        pendingImage = { base64: null, type: file.type || '', name: file.name, previewUrl: null, file: file, isImage: false };
         showImagePreview();
-    };
-    reader.readAsDataURL(file);
+    }
+}
+
+// 2026-08-17: 고객 첨부 파일을 chat-files 버킷에 올리고 chat_messages 에 file_url 저장 (매니저 jarvis 에서 열람/다운로드).
+async function _advPersistChatFile(file, roomId) {
+    try {
+        const sb = getSb();
+        if (!sb || !roomId || !file) return;
+        const ext = ((file.name || '').split('.').pop() || 'bin').toLowerCase();
+        const safe = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+        const path = 'room-' + roomId + '/' + safe;
+        const up = await sb.storage.from('chat-files').upload(path, file, { upsert: true });
+        if (up.error) { console.warn('[chat file] 업로드 실패:', up.error); return; }
+        const url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
+        await sb.from('chat_messages').insert({
+            room_id: roomId, sender_type: 'customer', sender_name: _custName || '고객',
+            message: '', file_url: url, file_name: file.name, file_type: file.type || '', created_at: new Date().toISOString()
+        });
+    } catch (e) { console.warn('[chat file] 저장 오류:', e); }
 }
 
 function showImagePreview() {
@@ -1390,7 +1416,13 @@ function showImagePreview() {
     const thumb = document.getElementById('advImgThumb');
     const nameEl = document.getElementById('advImgName');
     if (!preview || !pendingImage) return;
-    thumb.src = pendingImage.previewUrl;
+    if (pendingImage.isImage && pendingImage.previewUrl) {
+        thumb.src = pendingImage.previewUrl;
+        thumb.style.display = '';
+    } else {
+        thumb.src = '';
+        thumb.style.display = 'none';
+    }
     nameEl.textContent = pendingImage.name;
     preview.style.display = 'flex';
 }
@@ -1531,8 +1563,10 @@ async function sendMessage(text, imageData) {
 
     isProcessing = true;
 
-    if (imageData) {
+    if (imageData && imageData.isImage && imageData.previewUrl) {
         addImageBubble(imageData.previewUrl, text);
+    } else if (imageData && imageData.file) {
+        addBubble('📎 ' + (imageData.name || '파일') + (text && text.indexOf(imageData.name) < 0 ? '\n' + text : ''), 'user');
     } else {
         addBubble(text, 'user');
     }
@@ -1786,7 +1820,7 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
         if (_advRoomId) payload.room_id = _advRoomId;
         if (_custName) payload.customer_name = _custName;
         if (_custPhone) payload.customer_phone = _custPhone;
-        if (imageData) {
+        if (imageData && imageData.base64) {
             payload.image = imageData.base64;
             payload.image_type = imageData.type;
         }
@@ -1809,6 +1843,11 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
             subscribeAdminMessages(_advRoomId);
         } else if (data.room_id) {
             _advRoomId = data.room_id;
+        }
+
+        // 2026-08-17: 고객 첨부 파일을 chat-files 에 저장 → 매니저(jarvis)가 보고 다운로드 가능
+        if (imageData && imageData.file && _advRoomId) {
+            _advPersistChatFile(imageData.file, _advRoomId);
         }
 
         typingEl.remove();
