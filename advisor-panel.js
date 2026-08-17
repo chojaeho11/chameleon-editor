@@ -42,6 +42,11 @@ let conversationHistory = [];
 let _advRoomId = null; // product-advisor room_id 유지
 let _custName = ''; // 고객 이름
 let _custPhone = ''; // 고객 전화번호
+// 2026-08-17: 매니저 답변 수신 안정화 — realtime + 폴링 병행. lastMsgAt 로 중복/누락 방지.
+let _advPollTimer = null;
+let _advLastMsgAt = null;      // 마지막으로 처리한 메시지 created_at (ISO)
+let _advSeenIds = {};          // 세션 내 렌더된 메시지 id (realtime↔폴링 중복 방지)
+let _adminSub = null;          // 관리자 메시지 realtime 구독 핸들
 
 // ─── Supabase 클라이언트 ───
 // window.sb (config.js)를 재사용 — 새 클라이언트 생성 금지
@@ -59,7 +64,9 @@ function saveChat() {
         localStorage.setItem(chatKey(), JSON.stringify({
             html: chatArea.innerHTML,
             history: conversationHistory,
-            lastProducts
+            lastProducts,
+            roomId: _advRoomId,
+            lastMsgAt: _advLastMsgAt
         }));
     } catch(e) {}
 }
@@ -75,6 +82,12 @@ function loadChat() {
         }
         conversationHistory = data.history || [];
         lastProducts = data.lastProducts || [];
+        // 2026-08-17: 이전 세션의 room/최종시각 복원 → 매니저 답변 수신 재개 (놓친 답변 즉시 catch-up)
+        if (data.roomId) {
+            _advRoomId = data.roomId;
+            _advLastMsgAt = data.lastMsgAt || null;
+            try { _advStartAdminSync(_advRoomId); } catch(e) {}
+        }
         return !!(data.html && data.html.length > 50);
     } catch(e) { return false; }
 }
@@ -83,6 +96,10 @@ function clearChat() {
     conversationHistory = [];
     lastProducts = [];
     _advRoomId = null;
+    _advLastMsgAt = null;
+    _advSeenIds = {};
+    if (_advPollTimer) { clearInterval(_advPollTimer); _advPollTimer = null; }
+    if (_adminSub) { try { _adminSub.unsubscribe(); } catch(e) {} _adminSub = null; }
     _custName = '';
     _custPhone = '';
     if (chatArea) chatArea.innerHTML = '';
@@ -1840,9 +1857,10 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
         // room_id 저장 (다음 메시지에서 재사용)
         if (data.room_id && data.room_id !== _advRoomId) {
             _advRoomId = data.room_id;
-            subscribeAdminMessages(_advRoomId);
+            _advStartAdminSync(_advRoomId);
         } else if (data.room_id) {
             _advRoomId = data.room_id;
+            if (!_advPollTimer) _advStartAdminSync(_advRoomId);   // 폴링 미가동 시 보장
         }
 
         // 2026-08-17: 고객 첨부 파일을 chat-files 에 저장 → 매니저(jarvis)가 보고 다운로드 가능
@@ -1969,7 +1987,6 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
 // ═══════════════════════════════════════
 // 관리자 메시지 실시간 수신
 // ═══════════════════════════════════════
-let _adminSub = null;
 function subscribeAdminMessages(roomId) {
     const sb = getSb();
     if (!sb || !roomId) return;
@@ -1979,17 +1996,57 @@ function subscribeAdminMessages(roomId) {
         .on('postgres_changes', {
             event: 'INSERT', schema: 'public', table: 'chat_messages',
             filter: 'room_id=eq.' + roomId
-        }, (payload) => {
-            const m = payload.new;
-            if (!m) return;
-            // 관리자가 보낸 메시지만 표시 (sender_name에 '관리자' 포함)
-            if (m.sender_type === 'chatbot' && m.sender_name && m.sender_name.includes('관리자')) {
-                addBubble(m.message, 'ai');
-                scrollChat();
-                saveChat();
-            }
-        })
+        }, (payload) => { _advRenderAdminMsg(payload.new); })
         .subscribe();
+}
+
+// 2026-08-17: realtime + 폴링 동시 사용 (매니저 답변이 고객 화면에 항상 뜨도록). 중복은 id/시각으로 방지.
+function _advStartAdminSync(roomId) {
+    if (!roomId) return;
+    subscribeAdminMessages(roomId);
+    if (_advPollTimer) { clearInterval(_advPollTimer); _advPollTimer = null; }
+    _advPollAdminMessages();                    // 즉시 1회 — 놓친 매니저 답변 즉시 표시
+    _advPollTimer = setInterval(_advPollAdminMessages, 5000);
+}
+async function _advPollAdminMessages() {
+    try {
+        if (!_advRoomId || document.hidden) return;
+        const sb = getSb(); if (!sb) return;
+        let q = sb.from('chat_messages')
+            .select('id,sender_type,sender_name,message,file_url,file_name,file_type,created_at')
+            .eq('room_id', _advRoomId).order('created_at', { ascending: true }).limit(60);
+        if (_advLastMsgAt) q = q.gt('created_at', _advLastMsgAt);
+        const { data, error } = await q;
+        if (error || !data) return;
+        data.forEach(_advRenderAdminMsg);
+    } catch (e) {}
+}
+// 매니저(관리자) 메시지만 렌더 (텍스트 + 이미지 + 파일). 중복 방지.
+function _advRenderAdminMsg(m) {
+    if (!m) return;
+    if (m.id != null) { if (_advSeenIds[m.id]) { _advTouchTime(m.created_at); return; } _advSeenIds[m.id] = true; }
+    const isMgr = m.sender_type === 'chatbot' && m.sender_name && m.sender_name.indexOf('관리자') >= 0;
+    if (!isMgr) { _advTouchTime(m.created_at); return; }
+    if (m.file_url) addAdminMediaBubble(m.file_url, m.file_name, m.file_type, m.message);
+    else if (m.message) addBubble(m.message, 'ai');
+    _advTouchTime(m.created_at);
+    scrollChat(); saveChat();
+}
+function _advTouchTime(ts) { if (ts && (!_advLastMsgAt || ts > _advLastMsgAt)) _advLastMsgAt = ts; }
+// 매니저 이미지/파일 말풍선 (AI 쪽 정렬)
+function addAdminMediaBubble(fileUrl, fileName, fileType, text) {
+    if (!chatArea) return;
+    const ft = String(fileType || '').toLowerCase();
+    const isImg = ft.indexOf('image') === 0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(fileUrl);
+    const media = isImg
+        ? `<img src="${esc(fileUrl)}" class="adv-chat-img" alt="" style="cursor:pointer" onclick="window.open('${esc(fileUrl)}','_blank')">`
+        : `<a href="${esc(fileUrl)}" target="_blank" rel="noopener" style="display:inline-block;padding:8px 12px;background:rgba(0,0,0,0.06);border-radius:10px;color:#4338ca;text-decoration:none;">📎 ${esc(fileName || '파일 다운로드')}</a>`;
+    const row = document.createElement('div');
+    row.className = 'adv-row adv-row-ai';
+    row.innerHTML = `<div class="adv-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div><div class="adv-bubble adv-bubble-ai">${media}${text ? `<p style="margin:6px 0 0">${esc(text)}</p>` : ''}</div>`;
+    chatArea.appendChild(row);
+    scrollChat();
+    return row;
 }
 
 // ═══════════════════════════════════════
