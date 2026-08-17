@@ -778,6 +778,58 @@ window.manualDownloadSelected = async () => {
     showToast(msg, fail > 0 ? 'warn' : 'success');
 };
 
+// 2026-08-17: 송장 출력용 엑셀(CSV) 다운 — 체크한 주문의 주문번호/고객명/전화번호/주소/주문내역.
+//   UTF-8 BOM CSV 로 저장 → Excel 에서 한글 정상 표시. 별도 라이브러리 불필요.
+window.exportInvoiceExcelSelected = async () => {
+    const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
+    if (ids.length === 0) { showToast('선택된 주문이 없습니다.', 'warn'); return; }
+    showToast(`${ids.length}건 송장 데이터 조회 중...`, 'info');
+    let fetched = [];
+    try {
+        const { data, error } = await sb.from('orders')
+            .select('id, manager_name, phone, address, items')
+            .in('id', ids);
+        if (error) throw error;
+        fetched = data || [];
+    } catch (e) {
+        console.error('[송장엑셀] 조회 실패:', e);
+        showToast('주문 조회 실패: ' + (e.message || e), 'error');
+        return;
+    }
+    const orderMap = {};
+    fetched.forEach(o => { orderMap[String(o.id)] = o; });
+    // 이모지/기호 제거 (송장은 텍스트만)
+    const _clean = s => String(s || '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️]/gu, '').replace(/\s+/g, ' ').trim();
+    const rows = [['주문번호', '고객명', '전화번호', '주소', '주문내역', '수량합계']];
+    let miss = 0;
+    ids.forEach(id => {
+        const o = orderMap[String(id)];
+        if (!o) { miss++; return; }
+        let items = o.items;
+        if (typeof items === 'string') { try { items = JSON.parse(items || '[]'); } catch (e) { items = []; } }
+        if (!Array.isArray(items)) items = [];
+        const itemText = items.length
+            ? items.map(it => `${_clean(_omItemLabel(it))} (${it.qty || 1})`).join(' / ')
+            : '';
+        const qtySum = items.reduce((s, it) => s + (Number(it.qty) || 1), 0);
+        rows.push([String(o.id), o.manager_name || '', o.phone || '', o.address || '', itemText, String(qtySum || '')]);
+    });
+    if (rows.length <= 1) { showToast('출력할 주문이 없습니다.', 'warn'); return; }
+    const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = '﻿' + rows.map(r => r.map(esc).join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `송장_${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    showToast(`${rows.length - 1}건 송장 엑셀 다운로드 완료` + (miss > 0 ? ` (${miss}건 조회안됨)` : ''), miss > 0 ? 'warn' : 'success');
+};
+
 async function _runAutoDownloadCheck() {
     if (!_autoDownloadActive || !_rootDirHandle) return;
     const status = document.getElementById('autoDownloadStatus');
@@ -2253,6 +2305,7 @@ window.updateActionButtons = () => {
     div.innerHTML += `<button class="btn" onclick="pcAutoDownloadSelected()" style="background:#7c3aed;color:white;margin-left:4px;" title="PC 자동화용 별도 다운 — 고객명 폴더 + 기호 파일명 + order_info.json">🤖 PC다운</button>`;
     div.innerHTML += `<button class="btn" onclick="photoUploadSelected()" style="background:#10b981;color:white;margin-left:4px;">📷 제작사진</button>`;
     div.innerHTML += `<button class="btn" onclick="inquirySelected()" style="background:#8b5cf6;color:white;margin-left:4px;">💬 문의답변</button>`;
+    div.innerHTML += `<button class="btn" onclick="exportInvoiceExcelSelected()" style="background:#0f766e;color:white;margin-left:4px;" title="체크한 주문의 고객명/전화/주소/주문내역/주문번호를 엑셀(CSV)로 다운">송장 엑셀</button>`;
 };
 
 window.photoUploadSelected = () => {
