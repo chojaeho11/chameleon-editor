@@ -1746,8 +1746,14 @@ function calcCartTotal() {
 //   패브릭 항목만 보이는데 합계엔 일반상품이 더해져 과다청구되던 버그(예: 16,900 항목인데 합계 122만).
 //   _cpOpenCheckout/_cpSubmitOrder/_cpCreateMgrQuote 는 패브릭만 처리하므로 이 합계를 사용.
 function calcFabricCartTotal() {
-    var fabricTotal = getCart().reduce(function (s, it) { return s + (it.price || 0); }, 0);
-    if (fabricTotal <= 0) return 0;
+    var cart = getCart();
+    if (!cart || cart.length === 0) return 0;
+    var fabricTotal = cart.reduce(function (s, it) { return s + (it.price || 0); }, 0);
+    // 2026-08-17: 무료 스와치(상품가 0원)만 담아도 택배비 2,500원 부과 (사장님 지시).
+    if (fabricTotal <= 0) {
+        var _hasSwatch = cart.some(function (it) { return it && (it.isSwatch || it.fabricCode === 'SWATCH'); });
+        return _hasSwatch ? getShippingFeeKrw() : 0;
+    }
     return fabricTotal + getShippingFeeKrw();
 }
 
@@ -2307,7 +2313,7 @@ window._cdAddSwatch = function () {
         title: title, fabricName: title, fabricCode: 'SWATCH',
         orderSize: '-', orderWcm: 0, orderHcm: 0,
         qty: 1, qtyLabel: '1', finishCode: '', finishName: '-',
-        price: 0, shipping: { fee: 0, label: shipLbl }   // 2026-08-15: 택배비까지 완전 무료(카멜레온 부담)
+        price: 0, shipping: { fee: 2500, label: shipLbl }   // 2026-08-17: 스와치 무료 + 택배비 2,500원 (사장님 지시)
     };
     try { var cart = getCart(); cart.push(item); saveCart(cart); } catch (e) { console.warn('[swatch] cart', e); return; }
     try { window.gtagTrackAddToCart && window.gtagTrackAddToCart(0); } catch (e) {}

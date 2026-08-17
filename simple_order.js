@@ -19670,7 +19670,9 @@ html, body { background: #ffffff !important; }
                 var _cat = String(_p.category || _it.category || '');
                 return _cat === 'design_fee' || _code.indexOf('design_fee_') === 0;
             });
-            var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee;
+            // 2026-08-17: 무료 스와치(상품가 0원이지만 실제 배송되는 물건)는 소계 0원 면제에서 제외 → 택배비 2,500원 부과 (사장님 지시).
+            //   패브릭 항목이 있으면 소계가 0이어도 배송비는 부과 (스와치는 fabric 으로 인식됨).
+            var _shipExempt = _hasAmountOrder || (_allProductSub <= 0 && !cart.some(_soIsFabricItem)) || _allDesignFee;
             shipTotal = _shipExempt ? 0 : 2500;   // 2026-07-28: 일반택배 정액 5,000→2,500원 (사장님 지시)
         }
         // 2026-06-30: JP 사이트 — 일반 택배 카트 배송비 500엔(5,000원) 정액 통일 (2026-07-01 1000엔→500엔).
