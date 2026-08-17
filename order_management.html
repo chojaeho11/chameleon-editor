@@ -379,7 +379,9 @@ window.showSection = function(){};
                 <div class="divider"></div>
                 <div>💰 총 매출(검색기준): <b id="sumRevenue" style="font-size:17px;">0원</b></div>
                 <!-- 2026-08-15: 실시간 채팅관리(자비스) 진입 + 새 문의 알림 배지 + 알람 토글 -->
-                <button onclick="window.open('/jarvis','_blank')" title="실시간 채팅관리 (자비스)" style="margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; border:none; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">💬 실시간 채팅관리 <span id="omChatBadge" style="display:none; background:#ef4444; color:#fff; border-radius:10px; padding:1px 7px; font-size:11px;">0</span></button>
+                <!-- 2026-08-17: 눈에 띄게 빨강 깜박임 (사장님 요청) -->
+                <style>@keyframes omChatBlink{0%,100%{background:#ef4444;opacity:1;}50%{background:#b91c1c;opacity:.5;}}</style>
+                <button onclick="window.open('/jarvis','_blank')" title="실시간 채팅관리 (자비스)" style="margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:#ef4444; color:#fff; border:none; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; animation:omChatBlink 1s ease-in-out infinite;">💬 실시간 채팅관리 <span id="omChatBadge" style="display:none; background:#fff; color:#dc2626; border-radius:10px; padding:1px 7px; font-size:11px; font-weight:800;">0</span></button>
                 <button id="omAlarmBtn" onclick="window._omToggleAlarm && window._omToggleAlarm()" title="채팅 알람 켜기/끄기" style="display:inline-flex; align-items:center; justify-content:center; background:#ecfdf5; color:#059669; border:1px solid #6ee7b7; padding:9px 12px; border-radius:10px; font-size:14px; cursor:pointer;">🔔</button>
                 <div style="font-size:12px; color:#94a3b8;">* 페이지네이션과 관계없이 검색된 전체 합계</div>
             </div>
