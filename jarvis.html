@@ -205,7 +205,7 @@
                 <div class="reply-wrap" id="replyWrap">
                     <input type="file" id="replyFile" style="display:none" onchange="if(this.files[0])managerSendFile(this.files[0]); this.value='';">
                     <button class="btn btn-file" onclick="document.getElementById('replyFile').click()" title="이미지·파일 첨부 (최대 20MB)">첨부</button>
-                    <textarea class="reply-ta" id="replyTa" placeholder="고객에게 보낼 답변 입력..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();managerSend();}"></textarea>
+                    <textarea class="reply-ta" id="replyTa" placeholder="고객에게 보낼 답변 입력... (이미지 붙여넣기 가능)" onpaste="managerPaste(event)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();managerSend();}"></textarea>
                     <button class="btn btn-send" onclick="managerSend()">보내기</button>
                     <button class="btn btn-leave" onclick="managerLeave()" title="AI 재개">AI 재개</button>
                 </div>
@@ -449,6 +449,20 @@
                 _curRoomMgrSent = true;
                 toast('첨부 전송 완료');
             }catch(e){ toast('첨부 전송 실패: '+(e?.message||e), true); }
+        };
+        // 2026-08-17: 답변창에 이미지/파일 붙여넣기(Ctrl+V) → 바로 첨부 전송 (스크린샷 캡처 후 붙여넣기)
+        window.managerPaste = function(e){
+            try{
+                const items = (e.clipboardData && e.clipboardData.items) || [];
+                let sent = 0;
+                for(let i=0;i<items.length;i++){
+                    if(items[i].kind === 'file'){
+                        const f = items[i].getAsFile();
+                        if(f){ managerSendFile(f); sent++; }
+                    }
+                }
+                if(sent){ e.preventDefault(); }   // 파일이 있으면 텍스트 붙여넣기는 막음
+            }catch(err){ console.warn('[paste]', err); }
         };
 
         function subscribeRoom(roomId){
