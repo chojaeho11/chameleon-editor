@@ -3373,8 +3373,8 @@ html, body { background: #ffffff !important; }
       <div class="so-co-section" id="soCoShippingBox">
         <span class="so-co-label">${tr('배송지', 'お届け先', 'Shipping address')} <span style="color:#dc2626;">*</span></span>
         <div style="display:flex; gap:6px; margin-bottom:6px; align-items:stretch;">
-          <input id="soCoZip" class="so-co-input" placeholder="${tr('우편번호', '郵便番号', 'ZIP')}" style="width:150px; margin:0;">
-          ${((window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR') === 'KR') ? `<button type="button" onclick="window._soOpenPostcode()" style="padding:0 16px; border:1px solid #d1d5db; border-radius:8px; background:#f9fafb; color:#374151; font-size:14px; cursor:pointer; white-space:nowrap;">${tr('우편번호 검색', '郵便番号検索', 'Find ZIP')}</button>` : ''}
+          <input id="soCoZip" class="so-co-input" placeholder="${tr('우편번호', '郵便番号 (7桁)', 'ZIP')}" style="width:150px; margin:0;">
+          ${(function(){ var _sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR'); if (_sc === 'KR') return '<button type="button" onclick="window._soOpenPostcode()" style="padding:0 16px; border:1px solid #d1d5db; border-radius:8px; background:#f9fafb; color:#374151; font-size:14px; cursor:pointer; white-space:nowrap;">우편번호 검색</button>'; if (_sc === 'JP') return '<button type="button" onclick="window._soOpenPostcodeJP()" style="padding:0 16px; border:1px solid #d1d5db; border-radius:8px; background:#f9fafb; color:#374151; font-size:14px; cursor:pointer; white-space:nowrap;">住所検索</button>'; return ''; })()}
         </div>
         <input id="soCoAddr1" class="so-co-input" placeholder="${tr('기본 주소', '住所', 'Address line 1')}" style="margin-bottom:6px;">
         <input id="soCoAddr2" class="so-co-input" placeholder="${tr('상세 주소 (동/호수)', '建物名・部屋番号', 'Address line 2')}">
@@ -20609,6 +20609,33 @@ html, body { background: #ffffff !important; }
         s.onload = _open;
         s.onerror = function () { alert(tr('우편번호 검색을 불러오지 못했어요. 잠시 후 다시 시도해주세요.', '郵便番号検索を読み込めませんでした。', 'Could not load postcode search. Please try again.')); };
         document.head.appendChild(s);
+    };
+
+    // 2026-08-17: 일본 郵便番号 → 주소 자동입력 (zipcloud API, 무료·키불필요). 都道府県+市区町村+町域 을 기본주소에 채움.
+    window._soOpenPostcodeJP = async function () {
+        var z = document.getElementById('soCoZip');
+        var raw = (z && z.value || '').replace(/[^0-9]/g, '');
+        if (raw.length !== 7) {
+            alert('郵便番号を7桁の数字で入力してください。(例: 1000001)');
+            if (z) z.focus();
+            return;
+        }
+        try {
+            var res = await fetch('https://zipcloud.ansuapi.com/api/search?zipcode=' + raw);
+            var data = await res.json();
+            if (!data || data.status !== 200 || !data.results || !data.results.length) {
+                alert('該当する住所が見つかりませんでした。郵便番号をご確認ください。');
+                return;
+            }
+            var r = data.results[0];
+            var addr = (r.address1 || '') + (r.address2 || '') + (r.address3 || '');
+            if (z) z.value = raw.slice(0, 3) + '-' + raw.slice(3);   // 表示は 123-4567
+            var a1 = document.getElementById('soCoAddr1'); if (a1) a1.value = addr;
+            var a2 = document.getElementById('soCoAddr2'); if (a2) a2.focus();   // 番地・建物名 入力へ
+        } catch (e) {
+            console.warn('[jp postcode]', e);
+            alert('住所検索に失敗しました。しばらくして再度お試しください。');
+        }
     };
 
     window._soSubmitOrder = async function () {
