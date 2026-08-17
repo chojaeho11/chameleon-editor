@@ -7,7 +7,7 @@
 //   고쳐도 "재발"(예: #35 스티커 용지 누락)처럼 보였다. → 자가치유 추가. 배포된 version.txt 와 아래 CV 가 다르면 새로고침.
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다(손대지 말 것).
 (function(){
-    var CV = '20260817165701';
+    var CV = '20260817175651';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -406,7 +406,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         // 주문 + 옵션 카탈로그 병렬 로드
         const [orderResult, addonResult] = await Promise.all([
             sb.from('orders').select('*').eq('id', orderId).single(),
-            sb.from('admin_addons').select('code, name, display_name, price, type, img_url')
+            sb.from('admin_addons').select('code, name, name_kr, name_jp, price, img_url, category')
         ]);
         const { data: order, error } = orderResult;
         if (error || !order) {
@@ -903,7 +903,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 if (ps && ps.layout) parts.push(`<div>배치: <b>${esc(ps.layout)}</b></div>`);
                 if (ps && ps.image_scale != null) parts.push(`<div>이미지 비율: <b>${Math.round(ps.image_scale * 100)}%</b></div>`);
                 if (ps && ps.bg_color) parts.push(`<div>배경색: <b>${esc(ps.bg_color)}</b></div>`);
-                if (ps && ps.finish_name) parts.push(`<div>마감: <b>${esc(ps.finish_name)}</b></div>`);
+                if (ps && ps.finish_name) parts.push(`<div>마감: <b>${window._woTStored(ps.finish_name)}</b></div>`);
                 if (ps && ps.artwork_filename) parts.push(`<div>원본 파일: <b>${esc(ps.artwork_filename)}</b></div>`);
                 if (parts.length) fabricHtml = parts.join('');
             }
@@ -920,17 +920,19 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const addonRows = addonsArr.map(a => {
                     const dbItem = addonDB[a.code] || {};
                     const imgUrl = dbItem.img_url || '';
-                    // 2026-06-17: 정식 이름이 없는 (DB 매핑 안 됨, 또는 raw code) 항목 숨김.
-                    //   dbItem.name_kr / name / display_name 중 하나라도 있으면 사용. 없으면 a.label fallback.
-                    //   둘 다 없으면 skip.
-                    const dbName = dbItem.name_kr || dbItem.display_name || dbItem.name || '';
-                    const cleanLabel = a.label || dbName || '';
+                    // 2026-08-17: 해외주문도 한국어로 표시 — DB의 name_kr 을 항상 우선 (저장된 고객언어 라벨보다).
+                    //   admin_addons 다국어(name_kr/name_jp) 로 한↔일 정확한 이중언어. DB 미매핑만 저장라벨+사전 폴백.
+                    const koName = dbItem.name_kr || dbItem.name || a.label || '';
+                    const jaName = dbItem.name_jp || a.label || koName || '';
+                    const cleanLabel = koName || a.label || '';
                     if (!cleanLabel || /^[0-9a-zA-Z_]{3,}$/.test(cleanLabel.trim())) {
                         // 라벨이 raw code 패턴 (영숫자/언더스코어만) 이면 숨김.
                         return '';
                     }
                     const label = esc(cleanLabel);                 // alt 속성용 (평문)
-                    const labelDisp = window._woTStored(cleanLabel); // 표시용 (한↔일 이중언어 span)
+                    const labelDisp = (dbItem.name_kr || dbItem.name_jp)
+                        ? window._woT(koName, jaName)              // DB 다국어 있으면 정확한 이중언어
+                        : window._woTStored(cleanLabel);           // 없으면 저장라벨 사전 번역
                     const qtyStr = a.qty && a.qty > 1 ? ` × ${a.qty}` : '';
                     if (imgUrl) {
                         return `<div style="display:inline-flex; flex-direction:column; align-items:center; gap:4px; margin:4px 6px 4px 0; vertical-align:top;">

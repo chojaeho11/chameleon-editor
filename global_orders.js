@@ -3574,7 +3574,7 @@ async function generateRecoveryOrderSheet(order, addonDB) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = addonDB[code]; if (!add) return;
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                _dt(doc, `• ${add.display_name || add.name || code} (x${qty})`, 25, optY);
+                _dt(doc, `• ${add.name_kr || add.display_name || add.name || code} (x${qty})`, 25, optY);
                 optY += 6;
             });
         } else {
@@ -5083,7 +5083,7 @@ async function regenerateWorkOrder(orderId) {
     if (!order) return;
 
     // addon DB 로드
-    const { data: addons } = await sb.from('admin_addons').select('code, name, display_name');
+    const { data: addons } = await sb.from('admin_addons').select('code, name, name_kr, name_jp, price');
     const addonDB = {};
     if (addons) addons.forEach(a => addonDB[a.code] = a);
 
