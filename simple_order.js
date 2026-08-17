@@ -21065,7 +21065,14 @@ html, body { background: #ffffff !important; }
             // 마일리지/예치금/SNS포인트로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
             var _walletUsed = (_useMileage > 0 || _useDeposit > 0 || _useBlogCoupon > 0);
             // 2026-08-15: 무료 스와치처럼 지불액 0 인 주문도 결제 없이 완료. (일반 상품 0원 버그가 무료완료로 위장되지 않게 스와치/월렛 주문만)
-            var _isSwatchOrder = items.length > 0 && items.every(function (it) { return it && (it.isSwatch || it.fabricCode === 'SWATCH'); });
+            // 2026-08-17 HOTFIX: 스와치 항목이 실제로는 product_code='SWATCH'/이름 '무료 원단 스와치' 로 저장돼 기존 fabricCode 체크가
+            //   전부 실패 → 무료 스와치를 카드결제로 보내 '결제 금액이 0원' 오류 (여러 고객 제보). product_code·이름도 인식.
+            var _isSwatchOrder = items.length > 0 && items.every(function (it) {
+                if (!it) return false;
+                return it.isSwatch || it.fabricCode === 'SWATCH' || it.product_code === 'SWATCH'
+                    || (it.product && it.product.code === 'SWATCH')
+                    || /무료\s*원단\s*스와치|무료\s*스와치|free\s*swatch|swatch/i.test(it.product_name || it.fabric || (it.product && it.product.name) || '');
+            });
             var _fullyCovered = _finalTotal <= 0 && (_walletUsed || _isSwatchOrder);
             // SNS 포인트 사용 시 결제수단 '블로그체험단쿠폰' (매출집계 제외 구분용) 우선
             var _walletPayLabel = _useBlogCoupon > 0 ? '포인트' : (_useDeposit > 0 ? '예치금' : (_walletUsed ? '마일리지' : '무료'));
