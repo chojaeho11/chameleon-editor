@@ -3372,7 +3372,10 @@ html, body { background: #ffffff !important; }
       </div>
       <div class="so-co-section" id="soCoShippingBox">
         <span class="so-co-label">${tr('배송지', 'お届け先', 'Shipping address')} <span style="color:#dc2626;">*</span></span>
-        <input id="soCoZip" class="so-co-input" placeholder="${tr('우편번호', '郵便番号', 'ZIP')}" style="width:160px; margin-bottom:6px;">
+        <div style="display:flex; gap:6px; margin-bottom:6px; align-items:stretch;">
+          <input id="soCoZip" class="so-co-input" placeholder="${tr('우편번호', '郵便番号', 'ZIP')}" style="width:150px; margin:0;">
+          ${((window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR') === 'KR') ? `<button type="button" onclick="window._soOpenPostcode()" style="padding:0 16px; border:1px solid #d1d5db; border-radius:8px; background:#f9fafb; color:#374151; font-size:14px; cursor:pointer; white-space:nowrap;">${tr('우편번호 검색', '郵便番号検索', 'Find ZIP')}</button>` : ''}
+        </div>
         <input id="soCoAddr1" class="so-co-input" placeholder="${tr('기본 주소', '住所', 'Address line 1')}" style="margin-bottom:6px;">
         <input id="soCoAddr2" class="so-co-input" placeholder="${tr('상세 주소 (동/호수)', '建物名・部屋番号', 'Address line 2')}">
       </div>
@@ -20579,6 +20582,33 @@ html, body { background: #ffffff !important; }
             inp.select(); document.execCommand('copy');
             alert('URL 이 복사되었습니다.');
         }
+    };
+
+    // 2026-08-17: 우편번호 검색 (다음 우편번호 서비스) — 검색 완료 시 우편번호+기본주소 자동 입력, 상세주소로 포커스.
+    window._soOpenPostcode = function () {
+        function _open() {
+            try {
+                new window.daum.Postcode({
+                    oncomplete: function (data) {
+                        var zip = data.zonecode || data.postcode || '';
+                        var addr = data.roadAddress || data.jibunAddress || '';
+                        var extra = '';
+                        if (data.bname && /[동로가]$/.test(data.bname)) extra += data.bname;
+                        if (data.buildingName && data.apartment === 'Y') extra += (extra ? ', ' : '') + data.buildingName;
+                        if (extra) addr += ' (' + extra + ')';
+                        var z = document.getElementById('soCoZip'); if (z) z.value = zip;
+                        var a1 = document.getElementById('soCoAddr1'); if (a1) a1.value = addr;
+                        var a2 = document.getElementById('soCoAddr2'); if (a2) a2.focus();
+                    }
+                }).open();
+            } catch (e) { console.warn('[postcode]', e); }
+        }
+        if (window.daum && window.daum.Postcode) { _open(); return; }
+        var s = document.createElement('script');
+        s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+        s.onload = _open;
+        s.onerror = function () { alert(tr('우편번호 검색을 불러오지 못했어요. 잠시 후 다시 시도해주세요.', '郵便番号検索を読み込めませんでした。', 'Could not load postcode search. Please try again.')); };
+        document.head.appendChild(s);
     };
 
     window._soSubmitOrder = async function () {
