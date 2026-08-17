@@ -20642,6 +20642,30 @@ html, body { background: #ffffff !important; }
         var origLabel = btn.innerHTML;
         btn.innerHTML = '⏳ ' + tr('처리 중...', '処理中...', 'Processing...');
 
+        // 2026-08-17: 무한 "처리 중..." 방지 워치독.
+        // 모바일 네트워크 지연으로 주문 요청이 멈추면 25초 후 복구 안내.
+        // 버튼 상태로 판별 → 다른 return 경로가 이미 버튼을 되살렸으면(=btn.disabled false) 무시.
+        // 주문이 이미 생성됐으면(newOrderId) 중복 방지 위해 재시도 막고 안내만.
+        var _soSubmitWatchdog = setTimeout(function () {
+            try {
+                if (!btn || btn.disabled === false) return; // 이미 복구됨/에러 처리됨
+                if (typeof newOrderId !== 'undefined' && newOrderId) {
+                    alert(tr(
+                        '주문은 접수되었습니다. 화면 이동이 지연되고 있어요.\n마이페이지 > 주문내역에서 확인하시거나 잠시만 기다려주세요.',
+                        '注文は受け付けました。画面遷移が遅れています。マイページ＞注文履歴でご確認いただくか、少々お待ちください。',
+                        'Your order was received. The page is slow to move — please check My Page > Orders, or wait a moment.'
+                    ));
+                    return;
+                }
+                // 주문 미생성 = 네트워크 지연. 아직 청구 없음 → 안전하게 재시도 허용.
+                btn.disabled = false; btn.innerHTML = origLabel;
+                alert(tr(
+                    '네트워크 지연으로 주문 접수가 완료되지 않았어요. 아직 주문·결제된 내역은 없습니다.\n\n· 인터넷(Wi-Fi/LTE) 확인 후 다시 시도해주세요\n· 계속되면 새로고침 후 재시도하거나 아래 계좌로 직접 입금해주세요\n  국민은행 647701-04-277763 (주)카멜레온프린팅',
+                    'ネットワーク遅延で注文が完了しませんでした。まだ課金はありません。接続を確認して再度お試しください。',
+                    'Network delay — the order did not go through (you were not charged). Please check your connection and try again.'
+                ));
+            } catch (e) { console.warn('[submit watchdog]', e); }
+        }, 25000);
         try {
             var sb = getSb();
             if (!sb) throw new Error('Supabase 연결 실패');
