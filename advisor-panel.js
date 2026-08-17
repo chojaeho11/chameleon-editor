@@ -49,8 +49,20 @@ let _advSeenIds = {};          // 세션 내 렌더된 메시지 id (realtime↔
 let _adminSub = null;          // 관리자 메시지 realtime 구독 핸들
 
 // ─── Supabase 클라이언트 ───
-// window.sb (config.js)를 재사용 — 새 클라이언트 생성 금지
-function getSb() { return window.sb || null; }
+// window.sb (config.js)를 재사용. 단, iframe(chameleon-chatbot.html — cotton-print 등)에는
+// config.js 가 없어 window.sb 가 없음 → UMD(window.supabase)로 자가 생성. (2026-08-17: 매니저 답변 realtime/폴링 수신 위해 필수)
+function getSb() {
+    if (window.sb && typeof window.sb.from === 'function') return window.sb;
+    if (typeof window.supabase !== 'undefined' && window.supabase && window.supabase.createClient) {
+        try {
+            window.sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' }
+            });
+            return window.sb;
+        } catch (e) { console.warn('[advisor getSb] createClient 실패:', e); return null; }
+    }
+    return window.sb || null;
+}
 
 // ─── localStorage 영속성 (로그인 상태 무관하게 단일 키 사용) ───
 function chatKey() { return 'kapu_chat_' + getLang(); }
