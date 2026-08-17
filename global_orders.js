@@ -787,7 +787,7 @@ window.exportInvoiceExcelSelected = async () => {
     let fetched = [];
     try {
         const { data, error } = await sb.from('orders')
-            .select('id, manager_name, phone, address, items')
+            .select('id, manager_name, phone, address, items, site_code')
             .in('id', ids);
         if (error) throw error;
         fetched = data || [];
@@ -800,6 +800,31 @@ window.exportInvoiceExcelSelected = async () => {
     fetched.forEach(o => { orderMap[String(o.id)] = o; });
     // 이모지/기호 제거 (송장은 텍스트만)
     const _clean = s => String(s || '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️]/gu, '').replace(/\s+/g, ' ').trim();
+    // 전화번호 서식 — Excel 이 숫자로 인식해 앞 0 을 떼는 문제 방지(하이픈=텍스트). KR=010-XXXX-XXXX, JP=일본 형식.
+    const _fmtPhone = (raw, site) => {
+        if (!raw) return '';
+        const s = String(raw).trim();
+        const hadPlus = /^\+/.test(s);
+        let digits = s.replace(/[^\d]/g, '');
+        const isJP = (site === 'JP') || /^\+?81/.test(s);
+        if (isJP) {
+            if (/^81/.test(digits) && (hadPlus || digits.length >= 11)) digits = '0' + digits.slice(2);
+            if (/^0[789]0\d{8}$/.test(digits)) return digits.replace(/^(0[789]0)(\d{4})(\d{4})$/, '$1-$2-$3'); // 휴대폰
+            if (/^0[36]\d{8}$/.test(digits)) return digits.replace(/^(0\d)(\d{4})(\d{4})$/, '$1-$2-$3');       // 도쿄/오사카
+            if (digits.length === 10) return digits.replace(/^(\d{2,4})(\d{2,4})(\d{4})$/, '$1-$2-$3');
+            if (digits.length === 11) return digits.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
+            return digits || s;
+        }
+        // KR (기본)
+        if (/^82/.test(digits) && (hadPlus || digits.length >= 11)) digits = '0' + digits.slice(2);
+        if (/^01\d{9}$/.test(digits)) return digits.replace(/^(01\d)(\d{4})(\d{4})$/, '$1-$2-$3');   // 010-XXXX-XXXX
+        if (/^01\d{8}$/.test(digits)) return digits.replace(/^(01\d)(\d{3})(\d{4})$/, '$1-$2-$3');    // 구형 010-XXX-XXXX
+        if (/^02\d{8}$/.test(digits)) return digits.replace(/^(02)(\d{4})(\d{4})$/, '$1-$2-$3');       // 서울
+        if (/^02\d{7}$/.test(digits)) return digits.replace(/^(02)(\d{3})(\d{4})$/, '$1-$2-$3');
+        if (/^0\d{9}$/.test(digits)) return digits.replace(/^(0\d{2})(\d{3})(\d{4})$/, '$1-$2-$3');    // 지역 10자리
+        if (/^0\d{10}$/.test(digits)) return digits.replace(/^(0\d{2})(\d{4})(\d{4})$/, '$1-$2-$3');   // 지역 11자리
+        return s; // 알 수 없는 형식은 원본 유지(하이픈 등 포함될 수 있음)
+    };
     const rows = [['주문번호', '고객명', '전화번호', '주소', '주문내역', '수량합계']];
     let miss = 0;
     ids.forEach(id => {
@@ -812,7 +837,7 @@ window.exportInvoiceExcelSelected = async () => {
             ? items.map(it => `${_clean(_omItemLabel(it))} (${it.qty || 1})`).join(' / ')
             : '';
         const qtySum = items.reduce((s, it) => s + (Number(it.qty) || 1), 0);
-        rows.push([String(o.id), o.manager_name || '', o.phone || '', o.address || '', itemText, String(qtySum || '')]);
+        rows.push([String(o.id), o.manager_name || '', _fmtPhone(o.phone, o.site_code), o.address || '', itemText, String(qtySum || '')]);
     });
     if (rows.length <= 1) { showToast('출력할 주문이 없습니다.', 'warn'); return; }
     const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
