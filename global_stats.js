@@ -1,5 +1,23 @@
 import { sb } from "./global_config.js?v=435";
 
+// 2026-08-18: Supabase 기본 1000행 제한 우회 — range 페이지네이션으로 전체 조회.
+//   (매출/건수가 1000건에서 멈추던 버그. buildQuery 는 매 호출마다 새 쿼리빌더 반환해야 함.)
+async function _statsFetchAll(buildQuery) {
+    const PAGE = 1000;
+    let from = 0, all = [];
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const { data, error } = await buildQuery().range(from, from + PAGE - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all = all.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+        if (from > 500000) break;   // 안전 상한
+    }
+    return all;
+}
+
 // [매출 통계 로드] - 검색 버튼 클릭 시 실행
 window.loadStatsData = async () => {
     // 1. 대시보드 차트 로드 (자동 실행)
@@ -31,15 +49,14 @@ window.loadStatsData = async () => {
     if(drvBody) drvBody.innerHTML = '<tr><td colspan="2" style="text-align:center;"><div class="spinner"></div> 로딩 중...</td></tr>';
 
     try {
-        // [검색 기간 데이터 조회]
-        const { data: orders, error } = await sb.from('orders')
+        // [검색 기간 데이터 조회] — 2026-08-18: 1000행 캡 우회(페이지네이션)로 전체 집계
+        const orders = await _statsFetchAll(() => sb.from('orders')
             .select('id, total_amount, items, staff_manager_id, staff_driver_id, status, created_at, payment_status, payment_method')
             .gte('created_at', startDate + 'T00:00:00')
             .lte('created_at', endDate + 'T23:59:59')
-            .not('status', 'eq', '임시작성') 
-            .not('status', 'eq', '취소됨');
-
-        if (error) throw error;
+            .not('status', 'eq', '임시작성')
+            .not('status', 'eq', '취소됨')
+            .order('created_at', { ascending: false }));
 
         // 집계 변수
         let totalRevenue = 0;
@@ -95,13 +112,13 @@ async function loadDashboardCharts() {
     const startOfYear = `${currentYear}-01-01T00:00:00`;
     
     try {
-        // 올해 전체 주문 가져오기 (결제완료된 것만)
-        const { data: orders, error } = await sb.from('orders')
+        // 올해 전체 주문 가져오기 (결제완료된 것만) — 2026-08-18: 1000행 캡 우회(페이지네이션)
+        const orders = await _statsFetchAll(() => sb.from('orders')
             .select('created_at, total_amount, payment_status, payment_method')
             .gte('created_at', startOfYear)
-            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
+            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'])
+            .order('created_at', { ascending: false }));
 
-        if(error) throw error;
 
         let yearSum = 0;
         const monthlySum = new Array(12).fill(0); // 0~11 (1월~12월)
@@ -137,6 +154,16 @@ async function loadDashboardCharts() {
             const dayObj = dailyData.find(d => d.date === dateStr);
             if(dayObj) dayObj.sum += amt;
         });
+
+        // 2026-08-18: 사이트 도입 전/오프라인 매출 보정 (장부 기준). 월 인덱스 0=1월 ... 11=12월.
+        //   DB 온라인 매출에 더해서 장부 합산매출과 맞춤. 값은 사장님 장부 기준 — 여기 숫자만 고치면 됨.
+        //   (예: 1월 장부 95,618,240 − DB 64,870,536 = 오프라인 30,747,704)
+        const OFFLINE_MONTHLY_ADJ = [30747704, 9479736, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        if (currentYear === 2026) {
+            for (let i = 0; i < 12; i++) {
+                if (OFFLINE_MONTHLY_ADJ[i]) { monthlySum[i] += OFFLINE_MONTHLY_ADJ[i]; yearSum += OFFLINE_MONTHLY_ADJ[i]; }
+            }
+        }
 
         // UI 업데이트
         yearTotalEl.innerText = yearSum.toLocaleString() + "원";
@@ -257,25 +284,24 @@ window.loadAccountingData = async () => {
 
     try {
         // --- (A) 예치금 총액 + (B) 매출 + 상품 원가를 병렬 조회 ---
-        const [depositRes, ordersRes, prodsRes] = await Promise.all([
-            sb.from('profiles').select('deposit'),
-            sb.from('orders')
+        // 2026-08-18: 1000행 캡 우회(페이지네이션) — 예치금(profiles)·주문 전체 집계
+        const [depositRows, ordersRows, prodsRes] = await Promise.all([
+            _statsFetchAll(() => sb.from('profiles').select('deposit').order('id', { ascending: true })),
+            _statsFetchAll(() => sb.from('orders')
                 .select('id, total_amount, discount_amount, items, payment_status, payment_method')
                 .gte('created_at', start + 'T00:00:00')
                 .lte('created_at', end + 'T23:59:59')
-                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']),
+                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'])
+                .order('created_at', { ascending: false })),
             sb.from('admin_products').select('name, price')
         ]);
 
-        if (depositRes.error) throw depositRes.error;
-        if (ordersRes.error) throw ordersRes.error;
-
-        cachedAccProfiles = depositRes.data || [];
+        cachedAccProfiles = depositRows || [];
         const totalDeposit = cachedAccProfiles.reduce((acc, cur) => acc + (cur.deposit || 0), 0);
         document.getElementById('accTotalDeposit').innerText = totalDeposit.toLocaleString() + "원";
 
         // 2026-08-10: 포인트/무료쿠폰 결제 주문은 실매출 아님 → 결산에서 제외
-        cachedAccOrders = (ordersRes.data || []).filter(o => o.payment_method !== '포인트' && o.payment_method !== '블로그체험단쿠폰');
+        cachedAccOrders = (ordersRows || []).filter(o => o.payment_method !== '포인트' && o.payment_method !== '블로그체험단쿠폰');
 
         let totalSales = 0;
         let totalDiscount = 0;

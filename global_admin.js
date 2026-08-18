@@ -12,7 +12,7 @@ import "./global_products.js?v=308";
 import "./global_users.js?v=315";
 import "./global_safetx.js?v=1";
 import "./global_assets.js?v=296";
-import "./global_stats.js?v=435";
+import "./global_stats.js?v=438";
 import "./global_reviews.js?v=294";
 
 window.addEventListener('DOMContentLoaded', async () => {
