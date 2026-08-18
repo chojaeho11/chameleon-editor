@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260818160620';
+    var CV = '20260818173140';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1631,7 +1631,7 @@ window._tcmFallbackClick = function(code) {
             }
             /* 2026-07-28: 8 버튼 1줄 (자유게시판·출석체크 추가) */
             #mgrActionsGrid {
-                display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;
+                display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;
                 margin-bottom:4px; justify-content:center;
             }
             .mgr-action {
@@ -2043,6 +2043,9 @@ window._tcmFallbackClick = function(code) {
             #mgrActionsGrid .mgr-action.mgr-coupon .mgr-action-icon-wrap {
                 background:linear-gradient(135deg, #fce7f3, #f472b6) !important; color:#831843 !important;
             }
+            #mgrActionsGrid .mgr-action.mgr-designreq .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #ede9fe, #a78bfa) !important; color:#5b21b6 !important;
+            }
             /* 2026-06-14: 디자이너 — 진회색 칩 + 흰 아이콘 (per-button block 안에서 다른 버튼과 동일 패턴 유지). */
             #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap {
                 background:linear-gradient(135deg, #4b5563, #1f2937) !important; color:#ffffff !important;
@@ -2057,7 +2060,7 @@ window._tcmFallbackClick = function(code) {
                 /* 2026-06-19 v641: 모바일 6버튼 1줄 — 아이콘 작게 줄여서 6개 모두 한 줄에 */
                 #mgrQuoteHero { margin:8px auto 20px !important; padding:0 8px !important; min-height:80px !important; }
                 #mgrActionsGrid {
-                    grid-template-columns:repeat(6, 1fr) !important;
+                    grid-template-columns:repeat(7, 1fr) !important;
                     gap:4px !important;
                 }
                 #mgrActionsGrid .mgr-action {
@@ -2151,6 +2154,11 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-pen-ruler"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_designer_apply">디자이너</span>
                 </a>
+                <!-- 2026-08-18: 디자인의뢰 재추가 (사장님 요청 - 고객들이 다시 찾음). 디자인 의뢰 팝업(기본디자인 3만원 티어)로 오픈. -->
+                <button type="button" class="mgr-action mgr-designreq" onclick="window.openDesignRequestPopup && window.openDesignRequestPopup({ product: '기본디자인' })">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-palette"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_design_request">디자인의뢰</span>
+                </button>
                 <!-- 2026-07-17: 6번째 — 디자이너 모집 → 블로그 (디자이너 모집은 위 큰 배너에 그대로 있음).
                      a 태그로 둔 이유: 크롤러가 따라갈 수 있는 실제 링크가 필요 (button+onclick 은 못 따라감). -->
                 <a class="mgr-action mgr-dapply" href="/board.html?cat=blog" style="text-decoration:none;">
@@ -2641,6 +2649,8 @@ window._tcmFallbackClick = function(code) {
         setI18n('[data-i18n="btn_scrap_s"]', ({kr:'금액주문',ja:'金額注文',en:'Quote',zh:'金额下单',ar:'طلب',es:'Pedido',de:'Betrag',fr:'Commande'}[lang]||'금액주문'));
         setI18n('[data-i18n="btn_bulk_inquiry"]', ({kr:'대량문의',ja:'大量問合せ',en:'Bulk',zh:'批量咨询',ar:'استفسار',es:'Consulta',de:'Großanfrage',fr:'En gros'}[lang] || '대량문의'));
         setI18n('[data-i18n="btn_event_coupon"]', t.btnCoupon);
+        // 2026-08-18: 디자인의뢰 버튼 다국어 (기존 btnDesign 재사용)
+        setI18n('[data-i18n="btn_design_request"]', t.btnDesign || '디자인의뢰');
         // 2026-06-14: 7번째 디자이너 신청 버튼
         setI18n('[data-i18n="btn_designer_apply"]', t.btnDapply || '디자이너 신청');
         // 2026-06-19 v640: 6번째 단축 — 디자이너 모집 버튼
@@ -20591,12 +20601,22 @@ if (w >= 20 && h >= 20) {
                     <button type="button" class="dreq-prod" data-prod="배너" data-price="30000"><div class="dpn">배너</div><div class="dpp">30,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="가벽" data-price="50000"><div class="dpn">가벽</div><div class="dpp">50,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="글씨포토존" data-price="50000"><div class="dpn">글씨포토존</div><div class="dpp">50,000원</div></button>
-                    <!-- 2026-07-16: 전용 단가가 없는 나머지 제품용 기본 디자인의뢰 (최연두 제보 #12) — 3만원, 디자이너 70% 정산 -->
-                    <button type="button" class="dreq-prod" data-prod="기본디자인" data-price="30000"><div class="dpn">기본 디자인</div><div class="dpp">30,000원</div></button>
+                    <!-- 2026-08-18: 기본 디자인 — 넓은 카드 + 1만원/개 + 수량 선택 (매니저 상담 금액만큼). 디자이너 70% 정산. -->
+                    <button type="button" class="dreq-prod" data-prod="기본디자인" data-price="10000" style="grid-column:1 / -1; text-align:left; display:flex; align-items:center; justify-content:space-between;">
+                        <div class="dpn">기본 디자인 <span style="font-weight:500; color:#86868b; font-size:11.5px;">· 매니저와 상담한 금액만큼 수량 선택</span></div>
+                        <div class="dpp">10,000원 <span style="font-weight:500; color:#86868b; font-size:11.5px;">/ 개</span></div>
+                    </button>
                 </div>
-                <!-- 2026-06-13: 수량 선택 제거 — 항상 1건 단위로 등록 (입력칸은 숨김 유지, 호환성 위해 hidden input) -->
+                <!-- 2026-08-18: 수량 선택 — 기본 디자인 전용 (매니저 상담 금액 ÷ 1만원). 다른 티어는 숨김(1건). -->
                 <input type="hidden" id="dreqQty" value="1">
-                <div id="dreqQtyRow" style="display:none;"><span id="dreqQtyHint"></span><span id="dreqQtyMinus"></span><span id="dreqQtyPlus"></span></div>
+                <div id="dreqQtyRow" style="display:none; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding:11px 14px; background:#f5f5f7; border-radius:12px;">
+                    <span style="font-size:13px; color:#1d1d1f; font-weight:600;">수량 <span style="color:#86868b; font-weight:500; font-size:11.5px;">(상담 금액 ÷ 1만원)</span></span>
+                    <span style="display:inline-flex; align-items:center; gap:14px;">
+                        <button type="button" onclick="window._dreqQtyChg(-1)" style="width:32px;height:32px;border-radius:50%;border:1px solid #d1d1d6;background:#fff;font-size:18px;line-height:1;cursor:pointer;color:#1d1d1f;">−</button>
+                        <span id="dreqQtyVal" style="min-width:28px;text-align:center;font-weight:700;font-size:16px;">1</span>
+                        <button type="button" onclick="window._dreqQtyChg(1)" style="width:32px;height:32px;border-radius:50%;border:1px solid #d1d1d6;background:#fff;font-size:18px;line-height:1;cursor:pointer;color:#1d1d1f;">+</button>
+                    </span>
+                </div>
                 <div id="dreqTotal" class="dreq-total" style="display:none;">
                     <span class="l"><span id="dreqTotalProd">-</span> 디자인비</span>
                     <span class="v" id="dreqTotalAmt">-</span>
@@ -20789,6 +20809,8 @@ if (w >= 20 && h >= 20) {
         var amt = state.price * qty;
         $('dreqTotalQty').textContent = qty;
         $('dreqTotalAmt').textContent = _dreqCurrency(amt);
+        var _pl = $('dreqTotalProd');
+        if (_pl) _pl.textContent = (state.product === '기본디자인' && qty > 1) ? (state.product + ' × ' + qty) : state.product;
     }
 
     function _setTab(tab) {
@@ -20815,11 +20837,23 @@ if (w >= 20 && h >= 20) {
             b.classList.toggle('selected', b.dataset.prod === prod);
         });
         $('dreqQty').value = 1;
+        // 2026-08-18: 기본 디자인(단가 1만원 티어)일 때만 수량 선택 노출. 제품페이지 priceOverride(30,000 등)는 1건 고정.
+        var _isBasic = (prod === '기본디자인' && Math.round(price) === 10000);
+        var _qr = $('dreqQtyRow'); if (_qr) _qr.style.display = _isBasic ? 'flex' : 'none';
+        var _qv = $('dreqQtyVal'); if (_qv) _qv.textContent = '1';
         $('dreqTotal').style.display = 'flex';
         $('dreqTotalProd').textContent = prod;
         _updateTotal();
         $('dreqForm').style.display = '';
     }
+    // 2026-08-18: 기본 디자인 수량 조절
+    window._dreqQtyChg = function(d) {
+        var q = Math.max(1, Math.min(999, (parseInt(state.qty, 10) || 1) + d));
+        state.qty = q;
+        $('dreqQty').value = q;
+        var _qv = $('dreqQtyVal'); if (_qv) _qv.textContent = q;
+        _updateTotal();
+    };
 
     function _resetForm() {
         state.product = null; state.price = 0; state.preset = null; state.qty = 1; state.onSuccess = null; state.bizMeta = null;
@@ -21001,8 +21035,9 @@ if (w >= 20 && h >= 20) {
             // 2026-06-13: 자유의뢰 — 디자이너 정산금 70% 메타 태그 (디자이너 보드가 파싱)
             // 2026-07-16: '기본디자인'(전용 단가 없는 제품의 기본 3만원 의뢰) 도 동일하게 70% 정산 (최연두 제보 #12).
             if (state.mode === 'cust' || state.product === '기본디자인') {
-                var _designerPayout = Math.floor(unitPrice * 0.7);
-                finalDesc += '\n\n[FREE_REQ:{"customerPrice":' + unitPrice + ',"designerPayout":' + _designerPayout + '}]';
+                // 2026-08-18: 수량 반영 — 정산·고객가는 total(단가×수량) 기준 (기본디자인 수량 선택 대응)
+                var _designerPayout = Math.floor(total * 0.7);
+                finalDesc += '\n\n[FREE_REQ:{"customerPrice":' + total + ',"designerPayout":' + _designerPayout + '}]';
             }
             // 2026-06-14: 결제 후에만 designer-board 노출 — status='payment_pending' 으로 insert,
             //   success.html 의 dm_pending_design_requests 처리기가 결제 성공 시 'open' 으로 flip.
