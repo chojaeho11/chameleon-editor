@@ -12549,7 +12549,7 @@ html, body { background: #ffffff !important; }
                     var _fdTitle = document.getElementById('soDreqTitleLabel');
                     if (_fdTitle) _fdTitle.textContent = '이 제품은 무료 디자인 제품입니다';
                     var _fdSub = document.getElementById('soDreqSubLine');
-                    if (_fdSub) _fdSub.innerHTML = '담당자에게 무료디자인을 요청해주세요';
+                    if (_fdSub) _fdSub.innerHTML = '담당자에게 무료디자인을 요청해주세요 · <span style="color:#007AFF; font-weight:700;">결제 이후 요청 가능</span>';
                 }
                 return;
             }
@@ -18082,7 +18082,7 @@ html, body { background: #ffffff !important; }
     window._soOpenDesignRequest = function() {
         // 2026-08-18: 무료 디자인 포함 제품(인스타/스카시류) — 유료 의뢰창 대신 무료 안내.
         if (state && state._soFreeDesignProduct) {
-            alert('이 제품은 무료 디자인 제품입니다.\n담당자에게 무료디자인을 요청해주세요.\n\n· 전화/카카오톡 상담 또는 우측 하단 채팅으로 문의해주세요.');
+            alert('이 제품은 무료 디자인 제품입니다.\n담당자에게 무료디자인을 요청해주세요.\n\n· 결제 이후에 요청하실 수 있습니다.\n· 전화/카카오톡 상담 또는 우측 하단 채팅으로 문의해주세요.');
             return;
         }
         var prod = state && state._drReqProduct;
