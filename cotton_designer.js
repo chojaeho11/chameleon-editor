@@ -286,12 +286,33 @@ function getFabric() {
     };
 }
 
+// 2026-08-18: 원단별 품절 색상 — 해당 색상 버튼을 숨김 (사장님 지시: 면16수 네츄럴 품절).
+var _CD_SOLDOUT_COLORS = { cotton16: ['natural'] };
+function _cdSyncColorAvailability(type) {
+    var sold = _CD_SOLDOUT_COLORS[type] || [];
+    document.querySelectorAll('#fabricColorWrap .color-chip').forEach(function(btn){
+        var c = btn.getAttribute('data-color');
+        btn.style.display = (sold.indexOf(c) >= 0) ? 'none' : '';
+    });
+    // 현재 선택 색상이 품절이면 화이트로 자동 전환
+    if (sold.indexOf(state.fabricColor) >= 0) {
+        state.fabricColor = 'white';
+        var _t = FABRIC_TYPES[state.fabricType] || FABRIC_TYPES.cotton20;
+        if (_t.isCotton) state.fabricCode = state.fabricType + '_white';
+        document.querySelectorAll('#fabricColorWrap .color-chip').forEach(function(el){ el.classList.remove('active'); });
+        var _wb = document.querySelector('#fabricColorWrap .color-chip[data-color="white"]');
+        if (_wb) _wb.classList.add('active');
+    }
+}
+window._cdSyncColorAvailability = _cdSyncColorAvailability;
+
 window._cdSelectFabricType = function(type) {
     state.fabricType = type;
     const t = FABRIC_TYPES[type] || FABRIC_TYPES.cotton20;
-    state.fabricCode = type + (t.isCotton ? '_' + state.fabricColor : '');
     document.querySelectorAll('.fabric-type').forEach(el => el.classList.toggle('active', el.dataset.fab === type));
     document.getElementById('fabricColorWrap').style.display = t.isCotton ? '' : 'none';
+    _cdSyncColorAvailability(type);   // 품절색 숨김 + 선택색 보정 (fabricCode 아래에서 확정)
+    state.fabricCode = type + (t.isCotton ? '_' + state.fabricColor : '');
     updateFabricDetail();
     updatePrice();
     // 2026-05-30: 상세/리뷰 섹션도 새 fabricType 기준으로 갱신
