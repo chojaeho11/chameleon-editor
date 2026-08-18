@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260818195908';
+        var CV = '20260818201145';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -632,8 +632,8 @@
                         <i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 기간별 상세 검색
                     </h3>
                     <div style="display:flex; gap:10px; align-items:flex-end; background:#f8fafc; padding:20px; border-radius:8px;">
-                        <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text"></div>
-                        <div><label class="form-label">종료일</label><input type="date" id="statEndDate" class="input-text"></div>
+                        <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text" onchange="window.loadStatsData && loadStatsData()"></div>
+                        <div><label class="form-label">종료일</label><input type="date" id="statEndDate" class="input-text" onchange="window.loadStatsData && loadStatsData()"></div>
                         <button class="btn btn-primary" style="height:42px;" onclick="loadStatsData()"><i class="fa-solid fa-magnifying-glass"></i> 조회하기</button>
                     </div>
                 </div>

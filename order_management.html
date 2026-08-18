@@ -449,8 +449,8 @@ window.showSection = function(){};
                     <i class="fa-solid fa-calendar-days" style="color:#6366f1;"></i> 기간별 상세 검색
                 </h3>
                 <div style="display:flex; gap:10px; align-items:flex-end; background:#f8fafc; padding:20px; border-radius:8px;">
-                    <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text"></div>
-                    <div><label class="form-label">종료일</label><input type="date" id="statEndDate" class="input-text"></div>
+                    <div><label class="form-label">시작일</label><input type="date" id="statStartDate" class="input-text" onchange="window.loadStatsData && loadStatsData()"></div>
+                    <div><label class="form-label">종료일</label><input type="date" id="statEndDate" class="input-text" onchange="window.loadStatsData && loadStatsData()"></div>
                     <button class="btn btn-primary" style="height:42px;" onclick="loadStatsData()"><i class="fa-solid fa-magnifying-glass"></i> 조회하기</button>
                 </div>
             </div>
