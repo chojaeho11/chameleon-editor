@@ -12534,7 +12534,12 @@ html, body { background: #ffffff !important; }
                     else if (/인스타\s*판넬|insta\s*panel/i.test(_drNm)) _isInstaForDR = true;
                 }
             } catch(_e){}
-            if (_siteIsKR) {
+            // 2026-08-18: 글씨포토존/스카시류(hb_skashi) + 인스타판넬 = 디자인비 포함 제품 → 디자인 의뢰 배너 미노출 (사장님 지시).
+            //   가벽(hb_dw)·배너·나무조형물/동화형 포토존(state.isPhotozone) 은 유지 — 정확히 스카시류만 제외.
+            var _drIsScasi = ((p && p.category || '').toLowerCase() === 'hb_skashi')
+                || /스카시|스카쉬|글씨\s*포토존/i.test(_drNm);
+            var _drDesignIncluded = _isInstaForDR || _drIsScasi;
+            if (_siteIsKR && !_drDesignIncluded) {
                 if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
                 else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) {
                     // 2026-07-02: 전단 양면은 디자인비 2배 (앞·뒤 2면 = 60,000원 / 디자이너 정산 40,000원). 단면 30,000.
