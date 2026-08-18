@@ -18,6 +18,19 @@ async function _statsFetchAll(buildQuery) {
     return all;
 }
 
+// 2026-08-18: 사이트 도입 전/오프라인 매출 보정 (장부 기준). 월 인덱스 0=1월 ... 11=12월. 2026년 대상.
+//   DB 온라인 매출에 더해 장부 합산매출과 맞춤. 값은 사장님 장부 기준 — 여기 숫자만 고치면 됨.
+//   (예: 1월 장부 95,618,240 − DB 64,870,536 = 오프라인 30,747,704)
+const OFFLINE_YEAR = 2026;
+const OFFLINE_MONTHLY_ADJ = [30747704, 9479736, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+// 2026년 monthIdx(0~11) 달이 [startStr, endStr] 기간과 겹치면 true
+function _offlineMonthInRange(monthIdx, startStr, endStr) {
+    const mStart = new Date(OFFLINE_YEAR, monthIdx, 1);
+    const mEnd = new Date(OFFLINE_YEAR, monthIdx + 1, 0);
+    const s = new Date(startStr), e = new Date(endStr + 'T23:59:59');
+    return mEnd >= s && mStart <= e;
+}
+
 // [매출 통계 로드] - 검색 버튼 클릭 시 실행
 window.loadStatsData = async () => {
     // 1. 대시보드 차트 로드 (자동 실행)
@@ -82,6 +95,13 @@ window.loadStatsData = async () => {
             if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt;
             if(o.staff_driver_id) driverStats[o.staff_driver_id] = (driverStats[o.staff_driver_id] || 0) + amt;
         });
+
+        // 2026-08-18: 선택 기간에 포함된 오프라인(장부) 매출 보정분을 더함 → 위쪽 '올해 총매출'과 일치
+        for (let i = 0; i < 12; i++) {
+            if (OFFLINE_MONTHLY_ADJ[i] && _offlineMonthInRange(i, startDate, endDate)) {
+                totalRevenue += OFFLINE_MONTHLY_ADJ[i];
+            }
+        }
 
         document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + '원';
         document.getElementById('totalCount').innerText = orders.length + '건';
@@ -155,11 +175,8 @@ async function loadDashboardCharts() {
             if(dayObj) dayObj.sum += amt;
         });
 
-        // 2026-08-18: 사이트 도입 전/오프라인 매출 보정 (장부 기준). 월 인덱스 0=1월 ... 11=12월.
-        //   DB 온라인 매출에 더해서 장부 합산매출과 맞춤. 값은 사장님 장부 기준 — 여기 숫자만 고치면 됨.
-        //   (예: 1월 장부 95,618,240 − DB 64,870,536 = 오프라인 30,747,704)
-        const OFFLINE_MONTHLY_ADJ = [30747704, 9479736, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        if (currentYear === 2026) {
+        // 2026-08-18: 사이트 도입 전/오프라인 매출 보정 (장부 기준, 모듈 상단 OFFLINE_MONTHLY_ADJ)
+        if (currentYear === OFFLINE_YEAR) {
             for (let i = 0; i < 12; i++) {
                 if (OFFLINE_MONTHLY_ADJ[i]) { monthlySum[i] += OFFLINE_MONTHLY_ADJ[i]; yearSum += OFFLINE_MONTHLY_ADJ[i]; }
             }
