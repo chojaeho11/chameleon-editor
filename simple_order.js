@@ -7404,9 +7404,29 @@ html, body { background: #ffffff !important; }
         }, 0);
     };
     window._soShowOptInfo = function(category, key, doSelect) {
-        var pool = (category === 'paper') ? BIZ_PAPERS : (category === 'foil') ? BIZ_FOILS : BIZ_FINISHES;
-        var item = pool.find(function(x){ return x.key === key; });
-        if (!item) return;
+        // 2026-08-18 버그#38: 리플렛(pp_lf) 용지/후가공 옵션은 LEAFLET_PAPERS/LEAFLET_FINISHES 에 있는데
+        //   기존엔 명함(BIZ) 풀만 검색 → 접지 등 리플렛 전용 옵션 not-found → return 으로 선택 자체가 막힘.
+        //   → 제품별 풀을 모두 검색. 그래도 못 찾으면 정보모달 없이 즉시 선택(선택은 절대 안 막히게).
+        var _pools = [];
+        var _addPool = function(p){ if (Array.isArray(p)) _pools.push(p); };
+        if (category === 'paper') {
+            if (typeof BIZ_PAPERS !== 'undefined') _addPool(BIZ_PAPERS);
+            if (typeof LEAFLET_PAPERS !== 'undefined') _addPool(LEAFLET_PAPERS);
+        } else if (category === 'foil') {
+            if (typeof BIZ_FOILS !== 'undefined') _addPool(BIZ_FOILS);
+        } else {
+            if (typeof BIZ_FINISHES !== 'undefined') _addPool(BIZ_FINISHES);
+            if (typeof LEAFLET_FINISHES !== 'undefined') _addPool(LEAFLET_FINISHES);
+        }
+        var item = null;
+        for (var _pi = 0; _pi < _pools.length && !item; _pi++) {
+            item = _pools[_pi].find(function(x){ return x.key === key; }) || null;
+        }
+        if (!item) {
+            // 정보 카드 데이터가 없어도 선택은 반드시 실행 (모달 생략)
+            if (typeof doSelect === 'function') { try { doSelect(); } catch(e){} }
+            return;
+        }
         var nm = _bizI18n(item, 'name');
         var desc = _bizI18n(item, 'desc');
         var vis = (_OPT_VISUAL[category] || {})[key] || {};
