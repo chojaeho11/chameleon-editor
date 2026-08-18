@@ -3227,7 +3227,7 @@ html, body { background: #ffffff !important; }
               <i class="fa-solid fa-pen-ruler" style="color:#007AFF; font-size:18px;"></i>
             </div>
             <div style="flex:1; min-width:0;">
-              <div style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">멋진 디자인을 저렴한 가격에 의뢰하세요</div>
+              <div id="soDreqTitleLabel" style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">멋진 디자인을 저렴한 가격에 의뢰하세요</div>
               <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;" id="soDreqSubLine"><span id="soDreqProdLabel">상품</span> 디자인을 <span id="soDreqPriceLabel" style="color:#007AFF; font-weight:700;">10,000원</span>에 의뢰하세요 · 영업일 2~3일</div>
             </div>
             <i class="fa-solid fa-chevron-right" style="color:#c7c7cc; font-size:13px; flex-shrink:0;"></i>
@@ -12534,12 +12534,27 @@ html, body { background: #ffffff !important; }
                     else if (/인스타\s*판넬|insta\s*panel/i.test(_drNm)) _isInstaForDR = true;
                 }
             } catch(_e){}
-            // 2026-08-18: 글씨포토존/스카시류(hb_skashi) + 인스타판넬 = 디자인비 포함 제품 → 디자인 의뢰 배너 미노출 (사장님 지시).
-            //   가벽(hb_dw)·배너·나무조형물/동화형 포토존(state.isPhotozone) 은 유지 — 정확히 스카시류만 제외.
+            // 2026-08-18: 글씨포토존/스카시류(hb_skashi) + 인스타판넬 = 무료 디자인 포함 제품.
+            //   유료 의뢰 배너 대신 '무료 디자인 안내'로 표시 (사장님 지시). 가벽·배너·나무조형물 포토존은 유료 유지.
             var _drIsScasi = ((p && p.category || '').toLowerCase() === 'hb_skashi')
                 || /스카시|스카쉬|글씨\s*포토존/i.test(_drNm);
             var _drDesignIncluded = _isInstaForDR || _drIsScasi;
-            if (_siteIsKR && !_drDesignIncluded) {
+            if (_siteIsKR && _drDesignIncluded) {
+                state._soFreeDesignProduct = true;
+                state._drReqProduct = null;
+                state._drReqPrice = 0;
+                var _fdBan = document.getElementById('soDesignReqBanner');
+                if (_fdBan) {
+                    _fdBan.style.display = '';
+                    var _fdTitle = document.getElementById('soDreqTitleLabel');
+                    if (_fdTitle) _fdTitle.textContent = '이 제품은 무료 디자인 제품입니다';
+                    var _fdSub = document.getElementById('soDreqSubLine');
+                    if (_fdSub) _fdSub.innerHTML = '담당자에게 무료디자인을 요청해주세요';
+                }
+                return;
+            }
+            state._soFreeDesignProduct = false;
+            if (_siteIsKR) {
                 if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
                 else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) {
                     // 2026-07-02: 전단 양면은 디자인비 2배 (앞·뒤 2면 = 60,000원 / 디자이너 정산 40,000원). 단면 30,000.
@@ -12589,6 +12604,9 @@ html, body { background: #ffffff !important; }
                 return;
             }
             _drBan.style.display = '';
+            // 무료 디자인 제품에서 다른 제품으로 전환 시 제목 원복
+            var _drTitleEl = document.getElementById('soDreqTitleLabel');
+            if (_drTitleEl) _drTitleEl.textContent = '멋진 디자인을 저렴한 가격에 의뢰하세요';
             var _drProdEl = document.getElementById('soDreqProdLabel');
             if (_drProdEl) _drProdEl.textContent = _drProd;
             var _drPriceEl = document.getElementById('soDreqPriceLabel');
@@ -18062,6 +18080,11 @@ html, body { background: #ffffff !important; }
 
     // 2026-06-13: 디자인 의뢰 배너 클릭 → 팝업 열기 (현재 상품 자동 선택)
     window._soOpenDesignRequest = function() {
+        // 2026-08-18: 무료 디자인 포함 제품(인스타/스카시류) — 유료 의뢰창 대신 무료 안내.
+        if (state && state._soFreeDesignProduct) {
+            alert('이 제품은 무료 디자인 제품입니다.\n담당자에게 무료디자인을 요청해주세요.\n\n· 전화/카카오톡 상담 또는 우측 하단 채팅으로 문의해주세요.');
+            return;
+        }
         var prod = state && state._drReqProduct;
         var presetDesc = '';
         var bizMeta = null;
