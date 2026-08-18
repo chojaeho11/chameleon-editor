@@ -332,7 +332,13 @@
             var d = r && r.data;
             if (d && d.ok) {
                 document.getElementById('bizRegOv').classList.remove('open');
-                toast(T('✅ 커뮤니티에 등록되었어요!', '✅ コミュニティに投稿しました！', '✅ Posted to the community!'));
+                if (d.granted) {
+                    // 2026-08-18: 최초 1회 등록 보상 1만원 지급 안내
+                    try { if (window.showRewardPopup) window.showRewardPopup({ kind: 'biz_promo', mileage: 10000 }); } catch (e) {}
+                    toast(T('🎉 홍보 등록 완료! 최초 1회 10,000원이 지급되었어요', '🎉 投稿完了！初回1万ウォンを付与しました', '🎉 Posted! 10,000 KRW granted (first time)'));
+                } else {
+                    toast(T('✅ 커뮤니티에 등록되었어요!', '✅ コミュニティに投稿しました！', '✅ Posted to the community!'));
+                }
                 _q = ''; var si = document.getElementById('bzSearch'); if (si) si.value = '';
                 loadFeed(true);
             } else if (d && d.reason === 'auth') { needLogin(); }
