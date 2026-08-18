@@ -4560,19 +4560,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-14: 낱장 인쇄는 leaflet 자체 가격 함수 사용 — isCustomSize 분기보다 우선.
             //   leaflet UI 가 비규격(custom) 입력을 허용해도 가격은 perSheet 기반이어야 함.
             qty = Math.max(1, state.qty || 1);
+            // 2026-08-18: 박·후가공은 단가에서 분리 → 아래 breakdown 에서 항목별 표시(+addonTotal). 단가 = 기본 인쇄가만.
             var _lfSubTop = _soLeafletPriceFor(state.leafletSize || 'A4', state.leafletSide || 'single', qty);
-            var _lfOptMultTop = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(qty) : 1;
-            if (state.leafletFoil) {
-                var _lfFoilTop = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
-                if (_lfFoilTop) _lfSubTop += _lfFoilTop.price * _lfOptMultTop;
-            }
-            if (state.leafletFinishes) {
-                Object.keys(state.leafletFinishes).forEach(function(k){
-                    if (!state.leafletFinishes[k]) return;
-                    var _lfFnTop = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
-                    if (_lfFnTop) _lfSubTop += _lfFnTop.price * (_lfFnTop.flat ? 1 : _lfOptMultTop);
-                });
-            }
             unit = Math.round(_lfSubTop / qty);
             subtotal = _lfSubTop;
             state.wallHeightExtra = 0;
@@ -4626,19 +4615,8 @@ html, body { background: #ffffff !important; }
                 // 2026-06-13: 낱장 인쇄 — A4/A3/A2 × 단/양면 × 수량 할인 + 박/후가공 옵션
                 // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4
                 qty = Math.max(1, qty || 1);
+                // 2026-08-18: 박·후가공은 단가에서 분리 → 아래 breakdown 에서 항목별 표시(+addonTotal). 단가 = 기본 인쇄가만.
                 var _lfSubtotal = _soLeafletPriceFor(state.leafletSize || 'A4', state.leafletSide || 'single', qty);
-                var _lfOptMult = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(qty) : 1;
-                if (state.leafletFoil) {
-                    var _lfFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
-                    if (_lfFoilOpt) _lfSubtotal += _lfFoilOpt.price * _lfOptMult;
-                }
-                if (state.leafletFinishes) {
-                    Object.keys(state.leafletFinishes).forEach(function(k){
-                        if (!state.leafletFinishes[k]) return;
-                        var _lfFn = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
-                        if (_lfFn) _lfSubtotal += _lfFn.price * (_lfFn.flat ? 1 : _lfOptMult);
-                    });
-                }
                 unit = Math.round(_lfSubtotal / qty);
                 subtotal = _lfSubtotal;
             } else if (state.isSticker) {
@@ -4798,6 +4776,32 @@ html, body { background: #ffffff !important; }
                     addonTotal += fopt.price;
                     addonBreakdownLines.push(
                         '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
+                    );
+                });
+            }
+        }
+        // 2026-08-18: 리플렛(낱장) 박·후가공 — 단가와 분리해 항목별 표시(+addonTotal). 총액은 기존과 동일.
+        if (state.isLeaflet) {
+            var _lfMult2 = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(qty) : 1;
+            if (state.leafletFoil && typeof BIZ_FOILS !== 'undefined') {
+                var _lfFoilO = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
+                if (_lfFoilO) {
+                    var _lfFoilAmt = (_lfFoilO.price || 0) * _lfMult2;
+                    addonTotal += _lfFoilAmt;
+                    addonBreakdownLines.push(
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_lfFoilO, 'name') + (_lfMult2 > 1 ? ' ×' + _lfMult2 : '') + '</span><span>+' + fmtPrice(_lfFoilAmt) + '</span></div>'
+                    );
+                }
+            }
+            if (state.leafletFinishes && typeof LEAFLET_FINISHES !== 'undefined') {
+                Object.keys(state.leafletFinishes).forEach(function(k){
+                    if (!state.leafletFinishes[k]) return;
+                    var _lfFo = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
+                    if (!_lfFo) return;
+                    var _lfFinAmt = (_lfFo.price || 0) * (_lfFo.flat ? 1 : _lfMult2);
+                    addonTotal += _lfFinAmt;
+                    addonBreakdownLines.push(
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(_lfFo, 'name') + (!_lfFo.flat && _lfMult2 > 1 ? ' ×' + _lfMult2 : '') + '</span><span>+' + fmtPrice(_lfFinAmt) + '</span></div>'
                     );
                 });
             }
