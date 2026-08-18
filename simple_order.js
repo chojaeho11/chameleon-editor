@@ -4783,6 +4783,15 @@ html, body { background: #ffffff !important; }
         // 2026-08-18: 리플렛(낱장) 박·후가공 — 단가와 분리해 항목별 표시(+addonTotal). 총액은 기존과 동일.
         if (state.isLeaflet) {
             var _lfMult2 = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(qty) : 1;
+            // 용지 — 선택 정보 표시 (리플렛은 용지 추가금 없음 → '포함')
+            if (state.leafletPaper && typeof LEAFLET_PAPERS !== 'undefined') {
+                var _lfPaperO = LEAFLET_PAPERS.find(function(o){ return o.key === state.leafletPaper; });
+                if (_lfPaperO) {
+                    addonBreakdownLines.push(
+                        '<div class="so-price-row"><span>· ' + tr('용지','用紙','Paper') + ' · ' + _bizI18n(_lfPaperO, 'name') + '</span><span style="color:#94a3b8;">' + tr('포함','込み','incl.') + '</span></div>'
+                    );
+                }
+            }
             if (state.leafletFoil && typeof BIZ_FOILS !== 'undefined') {
                 var _lfFoilO = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
                 if (_lfFoilO) {
