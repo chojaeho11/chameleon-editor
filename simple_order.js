@@ -11691,8 +11691,8 @@ html, body { background: #ffffff !important; }
     window._soToggleBaseStand = function (inp) {
         var key = inp.dataset.bsKey;
         if (!state.baseStands) state.baseStands = {};
-        // mutex: 등신대 V2 또는 cutPrint 의 4-card UI 면 다른 체크 해제. hb_ss 는 다중선택 유지.
-        if (inp.checked && (state.isStandeeV2 || state.isCutPrint)) {
+        // mutex: 등신대 V2 만 단일선택. 2026-08-19: 자유인쇄커팅은 여러 종류·수량 선택 허용 (사장님 요청, 헤더 문구와 일치).
+        if (inp.checked && state.isStandeeV2) {
             document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(o){
                 if (o !== inp) o.checked = false;
             });
@@ -11702,9 +11702,8 @@ html, body { background: #ffffff !important; }
         var qInp = lbl ? lbl.querySelector('input[data-bs-qty-key]') : null;
         if (inp.checked) {
             // 2026-07-11: 객체크기 모드(자유인쇄커팅/등신대) — 받침대 선택 시 기본 수량을 제품 수량으로.
-            var _defBsQty = state.isObjSizeMode ? Math.max(1, state.qty || 1) : 1;
-            state.baseStands[key] = (qInp && parseInt(qInp.value, 10) > 0) ? parseInt(qInp.value, 10) : _defBsQty;
-            if (state.isObjSizeMode) state.baseStands[key] = _defBsQty;   // 제품 수량과 강제 일치
+            // 2026-08-19: 받침대 수량은 입력칸 값 우선 (사장님 요청 — 제품 수량과 강제 일치 해제). 입력 없으면 1.
+            state.baseStands[key] = (qInp && parseInt(qInp.value, 10) > 0) ? parseInt(qInp.value, 10) : 1;
             if (qInp) qInp.value = state.baseStands[key];
         } else {
             delete state.baseStands[key];
@@ -14620,6 +14619,11 @@ html, body { background: #ffffff !important; }
                                 '</div>' +
                             '</div>' +
                             '<div style="text-align:right; font-weight:900; font-size:13px;">' + feeStr + '</div>' +
+                            // 2026-08-19: 받침대 수량 입력 (사장님 요청). 라벨 토글 방지 위해 preventDefault.
+                            '<div onclick="event.preventDefault(); event.stopPropagation();" style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:1px;">' +
+                                '<span style="font-size:11px; color:#64748b; font-weight:700;">' + tr('수량','数量','Qty') + '</span>' +
+                                '<input type="number" data-bs-qty-key="' + o.k + '" min="1" value="1" inputmode="numeric" oninput="window._soSetBaseStandTypeQty(this)" onclick="event.preventDefault(); event.stopPropagation();" style="width:56px; padding:4px 6px; text-align:center; border:1px solid #d1d5db; border-radius:7px; font-size:13px; font-family:inherit;">' +
+                            '</div>' +
                         '</label>';
                     }).join('');
                     _bsList.innerHTML = _topNoticeHtml + _cardHtml;
@@ -14630,9 +14634,9 @@ html, body { background: #ffffff !important; }
                     _bsList.style.gap = '6px';
                     _bsList.innerHTML = window._soBaseStandOriginalHTML;
                 }
-                // 2026-07-11: 객체크기 모드 — 받침대 수량 칸 숨김 (제품 수량을 그대로 따라감 → 별도 입력 불필요, 깔끔하게).
-                //   cutPrint 4-card 엔 원래 없음(no-op), 6종 UI(hb_ss 등)에서만 숨겨짐.
-                if (state.isObjSizeMode) {
+                // 2026-07-11: 객체크기 모드 — 받침대 수량 칸 숨김 (6종 UI 한정).
+                // 2026-08-19: 4-card(_bsIsFreeUi)는 수량 입력 노출 (사장님 요청) → 숨김 제외.
+                if (state.isObjSizeMode && !_bsIsFreeUi) {
                     _bsList.querySelectorAll('input[data-bs-qty-key]').forEach(function(qi){
                         var wrap = qi.closest('label') ? null : qi.parentNode;
                         if (wrap && wrap !== _bsList && wrap.children && wrap.children.length <= 3) wrap.style.display = 'none';
