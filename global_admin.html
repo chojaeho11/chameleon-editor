@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260821145154';
+        var CV = '20260821145355';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -7066,9 +7066,24 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     var listEl = document.getElementById('bugList'); if (!listEl) return;
     var sb = bugSb(); if (!sb) return;
     try {
-      // 2026-07-07: 재접수(reopened_at) 건은 맨 위로 — reopened_at desc(널 뒤로) → id desc.
-      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution,reopened_at,ai_options,reporter_reply,reporter_reply_at').order('reopened_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).limit(30);
+      // 2026-08-21: 활성 건만 표시 (완료/종료/반려는 보드에서 즉시 제외 — 사장님 요청). DB엔 남아있어 복구 가능.
+      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution,reopened_at,ai_options,reporter_reply,reporter_reply_at').in('status',['new','approved','in_progress','replied']).order('id',{ascending:false}).limit(50);
       var rows = (r && r.data) || [];
+      // 2026-08-21: 소통 필요·최신 건 맨 위로 정렬 (사장님 요청).
+      //   우선순위: 재접수(0) > 신규(1) > 제보자 답변대기(2) > 진행중(3). 같은순위는 최신(재접수/답변/생성 시각)순.
+      var _bugPrio = function(b){
+        if (b.status === 'new' && b.reopened_at) return 0;
+        if (b.status === 'new') return 1;
+        if (b.reporter_reply) return 2;
+        return 3;
+      };
+      rows.sort(function(a,b){
+        var pa=_bugPrio(a), pb=_bugPrio(b);
+        if (pa!==pb) return pa-pb;
+        var ta=new Date(a.reopened_at||a.reporter_reply_at||a.created_at||0).getTime();
+        var tb=new Date(b.reopened_at||b.reporter_reply_at||b.created_at||0).getTime();
+        return tb-ta;
+      });
       if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8; font-size:13px;">' + T('empty') + '</div>'; return; }
       var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', replied:'#2563eb', done:'#16a34a', closed:'#64748b' };
       var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), replied:T('st_replied'), done:T('st_done'), closed:T('st_closed') };
