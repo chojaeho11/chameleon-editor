@@ -5465,18 +5465,64 @@ window._moSearchMembers = function () {
     _moSearchTimer = setTimeout(async function () {
         try {
             var like = '%' + q.replace(/[%,()]/g, '') + '%';
-            var res = await sb.from('profiles')
+            // (1) profiles: 아이디/이메일/연락처/상호
+            var pRes = await sb.from('profiles')
                 .select('id, email, username, phone, biz_name')
                 .or('username.ilike.' + like + ',email.ilike.' + like + ',phone.ilike.' + like + ',biz_name.ilike.' + like)
                 .limit(15);
-            _moLastResults = res.data || [];
+            // (2) 실제 고객 이름은 profiles 가 아니라 orders.manager_name(주문자명)에 있는 경우가 대부분
+            //     → 주문내역(이름/연락처)까지 검색해서 그 주문의 user_id 로 회원 계정에 연결
+            var oRes = await sb.from('orders')
+                .select('user_id, manager_name, phone, created_at')
+                .neq('status', '임시작성')
+                .or('manager_name.ilike.' + like + ',phone.ilike.' + like)
+                .order('created_at', { ascending: false })
+                .limit(120);
+            var merged = [];        // {id,email,username,phone,biz_name,name}
+            var byUid = {};         // user_id -> merged index (회원 중복 제거)
+            var seenGuest = {};     // name|phone -> true (비회원 중복 제거)
+            function pushRow(r) { var idx = merged.length; merged.push(r); if (r.id) byUid[r.id] = idx; return idx; }
+            (pRes.data || []).forEach(function (m) {
+                pushRow({ id: m.id, email: m.email, username: m.username, phone: m.phone, biz_name: m.biz_name, name: m.username || m.biz_name || (m.email || '').split('@')[0] || '' });
+            });
+            var needEmailUids = [];
+            (oRes.data || []).forEach(function (o) {
+                var nm = (o.manager_name || '').trim();
+                if (o.user_id && byUid.hasOwnProperty(o.user_id)) {
+                    var ex = merged[byUid[o.user_id]];
+                    if (!ex.name && nm) ex.name = nm;      // profiles 이름이 비어있으면 주문자명으로 보강
+                    if (!ex.phone && o.phone) ex.phone = o.phone;
+                    return;
+                }
+                if (o.user_id) {
+                    pushRow({ id: o.user_id, email: null, username: null, phone: o.phone, biz_name: null, name: nm });
+                    needEmailUids.push(o.user_id);
+                } else {
+                    if (!nm) return;
+                    var key = nm + '|' + (o.phone || '');
+                    if (seenGuest[key]) return;
+                    seenGuest[key] = true;
+                    pushRow({ id: null, email: null, username: null, phone: o.phone, biz_name: null, name: nm });
+                }
+            });
+            // orders 로만 찾은 회원 이메일 보강
+            if (needEmailUids.length) {
+                var uniq = needEmailUids.filter(function (v, i) { return needEmailUids.indexOf(v) === i; }).slice(0, 30);
+                var eRes = await sb.from('profiles').select('id, email').in('id', uniq);
+                var emap = {}; (eRes.data || []).forEach(function (p) { emap[p.id] = p.email; });
+                merged.forEach(function (r) { if (r.id && !r.email && emap[r.id]) r.email = emap[r.id]; });
+            }
+            merged = merged.slice(0, 25);
+            _moLastResults = merged;
             if (!box) return;
-            if (_moLastResults.length === 0) {
+            if (merged.length === 0) {
                 box.innerHTML = '<div style="padding:10px; color:#94a3b8; font-size:12px;">검색 결과 없음</div>';
             } else {
-                box.innerHTML = _moLastResults.map(function (m, i) {
-                    var nm = m.username || m.biz_name || (m.email || '').split('@')[0] || '(이름없음)';
-                    var meta = [m.email, m.phone].filter(Boolean).join(' · ');
+                box.innerHTML = merged.map(function (m, i) {
+                    var nm = m.name || (m.email || '').split('@')[0] || '(이름없음)';
+                    var parts = [m.email, m.phone].filter(Boolean);
+                    if (!m.id) parts.push('비회원 · 주문기록');
+                    var meta = parts.join(' · ');
                     return '<div onclick="window._moSelectMember(' + i + ')" style="padding:9px 12px; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'"><b>' + _esc(nm) + '</b> <span style="color:#64748b; font-size:11.5px;">' + _esc(meta) + '</span></div>';
                 }).join('');
             }
@@ -5487,14 +5533,20 @@ window._moSearchMembers = function () {
 window._moSelectMember = function (i) {
     var m = _moLastResults[i];
     if (!m) return;
-    var nm = m.username || m.biz_name || (m.email || '').split('@')[0] || '고객';
-    var uid = document.getElementById('moUserId'); if (uid) uid.value = m.id;
+    var nm = m.name || m.username || m.biz_name || (m.email || '').split('@')[0] || '고객';
+    var uid = document.getElementById('moUserId'); if (uid) uid.value = m.id || '';
     var nameEl = document.getElementById('moName'); if (nameEl) nameEl.value = nm;
     var phEl = document.getElementById('moPhone'); if (phEl && m.phone) phEl.value = m.phone;
     var box = document.getElementById('moMemberResults'); if (box) box.style.display = 'none';
     var srch = document.getElementById('moMemberSearch'); if (srch) srch.value = nm + (m.email ? ' (' + m.email + ')' : '');
     var sel = document.getElementById('moMemberSelected');
-    if (sel) { sel.style.display = 'flex'; var lbl = document.getElementById('moMemberSelectedLabel'); if (lbl) lbl.textContent = '✅ 회원 연결: ' + nm + (m.email ? ' · ' + m.email : ''); }
+    if (sel) {
+        sel.style.display = 'flex';
+        var lbl = document.getElementById('moMemberSelectedLabel');
+        if (lbl) lbl.textContent = m.id
+            ? ('✅ 회원 연결: ' + nm + (m.email ? ' · ' + m.email : ''))
+            : ('👤 비회원 주문: ' + nm + (m.phone ? ' · ' + m.phone : ''));
+    }
 };
 window._moClearMember = function () {
     var uid = document.getElementById('moUserId'); if (uid) uid.value = '';
