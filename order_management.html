@@ -493,10 +493,29 @@ window.showSection = function(){};
                 </h3>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div>
-                        <label class="form-label">📦 주문출처</label>
-                        <select id="moSource" class="input-text" style="padding:10px;"><option value="STORE">🟢 스마트스토어</option><option value="GODO">🟣 고도몰</option></select>
+                        <label class="form-label">📦 주문출처 (사이트)</label>
+                        <select id="moSource" class="input-text" style="padding:10px;">
+                            <option value="STORE">🟢 스마트스토어</option>
+                            <option value="GODO">🟣 고도몰</option>
+                            <option value="KR">🇰🇷 카멜레온 KR</option>
+                            <option value="JP">🇯🇵 카멜레온 JP</option>
+                            <option value="US">🇺🇸 카멜레온 US</option>
+                            <option value="INTERIOR">🏠 인테리어</option>
+                        </select>
                     </div>
                     <div></div>
+                    <div style="grid-column:1/3;">
+                        <label class="form-label">🔎 회원 검색 (이름·이메일·연락처·상호) — 선택 시 고객 주문내역에 반영, 비우면 비회원</label>
+                        <div style="position:relative;">
+                            <input id="moMemberSearch" class="input-text" type="text" placeholder="2글자 이상 입력 후 회원 선택" style="padding:10px;" oninput="window._moSearchMembers && _moSearchMembers()" autocomplete="off">
+                            <div id="moMemberResults" style="display:none; position:absolute; z-index:30; left:0; right:0; top:100%; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:220px; overflow-y:auto; box-shadow:0 6px 16px rgba(0,0,0,0.12);"></div>
+                        </div>
+                        <div id="moMemberSelected" style="display:none; margin-top:6px; padding:8px 12px; background:#eef2ff; border-radius:8px; font-size:13px; color:#4338ca; align-items:center; justify-content:space-between;">
+                            <span id="moMemberSelectedLabel"></span>
+                            <button type="button" onclick="window._moClearMember && _moClearMember()" style="border:none; background:#e0e7ff; color:#4338ca; padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:700;">비회원으로 전환</button>
+                        </div>
+                        <input type="hidden" id="moUserId" value="">
+                    </div>
                     <div>
                         <label class="form-label">👤 고객명</label>
                         <input id="moName" class="input-text" type="text" placeholder="고객명" style="padding:10px;">
@@ -586,7 +605,7 @@ window.showSection = function(){};
 <script type="module">
 import { sb, initConfig } from './global_config.js?v=435';
 import { checkAdminAccess, showLoading } from './global_common.js?v=435';
-import './global_orders.js?v=497';
+import './global_orders.js?v=498';
 import './global_stats.js?v=439';
 
 window.sb = sb;
@@ -638,6 +657,7 @@ window.showSection = (secId, el) => {
         document.getElementById('moDelivery').value = '';
         document.getElementById('moNote').value = '';
         document.getElementById('moFiles').value = '';
+        if (window._moClearMember) window._moClearMember();   // 회원 연결 초기화
     }
 };
 

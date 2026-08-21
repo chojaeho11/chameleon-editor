@@ -5453,6 +5453,57 @@ window.openManualOrderModal = () => {
     }
 };
 
+// 2026-08-21: 수동주문 회원 검색 (버그#34 1단계) — profiles 이름/이메일/연락처/상호 검색 → user_id 연결
+let _moSearchTimer = null;
+let _moLastResults = [];
+window._moSearchMembers = function () {
+    clearTimeout(_moSearchTimer);
+    var inp = document.getElementById('moMemberSearch');
+    var box = document.getElementById('moMemberResults');
+    var q = (inp && inp.value || '').trim();
+    if (q.length < 2) { if (box) box.style.display = 'none'; return; }
+    _moSearchTimer = setTimeout(async function () {
+        try {
+            var like = '%' + q.replace(/[%,()]/g, '') + '%';
+            var res = await sb.from('profiles')
+                .select('id, email, username, phone, biz_name')
+                .or('username.ilike.' + like + ',email.ilike.' + like + ',phone.ilike.' + like + ',biz_name.ilike.' + like)
+                .limit(15);
+            _moLastResults = res.data || [];
+            if (!box) return;
+            if (_moLastResults.length === 0) {
+                box.innerHTML = '<div style="padding:10px; color:#94a3b8; font-size:12px;">검색 결과 없음</div>';
+            } else {
+                box.innerHTML = _moLastResults.map(function (m, i) {
+                    var nm = m.username || m.biz_name || (m.email || '').split('@')[0] || '(이름없음)';
+                    var meta = [m.email, m.phone].filter(Boolean).join(' · ');
+                    return '<div onclick="window._moSelectMember(' + i + ')" style="padding:9px 12px; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'"><b>' + _esc(nm) + '</b> <span style="color:#64748b; font-size:11.5px;">' + _esc(meta) + '</span></div>';
+                }).join('');
+            }
+            box.style.display = 'block';
+        } catch (e) { console.warn('[moSearch]', e); }
+    }, 250);
+};
+window._moSelectMember = function (i) {
+    var m = _moLastResults[i];
+    if (!m) return;
+    var nm = m.username || m.biz_name || (m.email || '').split('@')[0] || '고객';
+    var uid = document.getElementById('moUserId'); if (uid) uid.value = m.id;
+    var nameEl = document.getElementById('moName'); if (nameEl) nameEl.value = nm;
+    var phEl = document.getElementById('moPhone'); if (phEl && m.phone) phEl.value = m.phone;
+    var box = document.getElementById('moMemberResults'); if (box) box.style.display = 'none';
+    var srch = document.getElementById('moMemberSearch'); if (srch) srch.value = nm + (m.email ? ' (' + m.email + ')' : '');
+    var sel = document.getElementById('moMemberSelected');
+    if (sel) { sel.style.display = 'flex'; var lbl = document.getElementById('moMemberSelectedLabel'); if (lbl) lbl.textContent = '✅ 회원 연결: ' + nm + (m.email ? ' · ' + m.email : ''); }
+};
+window._moClearMember = function () {
+    var uid = document.getElementById('moUserId'); if (uid) uid.value = '';
+    var srch = document.getElementById('moMemberSearch'); if (srch) srch.value = '';
+    var sel = document.getElementById('moMemberSelected'); if (sel) sel.style.display = 'none';
+    var box = document.getElementById('moMemberResults'); if (box) box.style.display = 'none';
+};
+function _esc(s) { return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]; }); }
+
 window.submitManualOrder = async () => {
     const source = document.getElementById('moSource').value;
     const name = document.getElementById('moName').value.trim();
@@ -5470,8 +5521,19 @@ window.submitManualOrder = async () => {
 
     showLoading(true);
     try {
-        const sourceName = source === 'STORE' ? '스마트스토어' : '고도몰';
-        const payMethod = source === 'STORE' ? '스토어결제' : '고도몰결제';
+        // 2026-08-21: 주문출처(사이트) 전체 지원 (버그#34)
+        const _SRC_MAP = {
+            STORE:    { name: '스마트스토어', pay: '스토어결제', site: 'STORE' },
+            GODO:     { name: '고도몰',      pay: '고도몰결제', site: 'GODO' },
+            KR:       { name: '카멜레온 KR', pay: '수동등록',   site: 'KR' },
+            JP:       { name: '카멜레온 JP', pay: '수동등록',   site: 'JP' },
+            US:       { name: '카멜레온 US', pay: '수동등록',   site: 'US' },
+            INTERIOR: { name: '인테리어',    pay: '수동등록',   site: 'INTERIOR' }
+        };
+        const _sm = _SRC_MAP[source] || _SRC_MAP.STORE;
+        const sourceName = _sm.name;
+        const payMethod = _sm.pay;
+        const _moUid = (document.getElementById('moUserId') || {}).value || null;
 
         // items를 JSON 배열로 변환 (줄 단위로 분리)
         const lines = itemsText.split('\n').filter(l => l.trim());
@@ -5489,7 +5551,8 @@ window.submitManualOrder = async () => {
             status: '접수됨',
             payment_status: '결제완료',
             payment_method: payMethod,
-            site_code: source,
+            site_code: _sm.site,
+            user_id: _moUid || null,   // 2026-08-21: 회원 연결 시 고객 주문내역에 반영 (버그#34)
             delivery_target_date: delivery || null,
             created_at: new Date().toISOString()
         }]).select();
@@ -5516,7 +5579,8 @@ window.submitManualOrder = async () => {
         }
 
         document.getElementById('manualOrderModal').style.display = 'none';
-        alert(`✅ ${sourceName} 수동주문이 등록되었습니다. (주문번호: ${orderId})`);
+        alert(`✅ ${sourceName} 수동주문이 등록되었습니다.${_moUid ? ' (회원 주문내역 반영됨)' : ''} (주문번호: ${orderId})`);
+        try { if (window._moClearMember) window._moClearMember(); } catch (e) {}
         loadOrders();
     } catch (e) {
         console.error('[수동주문] 오류:', e);
