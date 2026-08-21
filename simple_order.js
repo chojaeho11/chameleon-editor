@@ -14414,7 +14414,8 @@ html, body { background: #ffffff !important; }
         try {
             var _gtNotice = document.getElementById('soGateNotice');
             var _gtSize   = document.getElementById('soGateSizeSection');
-            if (_gtNotice) _gtNotice.style.display = _isGate ? '' : 'none';
+            // 2026-08-21: 게이트 무료디자인/무료배송 안내 배너 완전 제거 (사장님 요청 — 무료배송은 수도권만이라 오해 소지). 사이즈 선택은 유지.
+            if (_gtNotice) _gtNotice.style.display = 'none';
             if (_gtSize)   _gtSize.style.display   = _isGate ? '' : 'none';
         } catch (e) {}
         if (_isGate) {
