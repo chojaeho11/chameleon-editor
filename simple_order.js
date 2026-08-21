@@ -3227,8 +3227,8 @@ html, body { background: #ffffff !important; }
               <i class="fa-solid fa-pen-ruler" style="color:#007AFF; font-size:18px;"></i>
             </div>
             <div style="flex:1; min-width:0;">
-              <div id="soDreqTitleLabel" style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">멋진 디자인을 저렴한 가격에 의뢰하세요</div>
-              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;" id="soDreqSubLine"><span id="soDreqProdLabel">상품</span> 디자인을 <span id="soDreqPriceLabel" style="color:#007AFF; font-weight:700;">10,000원</span>에 의뢰하세요 · 영업일 2~3일</div>
+              <div id="soDreqTitleLabel" style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">간단한 디자인은 가격이 정해져 있습니다</div>
+              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;" id="soDreqSubLine">설계가 필요하거나 복잡한 디자인의뢰는 담당 매니저와 금액을 상의한 후 결제해 주세요.<span id="soDreqProdLabel" style="display:none;"></span><span id="soDreqPriceLabel" style="display:none;"></span></div>
             </div>
             <i class="fa-solid fa-chevron-right" style="color:#c7c7cc; font-size:13px; flex-shrink:0;"></i>
           </div>
@@ -12605,17 +12605,15 @@ html, body { background: #ffffff !important; }
             }
             _drBan.style.display = '';
             // 무료 디자인 제품에서 다른 제품으로 전환 시 제목 원복
+            // 2026-08-21: 배너 문구 통일 (사장님 요청) — 간단=정가, 복잡=매니저 상의 후 결제
             var _drTitleEl = document.getElementById('soDreqTitleLabel');
-            if (_drTitleEl) _drTitleEl.textContent = '멋진 디자인을 저렴한 가격에 의뢰하세요';
+            if (_drTitleEl) _drTitleEl.textContent = '간단한 디자인은 가격이 정해져 있습니다';
             var _drProdEl = document.getElementById('soDreqProdLabel');
             if (_drProdEl) _drProdEl.textContent = _drProd;
             var _drPriceEl = document.getElementById('soDreqPriceLabel');
             if (_drPriceEl) _drPriceEl.textContent = _drPrice.toLocaleString() + '원';
             var _subEl = document.getElementById('soDreqSubLine');
-            if (_subEl) {
-                if (_drSub) _subEl.innerHTML = _drSub;
-                else _subEl.innerHTML = '<span id="soDreqProdLabel">' + _drProd + '</span> 디자인을 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>에 의뢰하세요 · 영업일 2~3일';
-            }
+            if (_subEl) _subEl.innerHTML = '설계가 필요하거나 복잡한 디자인의뢰는 담당 매니저와 금액을 상의한 후 결제해 주세요.';
             state._drReqProduct = _drProd;
             state._drReqPrice = _drPrice;
         } catch (e) { console.warn('[_soComputeDesignReqPrice]', e); }
