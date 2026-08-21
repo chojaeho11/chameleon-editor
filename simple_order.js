@@ -12538,6 +12538,16 @@ html, body { background: #ffffff !important; }
             var _drIsScasi = ((p && p.category || '').toLowerCase() === 'hb_skashi')
                 || /스카시|스카쉬|글씨\s*포토존/i.test(_drNm);
             var _drDesignIncluded = _isInstaForDR || _drIsScasi;
+            // 2026-08-21: 게이트(무료디자인+무료배송) — 상단에 이미 무료디자인 안내가 있어 유료 디자인의뢰 배너 완전 삭제 (사장님 요청)
+            var _drIsGate = !!(state && state.isGate) || (typeof window._soIsGateProduct === 'function' && window._soIsGateProduct(p));
+            if (_drIsGate) {
+                state._soFreeDesignProduct = false;
+                state._drReqProduct = null;
+                state._drReqPrice = 0;
+                var _gBan = document.getElementById('soDesignReqBanner');
+                if (_gBan) _gBan.style.display = 'none';
+                return;
+            }
             if (_siteIsKR && _drDesignIncluded) {
                 state._soFreeDesignProduct = true;
                 state._drReqProduct = null;
