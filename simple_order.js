@@ -1967,8 +1967,8 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
         <div class="so-section" id="soGateNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-            <span style="font-size:16px;">🎨</span>
-            ${tr('무료 디자인 + 무료 배송 제품입니다', '無料デザイン + 送料無料 商品です', 'FREE design + FREE shipping included')}
+            <span style="font-size:16px;">🚚</span>
+            ${tr('무료 배송 제품입니다', '送料無料 商品です', 'FREE shipping included')}
           </div>
           <div style="font-size:12px; color:#166534; line-height:1.55; font-weight:600; margin-bottom:8px;">
             ${tr('게이트는 <b>최대 가로 6m × 세로 4m</b> 이내에서 원하는 크기로 제작 가능합니다.', 'ゲートは <b>最大 横6m × 縦4m</b> 以内でご希望のサイズで製作可能です。', 'Gates can be custom-made within <b>max W 6m × H 4m</b>.')}
@@ -12538,16 +12538,7 @@ html, body { background: #ffffff !important; }
             var _drIsScasi = ((p && p.category || '').toLowerCase() === 'hb_skashi')
                 || /스카시|스카쉬|글씨\s*포토존/i.test(_drNm);
             var _drDesignIncluded = _isInstaForDR || _drIsScasi;
-            // 2026-08-21: 게이트(무료디자인+무료배송) — 상단에 이미 무료디자인 안내가 있어 유료 디자인의뢰 배너 완전 삭제 (사장님 요청)
-            var _drIsGate = !!(state && state.isGate) || (typeof window._soIsGateProduct === 'function' && window._soIsGateProduct(p));
-            if (_drIsGate) {
-                state._soFreeDesignProduct = false;
-                state._drReqProduct = null;
-                state._drReqPrice = 0;
-                var _gBan = document.getElementById('soDesignReqBanner');
-                if (_gBan) _gBan.style.display = 'none';
-                return;
-            }
+            // 2026-08-21: 게이트는 유료 디자인의뢰 배너 유지(사장님 정정) — 상단 초록 배너의 '무료 디자인' 문구만 삭제.
             if (_siteIsKR && _drDesignIncluded) {
                 state._soFreeDesignProduct = true;
                 state._drReqProduct = null;
