@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260821172728';
+        var CV = '20260821174611';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6996,7 +6996,9 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
                 fr:"Écrivez votre réponse/notes au développeur IA (ou touchez une option ci-dessus)" },
     replySend:{ ko:'답변 보내기', ja:'回答を送る', en:'Send reply', zh:'发送回复', ar:'إرسال الرد', es:'Enviar respuesta', de:'Antwort senden', fr:'Envoyer' },
     replySent:{ ko:'답변이 전달되었습니다. 감사합니다!', ja:'回答を送信しました。ありがとうございます！', en:'Reply sent. Thank you!', zh:'已发送回复，谢谢！', ar:'تم إرسال الرد. شكرًا!', es:'Respuesta enviada. ¡Gracias!', de:'Antwort gesendet. Danke!', fr:'Réponse envoyée. Merci !' },
-    replyEmpty:{ ko:'답변 내용을 적어주세요.', ja:'回答内容を記入してください。', en:'Please write your reply.', zh:'请填写回复内容。', ar:'يرجى كتابة ردّك.', es:'Escribe tu respuesta.', de:'Bitte Antwort eingeben.', fr:'Veuillez écrire votre réponse.' }
+    replyEmpty:{ ko:'답변 내용이나 이미지를 첨부해 주세요.', ja:'回答内容または画像を添付してください。', en:'Please write a reply or attach an image.', zh:'请填写回复或附上图片。', ar:'يرجى كتابة ردّ أو إرفاق صورة.', es:'Escribe una respuesta o adjunta una imagen.', de:'Bitte Antwort schreiben oder Bild anhängen.', fr:'Écrivez une réponse ou joignez une image.' },
+    replyImg: { ko:'📷 이미지 첨부 (선택)', ja:'📷 画像を添付（任意）', en:'📷 Attach image (optional)', zh:'📷 附加图片（可选）', ar:'📷 إرفاق صورة (اختياري)', es:'📷 Adjuntar imagen (opcional)', de:'📷 Bild anhängen (optional)', fr:'📷 Joindre une image (facultatif)' },
+    replyUploading:{ ko:'이미지 올리는 중…', ja:'画像アップロード中…', en:'Uploading image…', zh:'正在上传图片…', ar:'جارٍ رفع الصورة…', es:'Subiendo imagen…', de:'Bild wird hochgeladen…', fr:'Envoi de l’image…' }
   };
   function _bl(){ var l; try { l = localStorage.getItem('bugLang') || (navigator.language||'ko').slice(0,2); } catch(e){ l='ko'; } return (BUG_LANGS.indexOf(l) >= 0) ? l : 'ko'; }
   function T(k){ var d = BUG_I18N[k] || {}; return d[_bl()] || d.ko || ''; }
@@ -7128,9 +7130,14 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
           replyBlock =
             (optsArr.length ? '<div style="margin-top:8px; padding:8px 10px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px;"><div style="font-size:11px; color:#4338ca; font-weight:800; margin-bottom:6px;">' + T('aiAsk') + '</div><div style="display:flex; flex-direction:column; gap:5px;">' + optBtns + '</div></div>' : '') +
             (b.reporter_reply ? '<div style="font-size:11.5px; color:#1e40af; margin-top:6px; background:#eff6ff; border-radius:6px; padding:5px 8px; white-space:pre-wrap; word-break:break-word;">💬 ' + T('myReply') + ': ' + esc(b.reporter_reply) + '</div>' : '') +
-            '<div style="margin-top:6px; display:flex; gap:6px; align-items:flex-start;">' +
-              '<textarea id="bugReply_' + b.id + '" rows="2" placeholder="' + esc(T('replyPh')) + '" style="flex:1; min-width:0; font-size:12px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>' +
-              '<button type="button" style="' + btnCss + 'background:#2563eb;color:#fff; flex-shrink:0;" onclick="submitBugReply(' + b.id + ')">' + T('replySend') + '</button>' +
+            '<div style="margin-top:6px;">' +
+              '<div style="display:flex; gap:6px; align-items:flex-start;">' +
+                '<textarea id="bugReply_' + b.id + '" rows="2" placeholder="' + esc(T('replyPh')) + '" style="flex:1; min-width:0; font-size:12px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>' +
+                '<button type="button" id="bugReplyBtn_' + b.id + '" style="' + btnCss + 'background:#2563eb;color:#fff; flex-shrink:0;" onclick="submitBugReply(' + b.id + ')">' + T('replySend') + '</button>' +
+              '</div>' +
+              '<div style="margin-top:5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+                '<label style="font-size:10.5px; color:#64748b; cursor:pointer;">' + T('replyImg') + ' <input type="file" id="bugReplyFile_' + b.id + '" accept="image/*" multiple style="font-size:10.5px; color:#64748b; max-width:180px;"></label>' +
+              '</div>' +
             '</div>';
         }
         return '<div class="bug-item">' +
@@ -7208,14 +7215,36 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     var sb = bugSb(); if (!sb) { alert('DB 연결이 없습니다. 새로고침 후 다시 시도해 주세요.'); return; }
     var ta = document.getElementById('bugReply_' + id);
     var val = (ta && ta.value || '').trim();
-    if (!val) { alert(T('replyEmpty')); return; }
+    var fileEl = document.getElementById('bugReplyFile_' + id);
+    var files = (fileEl && fileEl.files) || [];
+    if (!val && !files.length) { alert(T('replyEmpty')); return; }
+    var btn = document.getElementById('bugReplyBtn_' + id);
     try {
-      // 답변 저장 + status='replied' (AI 개발자가 답변옴을 인지) — 기존 status/resolution 은 보존.
-      var res = await sb.from('bug_reports').update({
-        reporter_reply: val,
+      // 2026-08-21: 답변에 이미지 첨부 지원 — 업로드 후 기존 screenshot_url 에 이어붙여 썸네일로 노출(AI 개발자가 참고).
+      var newUrls = [];
+      if (files.length) {
+        if (btn) { btn.disabled = true; btn.textContent = T('replyUploading'); }
+        for (var i = 0; i < files.length; i++) {
+          var f = files[i];
+          var ext = (String(f.name).split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g,'') || 'png';
+          var path = 'bug_reports/reply_' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+          var up = await sb.storage.from('design').upload(path, f, { contentType: f.type || undefined, upsert: false });
+          if (!up.error) newUrls.push(sb.storage.from('design').getPublicUrl(path).data.publicUrl);
+        }
+      }
+      var patch = {
         reporter_reply_at: new Date().toISOString(),
         status: 'replied'
-      }).eq('id', id).select();
+      };
+      if (val) patch.reporter_reply = val;
+      if (newUrls.length) {
+        // 기존 스크린샷 뒤에 답변 이미지 이어붙임
+        var _cur = await sb.from('bug_reports').select('screenshot_url').eq('id', id).maybeSingle();
+        var existing = (_cur.data && _cur.data.screenshot_url) ? String(_cur.data.screenshot_url).split('\n').filter(Boolean) : [];
+        patch.screenshot_url = existing.concat(newUrls).join('\n');
+      }
+      var res = await sb.from('bug_reports').update(patch).eq('id', id).select();
+      if (btn) { btn.disabled = false; btn.textContent = T('replySend'); }
       if (res.error) throw res.error;
       if (!res.data || res.data.length === 0) {
         if (window.showToast) showToast('답변이 저장되지 않았습니다 (권한/RLS). 새로고침 후 다시 시도해 주세요.', 'error');
@@ -7225,6 +7254,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
       if (window.showToast) showToast(T('replySent'), 'success');
       if (window.loadBugReports) await window.loadBugReports();
     } catch(e) {
+      var _b = document.getElementById('bugReplyBtn_' + id); if (_b) { _b.disabled = false; _b.textContent = T('replySend'); }
       if (window.showToast) showToast('답변 실패: ' + (e.message||e), 'error');
       else alert('답변 실패: ' + (e.message||e));
     }
