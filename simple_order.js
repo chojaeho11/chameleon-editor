@@ -21429,6 +21429,73 @@ html, body { background: #ffffff !important; }
                 }
             } catch (e) { console.warn('[scarci dreq batch]', e); }
 
+            // 2026-08-24: 인스타판넬(포토존) — 무료 디자인 포함 제품. 주문 시 디자인의뢰방(design_requests) 자동 등록.
+            //   사장님 지시(2026-08-24): "인스타 제품류 주문하면 디자인보드에 자동의뢰 반영이 안 됨" 수정.
+            //   디자이너 정산 = 21,000원 정액 (인스타 디자인 표준가 30,000의 70% — 유료의뢰 정산율과 동일).
+            //   유료 팝업(openDesignRequestPopup)으로 이미 의뢰가 생성된 항목(designRequest.request_id 존재)은 건너뜀.
+            try {
+                var _inSb = sb;
+                var _inU = await _inSb.auth.getUser();
+                var _inUid = (_inU && _inU.data && _inU.data.user && _inU.data.user.id) || loggedInUid || null;
+                var _inIsInsta = function (it) {
+                    if (!it) return false;
+                    if (it.isInstaPanel) return true;
+                    var p = it.product; if (!p) return false;
+                    if (typeof window._soIsInstaPanelProduct === 'function' && window._soIsInstaPanelProduct(p)) return true;
+                    var _c = (p.code || '').toLowerCase();
+                    var _cat = (p.category || '').toLowerCase();
+                    if (_cat === 'hb_insta' || _cat.indexOf('insta') >= 0) return true;
+                    if (['lll0', '0ll', 'lllllp', 'ppp'].indexOf(_c) >= 0) return true;
+                    if (/인스타\s*판넬|insta\s*panel|인스타\s*포토/i.test((p.name_kr || p.name || ''))) return true;
+                    return false;
+                };
+                for (var _in = 0; _in < items.length; _in++) {
+                    var _in_it = items[_in];
+                    if (!_inIsInsta(_in_it)) continue;
+                    if (_in_it.designRequest && _in_it.designRequest.request_id) continue; // 유료 팝업 등으로 이미 생성됨
+                    var _in_prodName = (_in_it.productName || (_in_it.product && (_in_it.product.name_kr || _in_it.product.name)) || '인스타판넬');
+                    var _in_custName = (typeof name !== 'undefined' && name) ? name : '';
+                    var _in_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
+                    var _in_payout = 21000;   // 디자이너 정산 (사장님 지시) — 1건당 정액
+                    var _in_files = [];
+                    ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url', 'thumb'].forEach(function (f) { if (_in_it[f] && typeof _in_it[f] === 'string' && /^https?:/.test(_in_it[f])) _in_files.push(_in_it[f]); });
+                    if (typeof _in_it.filePath === 'string' && _in_it.filePath) _in_files.push('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/' + _in_it.filePath.replace(/^\/+/, ''));
+                    if (Array.isArray(_in_it.uploadedFiles)) _in_it.uploadedFiles.forEach(function (u) { if (u && typeof u === 'string' && /^https?:/.test(u)) _in_files.push(u); });
+                    _in_files = _in_files.filter(function (v, i, a) { return a.indexOf(v) === i; });
+                    var _in_extra = '';
+                    if (_in_it.instaTitle)   _in_extra += '타이틀 문구: ' + _in_it.instaTitle + '\n';
+                    if (_in_it.instaSub)     _in_extra += '작은 글씨: ' + _in_it.instaSub + '\n';
+                    if (_in_it.instaHashtag) _in_extra += '해시태그: ' + _in_it.instaHashtag + '\n';
+                    if (_in_it.instaLogo)    _in_extra += '로고: ' + _in_it.instaLogo + '\n';
+                    if (_in_it.itemNote)     _in_extra += '전달사항: ' + _in_it.itemNote + '\n';
+                    var _in_desc = '[' + (_in_custName || '고객') + ' · ' + (_in_custPhone || '-') + ']\n'
+                        + '제품: ' + _in_prodName + '\n'
+                        + _in_extra
+                        + '주문번호: ' + (newOrderId || '-') + '\n'
+                        + '※ 인스타판넬(포토존) 무료 디자인 포함 제품\n\n'
+                        + '[FREE_REQ:{"customerPrice":30000,"designerPayout":' + _in_payout + '}]';
+                    var _in_payload = {
+                        customer_id: _inUid,
+                        title: '[인스타판넬] ' + _in_prodName,
+                        description: _in_desc,
+                        category: '인스타판넬',
+                        country: 'KR',
+                        budget_min: _in_payout,
+                        budget_max: _in_payout,
+                        phone: _in_custPhone || null,
+                        files: _in_files,
+                        status: 'open'
+                    };
+                    try {
+                        var _in_ins = await _inSb.from('design_requests').insert(_in_payload).select().single();
+                        if (!_in_ins.error && _in_ins.data) {
+                            if (!_in_it.designRequest) _in_it.designRequest = {};
+                            _in_it.designRequest.request_id = _in_ins.data.id;
+                        }
+                    } catch (_ine) { console.warn('[insta dreq insert]', _ine); }
+                }
+            } catch (e) { console.warn('[insta dreq batch]', e); }
+
             // 2026-07-18~19: 종이매대·허니콤 테이블·박스 주문이 들어오면 디자이너 의뢰(design_requests)를
             //   자동 생성하던 블록이 여기 있었다. 2026-07-22 사장님 지시로 전부 철회 —
             //   주문만 하면 지급 40,000/30,000원짜리 건이 디자인마켓 주문관리에 쌓였는데,
