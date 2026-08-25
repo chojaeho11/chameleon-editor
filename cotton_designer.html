@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260824112924';
+    var CV = '20260825110350';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -419,6 +419,8 @@ window.__CD_I18N = {
     p_discount: { ko:'대량 할인', ja:'大量割引', en:'Volume discount' },
     hook: { ko:'고리', ja:'吊り具', en:'Hook' },
     acc: { ko:'부자재', ja:'付属品', en:'Accessory' },
+    acc_qty: { ko:'개수', ja:'個数', en:'Qty' },
+    acc_qty_hint: { ko:'집게링 등 총 개수', ja:'クリップリング等の合計数', en:'Total accessory count' },
     unit_hoebae: { ko:'회배', ja:'m²', en:'unit' },
     cart_output: { ko:'출력', ja:'出力', en:'Print' },
     cart_finish: { ko:'마감', ja:'仕上げ', en:'Finish' },
@@ -1762,6 +1764,12 @@ window._cpAuthClick = async function() {
                 </label>
                 <!-- 2026-06-18 v598: OPP 개별포장도 admin mate30001 으로 이동 — 하드코딩 삭제. 중복 방지. -->
                 <div id="accessoryExtraList" style="display:contents;"></div>
+                <!-- 2026-08-24: 부자재 개수 (집게링 등) — 선택 시 노출. 총 개수 × 단가로 청구. -->
+                <div id="accQtyWrap" style="display:none; grid-column:1/-1; margin-top:8px; align-items:center; gap:8px;">
+                    <label style="font-size:12px; color:var(--text); font-weight:700;" data-cdi18n="acc_qty">개수</label>
+                    <input type="number" id="accQtyInput" min="1" value="1" onchange="window._cdOnAccQtyChange()" oninput="window._cdOnAccQtyChange()" style="width:80px; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;">
+                    <span style="font-size:11px; color:var(--text-light);" data-cdi18n="acc_qty_hint">집게링 등 총 개수</span>
+                </div>
             </div>
         </div>
 
@@ -2142,7 +2150,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=132"></script>
+<script src="/cotton_designer.js?v=133"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

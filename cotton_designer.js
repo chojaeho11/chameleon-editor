@@ -142,10 +142,11 @@ const state = {
     hookCode: '',
     hookName: '',
     hookExtra: 0,
-    // 3) 부자재 (선택, 1회 가격)
+    // 3) 부자재 (선택) — 2026-08-24: 집게링 등 개당 품목은 '총 개수'로 청구 (accExtra × accQty, 주문수량 무관)
     accCode: '',
     accName: '',
     accExtra: 0,
+    accQty: 1,
     // 4) 이어박기 (130cm 초과 시 자동 +10,000원)
     seamExtra: 0,
     // 2026-05-31: 패턴 원단 인쇄 — 롤폭/야드. 패턴 모드에서만 사용.
@@ -1233,12 +1234,15 @@ function updatePrice() {
     //   기존: hoebae(billable) 곱 → ≤0.5 인 경우 4000×0.5=2000 으로 절반만 청구되던 버그.
     const finishCount = Math.max(1, Math.ceil(rawHoebae));
     const finishPerItem = (state.finishExtra || 0) * finishCount;
-    const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0) + (state.seamExtra || 0);
+    // 2026-08-24: 부자재(집게링 등)는 per-item 이 아니라 '총 개수 × 단가'로 별도 청구 → otherPerItem 에서 제외.
+    const otherPerItem = (state.hookExtra || 0) + (state.seamExtra || 0);
     const perItem = itemPrice + finishPerItem + otherPerItem;
     const subtotal = perItem * state.orderQty;
     const disc = getVolumeDiscount(state.orderQty);
     const discountAmt = Math.round(subtotal * disc.pct / 100);
-    const total = subtotal - discountAmt;
+    const accQty = Math.max(1, parseInt(state.accQty, 10) || 1);
+    const accTotal = (state.accExtra || 0) * accQty;   // 총 개수 × 단가 (주문수량·볼륨할인 무관)
+    const total = subtotal - discountAmt + accTotal;
 
     document.getElementById('pUnit').textContent = cdFmtPrice(itemPrice) + ' (' + hoebae.toFixed(2) + 'x)';
     document.getElementById('pQty').textContent = state.orderQty;
@@ -1252,7 +1256,7 @@ function updatePrice() {
         : state.finishName;
     extraParts.push(_finNm + (finishPerItem > 0 ? ' ×' + finishCount + ' = ' + cdFmtPrice(finishPerItem) : ''));
     if (state.hookCode) extraParts.push((window.cdT?window.cdT('hook'):'고리') + ': ' + state.hookName + ' (' + cdFmtPrice(state.hookExtra||0) + ')');
-    if (state.accCode) extraParts.push((window.cdT?window.cdT('acc'):'부자재') + ': ' + state.accName + ' (' + cdFmtPrice(state.accExtra||0) + ')');
+    if (state.accCode) extraParts.push((window.cdT?window.cdT('acc'):'부자재') + ': ' + state.accName + ' ×' + accQty + ' = ' + cdFmtPrice(accTotal));
     if (state.seamExtra > 0) extraParts.push((window.cdT?window.cdT('seam_label'):'이어박기 (대폭 초과)') + ' (+' + cdFmtPrice(state.seamExtra) + ')');
     document.getElementById('pFinish').innerHTML = extraParts.join('<br>');
 
@@ -1270,7 +1274,7 @@ function updatePrice() {
     const hs = document.getElementById('hookSummary');
     if (hs) hs.textContent = state.hookCode ? state.hookName + ' (+' + cdFmtPrice(state.hookExtra||0) + ')' : noneText;
     const as = document.getElementById('accSummary');
-    if (as) as.textContent = state.accCode ? state.accName + ' (+' + cdFmtPrice(state.accExtra||0) + ')' : noneText;
+    if (as) as.textContent = state.accCode ? state.accName + ' ×' + accQty + ' (+' + cdFmtPrice(accTotal) + ')' : noneText;
 
     document.getElementById('pTotal').textContent = cdFmtPrice(total);
 }
@@ -1356,6 +1360,25 @@ window._cdOnAccessoryChange = function() {
     var b = label.querySelector('b');
     state.accName = state.accCode ? ((b && b.textContent.trim()) || label.dataset.name || '') : '';
     state.accExtra = parseInt(label.dataset.extra || '0', 10);
+    // 2026-08-24: 부자재 개수 입력 노출 — 선택 시 기본값 = 현재 주문수량(기존 '주문수량만큼' 동작 보존), 이후 자유 조절.
+    var qWrap = document.getElementById('accQtyWrap');
+    var qInp = document.getElementById('accQtyInput');
+    if (state.accCode) {
+        state.accQty = Math.max(1, parseInt(state.orderQty, 10) || 1);
+        if (qInp) qInp.value = state.accQty;
+        if (qWrap) qWrap.style.display = 'flex';
+    } else {
+        state.accQty = 1;
+        if (qWrap) qWrap.style.display = 'none';
+    }
+    updatePrice();
+};
+// 2026-08-24: 부자재 개수 변경 (집게링 등 — 총 N개)
+window._cdOnAccQtyChange = function() {
+    var qInp = document.getElementById('accQtyInput');
+    var v = Math.max(1, Math.min(99999, parseInt(qInp && qInp.value, 10) || 1));
+    state.accQty = v;
+    if (qInp) qInp.value = v;
     updatePrice();
 };
 
@@ -2144,11 +2167,14 @@ function buildCartItem() {
         // 2026-06-11: 마감 — ceil(회배) 개수 단위 청구 (1마 이하 1개, 1.5마 2개, 2마 2개)
         const _finishCount = Math.max(1, Math.ceil(rawHoebae));
         finishPerItem = (state.finishExtra||0) * _finishCount;
-        otherPerItem = (state.hookExtra||0) + (state.accExtra||0) + (state.seamExtra||0);
+        // 2026-08-24: 부자재는 총 개수 × 단가로 별도 청구 (per-item 제외)
+        otherPerItem = (state.hookExtra||0) + (state.seamExtra||0);
         subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
         disc = getVolumeDiscount(state.orderQty);
         discountAmt = Math.round(subtotal * disc.pct / 100);
-        price = subtotal - discountAmt;
+        var _accQtyCI = Math.max(1, parseInt(state.accQty, 10) || 1);
+        var _accTotalCI = (state.accExtra||0) * _accQtyCI;
+        price = subtotal - discountAmt + _accTotalCI;
     }
 
     const cleanFile = state.imgFileName
@@ -2200,6 +2226,8 @@ function buildCartItem() {
         accCode: isPatternMode ? '' : state.accCode,
         accName: isPatternMode ? '' : state.accName,
         accExtra: isPatternMode ? 0 : (state.accExtra || 0),
+        accQty: isPatternMode ? 1 : Math.max(1, parseInt(state.accQty, 10) || 1),
+        accTotal: isPatternMode ? 0 : ((state.accExtra || 0) * Math.max(1, parseInt(state.accQty, 10) || 1)),
         seamExtra: isPatternMode ? 0 : (state.seamExtra || 0),
         oversize: !isPatternMode && (state.orderWcm > ROLL_MAX_WIDTH_CM && state.orderHcm > ROLL_MAX_WIDTH_CM),
         // 2026-05-31: 패턴 모드 — 롤 폭/야드 보존 (주문서·관리자 화면용)
@@ -2580,7 +2608,7 @@ window._cpCreateMgrQuote = async function (btnEl) {
                 addons: [
                     it.finishCode ? { type: 'finish', code: it.finishCode, name: it.finishName, price: it.finishExtra || 0 } : null,
                     it.hookCode ? { type: 'hook', code: it.hookCode, name: it.hookName, price: it.hookExtra || 0 } : null,
-                    it.accCode ? { type: 'accessory', code: it.accCode, name: it.accName, price: it.accExtra || 0 } : null
+                    it.accCode ? { type: 'accessory', code: it.accCode, name: it.accName, price: (it.accTotal != null ? it.accTotal : (it.accExtra || 0)), unit_price: it.accExtra || 0, qty: it.accQty || 1 } : null
                 ].filter(Boolean)
             };
         });
@@ -2970,7 +2998,7 @@ window._cpSubmitOrder = async function() {
                     const arr = [];
                     if (it.finishCode) arr.push({ type:'finish', code:it.finishCode, name:it.finishName, price:it.finishExtra||0 });
                     if (it.hookCode) arr.push({ type:'hook', code:it.hookCode, name:it.hookName, price:it.hookExtra||0 });
-                    if (it.accCode) arr.push({ type:'accessory', code:it.accCode, name:it.accName, price:it.accExtra||0 });
+                    if (it.accCode) arr.push({ type:'accessory', code:it.accCode, name:it.accName, price:(it.accTotal != null ? it.accTotal : (it.accExtra||0)), unit_price:it.accExtra||0, qty:it.accQty||1 });
                     if (it.seamExtra && it.seamExtra > 0) arr.push({ type:'seam', code:'seam_join', name:'이어박기 (대폭 1300mm 초과)', price:it.seamExtra });
                     return arr;
                 })(),

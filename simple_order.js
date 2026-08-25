@@ -3086,6 +3086,8 @@ html, body { background: #ffffff !important; }
             </button>
             <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
             <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">${tr('수도권 철거', '首都圏撤去', 'Metro removal')}</button>
+            <!-- 2026-08-24: 야간설치+철거 결합 (백화점 등 — 야간 설치 후 다음날 야간 철거) -->
+            <button type="button" class="so-ship-btn" data-ship="metro_weekend_removal" onclick="window._soPickShip('metro_weekend_removal')" style="grid-column:1/-1;">${tr('수도권 야간설치 + 철거', '首都圏 夜間設置＋撤去', 'Metro night install + removal')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
             <!-- 2026-06-09: 등신대/글씨포토존 전용 — 설치 없는 배송 옵션 3종 -->
@@ -8902,6 +8904,8 @@ html, body { background: #ffffff !important; }
         metro_weekend:        { fee: 100000, label_ko: '수도권 야간/주말 설치',         parts: [['수도권 야간/주말 설치', 100000]] },
         // 2026-06-04: 수도권 철거 단독 10만원 (이전: 설치+철거 30만원)
         metro_install_removal:{ fee: 100000, label_ko: '수도권 철거',                  parts: [['수도권 철거', 100000]] },
+        // 2026-08-24: 야간설치 + 철거 결합 (백화점 등 — 야간 설치 후 다음날 야간 철거). 설치일 + 철거일 각각 입력. 10만+10만.
+        metro_weekend_removal:{ fee: 200000, label_ko: '수도권 야간설치+철거',        parts: [['수도권 야간/주말 설치', 100000], ['수도권 철거', 100000]] },
         regional_truck:       { fee: 200000, label_ko: '지방 용차배송',       parts: [['지방 용차배송', 200000]] },
         regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] },
         // 2026-06-09: 등신대/글씨포토존 전용 — 설치 없이 배송만. 3가지 옵션 분리.
@@ -8935,6 +8939,7 @@ html, body { background: #ffffff !important; }
             case 'metro_install':         return tr('수도권 무료배송 · 무료설치', '首都圏 送料・設置 無料', 'Metro · FREE delivery & install');
             case 'metro_weekend':         return tr('수도권 야간/주말 설치',     '首都圏夜間/週末設置',     'Metro night/weekend install');
             case 'metro_install_removal': return tr('수도권 철거',               '首都圏撤去',              'Metro removal');
+            case 'metro_weekend_removal': return tr('수도권 야간설치+철거',      '首都圏 夜間設置＋撤去',    'Metro night install + removal');
             case 'regional_truck':        return tr('지방 용차배송',           '地方トラック配送',   'Regional truck delivery');
             case 'regional_install':      return tr('지방 설치배송',           '地方設置配送',       'Regional install + delivery');
             case 'metro_delivery':        return tr('수도권 배송',             '首都圏配送',         'Metro delivery');
@@ -9206,8 +9211,8 @@ html, body { background: #ffffff !important; }
         var needsSchedule = noScheduleMethods.indexOf(method) < 0;
         // 2026-06-26: 허니콤보드 원판도 배송 희망일 선택 노출 (시공 아니어도 — 사용자 요청)
         if (dateWrap) dateWrap.style.display = (needsSchedule || (state && state.isRawBoard)) ? '' : 'none';
-        // 철거 옵션 (수도권 설치+철거 시만)
-        if (remWrap) remWrap.style.display = (method === 'metro_install_removal') ? '' : 'none';
+        // 철거 옵션 (수도권 철거 / 야간설치+철거 시만)
+        if (remWrap) remWrap.style.display = (method === 'metro_install_removal' || method === 'metro_weekend_removal') ? '' : 'none';
         // 배송 희망일 최소값 = 오늘 + 영업일 3일
         var sd = document.getElementById('soScheduleDate');
         if (sd) {
@@ -9460,7 +9465,7 @@ html, body { background: #ffffff !important; }
             var timeLabel = { am:tr('오전','午前','AM'), pm:tr('오후','午後','PM'), night:tr('야간','夜間','Night'), any:tr('시간상관없음','時間指定なし','Anytime'), '':tr('시간 미지정','時間未定','Time TBD') }[st ? st.value : ''] || '';
             lines.push('<div style="margin-top:6px; font-size:11px;">' + tr('배송', '配送', 'Ship') + ': ' + sd.value + (timeLabel ? ' / ' + timeLabel : '') + '</div>');
         }
-        if (state.shipMethod === 'metro_install_removal' && rd && rd.value) {
+        if ((state.shipMethod === 'metro_install_removal' || state.shipMethod === 'metro_weekend_removal') && rd && rd.value) {
             var rTimeLabel = { night:tr('야간','夜間','Night'), any:tr('시간상관없음','時間指定なし','Anytime'), '':tr('시간 미지정','時間未定','Time TBD') }[rt ? rt.value : ''] || '';
             lines.push('<div style="font-size:11px;">' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
         }
@@ -15729,7 +15734,7 @@ html, body { background: #ffffff !important; }
             state.bundleShipping = false;
         }
         // 2026-05-13: 카테고리별 ship 버튼 화이트리스트
-        var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
+        var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'metro_weekend_removal', 'regional_truck', 'regional_install'];
         var hbDeliveryKeys = ['metro_delivery', 'regional_delivery'];
         var allowed; // 노출할 ship 버튼 키 집합
         if (state.isAmountOrder) {
@@ -17154,7 +17159,7 @@ html, body { background: #ffffff !important; }
             var _noScheduleSet = ['metro_delivery','regional_delivery','parcel_shipping','large_parcel','small_parcel','compact_parcel','pd_bulk_free','pd_parcel_1','pd_parcel_2'];
             // 2026-06-26: 허니콤보드 원판도 배송 희망일/시간 저장 (배송 방식이 택배여도)
             var _needsSchedule = (_noScheduleSet.indexOf(state.shipMethod) < 0) || state.isRawBoard;
-            var _needsRemoval = state.shipMethod === 'metro_install_removal';
+            var _needsRemoval = state.shipMethod === 'metro_install_removal' || state.shipMethod === 'metro_weekend_removal';
             shipping = {
                 method: state.shipMethod,
                 fee: actualFee,
@@ -18825,7 +18830,7 @@ html, body { background: #ffffff !important; }
                     // 2026-07-04: "5만원 이상 무료배송" 정책 제거 — 택배 5,000원 정액 묶음배송 (사용자 요청).
                     // 2026-07-08: 시공/설치/용차 배송(가벽·등신대·스카시 등)은 "택배 묶음배송" 대신 실제 방법명으로 표기.
                     //   적용된 배송비(_shipFinal)와 같은 시공/설치 방법 항목을 찾아 그 라벨 노출 (예: 지방 설치배송 700,000원).
-                    var _INSTALL_SHIP_METHODS = ['metro_install','metro_weekend','metro_install_removal','regional_truck','regional_install','metro_delivery','regional_delivery','regional_compact_60_180','regional_delivery_simple'];
+                    var _INSTALL_SHIP_METHODS = ['metro_install','metro_weekend','metro_install_removal','metro_weekend_removal','regional_truck','regional_install','metro_delivery','regional_delivery','regional_compact_60_180','regional_delivery_simple'];
                     var _instShipItem = null;
                     allItems.forEach(function(_it){
                         var _m = _it && _it.shipping && _it.shipping.method;
@@ -20998,8 +21003,9 @@ html, body { background: #ffffff !important; }
             var shipLabel = {
                 self_pickup:           '본사 방문 수령 (무료)',
                 metro_install:         '수도권 설치 (10만원)',
-                metro_weekend:         '수도권 야간/주말 설치 (20만원)',
-                metro_install_removal: '수도권 설치+철거 (10+20=30만원)',
+                metro_weekend:         '수도권 야간/주말 설치 (10만원)',
+                metro_install_removal: '수도권 철거 (10만원)',
+                metro_weekend_removal: '수도권 야간설치+철거 (10+10=20만원)',
                 regional_truck:        '지방 용차배송 (20만원)',
                 regional_install:      '지방 설치배송 (70만원)',
                 metro_delivery:        '수도권 배송 (10만원)',
@@ -21016,7 +21022,7 @@ html, body { background: #ffffff !important; }
                 preset_goods_flat:     '베스트굿즈 정액배송 (3,000원)'
             };
             // 일정(배송일자/시간) 이 의미 있는 메소드만 안내 — 단순 배송/택배는 일정 무관
-            var _shipWithSchedule = ['metro_install','metro_weekend','metro_install_removal','regional_truck','regional_install'];
+            var _shipWithSchedule = ['metro_install','metro_weekend','metro_install_removal','metro_weekend_removal','regional_truck','regional_install'];
             cart.forEach(function (it, idx) {
                 if (_soIsFabricItem(it)) return; // 패브릭은 별도 처리
                 var pname = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || '상품');
@@ -21184,8 +21190,8 @@ html, body { background: #ffffff !important; }
                                          it.shipping.delivery_time === 'any' ? '시간상관없음' : (it.shipping.delivery_time || '');
                             lines.push('       ' + (_m === 'self_pickup' ? '수령일' : '배송/시공일') + ': ' + it.shipping.delivery_date + (_dTime ? ' (' + _dTime + ')' : ''));
                         }
-                        // 철거는 metro_install_removal 에만
-                        if (_m === 'metro_install_removal' && it.shipping.removal_date) {
+                        // 철거는 metro_install_removal / metro_weekend_removal 에만
+                        if ((_m === 'metro_install_removal' || _m === 'metro_weekend_removal') && it.shipping.removal_date) {
                             var _rTime = it.shipping.removal_time === 'night' ? '야간' :
                                          it.shipping.removal_time === 'any' ? '시간상관없음' : (it.shipping.removal_time || '');
                             lines.push('       철거일: ' + it.shipping.removal_date + (_rTime ? ' (' + _rTime + ')' : ''));
@@ -21236,6 +21242,19 @@ html, body { background: #ffffff !important; }
                 });
                 if (_dreqLines.length > 0) _dreqSummary = '\n\n[디자인 의뢰]\n' + _dreqLines.join('\n');
             } catch (e) {}
+            // 2026-08-24: 철거 일정 — 관리자 배송 스케줄 보드(rdate/rtime 파싱)가 철거 방문을 별도 배지로 띄우게
+            //   admin_note 에 기계판독 마커를 기록. (수도권 철거 / 야간설치+철거 주문의 철거 회차가 보드에 뜨도록)
+            var _soRemovalMarker = '';
+            try {
+                for (var _rmI = 0; _rmI < cart.length; _rmI++) {
+                    var _rmSh = cart[_rmI] && cart[_rmI].shipping;
+                    if (_rmSh && _rmSh.removal_date) {
+                        var _rmT = (_rmSh.removal_time === 'night') ? ' rtime=19:00' : '';
+                        _soRemovalMarker = '\n[REMOVAL rdate=' + _rmSh.removal_date + _rmT + ']';
+                        break;
+                    }
+                }
+            } catch (e) {}
             var adminNote =
                 '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
                 '\n이메일: ' + (email || loggedInEmail || '없음') +
@@ -21243,7 +21262,8 @@ html, body { background: #ffffff !important; }
                 (totalShippingFee > 0 ? '\n배송/시공비: ' + totalShippingFee.toLocaleString() + '원' : '') +
                 discountSummary +
                 _dreqSummary +
-                (itemSummaries.length ? '\n\n=== 상품별 옵션·요청 ===\n' + itemSummaries.join('\n\n') : '');
+                (itemSummaries.length ? '\n\n=== 상품별 옵션·요청 ===\n' + itemSummaries.join('\n\n') : '') +
+                _soRemovalMarker;
 
             // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
             // 2026-05-16: 가맹점 스토어(/store/{slug}) 경유 주문 — fr 태그 + 본사 중계수수료 20%
