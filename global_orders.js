@@ -516,16 +516,24 @@ window.pcAutoDownloadSelected = async () => {
     }
 
     await _loadSymbolCache();
+    // 2026-08-24 (버그#36): 작업지시서 PDF 도 함께 다운받도록 — PDF 생성용 라이브러리/캐시 미리 로드.
+    let _pcAddonDB = null;
+    try {
+        await loadJsPDF();
+        _pcAddonDB = await _rcLoadAddons();
+        if (Object.keys(_materialCache).length === 0) await _loadMaterialCache();
+    } catch (e) { console.warn('[PC다운] 작업지시서 라이브러리 로드 실패(디자인파일만 진행):', e); }
 
     showToast(`${ids.length}건 PC 자동화 다운 시작...`, 'info');
     let ok = 0, fail = 0;
     for (const id of ids) {
         try {
+            // 2026-08-24: 작업지시서 생성에 전체 컬럼 필요 → select('*')
             const { data: order } = await sb.from('orders')
-                .select('id, files, manager_name, created_at, order_date, items, phone, address, request_note, total_amount, status, delivery_target_date, site_code, installation_time, delivery_period, assigned_team, is_province_install')
+                .select('*')
                 .eq('id', id).single();
             if (!order) { fail++; continue; }
-            await _savePcAutomationOrder(order);
+            await _savePcAutomationOrder(order, _pcAddonDB);
             ok++;
         } catch (e) {
             console.error('[PC다운] 오류:', id, e);
@@ -536,7 +544,7 @@ window.pcAutoDownloadSelected = async () => {
     showToast(msg, fail > 0 ? 'warn' : 'success');
 };
 
-async function _savePcAutomationOrder(order) {
+async function _savePcAutomationOrder(order, addonDB) {
     const customer = _sanitizeFsName(order.manager_name || `order_${order.id}`);
     const customerDir = await _getSubDir(_pcRootDirHandle, customer);
 
@@ -648,6 +656,27 @@ async function _savePcAutomationOrder(order) {
     });
     const txtBlob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
     await _writeFile(customerDir, 'order_info.txt', txtBlob);
+
+    // 2026-08-24 (버그#36): 작업지시서 PDF 도 함께 저장.
+    //   ① 주문에 저장된 order_sheet 파일(비복구본)이 있으면 그대로 사용
+    //   ② 없으면 최신 데이터로 즉시 생성 (openWorkOrderFresh 와 동일한 generateRecoveryOrderSheet)
+    try {
+        const _osFile = (order.files || []).find(f => f && f.url && f.type === 'order_sheet' && !String(f.url).includes('recovery'));
+        let _osBlob = null;
+        if (_osFile) {
+            try { _osBlob = await _fetchFileBlob(_osFile.url); } catch (e) { _osBlob = null; }
+        }
+        if (!_osBlob && addonDB && typeof generateRecoveryOrderSheet === 'function' && Array.isArray(order.items) && order.items.length) {
+            // product 누락 항목 최소 보정 (openWorkOrderFresh 와 동일)
+            const _fixed = Object.assign({}, order, {
+                items: order.items.map(it => it.product ? it : Object.assign({}, it, {
+                    product: { name: it.productName || it.product_name || '상품', code: it.productCode || '-', price: it.price || 0, img: '', w_mm: it.width || 0, h_mm: it.height || 0 }
+                }))
+            });
+            try { _osBlob = await generateRecoveryOrderSheet(_fixed, addonDB); } catch (e) { console.warn('[PC다운] 작업지시서 생성 실패:', order.id, e); }
+        }
+        if (_osBlob) await _writeFile(customerDir, `작업지시서_${customer}_${order.id}.pdf`, _osBlob);
+    } catch (e) { console.warn('[PC다운] 작업지시서 저장 실패:', order.id, e); }
 
     console.log(`[PC다운] 완료: ${customer} (주문 ${order.id})`);
 }
@@ -5586,23 +5615,38 @@ window.submitManualOrder = async () => {
         const sourceName = _sm.name;
         const payMethod = _sm.pay;
         const _moUid = (document.getElementById('moUserId') || {}).value || null;
+        // 2026-08-24 (버그#34 3단계): 고객 결제링크 발급 모드 — 미결제 주문서 생성 → 고객이 카드/무통장 선택 결제.
+        const _payLink = !!(document.getElementById('moPayLink') && document.getElementById('moPayLink').checked);
 
         // items를 JSON 배열로 변환 (줄 단위로 분리)
         const lines = itemsText.split('\n').filter(l => l.trim());
-        const items = lines.map(line => ({ productName: line.trim(), qty: 1 }));
+        //   결제링크 모드: 각 항목을 manager_quote 로 마킹 + product 객체 부여 → 개인결제창 노출 +
+        //   simple_order 카트에 상품명 정상 표시 + _soCalcItemPrice 가 order.total_amount 를 진실로 사용.
+        const items = lines.map(line => {
+            const nm = line.trim();
+            if (!_payLink) return { productName: nm, qty: 1 };
+            return {
+                productName: nm, qty: 1, type: 'manager_quote',
+                product: { name: nm, name_kr: nm, name_jp: nm, name_us: nm, category: 'manager_quote', code: 'manager_quote_manual', price: 0 }
+            };
+        });
 
         // DB 주문 생성
+        //   결제링크 모드: 상담대기(미결제) + [MANAGER_QUOTE] 마커(개인결제창/결제대기배너 노출 조건)
+        const _noteBase = note ? `[${sourceName}] ${note}` : `[${sourceName}]`;
+        const _adminNote = _payLink ? `[MANAGER_QUOTE] 수동주문 결제링크 발급 — 고객 결제 대기 (${sourceName})` : null;
         const { data: orderData, error } = await sb.from('orders').insert([{
             manager_name: name,
             phone: phone,
             address: address,
-            request_note: note ? `[${sourceName}] ${note}` : `[${sourceName}]`,
+            request_note: _noteBase,
             total_amount: amount,
             discount_amount: 0,
             items: items,
             status: '접수됨',
-            payment_status: '결제완료',
-            payment_method: payMethod,
+            payment_status: _payLink ? '상담대기' : '결제완료',
+            payment_method: _payLink ? null : payMethod,
+            admin_note: _adminNote,
             site_code: _sm.site,
             user_id: _moUid || null,   // 2026-08-21: 회원 연결 시 고객 주문내역에 반영 (버그#34)
             delivery_target_date: delivery || null,
@@ -5630,9 +5674,24 @@ window.submitManualOrder = async () => {
             }
         }
 
-        document.getElementById('manualOrderModal').style.display = 'none';
-        alert(`✅ ${sourceName} 수동주문이 등록되었습니다.${_moUid ? ' (회원 주문내역 반영됨)' : ''} (주문번호: ${orderId})`);
+        const _mm = document.getElementById('manualOrderModal'); if (_mm) _mm.style.display = 'none';
+        if (_payLink) {
+            // 2026-08-24 (버그#34 3단계): 고객에게 보낼 결제 URL 생성 (사이트별 도메인) → 복사 프롬프트.
+            const _domainMap = { JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com' };
+            const _base = _domainMap[_sm.site] || 'https://www.cafe2626.com';
+            const _payUrl = `${_base}/?quote=${orderId}`;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(_payUrl);
+            } catch (e) {}
+            window.prompt(
+                `✅ ${sourceName} 결제링크 주문서가 생성되었습니다 (주문번호: ${orderId}).${_moUid ? '\n회원 주문내역에도 반영됩니다.' : ''}\n\n아래 결제 링크를 고객에게 전달하세요. (클립보드에 복사됨)\n고객이 링크를 열면 카드/무통장 결제방식을 선택합니다.`,
+                _payUrl
+            );
+        } else {
+            alert(`✅ ${sourceName} 수동주문이 등록되었습니다.${_moUid ? ' (회원 주문내역 반영됨)' : ''} (주문번호: ${orderId})`);
+        }
         try { if (window._moClearMember) window._moClearMember(); } catch (e) {}
+        try { const _pl = document.getElementById('moPayLink'); if (_pl) _pl.checked = false; } catch (e) {}
         loadOrders();
     } catch (e) {
         console.error('[수동주문] 오류:', e);

@@ -548,6 +548,13 @@ window.showSection = function(){};
                         <label class="form-label">📎 파일첨부</label>
                         <input id="moFiles" type="file" multiple class="input-text" style="padding:8px;">
                     </div>
+                    <!-- 2026-08-24 (버그#34 3단계): 고객 결제링크 발급 옵션 -->
+                    <div style="grid-column:1/3; margin-top:6px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc;">
+                        <label style="display:flex; align-items:flex-start; gap:9px; cursor:pointer;">
+                            <input id="moPayLink" type="checkbox" style="margin-top:3px; width:16px; height:16px;">
+                            <span style="font-size:13px; color:#334155; line-height:1.5;">고객에게 <b style="color:#4338ca;">결제링크 발급</b> — 체크하면 미결제 주문서가 생성되고, 고객이 링크를 열어 카드/무통장 결제방식을 직접 선택합니다. (체크 안 하면 이미 결제 완료된 주문으로 등록)</span>
+                        </label>
+                    </div>
                 </div>
                 <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:16px;font-size:16px;font-weight:700;" onclick="submitManualOrder()">📦 주문 등록</button>
             </div>
@@ -605,7 +612,7 @@ window.showSection = function(){};
 <script type="module">
 import { sb, initConfig } from './global_config.js?v=435';
 import { checkAdminAccess, showLoading } from './global_common.js?v=435';
-import './global_orders.js?v=499';
+import './global_orders.js?v=500';
 import './global_stats.js?v=439';
 
 window.sb = sb;

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260825110350';
+    var CV = '20260825113153';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -3657,12 +3657,22 @@ window._tcmFallbackClick = function(code) {
         //   기존 #pendingQuoteBanner 그리드 (이미 렌더된 결제대기/디자인작업중 VIP 카드) 를
         //   모달 안 그리드로 그대로 클론. 카드의 inline onclick 은 window._payPendingQuote /
         //   window._markDesignComplete 를 문자열로 참조하므로 클론 후에도 정상 동작.
-        window._openPersonalPayModal = function () {
+        window._openPersonalPayModal = async function () {
             var modal = document.getElementById('personalPayModal');
             var banner = document.getElementById('pendingQuoteBanner');
             var grid = document.getElementById('personalPayModalGrid');
             var empty = document.getElementById('personalPayModalEmpty');
             if (!modal || !grid) return;
+            // 2026-08-24 (버그#43): 배너 그리드가 아직 렌더 전이면 먼저 로드해서 빈 화면 오표시 방지.
+            try {
+                var _bg0 = banner ? banner.querySelector('.hotdeal-grid, #pendingQuoteGrid') : null;
+                if ((!_bg0 || _bg0.children.length === 0) && typeof loadPendingQuote === 'function') {
+                    if (empty) { empty.style.display = 'block'; }
+                    var _et = document.getElementById('personalPayEmptyTxt');
+                    if (_et) _et.textContent = '불러오는 중…';
+                    await loadPendingQuote();
+                }
+            } catch (e) {}
             // 2026-06-11: 모달 타이틀/빈 메시지 i18n
             var _vipLang2 = (window.__SITE_CODE === 'JP') ? 'ja'
                 : ((window.__SITE_CODE === 'US') ? 'en' : 'ko');
@@ -3917,7 +3927,18 @@ window._tcmFallbackClick = function(code) {
             })();
         }
         function _scheduleLoad() {
-            _whenSb2(loadPendingQuote);
+            _whenSb2(function () {
+                loadPendingQuote();
+                // 2026-08-24 (버그#43): 개인결제 링크(?quote=ID)로 들어오면 결제창을 곧바로 연다.
+                //   기존엔 자동으로 안 열려서 고객이 '개인결제' 버튼을 눌러야 했고, 배너가 렌더되기 전에
+                //   누르면 "결제 대기 중인 견적 없음"이 떠서 X 닫고 재시도해야 하는 문의가 잦았음.
+                try {
+                    var _q = new URLSearchParams(location.search).get('quote');
+                    if (_q && typeof window._payPendingQuote === 'function') {
+                        setTimeout(function () { window._payPendingQuote(_q); }, 400);
+                    }
+                } catch (e) {}
+            });
             setTimeout(function () {
                 // 1차에서 빈 결과였고 관리자였을 가능성 — auth 늦게 들어왔으면 재조회
                 var wrap = document.getElementById('pendingQuoteBanner');

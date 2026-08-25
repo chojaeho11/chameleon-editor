@@ -1713,13 +1713,37 @@ window.markDesignSettled = async (reqId, btn) => {
     if (btn) btn.disabled = true;
     try {
         // 2026-07-13: .select() 로 실제 반영 행수 확인 — RLS 로 0행이면 조용히 실패하던 문제(버그#8) 감지.
-        const { data, error } = await sb.from('design_requests').update({ status: 'settled' }).eq('id', reqId).select('id, status');
+        const { data, error } = await sb.from('design_requests').update({ status: 'settled' }).eq('id', reqId).select('id, status, description');
         if (error) throw error;
         if (!data || !data.length) throw new Error('반영된 건이 없습니다 (권한/대상 확인). 페이지를 새로고침 후 다시 시도해 주세요.');
-        alert('정산완료 처리되었습니다. (디자이너 지갑·미정산 목록에도 자동 반영됩니다)');
+        // 2026-08-24 (버그#24): 정산완료 ↔ 디자이너출금 동기화. 해당 디자이너의 미정산(완료/정산요청) 작업이
+        //   모두 정산되면, 그 디자이너의 대기/승인 출금요청을 [지급완료]로 자동 전환.
+        //   (출금요청은 디자이너별 총액이라 개별 작업과 1:1 FK 가 없음 → '전부 정산 시' 를 기준으로 동기화)
+        try {
+            var _did = (String((data[0] && data[0].description) || '').match(/\[DESIGNER:([^\s\]]+)/) || [])[1];
+            if (_did) await _syncDesignerWithdrawalIfAllSettled(_did);
+        } catch (e) { console.warn('[settle→withdrawal sync]', e); }
+        alert('정산완료 처리되었습니다. (디자이너 지갑·미정산 목록·출금현황에도 자동 반영됩니다)');
         loadDesignOrders();
     } catch (e) { alert('처리 실패: ' + (e.message || e)); if (btn) btn.disabled = false; }
 };
+// 2026-08-24 (버그#24): 디자이너의 미정산 작업이 모두 정산되면 그 디자이너의 대기/승인 출금요청을 지급완료 처리.
+async function _syncDesignerWithdrawalIfAllSettled(designerId) {
+    if (!designerId) return;
+    // 아직 정산 안 된(완료/정산요청) 작업이 남아있으면 출금은 건드리지 않음
+    const { data: remaining } = await sb.from('design_requests')
+        .select('id')
+        .in('status', ['completed', 'settlement_requested'])
+        .like('description', '%[DESIGNER:' + designerId + '%')
+        .limit(1);
+    if (remaining && remaining.length) return;
+    const { data: wrs } = await sb.from('design_withdrawal_requests')
+        .select('id, status').eq('designer_id', designerId).in('status', ['pending', 'approved']);
+    for (const w of (wrs || [])) {
+        try { await sb.rpc('admin_mark_design_withdrawal_paid', { _req_id: w.id }); }
+        catch (e) { console.warn('[settle→withdrawal] paid rpc fail', w.id, e); }
+    }
+}
 window.unmarkDesignSettled = async (reqId, btn) => {
     if (!confirm('정산완료를 취소할까요? (다시 정산요청 상태가 됩니다)')) return;
     if (btn) btn.disabled = true;
@@ -2142,8 +2166,9 @@ window.loadDesignWithdrawals = async () => {
             });
             // design_requests 의뢰 - description LIKE '%[DESIGNER:uid%' (designer-board 식 메타)
             // 한 번에 fetch — designer_id 가 description 안에 들어있어 필터링 어려우니 status in 으로 추리고 클라이언트 분류
+            // 2026-08-24 (버그#24): design_requests 에 'amount' 컬럼 없음 → 400 에러였음. budget_max/min 사용.
             const { data: orderRows } = await sb.from('design_requests')
-                .select('id, description, status, amount')
+                .select('id, description, status, budget_min, budget_max')
                 .in('status', ['claimed','completed','settlement_requested','settled']);
             (orderRows || []).forEach(r => {
                 const m = String(r.description || '').match(/\[DESIGNER:([^\]\s]+)/);
@@ -2152,7 +2177,7 @@ window.loadDesignWithdrawals = async () => {
                 if (!designerIds.includes(did)) return;
                 if (!workMap[did]) workMap[did] = { templates:0, vectors:0, images:0, logos:0, orderClaimed:0, orderCompleted:0, orderSettled:0, totalAsset:0, totalOrder:0 };
                 const w = workMap[did];
-                const amt = r.amount || 0;
+                const amt = Number(r.budget_max || r.budget_min || 0);
                 if (r.status === 'claimed') w.orderClaimed++;
                 else if (r.status === 'completed') { w.orderCompleted++; w.totalOrder += amt; }
                 else if (r.status === 'settlement_requested') w.orderCompleted++;
@@ -2333,7 +2358,17 @@ window.markDesignWithdrawalPaid = async (reqId) => {
     try {
         const { error } = await sb.rpc('admin_mark_design_withdrawal_paid', { _req_id: reqId });
         if (error) throw error;
-        showToast("지급완료 처리되었습니다", "success");
+        // 2026-08-24 (버그#24): 지급완료 ↔ 정산완료 동기화. 송금 완료 = 실제 지급이므로,
+        //   그 디자이너의 미정산(완료/정산요청) 작업들도 [정산완료](settled)로 자동 전환 → 주문관리에서도 반영.
+        try {
+            const { data: wr } = await sb.from('design_withdrawal_requests').select('designer_id').eq('id', reqId).maybeSingle();
+            if (wr && wr.designer_id) {
+                await sb.from('design_requests').update({ status: 'settled' })
+                    .in('status', ['completed', 'settlement_requested'])
+                    .like('description', '%[DESIGNER:' + wr.designer_id + '%');
+            }
+        } catch (e) { console.warn('[withdrawal→settle sync]', e); }
+        showToast("지급완료 처리되었습니다 (관련 정산건도 자동 반영)", "success");
         loadDesignWithdrawals();
     } catch (e) {
         showToast("처리 실패: " + e.message, "error");

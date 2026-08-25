@@ -2558,11 +2558,13 @@ window._cpCreateMgrQuote = async function (btnEl) {
         if (!sb) throw new Error('Supabase 연결 실패');
         // 디자인 이미지 업로드
         // 2026-05-15: cartImageUrl 있으면 재업로드 스킵 (add-to-cart 시점에 이미 올림)
+        // 2026-08-24 (버그#41): uploadedFiles 를 카트 인덱스에 정렬(push 대신 [i]=). 이전엔 cartImageUrl 항목도
+        //   push 해서 배열이 압축 → uploadedFiles[idx] 폴백이 어긋나 뒤쪽 항목의 패턴/디자인 파일이 누락됐음.
         var uploadedFiles = [];
         for (var i = 0; i < cart.length; i++) {
             var it = cart[i];
             if (it.cartImageUrl) {
-                uploadedFiles.push({ name: it.imgFileName || ('fabric' + (i + 1)), url: it.cartImageUrl, type: 'image/png' });
+                uploadedFiles[i] = { name: it.imgFileName || ('fabric' + (i + 1)), url: it.cartImageUrl, type: 'image/png' };
                 continue;
             }
             if (!it.imgDataUrl) continue;
@@ -2578,7 +2580,7 @@ window._cpCreateMgrQuote = async function (btnEl) {
             var { error: upErr } = await sb.storage.from('orders').upload(path, blob);
             if (!upErr) {
                 var u = sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
-                uploadedFiles.push({ name: it.imgFileName || ('fabric' + (i + 1)), url: u, type: mime });
+                uploadedFiles[i] = { name: it.imgFileName || ('fabric' + (i + 1)), url: u, type: mime };
             }
         }
         var total = calcFabricCartTotal();
@@ -2588,7 +2590,7 @@ window._cpCreateMgrQuote = async function (btnEl) {
             if (it.cartImageUrl) {
                 artworkUrl = it.cartImageUrl;
                 artworkName = it.imgFileName || ('fabric' + (idx + 1));
-            } else if (it.imgDataUrl && uploadedFiles[idx]) {
+            } else if (uploadedFiles[idx]) {
                 artworkUrl = uploadedFiles[idx].url;
                 artworkName = uploadedFiles[idx].name;
             } else if (it.designerOriginalUrl) {
@@ -2628,7 +2630,7 @@ window._cpCreateMgrQuote = async function (btnEl) {
             discount_amount: 0,
             items: items,
             site_code: _cpSiteCode(),
-            files: uploadedFiles.length ? uploadedFiles : null,
+            files: uploadedFiles.filter(Boolean).length ? uploadedFiles.filter(Boolean) : null,
             admin_note: '[MANAGER_QUOTE] [Cotton Print] manager=' + (mgrEmail || 'unknown') + '\n패브릭 매니저 카트 기반 결제창 생성 — 고객 결제 대기'
         };
         var { data: inserted, error: insErr } = await sb.from('orders').insert([orderRow]).select().single();
@@ -2937,12 +2939,14 @@ window._cpSubmitOrder = async function() {
 
         // 1) 디자인 이미지 업로드 (각 카트 아이템)
         // 2026-05-15: add-to-cart 시점에 이미 storage 에 올린 cartImageUrl 이 있으면 그대로 사용 → 재업로드 스킵.
+        // 2026-08-24 (버그#41): uploadedFiles 를 카트 인덱스에 정렬(push 대신 [i]=). 이전엔 cartImageUrl 항목도
+        //   push 해서 배열이 압축 → uploadedFiles[idx] 폴백이 어긋나 뒤쪽 항목의 패턴/디자인 파일이 누락됐음.
         const uploadedFiles = [];
         for (let i = 0; i < cart.length; i++) {
             const it = cart[i];
             // 이미 storage 에 업로드돼서 URL 보관 중이면 그대로 사용
             if (it.cartImageUrl) {
-                uploadedFiles.push({ name: it.imgFileName || ('item' + (i+1)), url: it.cartImageUrl, type: 'image/png' });
+                uploadedFiles[i] = { name: it.imgFileName || ('item' + (i+1)), url: it.cartImageUrl, type: 'image/png' };
                 continue;
             }
             if (!it.imgDataUrl) continue;
@@ -2958,7 +2962,7 @@ window._cpSubmitOrder = async function() {
             const { error: upErr } = await sb.storage.from('orders').upload(path, blob);
             if (!upErr) {
                 const u = sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
-                uploadedFiles.push({ name: it.imgFileName || ('item' + (i+1)), url: u, type: mime });
+                uploadedFiles[i] = { name: it.imgFileName || ('item' + (i+1)), url: u, type: mime };
             }
         }
 
@@ -2974,7 +2978,7 @@ window._cpSubmitOrder = async function() {
             if (it.cartImageUrl) {
                 artworkUrl  = it.cartImageUrl;
                 artworkName = it.imgFileName || ('item' + (idx + 1));
-            } else if (it.imgDataUrl && uploadedFiles[idx]) {
+            } else if (uploadedFiles[idx]) {
                 artworkUrl  = uploadedFiles[idx].url;
                 artworkName = uploadedFiles[idx].name;
             } else if (it.designerOriginalUrl) {
@@ -3096,7 +3100,7 @@ window._cpSubmitOrder = async function() {
             discount_amount: _discAmt,
             items: items,
             site_code: _cpSiteCode(),
-            files: uploadedFiles.length ? uploadedFiles : null,
+            files: uploadedFiles.filter(Boolean).length ? uploadedFiles.filter(Boolean) : null,
             attribution_channel: (window.getOrderAttribution && window.getOrderAttribution().attribution_channel) || null,   // 2026-08-05: 유입경로(last-touch)
             attribution: (window.getOrderAttribution && window.getOrderAttribution().attribution) || null,
             admin_note: _finalAdminNote
