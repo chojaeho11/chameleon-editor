@@ -569,6 +569,12 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // 2026-08-31: 종이매대 설계 스튜디오 — 전 도메인에서 정적 파일 그대로 서빙 (host-takeover 블록보다 앞).
+        //   제품페이지 모달 iframe(src=/pd_studio.html)이 어느 도메인에서든 동일출처로 로드되게 보장.
+        if (path === 'pd_studio' || path === 'pd_studio.html') {
+            return env.ASSETS.fetch(new Request(new URL('/pd_studio.html', url.origin).toString(), request));
+        }
+
         // ========== 2026-05-25: hexa-board.com → 허니콤보드 원판(Hexalite) 전용 도메인 ==========
         //   새로 구입한 hexa-board.com 전체를 raw_board.html(원판 랜딩) 전용으로 서빙. URL 은 그대로 유지.
         //   언어는 URL ?lang= 따름 (기본 한국어 — raw_board.html 의 hostLang 처리). cafe3355 블록과 동일 패턴.

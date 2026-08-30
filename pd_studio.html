@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>종이매대 설계 스튜디오</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg:#eaedf1; --surface:#ffffff; --surface-2:#f5f7f9; --panel:#fbfcfd;
+    --ink:#191c22; --muted:#5c6472; --faint:#8a92a0;
+    --line:#d7dbe2; --line-2:#e6e9ee;
+    --accent:#4338ca; --accent-soft:#ecebfb;
+    --cut:#d92d20; --crease:#2563eb;
+    --grid:#e4e7ec;
+    --shadow:0 1px 2px rgba(20,25,40,.06),0 8px 26px -14px rgba(20,25,40,.22);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#111319; --surface:#1a1d24; --surface-2:#20242c; --panel:#1e222a;
+      --ink:#eceef2; --muted:#9aa2b1; --faint:#6b7280;
+      --line:#2b303a; --line-2:#242932;
+      --accent:#8b93f8; --accent-soft:#20213a;
+      --cut:#ff6f62; --crease:#6aa1ff;
+      --grid:#242a33;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#111319; --surface:#1a1d24; --surface-2:#20242c; --panel:#1e222a;
+    --ink:#eceef2; --muted:#9aa2b1; --faint:#6b7280;
+    --line:#2b303a; --line-2:#242932;
+    --accent:#8b93f8; --accent-soft:#20213a;
+    --cut:#ff6f62; --crease:#6aa1ff;
+    --grid:#242a33;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -16px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px; margin:0 auto; padding:14px 20px 24px}
+  header.top{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:2px}
+  header.top h1{font-size:19px; font-weight:600; letter-spacing:-.02em; margin:0}
+  header.top .badge{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 8px; border-radius:5px}
+  header.top p{margin:0; color:var(--muted); font-size:12px; flex-basis:100%; max-width:88ch}
+
+  .studio{display:grid; grid-template-columns:246px 1fr 172px; gap:14px; margin-top:12px; align-items:start}
+  @media (max-width:980px){ .studio{grid-template-columns:1fr} }
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow)}
+  .controls,.faces{padding:15px; align-self:start}
+  .controls h2,.faces h2{font-size:11px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 10px}
+  .controls h2:not(:first-child){margin-top:15px; padding-top:13px; border-top:1px solid var(--line-2)}
+  .field{margin-bottom:10px}
+  .field label{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; color:var(--muted); margin-bottom:6px}
+  .field label b{font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--ink); font-size:12.5px; font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%; accent-color:var(--accent); height:22px}
+  select,input[type=text]{width:100%; padding:9px 11px; background:var(--panel); border:1px solid var(--line); border-radius:9px; color:var(--ink); font-family:inherit; font-size:13px}
+  select:focus,input[type=text]:focus{outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent}
+  .typerow{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .typebtn{display:flex; flex-direction:column; align-items:center; gap:1px; padding:11px 0; border:1.5px solid var(--line); background:var(--panel); color:var(--muted); border-radius:11px; cursor:pointer; font-family:inherit; font-size:15px; font-weight:700}
+  .typebtn span{font-size:10.5px; font-weight:500; color:var(--faint)}
+  .typebtn[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent)}
+  .typebtn[aria-pressed="true"] span{color:var(--accent)}
+  .modelgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px}
+  .modelcard{display:flex; flex-direction:column; align-items:center; gap:5px; padding:9px 6px; border:1.5px solid var(--line); background:var(--panel); border-radius:11px; cursor:pointer; font-family:inherit}
+  .modelcard:hover{border-color:var(--accent)}
+  .modelcard[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+  .modelcard svg{width:100%; height:52px; display:block}
+  .modelcard .mname{font-size:11px; color:var(--ink); font-weight:600; text-align:center; line-height:1.3}
+  .segrow{display:flex; gap:6px}
+  .seg{flex:1; appearance:none; border:1px solid var(--line); background:var(--panel); color:var(--muted); font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:14px; padding:8px 0; border-radius:9px; cursor:pointer}
+  .seg[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+  .swrow{display:grid; grid-template-columns:repeat(6,1fr); gap:7px}
+  .sw{width:100%; aspect-ratio:1/1; border-radius:7px; border:2px solid transparent; cursor:pointer; padding:0}
+  .sw[aria-pressed="true"]{border-color:var(--ink); box-shadow:0 0 0 2px var(--surface) inset}
+  .facegrid{display:grid; grid-template-columns:1fr; gap:7px; margin-top:2px}
+  .facebtn{display:flex; flex-direction:column; align-items:flex-start; gap:2px; border:1px solid var(--line); background:var(--panel); border-radius:9px; padding:8px 10px; cursor:pointer; font-family:inherit; text-align:left}
+  .facebtn:hover{border-color:var(--accent)}
+  .facebtn b{font-size:12px; color:var(--ink); font-weight:600}
+  .facebtn span{font-size:10.5px; color:var(--faint)}
+  .facebtn .fsz{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--accent); font-weight:600}
+  .facebtn[data-has="1"]{border-color:var(--accent); background:var(--accent-soft)}
+  .facebtn[data-has="1"] span{color:var(--accent)}
+  .hint2{font-size:11.5px; color:var(--faint); margin-top:8px; line-height:1.5}
+
+  .stage{display:flex; flex-direction:column; height:clamp(460px, calc(100vh - 150px), 820px); min-height:0; overflow:hidden}
+  @media (max-width:980px){ .stage{height:auto; min-height:520px} }
+  .tabs{display:flex; gap:2px; padding:10px 12px 0; border-bottom:1px solid var(--line-2)}
+  .tab{appearance:none; border:none; background:none; font-family:inherit; font-size:13px; font-weight:500; color:var(--muted); padding:9px 15px; border-radius:9px 9px 0 0; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px}
+  .tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent); font-weight:600}
+  .view{flex:1; position:relative; display:none}
+  .view.on{display:block}
+  #view3d{background:
+      radial-gradient(120% 80% at 50% 0%, color-mix(in srgb,var(--accent) 8%, transparent) 0%, transparent 55%),
+      repeating-linear-gradient(0deg, transparent 0 27px, var(--grid) 27px 28px),
+      repeating-linear-gradient(90deg, transparent 0 27px, var(--grid) 27px 28px),
+      var(--surface-2); min-height:0}
+  #gl{width:100%; height:100%; display:block; cursor:grab; touch-action:none}
+  #gl:active{cursor:grabbing}
+  .hint{position:absolute; left:14px; bottom:12px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.05em; color:var(--faint); pointer-events:none}
+  #view2d{padding:20px; overflow:auto; background:var(--surface-2); min-height:560px}
+  #svgHost{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px}
+  #svgHost svg{width:100%; height:auto; display:block}
+  #svgHost .pface{cursor:pointer}
+  #svgHost .pface:hover .pfacefill{opacity:.14}
+
+  .barbottom{display:flex; align-items:center; gap:16px; padding:13px 16px; border-top:1px solid var(--line-2); flex-wrap:wrap}
+  .foldwrap{flex:1; min-width:200px; display:flex; align-items:center; gap:11px}
+  .foldwrap span{font-size:11px; color:var(--faint); white-space:nowrap}
+  .btn{appearance:none; font-family:inherit; font-size:13px; font-weight:600; padding:9px 16px; border-radius:10px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-bottom:14px}
+  .legend i{display:inline-block; width:22px; height:0; vertical-align:middle; margin-right:6px}
+  .lc{border-top:2.5px solid var(--cut)}
+  .lk{border-top:2.5px dashed var(--crease)}
+  .dimtbl{width:100%; border-collapse:collapse; margin-top:4px; font-size:12.5px}
+  .dimtbl td{padding:6px 2px; border-bottom:1px solid var(--line-2)}
+  .dimtbl td:last-child{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink); font-weight:500}
+  .note{margin-top:18px; font-size:12px; color:var(--muted); line-height:1.65; background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:10px; padding:13px 15px}
+  .note b{color:var(--ink); font-weight:600}
+
+  /* AI 이미지 생성 */
+  .aibtn{width:100%; margin-bottom:10px; padding:10px 12px; border:1.5px solid var(--accent); background:var(--accent-soft); color:var(--accent); border-radius:10px; font-family:inherit; font-weight:600; font-size:12.5px; cursor:pointer}
+  .aibtn:hover{filter:brightness(.98)}
+  .modal{position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; background:rgba(15,18,28,.55); padding:18px}
+  .modal.on{display:flex}
+  .modalcard{width:min(560px,96vw); max-height:92vh; overflow:auto; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 22px}
+  .modalcard h3{margin:0 0 3px; font-size:16px; font-weight:600}
+  .modalcard .sub{color:var(--muted); font-size:12px; margin:0 0 4px; line-height:1.55}
+  .mlabel{font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin:16px 0 7px}
+  textarea.aiprompt{width:100%; min-height:64px; resize:vertical; padding:10px 12px; background:var(--panel); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-family:inherit; font-size:13px; line-height:1.5}
+  textarea.aiprompt:focus{outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent}
+  .chiprow{display:flex; flex-wrap:wrap; gap:6px}
+  .chip{border:1px solid var(--line); background:var(--panel); color:var(--muted); border-radius:20px; padding:6px 13px; font-size:12px; cursor:pointer; font-family:inherit}
+  .chip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600}
+  .aibar{height:8px; border-radius:6px; background:var(--line-2); overflow:hidden; margin:12px 0 6px}
+  .aibar>i{display:block; height:100%; width:32%; background:var(--accent); border-radius:6px; transform:translateX(-120%)}
+  .aibar.run>i{animation:aislide 1.15s ease-in-out infinite}
+  @keyframes aislide{0%{transform:translateX(-120%)}100%{transform:translateX(360%)}}
+  .aistatus{font-size:12px; color:var(--muted); min-height:17px; line-height:1.5}
+  .refrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .refprev{position:relative; width:56px; height:56px; border:1px solid var(--line); border-radius:8px; overflow:hidden; flex:none}
+  .refprev img{width:100%; height:100%; object-fit:cover; display:block}
+  .refprev button{position:absolute; top:-8px; right:-8px; width:21px; height:21px; border-radius:50%; border:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:14px; line-height:1; cursor:pointer; padding:0}
+  .refhint{font-size:11px; color:var(--faint); flex:1; min-width:140px}
+  .gface{margin-top:12px}
+  .gface h5{margin:0 0 6px; font-size:12px; color:var(--ink); font-weight:600}
+  .gGrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(82px,1fr)); gap:8px}
+  .gitem{border:1px solid var(--line); border-radius:9px; overflow:hidden; background:var(--panel)}
+  .gitem img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block}
+  .gitem .gact{display:flex}
+  .gitem .gact button{flex:1; border:none; border-top:1px solid var(--line); background:var(--surface); color:var(--muted); font-family:inherit; font-size:11px; padding:5px 0; cursor:pointer}
+  .gitem .gact button:hover{color:var(--accent)}
+  .gitem .gact button.del{border-left:1px solid var(--line)}
+  .gitem .gact button.del:hover{color:var(--cut)}
+  .mfoot{display:flex; gap:8px; justify-content:flex-end; margin-top:18px; flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>종이매대 설계 스튜디오</h1>
+    <span class="badge">Prototype · Parametric + 3D</span>
+    <p>제품 크기·선반 수·하단 높이를 정하면 <b>바닥 다단 매대(FSDU)</b>의 3D 모델과 전개도가 실시간 생성됩니다. 각 면(헤더·뒷판·측면·선반·하단)에 이미지를 넣으면 <b>바깥면에만</b> 인쇄되고 안쪽은 크라프트로 남습니다.</p>
+  </header>
+
+  <div class="studio">
+    <div class="card controls">
+      <h2>매대 종류</h2>
+      <div class="typerow">
+        <button class="typebtn" type="button" data-type="small" aria-pressed="true">소형<span>카운터 트레이</span></button>
+        <button class="typebtn" type="button" data-type="large">대형<span>바닥 다단</span></button>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>모델 선택 <span style="font-size:10.5px;color:var(--faint)">추후 계속 추가</span></label>
+        <div class="modelgrid" id="modelgrid"></div>
+      </div>
+
+      <h2>치수 (mm)</h2>
+      <div class="field"><label>폭 <b><span id="vW">400</span></b></label><input type="range" id="W" min="250" max="600" step="10" value="400"></div>
+      <div class="field"><label>깊이 <b><span id="vD">350</span></b></label><input type="range" id="D" min="200" max="500" step="10" value="350"></div>
+      <div class="field"><label>전체 높이 <b><span id="vH">1500</span></b></label><input type="range" id="H" min="800" max="1600" step="20" value="1500"></div>
+      <div class="field" id="fldHd"><label>헤더 높이 <b><span id="vHd">320</span></b></label><input type="range" id="Hd" min="0" max="500" step="10" value="320"></div>
+      <div class="field"><label id="lblBs">하단(막음) 높이 <b><span id="vBs">280</span></b></label><input type="range" id="Bs" min="0" max="500" step="10" value="280"></div>
+      <div class="field" id="fldN">
+        <label>선반 수 <span style="font-size:10.5px;color:var(--faint)">하단 위 균등 분할</span></label>
+        <div class="segrow" id="shelfSeg">
+          <button class="seg" data-n="1" type="button">1</button>
+          <button class="seg" data-n="2" type="button">2</button>
+          <button class="seg" data-n="3" type="button">3</button>
+          <button class="seg" data-n="4" type="button" aria-pressed="true">4</button>
+        </div>
+      </div>
+
+      <div id="fldInsert" style="display:none; border-top:1px solid var(--line-2); margin-top:15px; padding-top:13px;">
+        <h2 style="margin-top:0; padding-top:0; border:none;">삽입 틀 (제품 꽂이)</h2>
+        <div class="field">
+          <label>구멍 모양</label>
+          <div class="segrow" id="insShape">
+            <button class="seg" data-shape="circle" type="button" aria-pressed="true">● 원형</button>
+            <button class="seg" data-shape="square" type="button">■ 사각</button>
+          </div>
+        </div>
+        <div class="field"><label>구멍 크기 <b><span id="vIns">80</span></b></label><input type="range" id="insSize" min="10" max="100" step="5" value="80"></div>
+        <div class="field"><label>가로 개수 <b><span id="vInsN">1</span></b></label><input type="range" id="insCount" min="1" max="6" step="1" value="1"></div>
+        <div class="field"><label>줄 수 <b><span id="vInsR">1</span></b></label><input type="range" id="insRowsN" min="1" max="4" step="1" value="1"></div>
+        <div class="field">
+          <label>배치 <span style="font-size:10.5px;color:var(--faint)">계단=뒤로 갈수록 높음</span></label>
+          <div class="segrow" id="insStep">
+            <button class="seg" data-step="0" type="button" aria-pressed="true">평면</button>
+            <button class="seg" data-step="1" type="button">계단</button>
+          </div>
+        </div>
+        <div class="field"><label>삽입 깊이 <b><span id="vInsD">60</span></b></label><input type="range" id="insDepth" min="10" max="200" step="5" value="60"></div>
+      </div>
+
+      <h2>디자인 (바깥면만 인쇄)</h2>
+      <div class="field"><label for="brand">브랜드 · 문구</label><input type="text" id="brand" value="CHAMELEON" maxlength="18"></div>
+      <div class="field"><label>기본 패널 색상</label><div class="swrow" id="swrow"></div></div>
+      <input type="file" id="faceFile" accept="image/*" style="display:none">
+    </div>
+
+    <div class="card stage">
+      <div class="tabs" role="tablist">
+        <button class="tab" id="tab3d" role="tab" aria-selected="true" onclick="pickTab('3d')">3D 미리보기</button>
+        <button class="tab" id="tab2d" role="tab" aria-selected="false" onclick="pickTab('2d')">2D 전개도 · 칼선</button>
+      </div>
+
+      <div class="view on" id="view3d" role="tabpanel">
+        <canvas id="gl"></canvas>
+        <div class="hint">드래그: 회전 · 슬라이더: 조립 ↔ 분해도</div>
+      </div>
+
+      <div class="view" id="view2d" role="tabpanel">
+        <div class="legend">
+          <span><i class="lc"></i>칼선 (재단 · Cut)</span>
+          <span><i class="lk"></i>오시선 (접는 골 · Crease)</span>
+          <span style="color:var(--accent)">면 클릭 → 이미지 넣기</span>
+        </div>
+        <div id="svgHost"></div>
+        <table class="dimtbl" id="dimtbl"></table>
+        <div class="note"><b>대표 전개도입니다.</b> 실제 생산본은 골 두께 접힘 보정·잠금 탭·풀칠 날개·재단기 별색(CutContour)·본체/선반 분리 피스가 자동 추가됩니다. 치수를 바꾸면 3D와 전개도가 실시간으로 다시 만들어집니다.</div>
+      </div>
+
+      <div class="barbottom">
+        <div class="foldwrap"><span>조립</span><input type="range" id="fold" min="0" max="100" value="0" style="flex:1"><span>분해도</span></div>
+        <button class="btn" id="spinBtn" onclick="toggleSpin()">자동회전 끄기</button>
+        <button class="btn" onclick="downloadSVG()">전개도 SVG 내려받기</button>
+        <button class="btn primary" id="pdAddBtn" style="display:none" onclick="window.pdAddToOrder()">이 디자인으로 담기</button>
+      </div>
+    </div>
+
+    <div class="card faces">
+      <h2>면별 이미지</h2>
+      <button class="aibtn" type="button" onclick="window.pdAiOpen()">AI 이미지 생성</button>
+      <div class="hint2" style="margin:0 0 10px">직접 업로드하거나 <b>AI로 생성</b>할 수 있어요. 아래 <b>표시된 사이즈</b> 기준, 바깥면에만 인쇄됩니다.</div>
+      <div class="facegrid" id="facegrid">
+        <button class="facebtn" type="button" data-face="header"><b>헤더</b><span class="fsz">–</span><span>비어있음</span></button>
+        <button class="facebtn" type="button" data-face="back"><b>뒷판</b><span class="fsz">–</span><span>비어있음</span></button>
+        <button class="facebtn" type="button" data-face="left"><b>좌측면</b><span class="fsz">–</span><span>비어있음</span></button>
+        <button class="facebtn" type="button" data-face="right"><b>우측면</b><span class="fsz">–</span><span>비어있음</span></button>
+        <button class="facebtn" type="button" data-face="base"><b>하단</b><span class="fsz">–</span><span>비어있음</span></button>
+        <button class="facebtn" type="button" data-face="top"><b>상단면 (꽂이판)</b><span class="fsz">–</span><span>비어있음</span></button>
+        <button class="facebtn" type="button" data-face="shelf"><b>선반 앞띠</b><span class="fsz">–</span><span>비어있음</span></button>
+      </div>
+      <div class="hint2">각 버튼을 누르거나 <b>2D 전개도에서 면을 클릭</b>해 넣을 수 있어요.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="aiModal">
+  <div class="modalcard">
+    <h3>AI 이미지 생성</h3>
+    <p class="sub"><b>메인 테마 이미지를 먼저</b> 만들어 확인한 뒤, 마음에 들면 같은 테마로 나머지 면을 생성합니다. 판형(면 비율)에 맞춰 생성되고, 세로로 긴 대형 옆면은 <b>배너처럼 가운데로</b> 구성됩니다.</p>
+    <p class="sub" style="color:var(--accent)">한 장당 20~60초 정도 걸릴 수 있어요. 생성 중에는 잠시 기다려 주세요. (생성 모델: gpt-image-2)</p>
+
+    <div class="mlabel">테마 · 문구 설명</div>
+    <textarea class="aiprompt" id="aiPrompt" placeholder="예) 노브랜드 버거 그릴드 불고기 무료증정 이벤트. 빨강·노랑, 먹음직한 버거 사진, 큰 한글 헤드라인"></textarea>
+
+    <div class="mlabel">제품 사진 (선택 · 합성용)</div>
+    <div class="refrow" id="aiRefRow">
+      <button class="btn" type="button" id="aiRefBtn" style="font-size:12px;padding:8px 13px">제품 사진 올리기</button>
+      <div class="refprev" id="aiRefPrev" style="display:none"><img id="aiRefImg" alt=""><button type="button" id="aiRefClear" title="제거">×</button></div>
+      <span class="refhint" id="aiRefHint">사진을 올리면 생성 이미지에 실제 제품이 자연스럽게 합성됩니다.</span>
+    </div>
+    <input type="file" id="aiRefFile" accept="image/*" style="display:none">
+
+    <div class="mlabel">① 메인 면 (대표 테마)</div>
+    <div class="chiprow" id="aiMainChips"></div>
+    <button class="btn primary" id="aiGenMain" style="width:100%;margin-top:10px">① 메인 테마 이미지 생성</button>
+
+    <div class="aibar" id="aiBar"><i></i></div>
+    <div class="aistatus" id="aiStatus">테마를 입력하고 메인 이미지를 생성하세요.</div>
+
+    <div id="aiStep2" style="display:none">
+      <div class="mlabel">② 나머지 면 (메인 확인 후)</div>
+      <div class="chiprow" id="aiOtherChips"></div>
+      <button class="btn primary" id="aiGenOthers" style="width:100%;margin-top:10px">② 이 테마로 선택한 면 생성</button>
+    </div>
+
+    <div class="mlabel">보관함 · 적용 / 삭제</div>
+    <div id="aiGallery"><p class="sub">아직 생성된 이미지가 없어요.</p></div>
+
+    <div class="mfoot">
+      <button class="btn" type="button" onclick="window.pdAiClose()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var KRAFT="#c9a878";
+  // AI 이미지 생성 엔드포인트 (홈페이지 미니에디터와 동일 = /functions/v1/ai-image-gen, 모델 gpt-image-2).
+  //   자기 도메인이라 CSP 정상 → 실제 생성·제품사진 합성 동작. 실패 시 데모 폴백.
+  var SB_URL="https://qinvtnhiidtmrzosyvys.supabase.co";
+  var SB_KEY=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9","eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0","3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y"].join(".");
+  // Supabase 클라이언트 (Storage 업로드용). 부모(index) 세션이 있으면 재사용, 없으면 anon 생성.
+  var _pdSb=null; function pdSb(){ if(_pdSb)return _pdSb; try{ _pdSb = (window.sb) || (window.supabase && window.supabase.createClient(SB_URL,SB_KEY)); }catch(_e){ _pdSb=null; } return _pdSb; }
+  // URL 파라미터 (제품페이지 모달에서 전달)
+  var PARAMS=new URLSearchParams(location.search);
+  var EMBED = PARAMS.get("embed")==="1";
+  var PCODE = PARAMS.get("code")||"";
+  var LANG = (function(){var l=(PARAMS.get("lang")||"").toLowerCase(); if(l)return l; var h=location.hostname; if(/cafe0101|co\.jp|\.jp$/.test(h))return "ja"; if(/cafe3355|chameleon\.design|\.com$/.test(h)&&/cafe3355/.test(h))return "en"; return "ko";})();
+  var FACE_KO={header:"헤더",back:"뒷판",left:"좌측면",right:"우측면",base:"하단",top:"상단면",shelf:"선반 앞띠"};
+  var FACE_ROLE={header:"상단 광고 헤더 (브랜드/이벤트명 크게)",back:"메인 뒷판 (핵심 헤드라인·대표 비주얼)",left:"좌측면 (보조 비주얼)",right:"우측면 (보조 비주얼)",base:"하단 앞막음 (브랜드 띠)",top:"상단 꽂이판",shelf:"선반 앞띠 (가격·문구 띠)"};
+  var state={type:"small",modelId:"s1",W:300,D:220,H:300,Hd:0,Bs:60,N:0,brand:"CHAMELEON",color:"#7c3aed",expl:0,spin:true,
+             insert:{shape:"circle",size:80,depth:60,count:1,rows:1,step:false},
+             faceImg:{header:null,back:null,left:null,right:null,base:null,shelf:null,top:null},
+             aiTheme:"",aiMainDone:false,aiGallery:{}};
+  // 모델 카탈로그 — 추후 계속 추가 (소형/대형 각 여러 모델)
+  var MODELS=[
+    {id:"s1",cls:"small",name:"카운터 트레이 기본형",preset:{W:[150,400,300],D:[120,300,220],H:[150,400,300],Hd:[0,0,0],Bs:[0,100,60],N:0}},
+    {id:"s2",cls:"small",name:"광고판형 (하단 삽입)",preset:{W:[150,400,300],D:[120,300,220],H:[220,550,400],Hd:[0,0,0],Bs:[0,150,90],N:0}},
+    {id:"l1",cls:"large",name:"바닥 다단 매대 기본형",preset:{W:[250,600,400],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,280],N:4}},
+    {id:"l2",cls:"large",name:"좌우 분리형",preset:{W:[300,700,460],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,240],N:4}}
+  ];
+  var PALETTE=["#7c3aed","#e5533d","#f59e0b","#0f9d6b","#2f80ed","#e11d8f","#0ea5e9","#14b8a6","#f43f5e","#a855f7","#334155","#111827"];
+  var LIP=48, INSET=6;
+
+  (function(){var host=$("swrow");PALETTE.forEach(function(c){var b=document.createElement("button");b.className="sw";b.style.background=c;b.type="button";b.setAttribute("aria-pressed",c===state.color?"true":"false");b.title=c;b.onclick=function(){state.color=c;host.querySelectorAll(".sw").forEach(function(x){x.setAttribute("aria-pressed","false");});b.setAttribute("aria-pressed","true");rebuild();};host.appendChild(b);});})();
+
+  function bindRange(id,key,disp){var el=$(id);el.addEventListener("input",function(){state[key]=parseFloat(el.value);if(disp)$(disp).textContent=state[key];rebuild();});}
+  bindRange("W","W","vW");bindRange("D","D","vD");bindRange("H","H","vH");bindRange("Hd","Hd","vHd");bindRange("Bs","Bs","vBs");
+  $("shelfSeg").addEventListener("click",function(e){var b=e.target.closest(".seg");if(!b)return;state.N=parseInt(b.getAttribute("data-n"),10);this.querySelectorAll(".seg").forEach(function(x){x.setAttribute("aria-pressed","false");});b.setAttribute("aria-pressed","true");rebuild();});
+  $("brand").addEventListener("input",function(){state.brand=this.value;rebuild();});
+  $("fold").addEventListener("input",function(){state.expl=parseFloat(this.value)/100;applyExplode();});
+  // 삽입 틀 컨트롤
+  $("insShape").addEventListener("click",function(e){var b=e.target.closest(".seg");if(!b)return;state.insert.shape=b.getAttribute("data-shape");this.querySelectorAll(".seg").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});rebuild();});
+  $("insSize").addEventListener("input",function(){state.insert.size=parseFloat(this.value);$("vIns").textContent=this.value;rebuild();});
+  $("insCount").addEventListener("input",function(){state.insert.count=parseInt(this.value,10);$("vInsN").textContent=this.value;rebuild();});
+  $("insRowsN").addEventListener("input",function(){state.insert.rows=parseInt(this.value,10);$("vInsR").textContent=this.value;rebuild();});
+  $("insStep").addEventListener("click",function(e){var b=e.target.closest(".seg");if(!b)return;state.insert.step=b.getAttribute("data-step")==="1";this.querySelectorAll(".seg").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});rebuild();});
+  $("insDepth").addEventListener("input",function(){state.insert.depth=parseFloat(this.value);$("vInsD").textContent=this.value;rebuild();});
+  // 소형/대형 + 모델 시스템
+  function modelIcon(id){
+    var g='<svg viewBox="0 0 60 52"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">';
+    if(id==="s1") return g+'<path d="M12 6 h36 v11 h-36 z"/><path d="M12 17 L16 40 h28 l4 -23"/><path d="M16 40 v6 h28 v-6"/></g></svg>';         // 트레이(사선)
+    if(id==="s2") return g+'<rect x="14" y="4" width="32" height="18"/><path d="M12 30 h36 v14 h-36 z"/><path d="M26 30 v14 M34 30 v14"/></g></svg>'; // 광고판+하단삽입
+    if(id==="l2") return g+'<rect x="18" y="3" width="24" height="7"/><rect x="15" y="10" width="30" height="40"/><path d="M30 10 v40"/><path d="M15 22 h13 M32 22 h13 M15 34 h13 M32 34 h13"/></g></svg>'; // 좌우분리
+    return g+'<rect x="18" y="3" width="24" height="8"/><rect x="15" y="11" width="30" height="39"/><path d="M15 22 h30 M15 32 h30 M15 42 h30"/></g></svg>'; // 다단 기본
+  }
+  function renderModels(){
+    var host=$("modelgrid"); if(!host) return;
+    var ac=cssv("--accent");
+    host.innerHTML=MODELS.filter(function(m){return m.cls===state.type;}).map(function(m){
+      return '<button class="modelcard" type="button" data-id="'+m.id+'" aria-pressed="'+(m.id===state.modelId?"true":"false")+'" style="color:'+ac+'">'+modelIcon(m.id)+'<span class="mname">'+m.name+'</span></button>';
+    }).join('');
+  }
+  function applyTypeVisibility(){
+    var small=state.type==="small";
+    $("fldHd").style.display=small?"none":"";
+    $("fldN").style.display=small?"none":"";
+    var lb=$("lblBs"); if(lb&&lb.firstChild) lb.firstChild.nodeValue=small?"앞막음 높이 ":"하단(막음) 높이 ";
+    $("facegrid").querySelectorAll(".facebtn").forEach(function(fb){var fc=fb.getAttribute("data-face");var hide=(small&&(fc==="header"||fc==="shelf"))||(!small&&fc==="top");fb.style.display=hide?"none":"";});
+    var fi=$("fldInsert"); if(fi) fi.style.display=small?"":"none";  // 삽입 틀은 소형(트레이/광고판형)
+    document.querySelectorAll(".typebtn").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-type")===state.type?"true":"false");});
+  }
+  window.selectModel=function(id){
+    var m=null; for(var i=0;i<MODELS.length;i++){if(MODELS[i].id===id){m=MODELS[i];break;}}
+    if(!m) return;
+    state.type=m.cls; state.modelId=id;
+    var p=m.preset;
+    function setS(id2,disp,arr){var el=$(id2);el.min=arr[0];el.max=arr[1];el.value=arr[2];state[id2]=arr[2];$(disp).textContent=arr[2];}
+    setS("W","vW",p.W);setS("D","vD",p.D);setS("H","vH",p.H);setS("Hd","vHd",p.Hd);setS("Bs","vBs",p.Bs);
+    state.N=p.N||0;
+    $("shelfSeg").querySelectorAll(".seg").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-n")===String(state.N)?"true":"false");});
+    applyTypeVisibility(); renderModels(); rebuild();
+  };
+  $("modelgrid").addEventListener("click",function(e){var b=e.target.closest(".modelcard");if(b)window.selectModel(b.getAttribute("data-id"));});
+  document.querySelectorAll(".typebtn").forEach(function(b){b.addEventListener("click",function(){
+    var t=b.getAttribute("data-type"); if(t===state.type) return;
+    var first=MODELS.filter(function(m){return m.cls===t;})[0];
+    if(first) window.selectModel(first.id);
+  });});
+
+  var pendingFace=null;
+  window.pdPickFace=function(face){pendingFace=face;$("faceFile").click();};
+  $("facegrid").addEventListener("click",function(e){var b=e.target.closest(".facebtn");if(!b)return;window.pdPickFace(b.getAttribute("data-face"));});
+  $("faceFile").addEventListener("change",function(e){
+    var f=e.target.files&&e.target.files[0];if(!f||!pendingFace){this.value="";return;}
+    var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){state.faceImg[pendingFace]={img:im,url:r.result};updateFaceBtns();rebuild();};im.src=r.result;};r.readAsDataURL(f);this.value="";
+  });
+  function faceSizeLabel(fc){
+    var W=state.W,Hb=bodyH(),D=state.D,Hd=state.Hd,Bs=baseH();
+    if(fc==="header") return Hd>0?(W+"×"+Hd+" mm"):"—";
+    if(fc==="back") return W+"×"+Math.round(Hb)+" mm";
+    if(fc==="left"||fc==="right") return D+"×"+Math.round(Hb)+" mm";
+    if(fc==="base") return Bs>0?(W+"×"+Math.round(Bs)+" mm"):"—";
+    if(fc==="top") return W+"×"+D+" mm";
+    if(fc==="shelf") return W+"×"+LIP+" mm";
+    return "—";
+  }
+  function updateFaceBtns(){
+    $("facegrid").querySelectorAll(".facebtn").forEach(function(b){
+      var fc=b.getAttribute("data-face"),has=!!state.faceImg[fc];
+      b.setAttribute("data-has",has?"1":"0");
+      var sz=b.querySelector(".fsz"); if(sz) sz.textContent=faceSizeLabel(fc);
+      var st=b.querySelector("span:not(.fsz)"); if(st) st.textContent=has?"이미지 있음 · 교체":"비어있음";
+    });
+  }
+
+  /* ================= AI 이미지 생성 ================= */
+  function faceDims(fc){var W=state.W,Hb=bodyH(),D=state.D,Hd=state.Hd,Bs=baseH();
+    if(fc==="header")return [W,Hd]; if(fc==="back")return [W,Hb];
+    if(fc==="left"||fc==="right")return [D,Hb]; if(fc==="base")return [W,Bs];
+    if(fc==="top")return [W,D]; if(fc==="shelf")return [W,LIP]; return [W,Hb];}
+  function faceSize(fc){var d=faceDims(fc),w=d[0],h=d[1]; if(w>h*1.15)return "1536x1024"; if(h>w*1.15)return "1024x1536"; return "1024x1024";}
+  function faceTall(fc){var d=faceDims(fc); return d[1]>=d[0]*1.8;}
+  function buildPrompt(fc,theme,hasRef){
+    var p=(theme||"")+" — 상업용 종이매대(POP) "+(FACE_ROLE[fc]||"인쇄면")+". 실제 인쇄 포스터 느낌, 선명하고 눈에 띄는 색.";
+    p+=" The background must extend fully to all edges (full bleed). Do NOT draw any border, frame or colored margin.";
+    if(hasRef) p+=" Use the ATTACHED product photo as the hero product: place it prominently and naturally in the layout, keep the real product clearly recognizable and undistorted, and blend it with matching lighting and a soft shadow.";
+    if(faceTall(fc)) p+=" Compose as a TALL VERTICAL BANNER: stack key elements in a centered vertical column, keep the important text and graphics in the middle band with large calm margins at top and bottom.";
+    else p+=" Keep the important text and elements centered, about 18% away from every edge (the print may be cropped).";
+    p+=(LANG==="ja") ? " Keep all visible text in JAPANESE." : (LANG==="en") ? " Keep all visible text in ENGLISH." : " Keep all visible text in KOREAN (Hangul).";
+    return p;
+  }
+  function visibleFaces(){var out=[];$("facegrid").querySelectorAll(".facebtn").forEach(function(b){if(b.style.display!=="none")out.push(b.getAttribute("data-face"));});return out;}
+  function delay(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  function _shade(hex,amt){function cl(v){return Math.max(0,Math.min(255,v));}var r=cl(parseInt(hex.slice(1,3),16)+amt),g=cl(parseInt(hex.slice(3,5),16)+amt),b=cl(parseInt(hex.slice(5,7),16)+amt);return "rgb("+r+","+g+","+b+")";}
+  function _rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+  function _wrap(g,t,cx,cy,maxw,lh){var ws=(t||"").split(/\s+/),lines=[],cur="";for(var i=0;i<ws.length;i++){var test=cur?cur+" "+ws[i]:ws[i];if(g.measureText(test).width>maxw&&cur){lines.push(cur);cur=ws[i];}else cur=test;}if(cur)lines.push(cur);lines=lines.slice(0,3);var y0=cy-(lines.length-1)*lh/2;lines.forEach(function(ln,i){g.fillText(ln,cx,y0+i*lh);});}
+  function _loadImg(u){return new Promise(function(res){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){res(null);};im.src=u;});}
+  // 참조(제품) 사진 정규화 — 긴 변 max 로 축소해 jpeg dataURL (8MB 상한·edits 속도 대비)
+  function _normRef(u,max){return new Promise(function(res){var im=new Image();im.onload=function(){var w=im.width,h=im.height,s=Math.min(1,max/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(w*s));c.height=Math.max(1,Math.round(h*s));var g=c.getContext("2d");g.drawImage(im,0,0,c.width,c.height);try{res(c.toDataURL("image/jpeg",0.9));}catch(_){res(u);}};im.onerror=function(){res(u);};im.src=u;});}
+  // 프로토타입 폴백: 실제 생성 불가(CSP) 시 데모 이미지 — 판형 비율·배너 중앙구성·제품사진 합성(데모) 반영
+  async function demoImage(fc,theme,size,refUrl){
+    var wh=size.split("x"),cw=Math.round(parseInt(wh[0],10)*0.6),ch=Math.round(parseInt(wh[1],10)*0.6);
+    var c=document.createElement("canvas");c.width=cw;c.height=ch;var g=c.getContext("2d");
+    var base=/^#([0-9a-f]{6})$/i.test(state.color)?state.color:"#7c3aed";
+    var grd=g.createLinearGradient(0,0,cw,ch);grd.addColorStop(0,base);grd.addColorStop(1,_shade(base,-34));g.fillStyle=grd;g.fillRect(0,0,cw,ch);
+    var tall=faceTall(fc), rim=refUrl?await _loadImg(refUrl):null;
+    if(rim){
+      // 제품 사진 합성(데모): 가운데 크게 + 아래 문구 띠
+      var availH=ch*(tall?0.56:0.60), availW=cw*0.78, s=Math.min(availW/rim.width,availH/rim.height);
+      var dw=rim.width*s, dh=rim.height*s, dx=(cw-dw)/2, dy=ch*0.09, pad=cw*0.028;
+      _rr(g,dx-pad,dy-pad,dw+pad*2,dh+pad*2,cw*0.03);g.fillStyle="rgba(255,255,255,.96)";g.fill();
+      g.drawImage(rim,dx,dy,dw,dh);
+      var ty=dy+dh+cw*0.05, tbh=ch-ty-ch*0.08;
+      if(tbh>ch*0.09){_rr(g,cw*0.1,ty,cw*0.8,tbh,tbh*0.16);g.fillStyle="rgba(255,255,255,.93)";g.fill();
+        g.fillStyle=_shade(base,-46);g.textAlign="center";g.textBaseline="middle";g.font="700 "+Math.round(cw*0.068)+"px 'IBM Plex Sans',sans-serif";
+        _wrap(g,(theme||"AI 이미지").slice(0,24),cw/2,ty+tbh/2,cw*0.72,cw*0.082);}
+    } else {
+      g.fillStyle="rgba(255,255,255,.94)";
+      var bw=cw*0.78, bh=tall?ch*0.28:ch*0.46, bx=(cw-bw)/2, by=(ch-bh)/2;
+      _rr(g,bx,by,bw,bh,Math.min(bw,bh)*0.08);g.fill();
+      g.fillStyle=_shade(base,-46);g.textAlign="center";g.textBaseline="middle";g.font="700 "+Math.round(cw*0.085)+"px 'IBM Plex Sans',sans-serif";
+      _wrap(g,(theme||"AI 이미지").slice(0,26),cw/2,by+bh/2,bw*0.86,cw*0.10);
+    }
+    g.fillStyle="rgba(255,255,255,.85)";g.textAlign="center";g.textBaseline="middle";g.font="600 "+Math.round(cw*0.042)+"px 'IBM Plex Mono',monospace";
+    g.fillText(FACE_KO[fc]+" · "+size,cw/2,ch*0.055);
+    g.globalAlpha=.55;g.fillText(refUrl?"AI 합성 데모":"AI 미리보기 데모",cw/2,ch*0.955);g.globalAlpha=1;
+    return c.toDataURL("image/jpeg",0.85);
+  }
+  async function genOne(fc){
+    var prompt=buildPrompt(fc,state.aiTheme,!!aiRefUrl), size=faceSize(fc), url=null, body={prompt:prompt,size:size};
+    if(aiRefUrl) body.refImage=aiRefUrl;
+    try{
+      var r=await fetch(SB_URL+"/functions/v1/ai-image-gen",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+SB_KEY,"apikey":SB_KEY},body:JSON.stringify(body)});
+      var d=await r.json(); if(r.ok&&d&&d.url)url=d.url;
+    }catch(e){}
+    if(!url){ await delay(1400); url=await demoImage(fc,state.aiTheme,size,aiRefUrl); }   // 프로토타입 폴백
+    return url;
+  }
+  function applyToFace(fc,url){var im=new Image();im.onload=function(){state.faceImg[fc]={img:im,url:url};updateFaceBtns();rebuild();};im.src=url;}
+  function saveGallery(){try{localStorage.setItem("pd_ai_gallery",JSON.stringify(state.aiGallery));}catch(_){}}
+  function loadGallery(){try{var s=localStorage.getItem("pd_ai_gallery");if(s)state.aiGallery=JSON.parse(s)||{};}catch(_){state.aiGallery={};}}
+  function storeGallery(fc,url){if(!state.aiGallery[fc])state.aiGallery[fc]=[];state.aiGallery[fc].unshift({id:"g"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),url:url});if(state.aiGallery[fc].length>12)state.aiGallery[fc].length=12;saveGallery();renderGallery();}
+  function renderGallery(){
+    var host=$("aiGallery");if(!host)return;var html="",any=false,order=["header","back","left","right","base","top","shelf"];
+    order.forEach(function(f){var arr=state.aiGallery[f];if(!arr||!arr.length)return;any=true;
+      html+='<div class="gface"><h5>'+FACE_KO[f]+'</h5><div class="gGrid">';
+      arr.forEach(function(it){html+='<div class="gitem"><img src="'+it.url+'" alt=""><div class="gact"><button type="button" data-act="apply" data-f="'+f+'" data-id="'+it.id+'">적용</button><button type="button" class="del" data-act="del" data-f="'+f+'" data-id="'+it.id+'">삭제</button></div></div>';});
+      html+='</div></div>';
+    });
+    host.innerHTML=any?html:'<p class="sub">아직 생성된 이미지가 없어요.</p>';
+  }
+  var aiMainFace="back", aiOtherSel={}, aiBusy=false, aiRefUrl=null;
+  $("aiRefBtn").addEventListener("click",function(){$("aiRefFile").click();});
+  $("aiRefFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];this.value="";if(!f)return;
+    var r=new FileReader();r.onload=function(){_normRef(String(r.result),1280).then(function(u){aiRefUrl=u;$("aiRefImg").src=u;$("aiRefPrev").style.display="";$("aiRefBtn").style.display="none";$("aiRefHint").textContent="제품 사진 준비됨 — 생성 시 이 제품이 합성됩니다.";});};
+    r.readAsDataURL(f);});
+  $("aiRefClear").addEventListener("click",function(){aiRefUrl=null;$("aiRefImg").src="";$("aiRefPrev").style.display="none";$("aiRefBtn").style.display="";$("aiRefHint").textContent="사진을 올리면 생성 이미지에 실제 제품이 자연스럽게 합성됩니다.";});
+  function buildMainChips(){var fs=visibleFaces();if(fs.indexOf(aiMainFace)<0)aiMainFace=fs.indexOf("back")>=0?"back":fs[0];
+    $("aiMainChips").innerHTML=fs.map(function(f){return '<button class="chip" type="button" data-f="'+f+'" aria-pressed="'+(f===aiMainFace?"true":"false")+'">'+FACE_KO[f]+'</button>';}).join("");}
+  function buildOtherChips(){var fs=visibleFaces().filter(function(f){return f!==aiMainFace;});
+    $("aiOtherChips").innerHTML=fs.map(function(f){if(aiOtherSel[f]===undefined)aiOtherSel[f]=true;return '<button class="chip" type="button" data-f="'+f+'" aria-pressed="'+(aiOtherSel[f]?"true":"false")+'">'+FACE_KO[f]+'</button>';}).join("");}
+  function aiBar(on){$("aiBar").classList.toggle("run",!!on);}
+  function aiSay(t){$("aiStatus").textContent=t;}
+  $("aiMainChips").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;aiMainFace=b.getAttribute("data-f");this.querySelectorAll(".chip").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});buildOtherChips();});
+  $("aiOtherChips").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;var f=b.getAttribute("data-f");aiOtherSel[f]=!aiOtherSel[f];b.setAttribute("aria-pressed",aiOtherSel[f]?"true":"false");});
+  $("aiGallery").addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var f=b.getAttribute("data-f"),id=b.getAttribute("data-id"),arr=state.aiGallery[f]||[],it=arr.filter(function(x){return x.id===id;})[0];
+    if(b.getAttribute("data-act")==="apply"){if(it){applyToFace(f,it.url);aiSay(FACE_KO[f]+"에 적용했어요.");}}
+    else{state.aiGallery[f]=arr.filter(function(x){return x.id!==id;});saveGallery();renderGallery();}});
+  $("aiGenMain").addEventListener("click",async function(){
+    if(aiBusy)return;var theme=$("aiPrompt").value.trim();
+    if(!theme){aiSay("먼저 테마·문구를 입력해 주세요.");$("aiPrompt").focus();return;}
+    state.aiTheme=theme;aiBusy=true;this.disabled=true;aiBar(true);
+    aiSay("메인("+FACE_KO[aiMainFace]+") 이미지를 생성하는 중… 20~60초 걸릴 수 있어요.");
+    try{var url=await genOne(aiMainFace);applyToFace(aiMainFace,url);storeGallery(aiMainFace,url);
+      state.aiMainDone=true;$("aiStep2").style.display="";buildOtherChips();
+      aiSay("메인 이미지 완성 — 3D에서 확인하세요. 마음에 들면 아래 ②로 나머지 면을 생성하세요.");
+    }catch(e){aiSay("생성 실패: "+((e&&e.message)||e));}
+    aiBar(false);this.disabled=false;aiBusy=false;});
+  $("aiGenOthers").addEventListener("click",async function(){
+    if(aiBusy)return;if(!state.aiMainDone){aiSay("먼저 메인 이미지를 만들어 확인해 주세요.");return;}
+    var faces=visibleFaces().filter(function(f){return f!==aiMainFace&&aiOtherSel[f];});
+    if(!faces.length){aiSay("생성할 면을 하나 이상 선택하세요.");return;}
+    aiBusy=true;this.disabled=true;$("aiGenMain").disabled=true;aiBar(true);
+    for(var i=0;i<faces.length;i++){aiSay("나머지 면 생성 중 "+(i+1)+"/"+faces.length+" — "+FACE_KO[faces[i]]+"…");
+      try{var url=await genOne(faces[i]);applyToFace(faces[i],url);storeGallery(faces[i],url);}catch(e){}}
+    aiSay("완료 — "+faces.length+"개 면을 생성했어요. 보관함에서 다른 후보로 교체할 수 있어요.");
+    aiBar(false);this.disabled=false;$("aiGenMain").disabled=false;aiBusy=false;});
+  window.pdAiOpen=function(){buildMainChips();buildOtherChips();renderGallery();if(state.aiMainDone)$("aiStep2").style.display="";$("aiModal").classList.add("on");};
+  window.pdAiClose=function(){$("aiModal").classList.remove("on");};
+  $("aiModal").addEventListener("click",function(e){if(e.target===this)window.pdAiClose();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")window.pdAiClose();});
+  loadGallery();
+
+  window.pickTab=function(which){var is3=which==="3d";$("view3d").classList.toggle("on",is3);$("view2d").classList.toggle("on",!is3);$("tab3d").setAttribute("aria-selected",is3?"true":"false");$("tab2d").setAttribute("aria-selected",!is3?"true":"false");if(is3)resize3d();};
+  window.toggleSpin=function(){state.spin=!state.spin;$("spinBtn").textContent=state.spin?"자동회전 끄기":"자동회전 켜기";};
+
+  function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||"#888";}
+  function readable(hex){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return (0.299*r+0.587*g+0.114*b)>150?"#15181f":"#ffffff";}
+  function drawCover(g,img,x,y,w,h){g.drawImage(img,x,y,w,h);}  // 자르지 않고 면 크기에 맞춰 늘림(stretch) — 잘림 방지
+
+  function bodyH(){return state.type==="small" ? state.H : Math.max(300,state.H-state.Hd);}
+  function baseH(){var bh=bodyH();return Math.min(state.Bs, state.type==="small" ? (bh-40) : (bh-160));}
+  function shelfYs(){var b=baseH(),top=bodyH(),ys=[];for(var i=1;i<=state.N;i++){ys.push(b+(top-b)*i/(state.N+1));}return ys;}
+
+  /* ================= 2D DIELINE ================= */
+  function renderSVG(forExport){
+    var W=state.W,D=state.D,H=state.H,Hd=state.Hd,m=54,Bs=baseH();
+    var Hb=bodyH();
+    var CUT=cssv("--cut"),CRE=cssv("--crease"),FA=cssv("--faint"),MU=cssv("--muted"),ACC=cssv("--accent");
+    var isSmall=state.type==="small";
+    var shX=W+D+90, shW=W, shPieceH=D+LIP, gap=28, N=isSmall?0:state.N;
+    var shTotalH=N*shPieceH+(N-1)*gap;
+    var hasHdr=!isSmall && Hd>10, hdTab=Math.min(90,D*0.4), hdY0=shTotalH+56, hdBottom=hasHdr?(hdY0+Hd+hdTab):0;
+    var frontExt=(Bs>0)?Bs:0;
+    var topX=W+D+70;
+    var minX=-D, maxX=isSmall?(topX+W):(shX+shW), minY=0, maxY=Math.max(Hb+D+frontExt, hdBottom);
+    var w=(maxX-minX)+m*2, h=(maxY-minY)+m*2, ox=-minX+m, oy=-minY+m;
+    var sw=Math.max(1.4,w/780);
+    function X(x){return (x+ox).toFixed(1);} function Y(y){return (y+oy).toFixed(1);}
+    function poly(pts,stroke,dash){var p=pts.map(function(q){return X(q[0])+","+Y(q[1]);}).join(" ");return '<polygon points="'+p+'" fill="none" stroke="'+stroke+'" stroke-width="'+sw+'" stroke-linejoin="round"'+(dash?' stroke-dasharray="'+(sw*4)+' '+(sw*3)+'"':'')+'/>';}
+    function rectP(x0,y0,x1,y1,stroke){return poly([[x0,y0],[x1,y0],[x1,y1],[x0,y1]],stroke);}
+    function line(x1,y1,x2,y2,stroke){return '<line x1="'+X(x1)+'" y1="'+Y(y1)+'" x2="'+X(x2)+'" y2="'+Y(y2)+'" stroke="'+stroke+'" stroke-width="'+sw+'" stroke-dasharray="'+(sw*4)+' '+(sw*3)+'"/>';}
+    function txt(x,y,t,col,sz,rot){return '<text x="'+X(x)+'" y="'+Y(y)+'" fill="'+col+'" font-size="'+(sz||w/54).toFixed(1)+'" text-anchor="middle" dominant-baseline="middle"'+(rot?' transform="rotate('+rot+' '+X(x)+' '+Y(y)+')"':'')+'>'+t+'</text>';}
+    function face(fkey,x0,y0,x1,y1,labelTxt,rot,clipId){
+      var pw=x1-x0,ph=y1-y0,cid="clip_"+(clipId||fkey),s='',fi=state.faceImg[fkey];
+      s+='<g class="pface"'+(forExport?'':' onclick="window.pdPickFace(\''+fkey+'\')"')+'>';
+      s+='<clipPath id="'+cid+'"><rect x="'+X(x0)+'" y="'+Y(y0)+'" width="'+pw+'" height="'+ph+'"/></clipPath>';
+      if(fi&&fi.url){s+='<image href="'+fi.url+'" x="'+X(x0)+'" y="'+Y(y0)+'" width="'+pw+'" height="'+ph+'" preserveAspectRatio="none" clip-path="url(#'+cid+')"/>';}
+      else if(!forExport){s+='<rect class="pfacefill" x="'+X(x0)+'" y="'+Y(y0)+'" width="'+pw+'" height="'+ph+'" fill="'+ACC+'" opacity="0"/>';s+=txt((x0+x1)/2,(y0+y1)/2,labelTxt+" ＋",FA,w/58,rot);}
+      else{s+=txt((x0+x1)/2,(y0+y1)/2,labelTxt,FA,w/58,rot);}
+      s+='</g>';return s;
+    }
+    var s='<svg viewBox="0 0 '+w.toFixed(0)+' '+h.toFixed(0)+'" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">';
+    // 몸통: 뒷판 + 좌우측면 + 바닥 (+ 하단 앞막음 flap)
+    var body=[[0,0],[W,0],[W+D,0],[W+D,Hb],[W,Hb],[W,Hb+D]];
+    if(frontExt>0){ body.push([W,Hb+D+frontExt]); body.push([0,Hb+D+frontExt]); }
+    body.push([0,Hb+D]);
+    body=body.concat([[0,Hb],[-D,Hb],[-D,0]]);
+    s+=poly(body,CUT);
+    s+=line(0,0,0,Hb,CRE);s+=line(W,0,W,Hb,CRE);s+=line(0,Hb,W,Hb,CRE);
+    if(frontExt>0) s+=line(0,Hb+D,W,Hb+D,CRE);
+    s+=face("back",0,0,W,Hb,"뒷판");
+    s+=face("left",-D,0,0,Hb,"좌측면",-90);
+    s+=face("right",W,0,W+D,Hb,"우측면",90);
+    if(frontExt>0){ s+=face("base",0,Hb+D,W,Hb+D+frontExt,"하단 앞막음"); s+=txt(W/2,Hb+D/2,"바닥",FA,w/58);} else { s+=txt(W/2,Hb+D/2,"바닥",FA,w/56); }
+    s+=txt(W/2,-m*0.5,state.W+" mm",MU,w/54);
+    // 선반 (별도 피스) — 소형은 선반 없음
+    if(!isSmall){
+      for(var i=0;i<N;i++){var y0=i*(shPieceH+gap);
+        s+=rectP(shX,y0,shX+shW,y0+D,CUT);
+        s+=face("shelf",shX,y0+D,shX+shW,y0+D+LIP,"선반 앞",0,"shelf"+i);
+        s+=rectP(shX,y0+D,shX+shW,y0+D+LIP,CUT);
+        s+=line(shX,y0+D,shX+shW,y0+D,CRE);
+        s+=txt(shX+shW/2,y0+D/2,"선반 "+(i+1),FA,w/58);
+      }
+      s+=txt(shX+shW/2,-m*0.5,"선반 ×"+N,MU,w/54);
+    }
+    // 상단면(꽂이판) = 별도 피스 (소형) — 제품 꽂이 구멍 칼선 포함
+    if(isSmall){
+      var ins=state.insert;
+      s+=face("top",topX,0,topX+W,D,"상단면",0,"top");
+      s+=rectP(topX,0,topX+W,D,CUT);
+      var tcols=Math.max(1,ins.count||1), trows=Math.max(1,ins.rows||1);
+      var trmax=Math.min(ins.size,(W-30)/tcols-5,(D-18)/trows-5)/2, trr=Math.max(5,Math.min(ins.size/2,trmax));
+      for(var tr0=0;tr0<trows;tr0++){for(var tci=0;tci<tcols;tci++){
+        var thx=topX+W*(tci+1)/(tcols+1), thy=D*(tr0+0.5)/trows;
+        if(ins.shape==="square"){s+=rectP(thx-trr,thy-trr,thx+trr,thy+trr,ACC);}
+        else{s+='<circle cx="'+X(thx)+'" cy="'+Y(thy)+'" r="'+trr.toFixed(1)+'" fill="none" stroke="'+ACC+'" stroke-width="'+sw+'"/>';}
+      }}
+      s+=txt(topX+W/2,-m*0.5,"상단면 "+W+"×"+D,MU,w/54);
+    }
+    // 상단 광고 헤더 = 별도 삽입 피스
+    if(hasHdr){
+      s+=poly([[shX,hdY0],[shX+W,hdY0],[shX+W,hdY0+Hd],[shX+W*0.72,hdY0+Hd+hdTab],[shX+W*0.28,hdY0+Hd+hdTab],[shX,hdY0+Hd]],CUT);
+      s+=line(shX,hdY0+Hd,shX+W,hdY0+Hd,CRE);
+      s+=face("header",shX,hdY0,shX+W,hdY0+Hd,"상단 광고");
+      s+=txt(shX+W/2,hdY0+Hd+hdTab*0.55,"↑ 삽입 탭",FA,w/62);
+      s+=txt(shX+W/2,hdY0-m*0.35,"상단 광고 (별도 삽입)",MU,w/56);
+    }
+    s+='</svg>';return s;
+  }
+  function refreshSVG(){
+    $("svgHost").innerHTML=renderSVG(false);
+    var Hb=bodyH(),Bs=baseH();
+    var bodyArea=state.W*Hb + 2*(state.D*Hb) + state.W*state.D + (Bs>0?state.W*Bs:0);
+    var extra=state.W*state.Hd + state.N*(state.W*(state.D+LIP));
+    var isSmall=state.type==="small";
+    $("dimtbl").innerHTML=
+      row("종류", isSmall?"소형 · 카운터 트레이":"대형 · 바닥 다단 매대")+
+      row("전체 크기 (조립)", state.W+" W × "+state.D+" D × "+state.H+" H mm")+
+      (isSmall?row("뒤 광고판 높이", Hb+" mm"):row("몸통 / 헤더", Hb+" mm / "+state.Hd+" mm (별도 삽입)"))+
+      row(isSmall?"앞막음 높이":"하단 막음 높이", (Bs>0?Bs+" mm":"없음(열림)"))+
+      (isSmall?"":row("선반 수 · 간격", state.N+"단 · 하단 위 균등"))+
+      row("총 판지 면적", ((bodyArea+extra)/1e6).toFixed(3)+" ㎡");
+  }
+  function row(k,v){return "<tr><td>"+k+"</td><td>"+v+"</td></tr>";}
+
+  window.downloadSVG=async function(){
+    var name="종이매대_전개도_"+state.W+"x"+state.D+"x"+state.H+"_선반"+state.N+".svg";
+    var svg=renderSVG(true);
+    try{
+      var blob=new Blob([svg],{type:"image/svg+xml"});
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+    }catch(e){alert("저장 실패: "+((e&&e.message)||e));}
+  };
+
+  /* ================= 3D ================= */
+  var renderer,scene,camera,model,parts,raf,dragging=false,lastX,lastY,yaw=-0.5,pitch=-0.06,modelR=1000;
+  var glc=$("gl");
+  function initGL(){
+    renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true,alpha:true,preserveDrawingBuffer:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(34,1,1,60000);
+    // 조명: 반구광(하늘/바닥 그라데이션) + 주광 + 보조 + 앞쪽 필 → 면·제품 구분 또렷하게
+    scene.add(new THREE.HemisphereLight(0xffffff,0x4a4e58,0.55));
+    var d1=new THREE.DirectionalLight(0xffffff,0.9);d1.position.set(650,1300,750);scene.add(d1);
+    var d2=new THREE.DirectionalLight(0xeaf0ff,0.34);d2.position.set(-700,450,-500);scene.add(d2);
+    var d3=new THREE.DirectionalLight(0xffffff,0.32);d3.position.set(0,350,1400);scene.add(d3);
+    var downX=0,downY=0,moved=0,_ray=new THREE.Raycaster(),_ndc=new THREE.Vector2();
+    glc.addEventListener("pointerdown",function(e){dragging=true;moved=0;downX=lastX=e.clientX;downY=lastY=e.clientY;glc.setPointerCapture(e.pointerId);});
+    glc.addEventListener("pointermove",function(e){if(!dragging)return;moved+=Math.abs(e.clientX-lastX)+Math.abs(e.clientY-lastY);yaw+=(e.clientX-lastX)*0.008;pitch+=(e.clientY-lastY)*0.008;pitch=Math.max(-0.9,Math.min(0.6,pitch));lastX=e.clientX;lastY=e.clientY;});
+    glc.addEventListener("pointerup",function(e){
+      dragging=false;
+      if(moved>6 || state.modelId!=="s2" || !parts) return;   // 클릭(드래그 아님) + 광고판형만
+      var rc=glc.getBoundingClientRect();
+      _ndc.x=((e.clientX-rc.left)/rc.width)*2-1; _ndc.y=-((e.clientY-rc.top)/rc.height)*2+1;
+      _ray.setFromCamera(_ndc,camera);
+      var tg=[]; if(parts.lid)tg.push(parts.lid); if(parts.base)tg.push(parts.base); if(parts.product)tg.push(parts.product);
+      if(tg.length && _ray.intersectObjects(tg,true).length){
+        var sec=$("fldInsert");
+        if(sec){ sec.scrollIntoView({behavior:"smooth",block:"center"}); sec.style.transition="box-shadow .25s"; sec.style.boxShadow="0 0 0 2px "+cssv("--accent"); sec.style.borderRadius="10px"; setTimeout(function(){sec.style.boxShadow="";},1300); }
+      }
+    });
+    window.addEventListener("resize",resize3d);
+    loop();
+  }
+  function makeCanvas(ratio){var c=document.createElement("canvas"),wpx=512;c.width=wpx;c.height=Math.max(18,Math.round(wpx*ratio));return c;}
+  function baseTex(ratio,fillImg,fkey,bigText){
+    var col=state.color,c=makeCanvas(ratio),g=c.getContext("2d");
+    g.fillStyle=col;g.fillRect(0,0,c.width,c.height);
+    var grd=g.createLinearGradient(0,0,0,c.height);grd.addColorStop(0,"rgba(255,255,255,.14)");grd.addColorStop(1,"rgba(0,0,0,.13)");g.fillStyle=grd;g.fillRect(0,0,c.width,c.height);
+    if(fillImg&&state.faceImg[fkey]){drawCover(g,state.faceImg[fkey].img,0,0,c.width,c.height);}
+    else if(bigText){g.fillStyle=readable(col);g.textAlign="center";g.textBaseline="middle";g.font="800 "+Math.round(Math.min(c.width*0.13,c.height*0.5))+"px 'IBM Plex Sans',sans-serif";g.fillText(state.brand||"BRAND",c.width/2,c.height*0.52);}
+    else{g.globalAlpha=.24;g.fillStyle=readable(col);g.textAlign="center";g.textBaseline="middle";g.font="700 "+Math.round(c.width*0.10)+"px 'IBM Plex Sans',sans-serif";g.fillText(state.brand||"",c.width/2,c.height*0.5);g.globalAlpha=1;}
+    var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;
+  }
+  function texBack(){return baseTex(bodyH()/state.W,true,"back",false);}
+  function texHeader(){return baseTex(state.Hd/state.W,true,"header",true);}
+  function texBaseFront(){return baseTex(baseH()/state.W,true,"base",true);}
+  function texSide(which,hgt,smallStyle){
+    var col=state.color,c=makeCanvas((hgt||bodyH())/state.D),g=c.getContext("2d");
+    g.fillStyle=col;g.fillRect(0,0,c.width,c.height);
+    var grd=g.createLinearGradient(0,0,0,c.height);grd.addColorStop(0,"rgba(255,255,255,.10)");grd.addColorStop(1,"rgba(0,0,0,.14)");g.fillStyle=grd;g.fillRect(0,0,c.width,c.height);
+    if(state.faceImg[which]){drawCover(g,state.faceImg[which].img,0,0,c.width,c.height);}
+    else if(smallStyle){
+      // 소형: 가로로 작게, 아래쪽(잘 보이는 낮은 영역)에 배치
+      g.fillStyle=readable(col);g.textAlign="center";g.textBaseline="middle";
+      g.font="700 "+Math.round(c.width*0.11)+"px 'IBM Plex Sans',sans-serif";
+      g.fillText(state.brand||"",c.width/2,c.height*0.87);
+    } else {
+      g.save();g.translate(c.width/2,c.height/2);g.rotate(-Math.PI/2);g.fillStyle=readable(col);g.textAlign="center";g.textBaseline="middle";g.font="700 "+Math.round(c.width*0.13)+"px 'IBM Plex Sans',sans-serif";g.fillText(state.brand||"",0,0);g.restore();
+    }
+    var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;
+  }
+  function texLip(){
+    var col=state.color,c=makeCanvas(LIP/state.W),g=c.getContext("2d");
+    if(state.faceImg.shelf){drawCover(g,state.faceImg.shelf.img,0,0,c.width,c.height);}
+    else{g.fillStyle=col;g.fillRect(0,0,c.width,c.height);g.fillStyle="rgba(0,0,0,.16)";g.fillRect(0,0,c.width,c.height);g.fillStyle=readable(col);g.textAlign="center";g.textBaseline="middle";g.font="700 "+Math.round(c.height*0.5)+"px 'IBM Plex Sans',sans-serif";g.fillText("SALE · NEW · "+(state.brand||""),c.width/2,c.height*0.55);}
+    var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;
+  }
+  function texInsertTop(){
+    var col=state.color,c=makeCanvas(state.D/state.W),g=c.getContext("2d");
+    g.fillStyle=col;g.fillRect(0,0,c.width,c.height);
+    var grd=g.createLinearGradient(0,0,0,c.height);grd.addColorStop(0,"rgba(255,255,255,.12)");grd.addColorStop(1,"rgba(0,0,0,.10)");g.fillStyle=grd;g.fillRect(0,0,c.width,c.height);
+    if(state.faceImg.top){drawCover(g,state.faceImg.top.img,0,0,c.width,c.height);}
+    var t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;
+  }
+  // 바깥면=디자인(FrontSide), 안쪽=크라프트(BackSide). corners = 바깥(디자인) 방향에서 본 TL,TR,BR,BL
+  // uvQ(옵션) = [uvTL,uvTR,uvBR,uvBL] — 사다리꼴 재단 시 위치기반 UV 로 왜곡 방지
+  function designPanel(TL,TR,BR,BL,tex,uvQ){
+    var pos=new Float32Array([TL[0],TL[1],TL[2], BL[0],BL[1],BL[2], BR[0],BR[1],BR[2], TL[0],TL[1],TL[2], BR[0],BR[1],BR[2], TR[0],TR[1],TR[2]]);
+    var uv;
+    if(uvQ){var a=uvQ[0],b=uvQ[1],c=uvQ[2],d=uvQ[3];uv=new Float32Array([a[0],a[1], d[0],d[1], c[0],c[1], a[0],a[1], c[0],c[1], b[0],b[1]]);}
+    else uv=new Float32Array([0,1, 0,0, 1,0, 0,1, 1,0, 1,1]);
+    var geo=new THREE.BufferGeometry();
+    geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+    geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));
+    geo.computeVertexNormals();
+    var grp=new THREE.Group();
+    grp.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({map:tex,roughness:.93,metalness:0,side:THREE.FrontSide})));
+    grp.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(KRAFT),roughness:.97,metalness:0,side:THREE.BackSide})));
+    return grp;
+  }
+  function plainPanel(TL,TR,BR,BL,color){
+    var pos=new Float32Array([TL[0],TL[1],TL[2], BL[0],BL[1],BL[2], BR[0],BR[1],BR[2], TL[0],TL[1],TL[2], BR[0],BR[1],BR[2], TR[0],TR[1],TR[2]]);
+    var geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.computeVertexNormals();
+    return new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(color||KRAFT),roughness:.97,metalness:0,side:THREE.DoubleSide}));
+  }
+  function tri(a,b,c,color){
+    var geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(new Float32Array([a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]]),3));geo.computeVertexNormals();
+    return new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(color),roughness:.95,metalness:0,side:THREE.DoubleSide}));
+  }
+  function largeFrame(){
+    var W=state.W,D=state.D,Hd=state.Hd,hw=W/2,hd=D/2,Hb=bodyH(),Bs=baseH();
+    model.add(designPanel([-hw,Hb,-hd],[hw,Hb,-hd],[hw,0,-hd],[-hw,0,-hd],texBack()));
+    var ls=designPanel([-hw,Hb,-hd],[-hw,Hb,hd],[-hw,0,hd],[-hw,0,-hd],texSide("left"));
+    var rs=designPanel([hw,Hb,hd],[hw,Hb,-hd],[hw,0,-hd],[hw,0,hd],texSide("right"));
+    model.add(ls);model.add(rs);parts.sides=[ls,rs];
+    if(Bs>0){parts.front=designPanel([-hw,Bs,hd],[hw,Bs,hd],[hw,0,hd],[-hw,0,hd],texBaseFront());model.add(parts.front);}
+    if(Hd>10){parts.header=designPanel([-hw,Hb+Hd,-hd],[hw,Hb+Hd,-hd],[hw,Hb,-hd],[-hw,Hb,-hd],texHeader());model.add(parts.header);}
+    parts.base=plainPanel([-hw,0,-hd],[hw,0,-hd],[hw,0,hd],[-hw,0,hd],KRAFT);model.add(parts.base);
+  }
+  function buildLargeMeshes(){
+    largeFrame();
+    var hw=state.W/2,hd=state.D/2,iw=hw-INSET,id=hd-INSET,lipT=texLip();
+    shelfYs().forEach(function(y){
+      var grp=new THREE.Group();
+      grp.add(plainPanel([-iw,y,-id],[iw,y,-id],[iw,y,id],[-iw,y,id],KRAFT));
+      grp.add(designPanel([-iw,y+LIP,id],[iw,y+LIP,id],[iw,y,id],[-iw,y,id],lipT));
+      model.add(grp);parts.shelves.push(grp);
+    });
+  }
+  function buildLargeSplit(){
+    largeFrame();
+    var hw=state.W/2,hd=state.D/2,id=hd-INSET,Hb=bodyH(),lipT=texLip(),gapC=2.5,halfW=hw-INSET;
+    // 중앙 칸막이 (크라프트) — 좌우 분리
+    model.add(plainPanel([0,Hb,-hd],[0,Hb,hd],[0,0,hd],[0,0,-hd],KRAFT));
+    shelfYs().forEach(function(y){
+      var gl=new THREE.Group();
+      gl.add(plainPanel([-halfW,y,-id],[-gapC,y,-id],[-gapC,y,id],[-halfW,y,id],KRAFT));
+      gl.add(designPanel([-halfW,y+LIP,id],[-gapC,y+LIP,id],[-gapC,y,id],[-halfW,y,id],lipT));
+      model.add(gl);parts.shelves.push(gl);
+      var gr=new THREE.Group();
+      gr.add(plainPanel([gapC,y,-id],[halfW,y,-id],[halfW,y,id],[gapC,y,id],KRAFT));
+      gr.add(designPanel([gapC,y+LIP,id],[halfW,y+LIP,id],[halfW,y,id],[gapC,y,id],lipT));
+      model.add(gr);parts.shelves.push(gr);
+    });
+  }
+  // 삽입 틀 (제품 꽂이) — 뚜껑에 구멍 N개 자동배치 + 제품 플레이스홀더. 1단/2단 지원.
+  function _insLid(x0,x1,z0,z1,y,holes){
+    var shp=new THREE.Shape();
+    shp.moveTo(x0,z0);shp.lineTo(x1,z0);shp.lineTo(x1,z1);shp.lineTo(x0,z1);shp.lineTo(x0,z0);
+    holes.forEach(function(h){var p=new THREE.Path();if(h.shape==="square"){p.moveTo(h.x-h.r,h.z-h.r);p.lineTo(h.x+h.r,h.z-h.r);p.lineTo(h.x+h.r,h.z+h.r);p.lineTo(h.x-h.r,h.z+h.r);p.lineTo(h.x-h.r,h.z-h.r);}else{p.absarc(h.x,h.z,h.r,0,Math.PI*2,true);}shp.holes.push(p);});
+    var geo=new THREE.ShapeGeometry(shp),mat;
+    if(state.faceImg.top){
+      // 상단면 이미지: 전체 꽂이판(W×D) 기준으로 UV 정규화 → 여러 단이어도 이미지가 이어짐
+      var W=state.W,D=state.D,hw=W/2,hd=D/2,pos=geo.attributes.position,uv=[];
+      for(var vi=0;vi<pos.count;vi++){var X=pos.getX(vi),Z=pos.getY(vi);uv.push((X+hw)/W,(hd-Z)/D);}  // 이미지 위쪽=안쪽(뒤)
+      geo.setAttribute("uv",new THREE.BufferAttribute(new Float32Array(uv),2));
+      mat=new THREE.MeshStandardMaterial({map:texInsertTop(),roughness:.9,metalness:0,side:THREE.DoubleSide});
+    } else {
+      mat=new THREE.MeshStandardMaterial({color:new THREE.Color(state.color),roughness:.9,metalness:0,side:THREE.DoubleSide});
+    }
+    var m=new THREE.Mesh(geo,mat);
+    m.rotation.x=Math.PI/2;m.position.y=y;return m;   // +90°: shape z = world z (구멍과 제품 z 일치)
+  }
+  function _insProduct(h,topY,depth,hscale){
+    var stick=Math.max(70,depth*1.3)*(hscale||1),ph=depth+stick,g;
+    if(h.shape==="square")g=new THREE.BoxGeometry(h.r*1.7,ph,h.r*1.7);else g=new THREE.CylinderGeometry(h.r*0.9,h.r*0.9,ph,26);
+    var mm=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xe2e6ee,roughness:.45,metalness:.05,transparent:true,opacity:.9}));
+    mm.position.set(h.x,topY-depth+ph/2,h.z);return mm;
+  }
+  function buildInsertPlatform(topY,maxTop){
+    var ins=state.insert,W=state.W,D=state.D,hw=W/2,hd=D/2;
+    if(maxTop==null)maxTop=topY;
+    var cols=Math.max(1,ins.count||1), rows=Math.max(1,ins.rows||1), step=!!ins.step, depth=Math.max(4,ins.depth);
+    var rmax=Math.min(ins.size,(W-30)/cols-5,(D-18)/rows-5)/2; var r=Math.max(5,Math.min(ins.size/2,rmax));
+    function xPos(i){return -hw+W*(i+1)/(cols+1);}
+    // 계단: 앞(z+, 앞막음면)=앞막음 높이 → 뒤(z-, 안쪽)=그 2배. 평면: 전부 앞막음 높이.
+    var frontY=topY, backY=Math.min(topY*2, maxTop-6); if(backY<frontY+16) backY=frontY+16;
+    function rowY(r0){ return (!step||rows===1) ? frontY : frontY+(backY-frontY)*(r0/(rows-1)); }        // r0=0 앞(낮) → rows-1 뒤(높)
+    function rowScale(r0){ return (!step||rows===1) ? 1.0 : (0.66+0.34*(r0/(rows-1))); }
+    for(var r0=0;r0<rows;r0++){
+      var zHi=hd - D*r0/rows, zLo=hd - D*(r0+1)/rows, zc=(zHi+zLo)/2, y=rowY(r0);
+      var holes=[]; for(var i=0;i<cols;i++){holes.push({x:xPos(i),z:zc,r:r,shape:ins.shape});}
+      var lid=_insLid(-hw,hw,zLo,zHi,y,holes); model.add(lid); if(r0===0)parts.lid=lid;
+      if(step && r0>0){ var yPrev=rowY(r0-1); model.add(plainPanel([-hw,y,zHi],[hw,y,zHi],[hw,yPrev,zHi],[-hw,yPrev,zHi],state.color)); } // 단 사이 라이저
+      var dY=Math.max(4,Math.min(depth,y-4)), hs=rowScale(r0);
+      holes.forEach(function(h){model.add(_insProduct(h,y,dY,hs));});
+    }
+  }
+  function buildSmallAd(){
+    // 광고판형 : 사선 없는 낮은 트레이(하단 삽입) + 뒤 광고판(전체 높이). 측면 사각.
+    var W=state.W,D=state.D,H=state.H,hw=W/2,hd=D/2,trayH=Math.max(40,Math.min(baseH()||90,H-60));
+    model.add(designPanel([-hw,H,-hd],[hw,H,-hd],[hw,0,-hd],[-hw,0,-hd],texBack()));
+    var ls=designPanel([-hw,trayH,-hd],[-hw,trayH,hd],[-hw,0,hd],[-hw,0,-hd],texSide("left",trayH,true));
+    var rs=designPanel([hw,trayH,hd],[hw,trayH,-hd],[hw,0,-hd],[hw,0,hd],texSide("right",trayH,true));
+    model.add(ls);model.add(rs);parts.sides=[ls,rs];
+    if(baseH()>0){parts.front=designPanel([-hw,trayH,hd],[hw,trayH,hd],[hw,0,hd],[-hw,0,hd],texBaseFront());model.add(parts.front);}
+    parts.base=plainPanel([-hw,0,-hd],[hw,0,-hd],[hw,0,hd],[-hw,0,hd],KRAFT);model.add(parts.base);
+    // 상단 뚜껑(구멍 N개) + 제품 꽂이 (광고판형: 뒤 단은 몸통 위까지)
+    buildInsertPlatform(trayH, Math.max(trayH, state.H*0.42));
+  }
+  function buildSmallMeshes(){
+    // 카운터 트레이 : 뒤 광고판(높음) + 낮은 앞막음 + 트레이 측면(사각 글씨 + 상단 삼각 색). 선반 없음.
+    var W=state.W,D=state.D,H=state.H,hw=W/2,hd=D/2,Hf=Math.max(12,Math.min(baseH()||60,H-40));
+    var vf=Hf/H;   // 앞쪽 상단 위치(0~1) — 사각 인쇄물 기준 재단선
+    // 뒷판(광고) — 높음
+    model.add(designPanel([-hw,H,-hd],[hw,H,-hd],[hw,0,-hd],[-hw,0,-hd],texBack()));
+    // 측면 = 사각 인쇄물(D×H)을 사다리꼴로 재단. 위치기반 UV → 왜곡 없음, 잘린 삼각은 투명(없음).
+    //   u=(z+hd)/D (뒤0~앞1), v=y/H (아래0~위1)
+    var ls=designPanel([-hw,H,-hd],[-hw,Hf,hd],[-hw,0,hd],[-hw,0,-hd],texSide("left",H,true),
+                       [[0,1],[1,vf],[1,0],[0,0]]);
+    var rs=designPanel([hw,Hf,hd],[hw,H,-hd],[hw,0,-hd],[hw,0,hd],texSide("right",H,true),
+                       [[0,vf],[1,1],[1,0],[0,0]]);   // u축 뒤집어 좌우 반전 방지
+    model.add(ls);model.add(rs);parts.sides=[ls,rs];
+    // 앞막음(낮음) — 앞막음 높이 0이면 열린 트레이
+    if(baseH()>0){parts.front=designPanel([-hw,Hf,hd],[hw,Hf,hd],[hw,0,hd],[-hw,0,hd],texBaseFront());model.add(parts.front);}
+    // 바닥 트레이 (크라프트)
+    parts.base=plainPanel([-hw,0,-hd],[hw,0,-hd],[hw,0,hd],[-hw,0,hd],KRAFT);model.add(parts.base);
+    // 트레이 안 삽입 플랫폼(구멍 N개) — 뒤 단은 트레이 경사 안(중앙 높이)까지 올려 계단효과
+    buildInsertPlatform(Hf, (H+Hf)/2 - 15);
+  }
+  function rebuild3d(){
+    if(!renderer)initGL();
+    if(model)scene.remove(model);
+    model=new THREE.Group();parts={sides:[],base:null,shelves:[],header:null,front:null};
+    if(state.type==="small"){ if(state.modelId==="s2") buildSmallAd(); else buildSmallMeshes(); }
+    else { if(state.modelId==="l2") buildLargeSplit(); else buildLargeMeshes(); }
+    model.position.y=-state.H*0.5;
+    modelR=0.5*Math.sqrt(state.W*state.W+state.D*state.D+state.H*state.H);
+    scene.add(model);
+    applyExplode();fit();resize3d();
+  }
+  function applyExplode(){
+    if(!parts)return;var e=state.expl,W=state.W,D=state.D;
+    if(parts.sides[0]){parts.sides[0].position.x=-e*W*0.55;parts.sides[1].position.x=e*W*0.55;}
+    if(parts.base)parts.base.position.y=-e*state.H*0.10;
+    if(parts.front)parts.front.position.z=e*D*0.55;
+    if(parts.header)parts.header.position.y=e*state.Hd*1.2;
+    parts.shelves.forEach(function(g,i){g.position.z=e*D*0.75;g.position.y=e*(60+i*45);});
+  }
+  function fit(){
+    if(!camera)return;
+    var vHalf=camera.fov*Math.PI/360;
+    var distV=modelR/Math.sin(vHalf);
+    var hHalf=Math.atan(Math.tan(vHalf)*Math.max(camera.aspect,0.35));
+    var distH=modelR/Math.sin(hHalf);
+    var dist=Math.max(distV,distH)*0.98;
+    camera.position.set(0,0,dist);camera.near=Math.max(1,dist*0.05);camera.far=dist*4;camera.updateProjectionMatrix();camera.lookAt(0,0,0);
+  }
+  function resize3d(){if(!renderer)return;var host=$("view3d"),w=host.clientWidth,h=host.clientHeight;if(w<2||h<2)return;renderer.setSize(w,h,false);camera.aspect=w/h;fit();}
+  function loop(){raf=requestAnimationFrame(loop);if(!renderer)return;if(model){if(state.spin&&!dragging)yaw+=0.0042;model.rotation.y=yaw;model.rotation.x=pitch;}renderer.render(scene,camera);}
+
+  var rebTimer;
+  function rebuild(){updateFaceBtns();refreshSVG();clearTimeout(rebTimer);rebTimer=setTimeout(rebuild3d,40);}
+  if(window.matchMedia){try{matchMedia("(prefers-color-scheme:dark)").addEventListener("change",refreshSVG);}catch(e){}}
+
+  /* ================= 사이트 통합 (제품페이지 모달 iframe) ================= */
+  function _soApplyParams(){
+    // 소형/대형 시작 모델: type 파라미터(best-effort). 불명확하면 소형(사용자가 상단 버튼으로 변경 가능).
+    var t=(PARAMS.get("type")||"").toLowerCase();
+    var startId = (t==="large") ? "l1" : "s1";
+    window.selectModel(startId);
+    if(EMBED){
+      // 모달 안에서는 상단 헤더를 최소화(부모 모달이 이미 제목을 보여줌).
+      var hdr=document.querySelector("header.top"); if(hdr) hdr.style.display="none";
+      document.querySelector(".wrap") && (document.querySelector(".wrap").style.paddingTop="10px");
+      var addBtn=$("pdAddBtn"); if(addBtn) addBtn.style.display="";
+    }
+  }
+  function _pdDataURLToBlob(u){
+    var m=/^data:([^;]+);base64,(.*)$/.exec(u); if(!m) return null;
+    var mime=m[1], bin=atob(m[2]), n=bin.length, arr=new Uint8Array(n);
+    for(var i=0;i<n;i++)arr[i]=bin.charCodeAt(i);
+    return new Blob([arr],{type:mime});
+  }
+  async function _pdUpload(sb, path, blob){
+    var up=await sb.storage.from("design").upload(path, blob, {contentType:blob.type||undefined, upsert:false});
+    if(up.error) throw up.error;
+    return sb.storage.from("design").getPublicUrl(path).data.publicUrl;
+  }
+  window.pdAddToOrder=async function(){
+    var btn=$("pdAddBtn"); if(btn){ if(btn._busy) return; btn._busy=true; btn.disabled=true; btn.textContent="담는 중…"; }
+    try{
+      var sb=pdSb();
+      if(!sb) throw new Error("연결이 준비되지 않았어요. 새로고침 후 다시 시도해 주세요.");
+      var faces=[], ts=Date.now().toString(36), root="paper_display/orders/"+ts+"_"+(PCODE||"pd");
+      var order=["header","back","left","right","base","top","shelf"];
+      for(var i=0;i<order.length;i++){
+        var f=order[i], fi=state.faceImg[f];
+        if(!fi||!fi.url) continue;
+        var blob=_pdDataURLToBlob(fi.url);
+        if(!blob){ try{ blob=await (await fetch(fi.url)).blob(); }catch(_e){ blob=null; } }
+        if(!blob) continue;
+        var ext=(blob.type&&blob.type.indexOf("png")>=0)?"png":(blob.type&&blob.type.indexOf("jpeg")>=0)?"jpg":"png";
+        var url=await _pdUpload(sb, root+"_"+f+"."+ext, blob);
+        faces.push({face:FACE_KO[f]||f, key:f, name:FACE_KO[f]||f, url:url});
+      }
+      if(!faces.length) throw new Error("먼저 면에 이미지를 넣어 주세요 (직접 업로드 또는 AI 생성).");
+      // 칼선 SVG
+      var cutlineUrl=null;
+      try{ var svgBlob=new Blob([renderSVG(true)],{type:"image/svg+xml"}); cutlineUrl=await _pdUpload(sb, root+"_cutline.svg", svgBlob); }catch(_c){}
+      // 3D 미리보기 스냅샷
+      var previewUrl=null;
+      try{ if(renderer){ renderer.render(scene,camera); var pdata=renderer.domElement.toDataURL("image/png"); var pblob=_pdDataURLToBlob(pdata); if(pblob) previewUrl=await _pdUpload(sb, root+"_preview.png", pblob); } }catch(_p){}
+      if(!previewUrl) previewUrl=faces[0].url;
+      var meta={type:state.type,modelId:state.modelId,W:state.W,D:state.D,H:state.H,Hd:state.Hd,Bs:state.Bs,N:state.N,brand:state.brand,color:state.color,insert:state.insert};
+      try{ window.parent && window.parent.postMessage({type:"pd_design_done",code:PCODE,faces:faces,cutlineUrl:cutlineUrl,previewUrl:previewUrl,meta:meta}, location.origin); }catch(_m){}
+      if(btn){ btn.textContent="담겼어요 ✓"; }
+    }catch(e){
+      alert((e&&e.message)||"담기에 실패했어요.");
+      if(btn){ btn.textContent="이 디자인으로 담기"; }
+    }
+    if(btn){ btn._busy=false; btn.disabled=false; }
+  };
+  window.addEventListener("keydown",function(e){ if(e.key==="Escape"&&EMBED){ var am=$("aiModal"); if(am&&am.classList.contains("on"))return; try{ window.parent.postMessage({type:"pd_studio_close"}, location.origin); }catch(_){} } });
+
+  _soApplyParams();
+  setTimeout(resize3d,120);
+})();
+</script>
+</body>
+</html>

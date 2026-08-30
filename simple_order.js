@@ -1642,6 +1642,17 @@ html, body { background: #ffffff !important; }
                           'or 아래에서 직접 이미지 업로드' 가이드도 제거 — 우측 파일 업로드 카드 사용. -->
         </div>
 
+        <!-- 2026-08-31: 종이매대 전용 — 미니에디터 대신 3D 설계 스튜디오 진입 카드. -->
+        <div id="soPdStudioEntry" style="display:none; background:#fafbff; border:1px solid #e2e6f5; border-radius:14px; padding:18px;">
+          <div style="font-size:15px; font-weight:700; color:#1e2340; margin-bottom:6px;">${tr('종이매대 설계 스튜디오', 'ペーパーディスプレイ設計スタジオ', 'Paper Display Design Studio')}</div>
+          <div style="font-size:12.5px; color:#5c6478; line-height:1.7; margin-bottom:14px;">${tr('소형·대형 종이매대를 3D로 직접 설계합니다. 크기·삽입 틀을 정하고, 면별로 이미지를 올리거나 AI로 생성(제품 사진 합성 가능)하면 3D 미리보기와 칼선이 자동으로 만들어져요. 완성 후 <b>이 디자인으로 담기</b>를 누르면 주문에 그대로 첨부됩니다.', '小型・大型のペーパーディスプレイを3Dで設計。サイズや差込トレイを決め、面ごとに画像をアップまたはAI生成(商品写真の合成可)すると、3Dプレビューとカットラインが自動生成されます。完成後「このデザインで追加」で注文にそのまま添付されます。', 'Design small or large paper displays in 3D. Set the size and insert tray, add or AI-generate an image per face (product photo compositing supported), and the 3D preview and cutline are built automatically. Press "Add this design" to attach it to your order.')}</div>
+          <div id="soPdStudioThumb" style="display:none; margin-bottom:12px;">
+            <img id="soPdStudioThumbImg" alt="" style="width:100%; max-width:280px; border-radius:10px; border:1px solid #e2e6f5; display:block;">
+            <div style="font-size:11.5px; color:#0f9d6b; margin-top:6px;">${tr('디자인이 주문에 담겼어요.', 'デザインが注文に追加されました。', 'Design attached to your order.')}</div>
+          </div>
+          <button type="button" id="soPdStudioOpenBtn" onclick="window._soOpenPdStudio && window._soOpenPdStudio()" style="width:100%; padding:13px; background:#4338ca; color:#fff; border:none; border-radius:11px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;">${tr('설계 스튜디오 열기', '設計スタジオを開く', 'Open Design Studio')}</button>
+        </div>
+
         <!-- 2026-06-26: 허니콤보드 원판 커팅 에디터 — 좌측 메인 영역 (다른 제품 에디터와 같은 자리). -->
         <div id="soRbCutEditorMain" style="display:none;">
           <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
@@ -16685,6 +16696,59 @@ html, body { background: #ffffff !important; }
             return p && /^pp_bc/i.test(String(p.code || ''));
         }
 
+        // 2026-08-31: 종이매대 3D 설계 스튜디오 — 큰 모달(iframe) + 완료 디자인(면 이미지+칼선) 수신.
+        function _soEnsurePdStudioOverlay() {
+            var ov = document.getElementById('pdStudioOverlay');
+            if (ov) return ov;
+            ov = document.createElement('div');
+            ov.id = 'pdStudioOverlay';
+            ov.style.cssText = 'position:fixed; inset:0; z-index:60000; background:#fff; display:none;';
+            ov.innerHTML = ''
+                + '<div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #e5e7eb; background:#fff;">'
+                +   '<div style="font-size:15px; font-weight:700; color:#1e2340;">' + tr('종이매대 설계 스튜디오','ペーパーディスプレイ設計スタジオ','Paper Display Design Studio') + '</div>'
+                +   '<button type="button" id="pdStudioCloseBtn" style="border:none; background:#f1f3f9; color:#475069; width:34px; height:34px; border-radius:9px; font-size:20px; line-height:1; cursor:pointer;">&times;</button>'
+                + '</div>'
+                + '<iframe id="pdStudioFrame" title="Paper Display Studio" style="width:100%; height:calc(100% - 59px); border:0; display:block;"></iframe>';
+            document.body.appendChild(ov);
+            var cb = document.getElementById('pdStudioCloseBtn');
+            if (cb) cb.onclick = window._soClosePdStudio;
+            return ov;
+        }
+        window._soOpenPdStudio = function() {
+            var p = state && state.product; if (!p) return;
+            var code = String(p.code || '');
+            var nm = String(p.name || p.name_kr || '') + ' ' + code;
+            var t = /대형|플로어|floor|large|다단|fsdu/i.test(nm) ? 'large' : 'small';
+            var lang = (function(){ try { var c = (window.__SITE_CODE || '').toUpperCase(); if (c === 'JP' || c === 'JA') return 'ja'; if (c === 'US' || c === 'EN') return 'en'; } catch(_){} return 'ko'; })();
+            var ov = _soEnsurePdStudioOverlay();
+            var fr = document.getElementById('pdStudioFrame');
+            var src = '/pd_studio.html?embed=1&type=' + t + '&lang=' + lang + '&code=' + encodeURIComponent(code);
+            if (fr && fr.getAttribute('data-src') !== src) { fr.src = src; fr.setAttribute('data-src', src); }
+            ov.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+        window._soClosePdStudio = function() {
+            var ov = document.getElementById('pdStudioOverlay');
+            if (ov) ov.style.display = 'none';
+            document.body.style.overflow = '';
+        };
+        if (!window._soPdStudioMsgBound) {
+            window._soPdStudioMsgBound = true;
+            window.addEventListener('message', function(ev) {
+                try { if (ev.origin !== location.origin) return; } catch(_) { return; }
+                var d = ev.data; if (!d || typeof d !== 'object') return;
+                if (d.type === 'pd_studio_close') { window._soClosePdStudio(); return; }
+                if (d.type === 'pd_design_done') {
+                    state._pdStudioDesign = { code: d.code || '', faces: d.faces || [], cutlineUrl: d.cutlineUrl || null, previewUrl: d.previewUrl || null, meta: d.meta || null };
+                    window._soClosePdStudio();
+                    var tw = document.getElementById('soPdStudioThumb'), ti = document.getElementById('soPdStudioThumbImg');
+                    if (tw && ti && state._pdStudioDesign.previewUrl) { ti.src = state._pdStudioDesign.previewUrl; tw.style.display = ''; }
+                    // 2026-08-31: 스튜디오에서 완료 → 곧바로 장바구니 담기 (디자인 자동 첨부 + 카트 드로어 오픈).
+                    setTimeout(function () { try { if (typeof window._soAddCart === 'function') window._soAddCart(); } catch (_ac) {} }, 120);
+                }
+            });
+        }
+
         // 셋업 — openSimpleOrderModal 끝부분에서 호출
         window._soQdSetup = function() {
             var sec = document.getElementById('soQuickDesignSec');
@@ -16692,12 +16756,33 @@ html, body { background: #ffffff !important; }
             var p = state && state.product;
             if (!p) return;
 
+            // 2026-08-31: 종이매대 진입 카드는 종이매대일 때만 노출 (그 외 항상 숨김).
+            var _pdEntry = document.getElementById('soPdStudioEntry');
+
             // 2026-06-26: 허니콤보드 원판(혜림허니콤) — 디자인 에디터 불필요(원자재). 섹션 숨김 + 에디터 언마운트.
             if (state.isRawBoard) {
                 sec.style.display = 'none';
+                if (_pdEntry) _pdEntry.style.display = 'none';
                 try { _unmountEditor(); } catch(_ue){}
                 return;
             }
+            // 2026-08-31: 종이매대 — 미니에디터 대신 3D 설계 스튜디오 진입 카드.
+            if (state.isPaperDisplay) {
+                sec.style.display = 'none';
+                try { _unmountEditor(); } catch(_ue2){}
+                if (_pdEntry) {
+                    _pdEntry.style.display = '';
+                    // 이전에 담아둔 디자인 썸네일 복원
+                    var _thumbWrap = document.getElementById('soPdStudioThumb');
+                    var _thumbImg = document.getElementById('soPdStudioThumbImg');
+                    var _d = state._pdStudioDesign;
+                    var _pcode = String((p && p.code) || '');
+                    if (_thumbWrap && _thumbImg && _d && _d.previewUrl && (!_d.code || _d.code === _pcode)) { _thumbImg.src = _d.previewUrl; _thumbWrap.style.display = ''; }
+                    else if (_thumbWrap) { _thumbWrap.style.display = 'none'; }
+                }
+                return;
+            }
+            if (_pdEntry) _pdEntry.style.display = 'none';
             _mountEditor();
 
             var sz = _resolveSize(p);
@@ -17717,7 +17802,9 @@ html, body { background: #ffffff !important; }
         // 2026-05-22: 디자인 파일은 선택사항 — 패브릭과 동일하게 파일 없이도 주문 가능 (이미지 추후 전달).
         //   원판·금액주문은 원래 파일 불필요. 그 외 상품은 파일 미첨부 시 확인창만 띄우고 진행.
         state.artworkLater = false;
-        if (!state.isRawBoard && !state.isAmountOrder && !state.file) {
+        // 2026-08-31: 종이매대 설계 스튜디오로 디자인을 만든 경우 — 파일 업로드가 아니어도 디자인이 이미 첨부됨 → 확인창 skip.
+        var _pdHasStudio = !!(state.isPaperDisplay && state._pdStudioDesign);
+        if (!state.isRawBoard && !state.isAmountOrder && !state.file && !_pdHasStudio) {
             // 2026-07-15: 글씨 스카시 — 디자이너가 직접 디자인하는 상품이라 '파일 없이 주문' 대신 배정·검토 안내.
             var _noFileMsg = state.isScarci ? tr(
                 '담당 디자이너와 매니저가 배정되어 고객님의 자료를 검토하는 데까지 약 30분 소요됩니다.\n결제 후 기다려주시면 고객님께 연락을 드립니다.\n디자인 비용은 무료입니다.',
@@ -17976,6 +18063,20 @@ html, body { background: #ffffff !important; }
             try { if (state.isCustomSize && typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
             const item = buildCartItem(url, path);
             if (state._cartDesignPngUrl) item.thumb = state._cartDesignPngUrl;   // 작업지시서 이미지 미리보기 (PDF 대신 PNG)
+            // 2026-08-31: 종이매대 설계 스튜디오 디자인 첨부 (면 이미지 + 칼선 SVG + 3D 미리보기)
+            if (state.isPaperDisplay && state._pdStudioDesign) {
+                var _pds = state._pdStudioDesign;
+                var _pdCurCode = String((state.product && state.product.code) || '');
+                if (!_pds.code || _pds.code === _pdCurCode) {
+                    if (_pds.cutlineUrl) item.cutlineUrl = _pds.cutlineUrl;
+                    if (Array.isArray(_pds.faces) && _pds.faces.length) {
+                        item.pdStudioFaces = _pds.faces;
+                        item.uploadedFiles = _pds.faces.map(function (f) { return f.url; });
+                    }
+                    if (_pds.previewUrl) { item.thumb = _pds.previewUrl; item.originalUrl = _pds.previewUrl; }
+                    if (_pds.meta) item.pdStudioMeta = _pds.meta;
+                }
+            }
             // 뒷면 파일 URL 부착 (localStorage 호환 — Blob 직접 저장 안 함)
             if (backUrl) {
                 item.backFileUrl = backUrl;
@@ -18182,6 +18283,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-16: 칼선 SVG 도 초기화 — 다음 상품에 stale cutline 잔류 방지.
             state._cartCutlineUrl = null;
             state._cartCutlinePath = null;
+            // 2026-08-31: 종이매대 스튜디오 디자인도 담은 뒤 초기화 — 다음 항목에 재첨부 방지.
+            state._pdStudioDesign = null;
             try {
                 if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
             } catch (_e) {}
@@ -20700,6 +20803,9 @@ html, body { background: #ffffff !important; }
                 var fileName = it.fileName || ((it.product && it.product.name) || 'item') + '.png';
                 if (fileUrl) orderFiles.push({ name: '[앞면] ' + fileName, url: fileUrl, type: it.mimeType || 'image/png' });
                 if (it.backFileUrl) orderFiles.push({ name: '[뒷면] ' + (it.backFileName || 'back.png'), url: it.backFileUrl, type: it.backFileType || 'image/png' });
+                // 2026-08-31: 종이매대 설계 스튜디오 (칼선 + 면별 이미지) — 매니저 견적 경로에도 포함
+                if (it.cutlineUrl) { var _mqExt = String(it.cutlineUrl).match(/\.(svg|pdf)(\?|$)/i); orderFiles.push({ name: '[칼선] cutline_' + ((it.product && it.product.code) || 'item') + '.' + (_mqExt ? _mqExt[1].toLowerCase() : 'pdf'), url: it.cutlineUrl, type: 'cutline' }); }
+                if (Array.isArray(it.pdStudioFaces)) it.pdStudioFaces.forEach(function (f) { if (f && f.url) orderFiles.push({ name: '[종이매대-' + (f.face || f.key || 'face') + '] ' + (f.name || 'design') + '.png', url: f.url, type: 'image/png' }); });
                 return Object.assign({}, it, { addons: addons, productName: (it.product && it.product.name) || it.productName || '상품' });
             });
             var fullAddr = [zip ? '(' + zip + ')' : '', addr1, addr2].filter(Boolean).join(' ');
@@ -21039,6 +21145,12 @@ html, body { background: #ffffff !important; }
                         name: '[칼선] cutline_' + _cutPCode + '.' + _cutExtStr,
                         url: it.cutlineUrl,
                         type: 'cutline'
+                    });
+                }
+                // 2026-08-31: 종이매대 설계 스튜디오 면별 이미지 → orders.files (관리자 파일관리 다운로드/미리보기)
+                if (Array.isArray(it.pdStudioFaces) && it.pdStudioFaces.length) {
+                    it.pdStudioFaces.forEach(function (f) {
+                        if (f && f.url) orderFiles.push({ name: '[종이매대-' + (f.face || f.key || 'face') + '] ' + (f.name || 'design') + '.png', url: f.url, type: 'image/png' });
                     });
                 }
                 // 2026-06-17: PDF 위에 에디터로 편집한 경우 — overlay PNG 도 orders.files 에 포함.
