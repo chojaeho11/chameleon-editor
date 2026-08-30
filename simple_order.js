@@ -14281,7 +14281,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
         // 2026-06-01: 허니콤 가벽 (hb_dw_*) 도 디자인에디터 진입 카드 숨김 — 사용자 요청
         var _rb_editorBtn = document.getElementById('soOpenEditorBtn');
-        if (_rb_editorBtn) _rb_editorBtn.style.display = (state.isRawBoard || state.isWall) ? 'none' : '';
+        // 2026-08-31: 종이매대는 3D 설계 스튜디오로 대체 → 기존 '디자인에디터' 진입 배너 숨김.
+        if (_rb_editorBtn) _rb_editorBtn.style.display = (state.isRawBoard || state.isWall || state.isPaperDisplay) ? 'none' : '';
         // 2026-05-30: 원판 상품은 '상품 상세정보' 섹션 자체도 숨김 (description + common_info 통째로).
         //   DB 의 description / common_info 는 다른 페이지(/raw-board 랜딩, 메인 상세)에서도 쓰여서 거기서 지우면 영향 확산.
         //   모달에서만 강제 비표시로 처리.
@@ -15407,7 +15408,7 @@ html, body { background: #ffffff !important; }
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
             // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
-            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder || state.isWall) ? 'none' : '';
+            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder || state.isWall || state.isPaperDisplay) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
@@ -15448,7 +15449,7 @@ html, body { background: #ffffff !important; }
             var _cutS3 = document.getElementById('soPresetCutSection'); if (_cutS3) _cutS3.style.display = 'none';
             var _sideRow3 = document.getElementById('soKeyringSideRow'); if (_sideRow3) _sideRow3.style.display = 'none';
             // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
-            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder || state.isWall) ? 'none' : '';
+            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder || state.isWall || state.isPaperDisplay) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
@@ -16722,7 +16723,7 @@ html, body { background: #ffffff !important; }
             var lang = (function(){ try { var c = (window.__SITE_CODE || '').toUpperCase(); if (c === 'JP' || c === 'JA') return 'ja'; if (c === 'US' || c === 'EN') return 'en'; } catch(_){} return 'ko'; })();
             var ov = _soEnsurePdStudioOverlay();
             var fr = document.getElementById('pdStudioFrame');
-            var src = '/pd_studio.html?embed=1&type=' + t + '&lang=' + lang + '&code=' + encodeURIComponent(code);
+            var src = '/pd-studio?embed=1&type=' + t + '&lang=' + lang + '&code=' + encodeURIComponent(code);
             if (fr && fr.getAttribute('data-src') !== src) { fr.src = src; fr.setAttribute('data-src', src); }
             ov.style.display = 'block';
             document.body.style.overflow = 'hidden';

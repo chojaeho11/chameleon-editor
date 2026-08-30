@@ -325,7 +325,7 @@
   var SB_URL="https://qinvtnhiidtmrzosyvys.supabase.co";
   var SB_KEY=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9","eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0","3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y"].join(".");
   // Supabase 클라이언트 (Storage 업로드용). 부모(index) 세션이 있으면 재사용, 없으면 anon 생성.
-  var _pdSb=null; function pdSb(){ if(_pdSb)return _pdSb; try{ _pdSb = (window.sb) || (window.supabase && window.supabase.createClient(SB_URL,SB_KEY)); }catch(_e){ _pdSb=null; } return _pdSb; }
+  var _pdSb=null; function pdSb(){ if(_pdSb)return _pdSb; try{ _pdSb = (window.sb) || (window.supabase && window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"pd-studio-anon"}})); }catch(_e){ _pdSb=null; } return _pdSb; }
   // URL 파라미터 (제품페이지 모달에서 전달)
   var PARAMS=new URLSearchParams(location.search);
   var EMBED = PARAMS.get("embed")==="1";
