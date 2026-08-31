@@ -49,8 +49,10 @@
   header.top .badge{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 8px; border-radius:5px}
   header.top p{margin:0; color:var(--muted); font-size:12px; flex-basis:100%; max-width:88ch}
 
-  .studio{display:grid; grid-template-columns:246px 1fr 172px; gap:14px; margin-top:12px; align-items:start}
+  .studio{display:grid; grid-template-columns:184px 232px 1fr 172px; gap:14px; margin-top:12px; align-items:start}
+  @media (max-width:1180px){ .studio{grid-template-columns:170px 210px 1fr 160px} }
   @media (max-width:980px){ .studio{grid-template-columns:1fr} }
+  .modelcol .modelgrid{margin-top:6px}
 
   .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow)}
   .controls,.faces{padding:15px; align-self:start}
@@ -184,17 +186,19 @@
   </header>
 
   <div class="studio">
-    <div class="card controls">
+    <div class="card controls modelcol">
       <h2>매대 종류</h2>
       <div class="typerow">
         <button class="typebtn" type="button" data-type="small" aria-pressed="true">소형<span>카운터 트레이</span></button>
         <button class="typebtn" type="button" data-type="large">대형<span>바닥 다단</span></button>
       </div>
-      <div class="field" style="margin-top:12px">
+      <div class="field" style="margin-top:14px">
         <label>모델 선택 <span style="font-size:10.5px;color:var(--faint)">추후 계속 추가</span></label>
         <div class="modelgrid" id="modelgrid"></div>
       </div>
+    </div>
 
+    <div class="card controls">
       <h2>치수 (mm)</h2>
       <div class="field"><label>폭 <b><span id="vW">400</span></b></label><input type="range" id="W" min="250" max="600" step="10" value="400"></div>
       <div class="field"><label>깊이 <b><span id="vD">350</span></b></label><input type="range" id="D" min="200" max="500" step="10" value="350"></div>
