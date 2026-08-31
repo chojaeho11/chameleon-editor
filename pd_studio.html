@@ -278,12 +278,12 @@
 
 <div class="modal" id="aiModal">
   <div class="modalcard">
-    <h3>AI 이미지 생성</h3>
-    <p class="sub"><b>메인 테마 이미지를 먼저</b> 만들어 확인한 뒤, 마음에 들면 같은 테마로 나머지 면을 생성합니다. 판형(면 비율)에 맞춰 생성되고, 세로로 긴 대형 옆면은 <b>배너처럼 가운데로</b> 구성됩니다.</p>
-    <p class="sub" style="color:var(--accent)">한 장당 20~60초 정도 걸릴 수 있어요. 생성 중에는 잠시 기다려 주세요. (생성 모델: gpt-image-2)</p>
+    <h3>AI 광고판 이미지 생성</h3>
+    <p class="sub">AI 이미지는 <b id="aiAdFaceName">광고판</b>에만 생성됩니다. (소형=뒷판, 대형=헤더) 나머지 면은 배경색 + 작은 문구로 들어가요.</p>
+    <p class="sub" style="color:var(--accent)">20~60초 정도 걸릴 수 있어요. 생성 중에는 잠시 기다려 주세요. (생성 모델: gpt-image-2)</p>
 
     <div class="mlabel">테마 · 문구 설명</div>
-    <textarea class="aiprompt" id="aiPrompt" placeholder="예) 노브랜드 버거 그릴드 불고기 무료증정 이벤트. 빨강·노랑, 먹음직한 버거 사진, 큰 한글 헤드라인"></textarea>
+    <textarea class="aiprompt" id="aiPrompt" placeholder="예) 손에 묻지 않는 스틱형 썬크림, 요즘 대세 모찌 썬블럭. 파랑·노랑, 시원한 여름 느낌, 큰 한글 헤드라인"></textarea>
 
     <div class="mlabel">제품 사진 (선택 · 합성용)</div>
     <div class="refrow" id="aiRefRow">
@@ -293,18 +293,10 @@
     </div>
     <input type="file" id="aiRefFile" accept="image/*" style="display:none">
 
-    <div class="mlabel">① 메인 면 (대표 테마)</div>
-    <div class="chiprow" id="aiMainChips"></div>
-    <button class="btn primary" id="aiGenMain" style="width:100%;margin-top:10px">① 메인 테마 이미지 생성</button>
+    <button class="btn primary" id="aiGenMain" style="width:100%;margin-top:14px">광고판 이미지 생성</button>
 
     <div class="aibar" id="aiBar"><i></i></div>
-    <div class="aistatus" id="aiStatus">테마를 입력하고 메인 이미지를 생성하세요.</div>
-
-    <div id="aiStep2" style="display:none">
-      <div class="mlabel">② 나머지 면 (메인 확인 후)</div>
-      <div class="chiprow" id="aiOtherChips"></div>
-      <button class="btn primary" id="aiGenOthers" style="width:100%;margin-top:10px">② 이 테마로 선택한 면 생성</button>
-    </div>
+    <div class="aistatus" id="aiStatus">테마를 입력하고 광고판 이미지를 생성하세요.</div>
 
     <div class="mlabel">보관함 · 적용 / 삭제</div>
     <div id="aiGallery"><p class="sub">아직 생성된 이미지가 없어요.</p></div>
@@ -505,43 +497,29 @@
     });
     host.innerHTML=any?html:'<p class="sub">아직 생성된 이미지가 없어요.</p>';
   }
-  var aiMainFace="back", aiOtherSel={}, aiBusy=false, aiRefUrl=null;
+  var aiBusy=false, aiRefUrl=null;
+  function adFace(){ return state.type==="large" ? "header" : "back"; }   // 광고판: 소형=뒷판, 대형=헤더
   $("aiRefBtn").addEventListener("click",function(){$("aiRefFile").click();});
   $("aiRefFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];this.value="";if(!f)return;
     var r=new FileReader();r.onload=function(){_normRef(String(r.result),1280).then(function(u){aiRefUrl=u;$("aiRefImg").src=u;$("aiRefPrev").style.display="";$("aiRefBtn").style.display="none";$("aiRefHint").textContent="제품 사진 준비됨 — 생성 시 이 제품이 합성됩니다.";});};
     r.readAsDataURL(f);});
   $("aiRefClear").addEventListener("click",function(){aiRefUrl=null;$("aiRefImg").src="";$("aiRefPrev").style.display="none";$("aiRefBtn").style.display="";$("aiRefHint").textContent="사진을 올리면 생성 이미지에 실제 제품이 자연스럽게 합성됩니다.";});
-  function buildMainChips(){var fs=visibleFaces();if(fs.indexOf(aiMainFace)<0)aiMainFace=fs.indexOf("back")>=0?"back":fs[0];
-    $("aiMainChips").innerHTML=fs.map(function(f){return '<button class="chip" type="button" data-f="'+f+'" aria-pressed="'+(f===aiMainFace?"true":"false")+'">'+FACE_KO[f]+'</button>';}).join("");}
-  function buildOtherChips(){var fs=visibleFaces().filter(function(f){return f!==aiMainFace;});
-    $("aiOtherChips").innerHTML=fs.map(function(f){if(aiOtherSel[f]===undefined)aiOtherSel[f]=true;return '<button class="chip" type="button" data-f="'+f+'" aria-pressed="'+(aiOtherSel[f]?"true":"false")+'">'+FACE_KO[f]+'</button>';}).join("");}
   function aiBar(on){$("aiBar").classList.toggle("run",!!on);}
   function aiSay(t){$("aiStatus").textContent=t;}
-  $("aiMainChips").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;aiMainFace=b.getAttribute("data-f");this.querySelectorAll(".chip").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});buildOtherChips();});
-  $("aiOtherChips").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;var f=b.getAttribute("data-f");aiOtherSel[f]=!aiOtherSel[f];b.setAttribute("aria-pressed",aiOtherSel[f]?"true":"false");});
   $("aiGallery").addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var f=b.getAttribute("data-f"),id=b.getAttribute("data-id"),arr=state.aiGallery[f]||[],it=arr.filter(function(x){return x.id===id;})[0];
     if(b.getAttribute("data-act")==="apply"){if(it){applyToFace(f,it.url);aiSay(FACE_KO[f]+"에 적용했어요.");}}
     else{state.aiGallery[f]=arr.filter(function(x){return x.id!==id;});saveGallery();renderGallery();}});
   $("aiGenMain").addEventListener("click",async function(){
     if(aiBusy)return;var theme=$("aiPrompt").value.trim();
     if(!theme){aiSay("먼저 테마·문구를 입력해 주세요.");$("aiPrompt").focus();return;}
+    var face=adFace();
     state.aiTheme=theme;aiBusy=true;this.disabled=true;aiBar(true);
-    aiSay("메인("+FACE_KO[aiMainFace]+") 이미지를 생성하는 중… 20~60초 걸릴 수 있어요.");
-    try{var url=await genOne(aiMainFace);applyToFace(aiMainFace,url);storeGallery(aiMainFace,url);
-      state.aiMainDone=true;$("aiStep2").style.display="";buildOtherChips();
-      aiSay("메인 이미지 완성 — 3D에서 확인하세요. 마음에 들면 아래 ②로 나머지 면을 생성하세요.");
+    aiSay("광고판("+FACE_KO[face]+") 이미지를 생성하는 중… 20~60초 걸릴 수 있어요.");
+    try{var url=await genOne(face);applyToFace(face,url);storeGallery(face,url);
+      aiSay("광고판 이미지 완성 — 3D에서 확인하세요. 마음에 안 들면 다시 생성하거나 보관함에서 교체할 수 있어요.");
     }catch(e){aiSay("생성 실패: "+((e&&e.message)||e));}
     aiBar(false);this.disabled=false;aiBusy=false;});
-  $("aiGenOthers").addEventListener("click",async function(){
-    if(aiBusy)return;if(!state.aiMainDone){aiSay("먼저 메인 이미지를 만들어 확인해 주세요.");return;}
-    var faces=visibleFaces().filter(function(f){return f!==aiMainFace&&aiOtherSel[f];});
-    if(!faces.length){aiSay("생성할 면을 하나 이상 선택하세요.");return;}
-    aiBusy=true;this.disabled=true;$("aiGenMain").disabled=true;aiBar(true);
-    for(var i=0;i<faces.length;i++){aiSay("나머지 면 생성 중 "+(i+1)+"/"+faces.length+" — "+FACE_KO[faces[i]]+"…");
-      try{var url=await genOne(faces[i]);applyToFace(faces[i],url);storeGallery(faces[i],url);}catch(e){}}
-    aiSay("완료 — "+faces.length+"개 면을 생성했어요. 보관함에서 다른 후보로 교체할 수 있어요.");
-    aiBar(false);this.disabled=false;$("aiGenMain").disabled=false;aiBusy=false;});
-  window.pdAiOpen=function(){buildMainChips();buildOtherChips();renderGallery();if(state.aiMainDone)$("aiStep2").style.display="";$("aiModal").classList.add("on");};
+  window.pdAiOpen=function(){ var f=adFace(); var nm=$("aiAdFaceName"); if(nm)nm.textContent="광고판("+FACE_KO[f]+")"; renderGallery(); $("aiModal").classList.add("on"); };
   window.pdAiClose=function(){$("aiModal").classList.remove("on");};
   $("aiModal").addEventListener("click",function(e){if(e.target===this)window.pdAiClose();});
   document.addEventListener("keydown",function(e){if(e.key==="Escape")window.pdAiClose();});
@@ -705,7 +683,7 @@
   }
   function texBack(){return baseTex(bodyH()/state.W,true,"back",false);}
   function texHeader(){return baseTex(state.Hd/state.W,true,"header",true);}
-  function texBaseFront(){return baseTex(baseH()/state.W,true,"base",true);}
+  function texBaseFront(){return baseTex(baseH()/state.W,true,"base",false);}  // 하단(비광고판) = 배경 + 작은 문구
   function texSide(which,hgt,smallStyle){
     var col=state.color,c=makeCanvas((hgt||bodyH())/state.D),g=c.getContext("2d");
     g.fillStyle=col;g.fillRect(0,0,c.width,c.height);
