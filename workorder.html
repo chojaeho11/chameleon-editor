@@ -7,7 +7,7 @@
 //   고쳐도 "재발"(예: #35 스티커 용지 누락)처럼 보였다. → 자가치유 추가. 배포된 version.txt 와 아래 CV 가 다르면 새로고침.
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다(손대지 말 것).
 (function(){
-    var CV = '20260831185534';
+    var CV = '20260831221916';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1192,6 +1192,23 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 boxes.push(`<div class="opt-box" style="border-color:#a7f3d0; background:#f0fdf4;"><div class="opt-head" style="color:#15803d;"><i class="fa-solid fa-pen-ruler"></i> 디자인 의뢰</div><div class="opt-val">${_drBody}</div></div>`);
             }
 
+            // 2026-08-31: 낱장 인쇄(leaflet) 옵션 — 한글 라벨로 표시 (기타사양 raw 덤프 방지)
+            if (it.leafletPaper || it.leafletSide || it.leafletSize || it.leafletFinishes || it.leafletCustomW) {
+                var _LF_PAPER = { snow180: '스노우지 180g', art180: '아트지 180g', nuvegi240: '누브지 240g', whirale230: '휘라레리넨 230g', stardream240: '스타드림 240g', rendez240: '랑데뷰내추럴 240g', concept270: '컨셉 270g', popset250: '팝셋 250g', yupoblue250: '유포지블루 250g', scot220: '스코틀랜드 백색 220g', montblanc240: '몽블랑 백색 240g', arte310: '아르떼 울트라 화이트 310g' };
+                var _LF_FINISH = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
+                var _lfLines = [];
+                if (it.leafletSide) _lfLines.push('인쇄면: <b>' + (it.leafletSide === 'double' ? '양면' : '단면') + '</b>');
+                if (it.leafletSize && it.leafletSize !== 'custom') _lfLines.push('규격: <b>' + esc(it.leafletSize) + '</b>');
+                if (it.leafletCustomW && it.leafletCustomH) _lfLines.push('사이즈: <b>' + esc(it.leafletCustomW) + ' × ' + esc(it.leafletCustomH) + ' mm</b>');
+                if (it.leafletPaper) _lfLines.push('용지: <b>' + esc(_LF_PAPER[it.leafletPaper] || it.leafletPaper) + '</b>');
+                if (it.leafletFinishes) {
+                    var _lff = it.leafletFinishes;
+                    if (typeof _lff === 'string') { try { _lff = JSON.parse(_lff); } catch (e) { _lff = {}; } }
+                    var _fnames = Object.keys(_lff || {}).filter(function (k) { return _lff[k]; }).map(function (k) { return _LF_FINISH[k] || k; });
+                    if (_fnames.length) _lfLines.push('후가공: <b>' + _fnames.join(', ') + '</b>');
+                }
+                if (_lfLines.length) boxes.push('<div class="opt-box" style="border-color:#fde68a; background:#fffbeb;"><div class="opt-head" style="color:#92400e;"><i class="fa-solid fa-file-lines"></i> 낱장 인쇄</div><div class="opt-val" style="line-height:1.9;">' + _lfLines.join('<br>') + '</div></div>');
+            }
             // 2026-06-13: 기타 사양 catch-all — 위 박스에 안 잡힌 의미있는 필드들을 마지막에 표시
             // 시스템 메타/UI/이미지 키는 제외하고 사용자에게 의미있는 값만 추출
             const _SYS_KEYS = new Set([
@@ -1220,7 +1237,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 // 2026-06-13: 칼선작업 — 전용 박스에서 표시 중
                 'cutlineWork','cutlineCharCount','cutlineFee','cutlineEligible',
                 // 2026-06-25: 에디터 디자인 내부 메타 (raw URL/경로 덤프 방지 — 아래서 링크로 따로 표시)
-                'templateSvgUrl','templateSvgPath','templateMeta','templateId'
+                'templateSvgUrl','templateSvgPath','templateMeta','templateId',
+                // 2026-08-31: 낱장 인쇄 옵션 — 전용 '낱장 인쇄' 박스에서 한글로 표시 중
+                'leafletSide','leafletSize','leafletPaper','leafletCustomW','leafletCustomH','leafletFinishes'
             ]);
             const _extraFieldLines = [];
             // 2026-06-25: 에디터 디자인 벡터(SVG) — raw URL 덤프 대신 클릭 링크
