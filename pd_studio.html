@@ -77,7 +77,7 @@
   .seg{flex:1; appearance:none; border:1px solid var(--line); background:var(--panel); color:var(--muted); font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:14px; padding:8px 0; border-radius:9px; cursor:pointer}
   .seg[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
   .swrow{display:grid; grid-template-columns:repeat(6,1fr); gap:7px}
-  .sw{width:100%; aspect-ratio:1/1; border-radius:7px; border:2px solid transparent; cursor:pointer; padding:0}
+  .sw{width:100%; aspect-ratio:1/1; border-radius:7px; border:2px solid var(--line); cursor:pointer; padding:0}
   .sw[aria-pressed="true"]{border-color:var(--ink); box-shadow:0 0 0 2px var(--surface) inset}
   .facegrid{display:grid; grid-template-columns:1fr; gap:7px; margin-top:2px}
   .facebtn{display:flex; flex-direction:column; align-items:flex-start; gap:2px; border:1px solid var(--line); background:var(--panel); border-radius:9px; padding:8px 10px; cursor:pointer; font-family:inherit; text-align:left}
@@ -161,9 +161,20 @@
   .gitem .gact button.del{border-left:1px solid var(--line)}
   .gitem .gact button.del:hover{color:var(--cut)}
   .mfoot{display:flex; gap:8px; justify-content:flex-end; margin-top:18px; flex-wrap:wrap}
+  /* 모달(iframe) 임베드 전용 상단 닫기 바 */
+  .pdembedbar{position:sticky; top:0; z-index:70; display:none; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:var(--surface); border-bottom:1px solid var(--line)}
+  .pdembedbar.on{display:flex}
+  .pdembedbar .pdbartitle{font-size:14px; font-weight:600; color:var(--ink)}
+  .pdembedbar .pdclosebtn{padding:12px 26px; border:none; background:var(--accent); color:#fff; border-radius:11px; font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap}
+  .pdembedbar .pdclosebtn:hover{filter:brightness(1.08)}
 </style>
 </head>
 <body>
+
+<div class="pdembedbar" id="pdEmbedBar">
+  <span class="pdbartitle">종이매대 설계 스튜디오</span>
+  <button type="button" class="pdclosebtn" onclick="window.pdEmbedClose && window.pdEmbedClose()">✕ 창 닫기</button>
+</div>
 
 <div class="wrap">
   <header class="top">
@@ -336,7 +347,7 @@
     {id:"l1",cls:"large",name:"바닥 다단 매대 기본형",preset:{W:[250,600,400],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,280],N:4}},
     {id:"l2",cls:"large",name:"좌우 분리형",preset:{W:[300,700,460],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,240],N:4}}
   ];
-  var PALETTE=["#7c3aed","#e5533d","#f59e0b","#0f9d6b","#2f80ed","#e11d8f","#0ea5e9","#14b8a6","#f43f5e","#a855f7","#334155","#111827"];
+  var PALETTE=["#ffffff","#7c3aed","#e5533d","#f59e0b","#0f9d6b","#2f80ed","#e11d8f","#0ea5e9","#14b8a6","#f43f5e","#334155","#111827"];
   var LIP=48, INSET=6;
 
   (function(){var host=$("swrow");PALETTE.forEach(function(c){var b=document.createElement("button");b.className="sw";b.style.background=c;b.type="button";b.setAttribute("aria-pressed",c===state.color?"true":"false");b.title=c;b.onclick=function(){state.color=c;host.querySelectorAll(".sw").forEach(function(x){x.setAttribute("aria-pressed","false");});b.setAttribute("aria-pressed","true");rebuild();};host.appendChild(b);});})();
@@ -890,12 +901,13 @@
     var startId = (t==="large") ? "l1" : "s1";
     window.selectModel(startId);
     if(EMBED){
-      // 모달 안에서는 상단 헤더를 최소화(부모 모달이 이미 제목을 보여줌).
+      // 모달 안에서는 스튜디오 자체 헤더를 숨기고, 대신 큰 '창 닫기' 상단 바를 노출.
       var hdr=document.querySelector("header.top"); if(hdr) hdr.style.display="none";
-      document.querySelector(".wrap") && (document.querySelector(".wrap").style.paddingTop="10px");
+      var bar=$("pdEmbedBar"); if(bar) bar.classList.add("on");
       var addBtn=$("pdAddBtn"); if(addBtn) addBtn.style.display="";
     }
   }
+  window.pdEmbedClose=function(){ try{ window.parent.postMessage({type:"pd_studio_close"}, location.origin); }catch(_){} };
   function _pdDataURLToBlob(u){
     var m=/^data:([^;]+);base64,(.*)$/.exec(u); if(!m) return null;
     var mime=m[1], bin=atob(m[2]), n=bin.length, arr=new Uint8Array(n);
