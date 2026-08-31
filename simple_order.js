@@ -1187,6 +1187,14 @@ html, body { background: #ffffff !important; }
 @keyframes so-spin { to { transform: rotate(360deg); } }
 /* 2026-07-07: 파일 업로드 버튼 — 보라색 그라데이션이 흐르는 애니메이션 + 흰색 글씨 */
 @keyframes soUploadGradFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+/* 2026-08-31: 종이매대 설계 스튜디오 진입 버튼 — 움직이는 그라데이션(눈에 띄게). 인라인 배경 override 위해 !important. */
+#soPdStudioOpenBtn {
+    background: linear-gradient(90deg, #4338ca, #7c3aed, #d946ef, #6366f1, #4338ca) !important;
+    background-size: 300% 100% !important;
+    animation: soUploadGradFlow 3s ease infinite;
+    transition: filter .15s;
+}
+#soPdStudioOpenBtn:hover { filter: brightness(1.09); }
 .so-upload-grad-btn {
     background: linear-gradient(90deg, #6d28d9, #a855f7, #7c3aed, #c026d3, #6d28d9);
     background-size: 300% 100%;
