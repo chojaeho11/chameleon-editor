@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260831125500';
+    var CV = '20260831130711';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -20615,8 +20615,8 @@ if (w >= 20 && h >= 20) {
             <!-- 본사의뢰: 상품 선택 -->
             <div id="dreqHqPanel">
                 <div class="dreq-prods" id="dreqProds">
-                    <button type="button" class="dreq-prod" data-prod="명함" data-price="15000"><div class="dpn">명함</div><div class="dpp">15,000원</div></button>
-                    <button type="button" class="dreq-prod" data-prod="전단" data-price="30000"><div class="dpn">전단</div><div class="dpp">30,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="명함" data-price="30000"><div class="dpn">명함</div><div class="dpp">30,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="전단" data-price="50000"><div class="dpn">전단</div><div class="dpp">50,000원</div></button>
                     <!-- 2026-08-31: 종이매대 디자인 (대형 15만 / 소형 10만) -->
                     <button type="button" class="dreq-prod" data-prod="종이매대 대형" data-price="150000"><div class="dpn">종이매대 대형</div><div class="dpp">150,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="종이매대 소형" data-price="100000"><div class="dpn">종이매대 소형</div><div class="dpp">100,000원</div></button>
@@ -20731,6 +20731,8 @@ if (w >= 20 && h >= 20) {
         prodBanner:  { ko:'배너',         ja:'バナー',         en:'Banner' },
         prodWall:    { ko:'가벽',         ja:'壁面',           en:'Wall Panel' },
         prodPhoto:   { ko:'글씨포토존',   ja:'文字フォトゾーン', en:'Letter Photo Zone' },
+        prodPdLarge: { ko:'종이매대 대형', ja:'紙什器 大型',    en:'Paper display (L)' },
+        prodPdSmall: { ko:'종이매대 소형', ja:'紙什器 小型',    en:'Paper display (S)' },
         totalLabel:  { ko:'디자인비',     ja:'デザイン料',     en:'Design fee' },
         custTitle:   { ko:'제목',         ja:'タイトル',       en:'Title' },
         custTitlePh: { ko:'예: 카페 오픈 포스터, 제품 패키지 디자인', ja:'例: カフェオープンポスター、商品パッケージデザイン', en:'e.g. Cafe opening poster, product package design' },
@@ -20769,7 +20771,7 @@ if (w >= 20 && h >= 20) {
         var tHq = document.querySelector('#dreqTabs .dreq-tab[data-tab="hq"]');   if (tHq) tHq.textContent = _T('tabHq');
         var tCu = document.querySelector('#dreqTabs .dreq-tab[data-tab="cust"]'); if (tCu) tCu.textContent = _T('tabCust');
         // 본사 5종 카드
-        var _PRODK = ['prodCard','prodFlyer','prodBanner','prodWall','prodPhoto'];
+        var _PRODK = ['prodCard','prodFlyer','prodPdLarge','prodPdSmall','prodBanner','prodWall','prodPhoto'];
         document.querySelectorAll('#dreqProds .dreq-prod').forEach(function(btn, i){
             var dpn = btn.querySelector('.dpn'); var dpp = btn.querySelector('.dpp');
             if (dpn && _PRODK[i]) dpn.textContent = _T(_PRODK[i]);

@@ -707,18 +707,17 @@ function payoutOf(cat) { return PAYOUT[cat] || 0; }
 function hqFixedPayout(row) {
     if (!row) return 0;
     var base = payoutOf(row.category);
-    if (base <= 0) return 0;   // 명함/칼선/자유의뢰 등은 호출부에서 별도 처리
-    if (row.category === '전단') {
-        var cust = Number(row.budget_max || row.budget_min || 0);
-        if (cust >= 60000) base = base * 2;   // 양면
-    }
+    if (base <= 0) return 0;   // 명함/칼선/자유의뢰/종이매대 등은 호출부에서 별도 처리(budget 70%)
+    // 2026-08-31 (사장님): 본사 정찰가 디자인 = 고객 결제금액의 70% 균일 지급.
+    var cust = Number(row.budget_max || row.budget_min || 0);
+    var pay = Math.floor(cust * 0.7);
+    if (pay <= 0) pay = base;   // 예전 데이터(budget 미기록) 안전망
     var mm = parseMeta(row.description || '');
-    if (mm && mm.agreedPayout && Number(mm.agreedPayout) > base) return Number(mm.agreedPayout);
-    return base;
+    if (mm && mm.agreedPayout && Number(mm.agreedPayout) > pay) return Number(mm.agreedPayout);
+    return pay;
 }
 function hqPayoutSuffix(row) {
-    if (row && row.category === '전단' && Number(row.budget_max || row.budget_min || 0) >= 60000) return ' (양면 ×2)';
-    return '';
+    return '';   // 2026-08-31: 70% 균일 — 전단 양면 ×2 표기 제거
 }
 
 function payoutDetailFor(r) {
@@ -782,7 +781,7 @@ function payoutLabel(r) {
         return pay.toLocaleString() + '원 (캐릭터 ' + n + '개 × 10,000원의 70%)';
     }
     var p = hqFixedPayout(r);
-    if (p > 0) return p.toLocaleString() + '원' + hqPayoutSuffix(r);
+    if (p > 0) return p.toLocaleString() + '원 (의뢰금액 ' + Number(r.budget_max || r.budget_min || 0).toLocaleString() + '원의 70%)';
     // 자유의뢰: FREE_REQ 메타 → 70% 자동, 없으면 합의 금액, 그것도 없으면 협의
     var fr = parseFreeReqMeta(r.description);
     if (fr && fr.designerPayout) {
@@ -1867,7 +1866,9 @@ async function dbOpenComplete(id) {
         }
     } else {
         fixed = hqFixedPayout(row);
-        fixedLabel = fixed.toLocaleString() + '원' + hqPayoutSuffix(row);
+        // 2026-08-31: 종이매대 등 정찰가표 미등록 카테고리도 의뢰금액의 70% 자동 적용.
+        if (fixed <= 0) { const _c = Number(row.budget_max || row.budget_min || 0); if (_c > 0) fixed = Math.floor(_c * 0.7); }
+        fixedLabel = fixed.toLocaleString() + '원 (의뢰금액 ' + Number(row.budget_max || row.budget_min || 0).toLocaleString() + '원의 70%)';
     }
     const fixedEl = document.getElementById('dbCompletePayoutFixed');
     const inpEl = document.getElementById('dbCompletePayoutInput');
@@ -1928,6 +1929,8 @@ async function dbSubmitComplete() {
         if (cust3 > 0) fixedPayout = Math.floor(cust3 * 0.7);
     } else {
         fixedPayout = hqFixedPayout(row);
+        // 2026-08-31: 종이매대 등 정찰가표 미등록 카테고리도 의뢰금액의 70% 자동 적용.
+        if (fixedPayout <= 0) { const _c2 = Number(row.budget_max || row.budget_min || 0); if (_c2 > 0) fixedPayout = Math.floor(_c2 * 0.7); }
     }
     let payoutAmount = fixedPayout;
     if (fixedPayout <= 0) {
