@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260831122710';
+        var CV = '20260831123850';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -259,8 +259,8 @@
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자이너출금</li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 경리과</li>
             <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품옵션</li>
-            <!-- 2026-08-28: 종이매대 칼선 갤러리 관리 (직원이 완성품 사진+사이즈+칼선 업로드 → 고객 다운로드) -->
-            <li class="nav-item" onclick="showSection('sec-pdtpl', this); if(window.pdtLoad) pdtLoad();"><i class="fa-solid fa-box-open"></i> 📦 종이매대 칼선</li>
+            <!-- 2026-08-31: 종이매대 칼선 갤러리 관리 제거 — 설계 스튜디오로 대체. -->
+
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 직원관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 고객관리</li>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 탬플릿</li>
@@ -329,112 +329,7 @@
               </div>
             </div>
 
-            <!-- 2026-08-28: 종이매대 칼선 갤러리 관리 — 직원이 완성품 사진+사이즈+칼선 업로드 → 고객 페이지에서 다운로드 -->
-            <div id="sec-pdtpl" class="section">
-              <div style="max-width:1000px; margin:0 auto;">
-                <h2 style="margin:0 0 4px;">📦 종이매대 칼선 갤러리</h2>
-                <p style="color:#64748b; margin:0 0 16px; font-size:13.5px; line-height:1.6;">완성품 사진 · 사이즈 · 칼선 파일을 올리면 고객이 종이매대 페이지에서 보고 다운받습니다. (소형 / 대형으로 분류)</p>
-                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:22px;">
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div>
-                      <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;">분류</label>
-                      <select id="pdtClass" style="width:100%; padding:10px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit;">
-                        <option value="small">소형</option><option value="large">대형</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;">사이즈</label>
-                      <input type="text" id="pdtSize" placeholder="예: 600 × 1600mm" style="width:100%; padding:10px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; box-sizing:border-box;">
-                    </div>
-                    <div style="grid-column:1/3;">
-                      <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;">스타일명</label>
-                      <input type="text" id="pdtName" placeholder="예: 원터치 매대 A형" style="width:100%; padding:10px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; box-sizing:border-box;">
-                    </div>
-                    <div>
-                      <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;">완성품 사진 (이미지)</label>
-                      <input type="file" id="pdtPhoto" accept="image/*" style="width:100%; padding:8px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; box-sizing:border-box;">
-                    </div>
-                    <div>
-                      <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:5px;">칼선 파일 (PDF·AI·PNG·ZIP)</label>
-                      <input type="file" id="pdtCut" accept=".pdf,.ai,.png,.jpg,.jpeg,.zip,.eps" style="width:100%; padding:8px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; box-sizing:border-box;">
-                    </div>
-                  </div>
-                  <button onclick="pdtSave(this)" style="margin-top:16px; width:100%; padding:13px; border:none; border-radius:12px; background:linear-gradient(135deg,#4338ca,#6366f1); color:#fff; font-size:15px; font-weight:800; cursor:pointer;">+ 칼선 등록</button>
-                  <div id="pdtStatus" style="margin-top:10px; font-size:13px; color:#64748b;"></div>
-                </div>
-                <div id="pdtList"><div style="color:#94a3b8; font-size:13px;">로딩 중...</div></div>
-              </div>
-              <script>
-                function _pdEsc(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
-                function _pdSb(){ return window.sb || null; }
-                async function _pdUpload(file, kind){
-                  var sb=_pdSb(); if(!sb) throw new Error('DB 연결 대기');
-                  var ext=(String(file.name).split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'')||'bin';
-                  var path='paper_display/'+kind+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+'.'+ext;
-                  var up=await sb.storage.from('design').upload(path,file,{contentType:file.type||undefined,upsert:false});
-                  if(up.error) throw up.error;
-                  return sb.storage.from('design').getPublicUrl(path).data.publicUrl;
-                }
-                window.pdtLoad = async function(){
-                  var box=document.getElementById('pdtList'); if(!box) return;
-                  var sb=_pdSb(); if(!sb){ box.innerHTML='<div style="color:#94a3b8;padding:20px;">DB 연결 대기 중... 잠시 후 다시 시도</div>'; return; }
-                  try{
-                    var res=await sb.from('paper_display_templates').select('*').order('size_class',{ascending:true}).order('sort_order',{ascending:true}).order('created_at',{ascending:false});
-                    var rows=res.data||[];
-                    if(!rows.length){ box.innerHTML='<div style="color:#94a3b8;padding:20px;">등록된 칼선이 없습니다. 위에서 추가해 주세요.</div>'; return; }
-                    box.innerHTML=rows.map(function(r){
-                      var cls=r.size_class==='large'?'대형':'소형';
-                      return '<div style="display:flex;gap:12px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff;">'
-                        +(r.photo_url?'<img src="'+_pdEsc(r.photo_url)+'" style="width:56px;height:74px;object-fit:cover;border-radius:8px;background:#f1f5f9;">':'<div style="width:56px;height:74px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#cbd5e1;">📦</div>')
-                        +'<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:14px;">'+_pdEsc(r.style_name||'-')+' <span style="font-size:11px;color:#6366f1;font-weight:800;">['+cls+']</span></div>'
-                        +'<div style="font-size:12px;color:#64748b;margin-top:2px;">'+_pdEsc(r.size_label||'사이즈 미지정')+'</div>'
-                        +(r.cutline_url?'<a href="'+_pdEsc(r.cutline_url)+'" target="_blank" rel="noopener" style="font-size:11px;color:#4338ca;font-weight:700;text-decoration:none;">📎 칼선 파일 보기</a>':'<span style="font-size:11px;color:#ef4444;">⚠ 칼선 파일 없음</span>')
-                        +'</div>'
-                        +'<button onclick="pdtToggle(\''+r.id+'\','+(r.active?'false':'true')+')" style="padding:6px 11px;border-radius:8px;border:1px solid '+(r.active?'#bbf7d0':'#e2e8f0')+';background:'+(r.active?'#f0fdf4':'#f8fafc')+';color:'+(r.active?'#15803d':'#94a3b8')+';font-size:11.5px;font-weight:700;cursor:pointer;">'+(r.active?'노출중':'숨김')+'</button>'
-                        +'<button onclick="pdtDelete(\''+r.id+'\')" style="padding:6px 11px;border-radius:8px;border:none;background:#fee2e2;color:#b91c1c;font-size:11.5px;font-weight:700;cursor:pointer;">삭제</button>'
-                        +'</div>';
-                    }).join('');
-                  }catch(e){ box.innerHTML='<div style="color:#ef4444;padding:16px;">불러오기 오류: '+_pdEsc(e.message||e)+'</div>'; }
-                };
-                window.pdtSave = async function(btn){
-                  var sb=_pdSb(); if(!sb){ alert('DB 연결 대기 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
-                  var cls=document.getElementById('pdtClass').value;
-                  var name=(document.getElementById('pdtName').value||'').trim();
-                  var size=(document.getElementById('pdtSize').value||'').trim();
-                  var photoF=(document.getElementById('pdtPhoto').files||[])[0];
-                  var cutF=(document.getElementById('pdtCut').files||[])[0];
-                  if(!name){ alert('스타일명을 입력하세요.'); return; }
-                  if(!photoF && !cutF){ alert('완성품 사진 또는 칼선 파일을 올려주세요.'); return; }
-                  var st=document.getElementById('pdtStatus'); if(btn) btn.disabled=true; st.style.color='#64748b'; st.textContent='업로드 중...';
-                  try{
-                    var photoUrl=photoF?await _pdUpload(photoF,'photo'):null;
-                    var cutUrl=cutF?await _pdUpload(cutF,'cut'):null;
-                    var ins=await sb.from('paper_display_templates').insert({ size_class:cls, style_name:name, size_label:size, photo_url:photoUrl, cutline_url:cutUrl, cutline_name:cutF?cutF.name:null, active:true }).select();
-                    if(ins.error) throw ins.error;
-                    if(!ins.data||!ins.data.length) throw new Error('저장 반영 안 됨 (권한/RLS 확인)');
-                    st.style.color='#16a34a'; st.textContent='등록 완료';
-                    document.getElementById('pdtName').value=''; document.getElementById('pdtSize').value='';
-                    document.getElementById('pdtPhoto').value=''; document.getElementById('pdtCut').value='';
-                    pdtLoad();
-                  }catch(e){ st.style.color='#dc2626'; st.textContent='실패: '+(e.message||e); }
-                  if(btn) btn.disabled=false;
-                };
-                window.pdtDelete = async function(id){
-                  if(!confirm('이 칼선을 삭제할까요? (되돌릴 수 없습니다)')) return;
-                  var sb=_pdSb(); if(!sb) return;
-                  var r=await sb.from('paper_display_templates').delete().eq('id',id).select();
-                  if(r.error){ alert('삭제 실패(권한 확인): '+r.error.message); return; }
-                  if(!r.data||!r.data.length){ alert('삭제 반영 안 됨 (권한/RLS 확인)'); return; }
-                  pdtLoad();
-                };
-                window.pdtToggle = async function(id, active){
-                  var sb=_pdSb(); if(!sb) return;
-                  var r=await sb.from('paper_display_templates').update({ active:active, updated_at:new Date().toISOString() }).eq('id',id).select();
-                  if(r.error){ alert('변경 실패: '+r.error.message); return; }
-                  pdtLoad();
-                };
-              </script>
-            </div>
+            <!-- 2026-08-31: 종이매대 칼선 갤러리 관리 섹션 제거 — 설계 스튜디오로 대체. -->
 
             <!-- 2026-07-18: 작품 갤러리 승인 — 명함/개인정보 감지 디자인은 pending 으로 대기, 여기서 승인해야 공개. -->
             <div id="sec-gallery-mod" class="section">

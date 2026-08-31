@@ -1546,22 +1546,7 @@ html, body { background: #ffffff !important; }
         </div>
 
         <!-- 2026-08-28: 종이매대 칼선 갤러리 — 직원이 올린 완성품 사진+사이즈+칼선을 고객이 보고 다운받음 (소형/대형). -->
-        <div id="soPdGallery" style="display:none; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-            <div>
-              <div style="font-size:15px; color:#1c1917; letter-spacing:-0.3px;">${tr('종이매대 칼선 갤러리', 'ペーパーラック カットライン', 'Paper display templates')}</div>
-              <div style="font-size:11.5px; color:#78716c; margin-top:2px;">${tr('원하는 스타일을 고르고 칼선을 다운받아 디자인에 맞춰 주문해 주세요.', 'お好みのスタイルを選び、カットラインをダウンロードしてご注文ください。', 'Pick a style, download the die-cut template, and order.')}</div>
-            </div>
-            <div id="soPdGalTabs" style="display:flex; gap:6px;">
-              <button type="button" data-pdcls="small" onclick="window._soPdGalPick('small')" class="so-pdgal-tab" style="padding:7px 16px; border-radius:999px; border:1px solid #d6d3d1; background:#4338ca; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('소형', '小型', 'Small')}</button>
-              <button type="button" data-pdcls="large" onclick="window._soPdGalPick('large')" class="so-pdgal-tab" style="padding:7px 16px; border-radius:999px; border:1px solid #d6d3d1; background:#fff; color:#57534e; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('대형', '大型', 'Large')}</button>
-            </div>
-          </div>
-          <div id="soPdGalGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;"></div>
-          <div id="soPdGalEmpty" style="display:none; padding:26px; text-align:center; color:#a8a29e; font-size:12.5px;">${tr('등록된 칼선이 없습니다.', '登録されたテンプレートがありません。', 'No templates yet.')}</div>
-          <!-- 갤러리 아래 작은 연락처 안내 (사용자 요청: 전화안내 유지) -->
-          <div id="soPdGalContact" style="margin-top:12px; padding:9px 13px; background:#fafaf9; border:1px solid #e7e5e4; border-radius:10px; font-size:11.5px; color:#78716c; line-height:1.5;"></div>
-        </div>
+        <!-- 2026-08-31: 종이매대 칼선 갤러리(#soPdGallery) 제거 — 설계 스튜디오로 대체. -->
 
         <!-- 2026-05-14: 칼선 도안 제공 안내 + 다운로드 (admin_products.cutline_url 있을 때만 표시).
              2026-05-31: 위의 추가옵션·시공/배송 카드와 톤 통일 — 흰 카드 + 검정 보더 + 10px 라운딩. -->
@@ -5426,88 +5411,7 @@ html, body { background: #ffffff !important; }
         return false;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 2026-08-28: 종이매대 칼선 갤러리 — 직원이 올린 완성품 사진+사이즈+칼선을 고객이 보고 다운받음.
-    //   테이블 paper_display_templates (size_class small/large, style_name, size_label, photo_url, cutline_url).
-    // ─────────────────────────────────────────────────────────
-    var _soPdGalCache = null;      // 전체 로드 캐시
-    var _soPdGalClass = 'small';   // 현재 탭
-    window._soPdGalPick = function (cls) {
-        _soPdGalClass = (cls === 'large') ? 'large' : 'small';
-        // 탭 active 스타일
-        document.querySelectorAll('.so-pdgal-tab').forEach(function (b) {
-            var on = b.getAttribute('data-pdcls') === _soPdGalClass;
-            b.style.background = on ? '#4338ca' : '#fff';
-            b.style.color = on ? '#fff' : '#57534e';
-        });
-        _soRenderPdGalGrid();
-    };
-    function _soPdGalContactHtml() {
-        var sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR').toUpperCase();
-        var phone, label;
-        if (sc === 'JP') { phone = '090-5397-0420'; label = tr('일본지사 나나미', '日本支社 ナナミ', 'Japan · Nanami'); }
-        else if (sc === 'KR') { phone = '031-366-1984'; label = tr('한국사무실', '韓国本社', 'Korea HQ'); }
-        else { phone = '+82 10-3491-3535'; label = tr('해외총괄 서혜림 디렉터', '海外統括 ソ・ヘリム', 'Global Director'); }
-        var telHref = 'tel:' + phone.replace(/[^0-9+]/g, '');
-        return '📞 ' + tr('칼선·제작 문의', 'カットライン・製作のお問い合わせ', 'Templates & production') + ': '
-            + '<a href="' + telHref + '" style="color:#b45309; font-weight:700; text-decoration:none;">' + escapeHtml(label) + ' ' + escapeHtml(phone) + '</a>'
-            + ((sc !== 'KR' && sc !== 'JP') ? ' · <span>' + tr('해외 배송은 FOB 방식', '海外配送はFOB', 'FOB terms overseas') + '</span>' : '');
-    }
-    function _soRenderPdGalGrid() {
-        var grid = document.getElementById('soPdGalGrid');
-        var empty = document.getElementById('soPdGalEmpty');
-        if (!grid) return;
-        var rows = (_soPdGalCache || []).filter(function (r) { return (r.size_class === 'large' ? 'large' : 'small') === _soPdGalClass; });
-        if (!rows.length) {
-            grid.innerHTML = '';
-            if (empty) empty.style.display = 'block';
-            return;
-        }
-        if (empty) empty.style.display = 'none';
-        grid.innerHTML = rows.map(function (r) {
-            var photo = r.photo_url || '';
-            var dl = r.cutline_url || '';
-            var nm = escapeHtml(r.style_name || '');
-            var sz = escapeHtml(r.size_label || '');
-            var img = photo
-                ? '<img src="' + escapeHtml(photo) + '" alt="' + nm + '" loading="lazy" style="width:100%; aspect-ratio:3/4; object-fit:cover; display:block; background:#f5f5f4;">'
-                : '<div style="width:100%; aspect-ratio:3/4; display:flex; align-items:center; justify-content:center; background:#f5f5f4; color:#a8a29e; font-size:24px;">📦</div>';
-            var dlBtn = dl
-                ? '<a href="' + escapeHtml(dl) + '" download target="_blank" rel="noopener" style="display:block; text-align:center; margin-top:6px; padding:7px 8px; background:#4338ca; color:#fff; border-radius:8px; font-size:11.5px; font-weight:700; text-decoration:none;">' + tr('칼선 다운받기', 'ダウンロード', 'Download') + '</a>'
-                : '<div style="text-align:center; margin-top:6px; padding:7px 8px; background:#f5f5f4; color:#a8a29e; border-radius:8px; font-size:11px;">' + tr('준비중', '準備中', 'Soon') + '</div>';
-            return '<div style="border:1px solid #e7e5e4; border-radius:12px; overflow:hidden; background:#fff;">'
-                + '<div style="overflow:hidden;">' + img + '</div>'
-                + '<div style="padding:8px 9px;">'
-                + '<div style="font-size:12px; color:#1c1917; font-weight:600; line-height:1.35; min-height:32px;">' + (nm || tr('종이매대', 'ペーパーラック', 'Display')) + '</div>'
-                + (sz ? '<div style="font-size:11px; color:#78716c; margin-top:2px;">' + sz + '</div>' : '')
-                + dlBtn
-                + '</div></div>';
-        }).join('');
-    }
-    window._soLoadPaperDisplayGallery = async function () {
-        var wrap = document.getElementById('soPdGallery');
-        if (!wrap) return;
-        var contact = document.getElementById('soPdGalContact');
-        if (contact) contact.innerHTML = _soPdGalContactHtml();
-        // 캐시 있으면 재사용
-        if (!_soPdGalCache) {
-            try {
-                var sb = getSb();
-                if (!sb) { _soPdGalCache = []; }
-                else {
-                    var res = await sb.from('paper_display_templates')
-                        .select('id, size_class, style_name, size_label, photo_url, cutline_url, sort_order')
-                        .eq('active', true)
-                        .order('sort_order', { ascending: true })
-                        .order('created_at', { ascending: false });
-                    _soPdGalCache = (res && res.data) || [];
-                }
-            } catch (e) { console.warn('[pd gallery]', e); _soPdGalCache = []; }
-        }
-        // 기본 탭: 소형에 항목 있으면 소형, 없으면 대형
-        var hasSmall = _soPdGalCache.some(function (r) { return (r.size_class !== 'large'); });
-        window._soPdGalPick(hasSmall ? 'small' : 'large');
-    };
+    // 2026-08-31: 종이매대 칼선 갤러리(paper_display_templates) 제거 — 설계 스튜디오로 대체.
 
     // 2026-07-18: "목업 뷰어" 제품군 — 종이매대 + 허니콤 테이블 (+2026-07-19: 허니콤 박스).
     //   이 제품군의 대지는 인쇄 원고가 아니라 AI 목업/테마를 크게 보기 위한 뷰어다
@@ -13726,13 +13630,7 @@ html, body { background: #ffffff !important; }
         var isPdNow = _soIsPaperDisplayProduct(p);
         if (descEl) descEl.style.display = (isWallNow || isPdNow) ? 'none' : '';
         if (wallGuide) wallGuide.style.display = isWallNow ? '' : 'none';
-        // 2026-08-28: 종이매대 칼선 갤러리 — 종이매대면 갤러리 표시(전화안내는 갤러리 하단에 소형으로),
-        //   기존 큰 전화카드(soPaperDisplayNotice)는 숨김.
-        var _pdGal = document.getElementById('soPdGallery');
-        if (_pdGal) {
-            _pdGal.style.display = isPdNow ? '' : 'none';
-            if (isPdNow && typeof window._soLoadPaperDisplayGallery === 'function') { try { window._soLoadPaperDisplayGallery(); } catch (e) {} }
-        }
+        // 2026-08-31: 종이매대 칼선 갤러리 제거 (설계 스튜디오로 대체). #soPdGallery HTML/함수도 삭제됨.
         if (pdNotice) {
             // 2026-08-28: 종이매대는 갤러리 하단 소형 연락처로 대체 → 기존 큰 전화카드는 항상 숨김.
             pdNotice.style.display = 'none';
