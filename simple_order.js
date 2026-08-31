@@ -20840,7 +20840,67 @@ html, body { background: #ffffff !important; }
         }
     };
 
+    // 2026-08-31: 주문 전 약관 동의 모달 (커스텀 제작·배송/설치·홍보사용·마일리지·일반 인쇄물 약관). 동의해야만 주문 진행.
+    window._soShowTermsModal = function () {
+        var ov = document.getElementById('soTermsOverlay');
+        if (ov) {
+            var c0 = ov.querySelector('#soTermsChk'), a0 = ov.querySelector('#soTermsAgree');
+            if (c0) c0.checked = false;
+            if (a0) { a0.disabled = true; a0.style.background = '#9ca3af'; a0.style.cursor = 'not-allowed'; }
+            ov.style.display = 'flex';
+            return;
+        }
+        var hd = function (ko, ja, en) { return '<div style="font-weight:800; color:#1e293b; font-size:13px; margin:14px 0 6px;">' + tr(ko, ja, en) + '</div>'; };
+        var pt = function (ko, ja, en) { return '<li style="margin-bottom:8px; line-height:1.62;">' + tr(ko, ja, en) + '</li>'; };
+        var body =
+            hd('환불 · 교환', '返金・交換', 'Refunds & exchanges') + '<ul style="margin:0; padding-left:19px;">'
+            + pt('커스텀 제작 상품 — 주문 후 설계·디자인·인쇄 작업이 시작되면 단순 변심에 의한 환불·교환이 불가합니다.', 'オーダーメイド品 — 注文後に設計・デザイン・印刷作業が始まると、お客様都合による返金・交換はできません。', 'Custom-made — once design/print work begins after ordering, refunds/exchanges for change of mind are not possible.')
+            + pt('색상 차이 — 모니터·기기마다 색 표현이 달라 화면의 색과 실제 인쇄 색이 다를 수 있으며, 이를 이유로 환불되지 않습니다. (인쇄는 CMYK 변환으로 화면 RGB와 차이가 있습니다.)', '色の違い — モニターや機器により色の見え方が異なり、画面の色と実際の印刷色が異なる場合があります。これを理由とした返金はできません。(印刷はCMYK変換のため画面RGBと差があります。)', 'Color difference — colors vary by monitor/device; printed color may differ from your screen and is not grounds for a refund (print uses CMYK, differing from screen RGB).')
+            + '</ul>'
+            + hd('배송 · 설치 (허니콤보드 전시제품 등)', '配送・設置 (ハニカムボード展示品など)', 'Delivery & installation (honeycomb display, etc.)') + '<ul style="margin:0; padding-left:19px;">'
+            + pt('배송일·시간 — 선택하신 날짜에 최대한 비슷한 시간에 도착하도록 노력합니다. 다만 9~12월 극성수기에는 날짜·시간을 정확히 맞추기 어렵고, 본사 차량으로 직접 배송되는 경우가 많아 배송 지연이 발생할 수 있습니다. 이에 동의하셔야 구매가 가능합니다.', '配送日時 — ご指定日にできる限り近い時間の到着に努めます。ただし9〜12月の繁忙期は日時の厳守が難しく、本社車両での直接配送が多いため遅延が生じる場合があります。ご同意のうえご購入ください。', 'Delivery date/time — we aim to arrive near your chosen time, but during the Sep–Dec peak season exact scheduling is difficult and, as we often deliver by our own vehicles, delays may occur. You must agree to purchase.')
+            + pt('하차·이송 — 배송기사는 현장(주차 가능한 위치)까지 차량으로 배송하며, 주차장에서 전시 현장까지의 이송은 고객이 직접 하셔야 합니다.', '荷降ろし・運搬 — 配送員は現場(駐車可能な場所)まで車両で配送します。駐車場から展示現場までの運搬はお客様ご自身で行ってください。', 'Unloading/transport — the driver delivers to the site (where parking is available); moving items from the parking area to the display site is the customer\'s responsibility.')
+            + pt('설치 안내 — 설치기사는 PM(현장 관리자)으로서 설치를 가이드하는 역할이며, 실제 설치는 구매자가 직접 진행합니다.', '設置案内 — 設置担当者はPM(現場管理)として設置をガイドする役割で、実際の設置はご購入者が行います。', 'Installation — the installer acts as a PM guiding the setup; the actual installation is done by the purchaser.')
+            + pt('설치 대상 — 허니콤보드 전시 제품 외 제품은 설치가 제공되지 않으며, 이를 이유로 한 환불은 불가합니다.', '設置対象 — ハニカムボード展示品以外は設置対象外で、これを理由とした返金はできません。', 'Installation scope — installation is not provided for products other than honeycomb display items, and this is not grounds for a refund.')
+            + '</ul>'
+            + hd('홍보 · 포트폴리오 사용', '宣伝・ポートフォリオ利用', 'Promotion & portfolio use') + '<ul style="margin:0; padding-left:19px;">'
+            + pt('주문하신 작품은 카멜레온의 홍보 또는 포트폴리오로 사용될 수 있으며, 이에 동의하지 않으시면 구매가 불가합니다. 추후 홍보글 삭제를 원하실 경우 특별한 사유를 제공해 주셔야 하며, 하청(제작 대행) 건은 「원청이 본다」는 사유만으로는 삭제를 요청하실 수 없습니다.', 'ご注文作品はカメレオンの宣伝やポートフォリオに使用される場合があり、ご同意いただけない場合はご購入いただけません。後日、掲載削除をご希望の際は特別な理由が必要で、下請け案件では「元請けが見る」という理由のみでは削除をご依頼いただけません。', 'Your ordered work may be used in Chameleon\'s promotions or portfolio; if you don\'t agree, purchase isn\'t possible. Later removal requests require a specific reason, and for subcontracted jobs, "the client might see it" alone is not sufficient grounds for removal.')
+            + '</ul>'
+            + hd('마일리지 · 포인트', 'マイル・ポイント', 'Mileage & points') + '<ul style="margin:0; padding-left:19px;">'
+            + pt('구매 시 또는 이벤트로 제공되는 마일리지는 매월 말일에 초기화(소멸)되며, 무상 제공 혜택이므로 본사 사정에 따라 지급·회수(철회)될 수 있습니다.', 'ご購入時やイベントで付与されるマイルは毎月末日に初期化(消滅)され、無償の特典のため当社の都合で付与・回収(取消)される場合があります。', 'Points given on purchase or via events reset (expire) at each month-end; as a free benefit they may be granted or revoked at our discretion.')
+            + '</ul>'
+            + hd('일반 인쇄물 공통', '一般印刷物 共通', 'General printing (common)') + '<ul style="margin:0; padding-left:19px;">'
+            + pt('원고 책임 — 고객이 업로드한 원고의 오탈자·저해상도·디자인 오류·규격 상이는 고객 책임이며, 저해상도로 인한 품질 저하는 환불 대상이 아닙니다. (권장 300dpi)', '原稿の責任 — アップロード原稿の誤字・低解像度・デザイン誤り・規格相違はお客様の責任で、低解像度による品質低下は返金対象外です。(推奨300dpi)', 'Artwork — typos, low resolution, design errors or wrong specs in uploaded files are the customer\'s responsibility; quality loss from low resolution is not refundable (300 dpi recommended).')
+            + pt('재단 오차 — 재단·접지 과정에서 ±1~3mm 내외의 오차가 발생할 수 있으며 정상 범위입니다.', '裁断誤差 — 裁断・折り工程で±1〜3mm程度の誤差が生じる場合があり、正常範囲です。', 'Trim tolerance — a variance of about ±1–3 mm may occur in cutting/folding and is within normal range.')
+            + pt('권리 책임 — 업로드 콘텐츠의 저작권·상표권·초상권 등 권리 확보는 고객 책임이며, 이로 인한 법적 분쟁의 책임은 고객에게 있습니다.', '権利の責任 — アップロード内容の著作権・商標権・肖像権などの確保はお客様の責任で、これに起因する法的紛争の責任はお客様にあります。', 'Rights — securing copyright, trademark and portrait rights for uploaded content is the customer\'s responsibility, as is any legal dispute arising from it.')
+            + pt('옵션 확인 — 수량·사이즈·용지·후가공 등 옵션의 오선택·오입력은 고객 책임입니다.', 'オプション確認 — 数量・サイズ・用紙・後加工などの選択・入力ミスはお客様の責任です。', 'Options — incorrect selection/entry of quantity, size, paper or finishing is the customer\'s responsibility.')
+            + pt('배송 파손 — 배송 중 파손·분실은 수령 즉시 사진 등 증빙과 함께 알려주시면 재제작 또는 보상을 협의합니다. (기간 경과 후에는 처리가 어려울 수 있습니다.)', '配送破損 — 配送中の破損・紛失は、受取後すぐに写真等の証拠とともにご連絡いただければ再制作または補償を協議します。(期間経過後は対応が難しい場合があります。)', 'Shipping damage — for damage/loss in transit, notify us right after receipt with photo evidence and we\'ll arrange a remake or compensation (late reports may not be processable).')
+            + pt('제작 착수 후 — 인쇄·제작이 시작된 이후에는 취소·변경이 불가하거나 제한됩니다.', '制作開始後 — 印刷・制作開始後はキャンセル・変更ができない、または制限されます。', 'After production starts — once printing/production begins, cancellation/changes are not possible or are limited.')
+            + '</ul>';
+        ov = document.createElement('div');
+        ov.id = 'soTermsOverlay';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:2147483000; background:rgba(15,18,28,.55); display:flex; align-items:center; justify-content:center; padding:16px; font-family:inherit;';
+        ov.innerHTML = '<div style="width:min(640px,96vw); max-height:90vh; display:flex; flex-direction:column; background:#fff; border-radius:16px; overflow:hidden;">'
+            + '<div style="padding:15px 20px; border-bottom:1px solid #e5e7eb;"><div style="font-size:16px; font-weight:700; color:#111827;">' + tr('주문 전 약관 동의', 'ご注文前の規約同意', 'Agree to terms before ordering') + '</div><div style="font-size:12px; color:#6b7280; margin-top:3px;">' + tr('아래 내용을 확인하고 동의하셔야 주문이 완료됩니다.', '以下をご確認・同意いただくと注文が完了します。', 'Please read and agree to complete your order.') + '</div></div>'
+            + '<div style="padding:12px 20px; overflow-y:auto; flex:1; font-size:12.5px; color:#334155;">' + body + '</div>'
+            + '<div style="padding:14px 20px; border-top:1px solid #e5e7eb; background:#fafafa;">'
+            + '<label style="display:flex; gap:9px; align-items:flex-start; cursor:pointer; font-size:13px; color:#111827; font-weight:600;"><input type="checkbox" id="soTermsChk" style="margin-top:2px; width:17px; height:17px; flex:none; accent-color:#16a34a;"><span>' + tr('위 내용을 모두 확인했으며 이에 동의합니다.', '上記をすべて確認し、同意します。', 'I have read and agree to all of the above.') + '</span></label>'
+            + '<div style="display:flex; gap:8px; margin-top:12px;">'
+            + '<button type="button" id="soTermsCancel" style="flex:1; padding:12px; border:1px solid #d1d5db; background:#fff; color:#374151; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;">' + tr('취소', 'キャンセル', 'Cancel') + '</button>'
+            + '<button type="button" id="soTermsAgree" disabled style="flex:2; padding:12px; border:none; background:#9ca3af; color:#fff; border-radius:10px; font-size:14px; font-weight:700; cursor:not-allowed; font-family:inherit;">' + tr('동의하고 주문 완료', '同意して注文', 'Agree & place order') + '</button>'
+            + '</div></div></div>';
+        document.body.appendChild(ov);
+        var chk = ov.querySelector('#soTermsChk'), agree = ov.querySelector('#soTermsAgree');
+        chk.addEventListener('change', function () { agree.disabled = !chk.checked; agree.style.background = chk.checked ? '#16a34a' : '#9ca3af'; agree.style.cursor = chk.checked ? 'pointer' : 'not-allowed'; });
+        ov.querySelector('#soTermsCancel').addEventListener('click', function () { ov.style.display = 'none'; });
+        ov.addEventListener('click', function (e) { if (e.target === ov) ov.style.display = 'none'; });
+        agree.addEventListener('click', function () { if (!chk.checked) return; state._termsAgreed = true; ov.style.display = 'none'; window._soSubmitOrder(); });
+    };
+
     window._soSubmitOrder = async function () {
+        // 2026-08-31: 주문 전 약관 동의 게이트 — 동의 전이면 약관 모달을 띄우고 중단. 동의 시 재호출됨.
+        if (!state._termsAgreed) { if (typeof window._soShowTermsModal === 'function') window._soShowTermsModal(); return; }
+        state._termsAgreed = false;   // 1회성 — 다음 주문은 다시 동의 필요
         var name = (document.getElementById('soCoName').value || '').trim();
         // 2026-06-18 v604: JP 한정 후리가나 수집
         var nameFurigana = '';
