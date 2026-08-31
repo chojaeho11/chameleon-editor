@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260831132116';
+    var CV = '20260831133509';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2157,7 +2157,7 @@ window._tcmFallbackClick = function(code) {
                 <!-- 2026-08-18: 디자인의뢰 재추가 (사장님 요청 - 고객들이 다시 찾음). 디자인 의뢰 팝업(기본디자인 3만원 티어)로 오픈. -->
                 <button type="button" class="mgr-action mgr-designreq" onclick="window.openDesignRequestPopup && window.openDesignRequestPopup({ product: '기본디자인' })">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-palette"></i></span>
-                    <span class="mgr-action-label">디자인의뢰</span>
+                    <span class="mgr-action-label" data-i18n="nav_design_req">디자인의뢰</span>
                 </button>
                 <!-- 2026-07-17: 6번째 — 디자이너 모집 → 블로그 (디자이너 모집은 위 큰 배너에 그대로 있음).
                      a 태그로 둔 이유: 크롤러가 따라갈 수 있는 실제 링크가 필요 (button+onclick 은 못 따라감). -->
@@ -2168,7 +2168,7 @@ window._tcmFallbackClick = function(code) {
                 <!-- 2026-08-16: 카멜SNS(커뮤니티/업체홍보 피드) — PC 탑바 전용 -->
                 <button type="button" class="mgr-action mgr-community" onclick="window.openBizPromo && window.openBizPromo()">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-users"></i></span>
-                    <span class="mgr-action-label">카멜SNS</span>
+                    <span class="mgr-action-label" data-i18n="nav_camel_sns">카멜SNS</span>
                 </button>
                 <!-- 2026-08-15: 탑바에서 홍보하기·끝말잇기 삭제 (사장님 요청). 리워드 허브(무료쿠폰)에서 이용 가능. -->
             </div>
