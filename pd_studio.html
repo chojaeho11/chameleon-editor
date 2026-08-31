@@ -338,7 +338,12 @@
   var EMBED = PARAMS.get("embed")==="1";
   var PCODE = PARAMS.get("code")||"";
   var LANG = (function(){var l=(PARAMS.get("lang")||"").toLowerCase(); if(l)return l; var h=location.hostname; if(/cafe0101|co\.jp|\.jp$/.test(h))return "ja"; if(/cafe3355|chameleon\.design|\.com$/.test(h)&&/cafe3355/.test(h))return "en"; return "ko";})();
-  var FACE_KO={header:"헤더",back:"뒷판",left:"좌측면",right:"우측면",base:"하단",top:"상단면",shelf:"선반 앞띠"};
+  function T(ko,ja,en){ return LANG==="ja" ? (ja||ko) : (LANG==="en" ? (en||ko) : ko); }
+  var FACE_KO = (LANG==="ja")
+      ? {header:"ヘッダー",back:"背面",left:"左側面",right:"右側面",base:"下部前面",top:"天面(差込板)",shelf:"棚 前帯"}
+      : (LANG==="en")
+      ? {header:"Header",back:"Back",left:"Left",right:"Right",base:"Base",top:"Top (insert)",shelf:"Shelf front"}
+      : {header:"헤더",back:"뒷판",left:"좌측면",right:"우측면",base:"하단",top:"상단면",shelf:"선반 앞띠"};
   var FACE_ROLE={header:"상단 광고 헤더 (브랜드/이벤트명 크게)",back:"메인 뒷판 (핵심 헤드라인·대표 비주얼)",left:"좌측면 (보조 비주얼)",right:"우측면 (보조 비주얼)",base:"하단 앞막음 (브랜드 띠)",top:"상단 꽂이판",shelf:"선반 앞띠 (가격·문구 띠)"};
   var state={type:"small",modelId:"s1",W:300,D:220,H:300,Hd:0,Bs:60,N:0,brand:"CHAMELEON",color:"#7c3aed",expl:0,spin:true,
              insert:{shape:"circle",size:80,depth:60,count:1,rows:1,step:false},
@@ -346,10 +351,10 @@
              aiTheme:"",aiMainDone:false,aiGallery:{}};
   // 모델 카탈로그 — 추후 계속 추가 (소형/대형 각 여러 모델)
   var MODELS=[
-    {id:"s1",cls:"small",name:"카운터 트레이 기본형",preset:{W:[150,400,300],D:[120,300,220],H:[150,400,300],Hd:[0,0,0],Bs:[0,100,60],N:0}},
-    {id:"s2",cls:"small",name:"광고판형 (하단 삽입)",preset:{W:[150,400,300],D:[120,300,220],H:[220,550,400],Hd:[0,0,0],Bs:[0,150,90],N:0}},
-    {id:"l1",cls:"large",name:"바닥 다단 매대 기본형",preset:{W:[250,600,400],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,280],N:4}},
-    {id:"l2",cls:"large",name:"좌우 분리형",preset:{W:[300,700,460],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,240],N:4}}
+    {id:"s1",cls:"small",name:T("카운터 트레이 기본형","カウンタートレイ 基本形","Counter tray (basic)"),preset:{W:[150,400,300],D:[120,300,220],H:[150,400,300],Hd:[0,0,0],Bs:[0,100,60],N:0}},
+    {id:"s2",cls:"small",name:T("광고판형 (하단 삽입)","広告板型 (下部差込)","Ad-board (bottom insert)"),preset:{W:[150,400,300],D:[120,300,220],H:[220,550,400],Hd:[0,0,0],Bs:[0,150,90],N:0}},
+    {id:"l1",cls:"large",name:T("바닥 다단 매대 기본형","床置き多段 基本形","Floor FSDU (basic)"),preset:{W:[250,600,400],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,280],N:4}},
+    {id:"l2",cls:"large",name:T("좌우 분리형","左右分離型","Split (L/R)"),preset:{W:[300,700,460],D:[200,500,350],H:[800,1600,1500],Hd:[0,500,320],Bs:[0,500,240],N:4}}
   ];
   var PALETTE=["#ffffff","#7c3aed","#e5533d","#f59e0b","#0f9d6b","#2f80ed","#e11d8f","#0ea5e9","#14b8a6","#f43f5e","#334155","#111827"];
   var LIP=48, INSET=6;
@@ -387,7 +392,7 @@
     var small=state.type==="small";
     $("fldHd").style.display=small?"none":"";
     $("fldN").style.display=small?"none":"";
-    var lb=$("lblBs"); if(lb&&lb.firstChild) lb.firstChild.nodeValue=small?"앞막음 높이 ":"하단(막음) 높이 ";
+    var lb=$("lblBs"); if(lb&&lb.firstChild) lb.firstChild.nodeValue=small?T("앞막음 높이 ","前塞ぎ高さ ","Front H "):T("하단(막음) 높이 ","下部(塞ぎ)高さ ","Base H ");
     $("facegrid").querySelectorAll(".facebtn").forEach(function(fb){var fc=fb.getAttribute("data-face");var hide=(small&&(fc==="header"||fc==="shelf"))||(!small&&fc==="top");fb.style.display=hide?"none":"";});
     var fi=$("fldInsert"); if(fi) fi.style.display=small?"":"none";  // 삽입 틀은 소형(트레이/광고판형)
     document.querySelectorAll(".typebtn").forEach(function(x){x.setAttribute("aria-pressed",x.getAttribute("data-type")===state.type?"true":"false");});
@@ -432,7 +437,7 @@
       var fc=b.getAttribute("data-face"),has=!!state.faceImg[fc];
       b.setAttribute("data-has",has?"1":"0");
       var sz=b.querySelector(".fsz"); if(sz) sz.textContent=faceSizeLabel(fc);
-      var st=b.querySelector("span:not(.fsz)"); if(st) st.textContent=has?"이미지 있음 · 교체":"비어있음";
+      var st=b.querySelector("span:not(.fsz)"); if(st) st.textContent=has?T("이미지 있음 · 교체","画像あり・変更","Has image · replace"):T("비어있음","空","Empty");
     });
   }
 
@@ -507,41 +512,41 @@
     var host=$("aiGallery");if(!host)return;var html="",any=false,order=["header","back","left","right","base","top","shelf"];
     order.forEach(function(f){var arr=state.aiGallery[f];if(!arr||!arr.length)return;any=true;
       html+='<div class="gface"><h5>'+FACE_KO[f]+'</h5><div class="gGrid">';
-      arr.forEach(function(it){html+='<div class="gitem"><img src="'+it.url+'" alt=""><div class="gact"><button type="button" data-act="apply" data-f="'+f+'" data-id="'+it.id+'">적용</button><button type="button" class="del" data-act="del" data-f="'+f+'" data-id="'+it.id+'">삭제</button></div></div>';});
+      arr.forEach(function(it){html+='<div class="gitem"><img src="'+it.url+'" alt=""><div class="gact"><button type="button" data-act="apply" data-f="'+f+'" data-id="'+it.id+'">'+T("적용","適用","Apply")+'</button><button type="button" class="del" data-act="del" data-f="'+f+'" data-id="'+it.id+'">'+T("삭제","削除","Delete")+'</button></div></div>';});
       html+='</div></div>';
     });
-    host.innerHTML=any?html:'<p class="sub">아직 생성된 이미지가 없어요.</p>';
+    host.innerHTML=any?html:'<p class="sub">'+T("아직 생성된 이미지가 없어요.","まだ生成された画像はありません。","No generated images yet.")+'</p>';
   }
   var aiBusy=false, aiRefUrl=null;
   function adFace(){ return state.type==="large" ? "header" : "back"; }   // 광고판: 소형=뒷판, 대형=헤더
   $("aiRefBtn").addEventListener("click",function(){$("aiRefFile").click();});
   $("aiRefFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];this.value="";if(!f)return;
-    var r=new FileReader();r.onload=function(){_normRef(String(r.result),1280).then(function(u){aiRefUrl=u;$("aiRefImg").src=u;$("aiRefPrev").style.display="";$("aiRefBtn").style.display="none";$("aiRefHint").textContent="제품 사진 준비됨 — 생성 시 이 제품이 합성됩니다.";});};
+    var r=new FileReader();r.onload=function(){_normRef(String(r.result),1280).then(function(u){aiRefUrl=u;$("aiRefImg").src=u;$("aiRefPrev").style.display="";$("aiRefBtn").style.display="none";$("aiRefHint").textContent=T("제품 사진 준비됨 — 생성 시 이 제품이 합성됩니다.","商品写真の準備完了 — 生成時に合成されます。","Product photo ready — it will be composited on generation.");});};
     r.readAsDataURL(f);});
-  $("aiRefClear").addEventListener("click",function(){aiRefUrl=null;$("aiRefImg").src="";$("aiRefPrev").style.display="none";$("aiRefBtn").style.display="";$("aiRefHint").textContent="사진을 올리면 생성 이미지에 실제 제품이 자연스럽게 합성됩니다.";});
+  $("aiRefClear").addEventListener("click",function(){aiRefUrl=null;$("aiRefImg").src="";$("aiRefPrev").style.display="none";$("aiRefBtn").style.display="";$("aiRefHint").textContent=T("사진을 올리면 생성 이미지에 실제 제품이 자연스럽게 합성됩니다.","写真を上げると生成画像に実際の商品が自然に合成されます。","Upload a photo and the real product is composited into the image.");});
   function aiBar(on){$("aiBar").classList.toggle("run",!!on);}
   function aiSay(t){$("aiStatus").textContent=t;}
   $("aiGallery").addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var f=b.getAttribute("data-f"),id=b.getAttribute("data-id"),arr=state.aiGallery[f]||[],it=arr.filter(function(x){return x.id===id;})[0];
-    if(b.getAttribute("data-act")==="apply"){if(it){applyToFace(f,it.url);aiSay(FACE_KO[f]+"에 적용했어요.");}}
+    if(b.getAttribute("data-act")==="apply"){if(it){applyToFace(f,it.url);aiSay(FACE_KO[f]+T("에 적용했어요.","に適用しました。"," applied."));}}
     else{state.aiGallery[f]=arr.filter(function(x){return x.id!==id;});saveGallery();renderGallery();}});
   $("aiGenMain").addEventListener("click",async function(){
     if(aiBusy)return;var theme=$("aiPrompt").value.trim();
-    if(!theme){aiSay("먼저 테마·문구를 입력해 주세요.");$("aiPrompt").focus();return;}
+    if(!theme){aiSay(T("먼저 테마·문구를 입력해 주세요.","まずテーマ・文言を入力してください。","Please enter a theme first."));$("aiPrompt").focus();return;}
     var face=adFace();
     state.aiTheme=theme;aiBusy=true;this.disabled=true;aiBar(true);
-    aiSay("광고판("+FACE_KO[face]+") 이미지를 생성하는 중… 20~60초 걸릴 수 있어요.");
+    aiSay(T("광고판("+FACE_KO[face]+") 이미지를 생성하는 중… 20~60초 걸릴 수 있어요.","広告面("+FACE_KO[face]+")の画像を生成中… 20〜60秒かかる場合があります。","Generating the ad panel ("+FACE_KO[face]+")… may take 20–60s."));
     try{var url=await genOne(face);applyToFace(face,url);storeGallery(face,url);
-      aiSay("광고판 이미지 완성 — 3D에서 확인하세요. 마음에 안 들면 다시 생성하거나 보관함에서 교체할 수 있어요.");
-    }catch(e){aiSay("생성 실패: "+((e&&e.message)||e));}
+      aiSay(T("광고판 이미지 완성 — 3D에서 확인하세요. 마음에 안 들면 다시 생성하거나 보관함에서 교체할 수 있어요.","広告面の画像が完成 — 3Dで確認してください。気に入らなければ再生成、または保存から差し替え可能です。","Ad panel done — check the 3D. Regenerate or swap from Saved if needed."));
+    }catch(e){aiSay(T("생성 실패: ","生成失敗: ","Failed: ")+((e&&e.message)||e));}
     aiBar(false);this.disabled=false;aiBusy=false;});
-  window.pdAiOpen=function(){ var f=adFace(); var nm=$("aiAdFaceName"); if(nm)nm.textContent="광고판("+FACE_KO[f]+")"; renderGallery(); $("aiModal").classList.add("on"); };
+  window.pdAiOpen=function(){ var f=adFace(); var nm=$("aiAdFaceName"); if(nm)nm.textContent=T("광고판("+FACE_KO[f]+")","広告面("+FACE_KO[f]+")","Ad panel ("+FACE_KO[f]+")"); renderGallery(); $("aiModal").classList.add("on"); };
   window.pdAiClose=function(){$("aiModal").classList.remove("on");};
   $("aiModal").addEventListener("click",function(e){if(e.target===this)window.pdAiClose();});
   document.addEventListener("keydown",function(e){if(e.key==="Escape")window.pdAiClose();});
   loadGallery();
 
   window.pickTab=function(which){var is3=which==="3d";$("view3d").classList.toggle("on",is3);$("view2d").classList.toggle("on",!is3);$("tab3d").setAttribute("aria-selected",is3?"true":"false");$("tab2d").setAttribute("aria-selected",!is3?"true":"false");if(is3)resize3d();};
-  window.toggleSpin=function(){state.spin=!state.spin;$("spinBtn").textContent=state.spin?"자동회전 끄기":"자동회전 켜기";};
+  window.toggleSpin=function(){state.spin=!state.spin;$("spinBtn").textContent=state.spin?T("자동회전 끄기","自動回転オフ","Auto-rotate off"):T("자동회전 켜기","自動回転オン","Auto-rotate on");};
 
   function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||"#888";}
   function readable(hex){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return (0.299*r+0.587*g+0.114*b)>150?"#15181f":"#ffffff";}
@@ -588,26 +593,26 @@
     s+=poly(body,CUT);
     s+=line(0,0,0,Hb,CRE);s+=line(W,0,W,Hb,CRE);s+=line(0,Hb,W,Hb,CRE);
     if(frontExt>0) s+=line(0,Hb+D,W,Hb+D,CRE);
-    s+=face("back",0,0,W,Hb,"뒷판");
-    s+=face("left",-D,0,0,Hb,"좌측면",-90);
-    s+=face("right",W,0,W+D,Hb,"우측면",90);
-    if(frontExt>0){ s+=face("base",0,Hb+D,W,Hb+D+frontExt,"하단 앞막음"); s+=txt(W/2,Hb+D/2,"바닥",FA,w/58);} else { s+=txt(W/2,Hb+D/2,"바닥",FA,w/56); }
+    s+=face("back",0,0,W,Hb,FACE_KO.back);
+    s+=face("left",-D,0,0,Hb,FACE_KO.left,-90);
+    s+=face("right",W,0,W+D,Hb,FACE_KO.right,90);
+    if(frontExt>0){ s+=face("base",0,Hb+D,W,Hb+D+frontExt,T("하단 앞막음","下部 前塞ぎ","Front base")); s+=txt(W/2,Hb+D/2,T("바닥","底","Floor"),FA,w/58);} else { s+=txt(W/2,Hb+D/2,T("바닥","底","Floor"),FA,w/56); }
     s+=txt(W/2,-m*0.5,state.W+" mm",MU,w/54);
     // 선반 (별도 피스) — 소형은 선반 없음
     if(!isSmall){
       for(var i=0;i<N;i++){var y0=i*(shPieceH+gap);
         s+=rectP(shX,y0,shX+shW,y0+D,CUT);
-        s+=face("shelf",shX,y0+D,shX+shW,y0+D+LIP,"선반 앞",0,"shelf"+i);
+        s+=face("shelf",shX,y0+D,shX+shW,y0+D+LIP,T("선반 앞","棚 前","Shelf front"),0,"shelf"+i);
         s+=rectP(shX,y0+D,shX+shW,y0+D+LIP,CUT);
         s+=line(shX,y0+D,shX+shW,y0+D,CRE);
-        s+=txt(shX+shW/2,y0+D/2,"선반 "+(i+1),FA,w/58);
+        s+=txt(shX+shW/2,y0+D/2,T("선반 ","棚 ","Shelf ")+(i+1),FA,w/58);
       }
-      s+=txt(shX+shW/2,-m*0.5,"선반 ×"+N,MU,w/54);
+      s+=txt(shX+shW/2,-m*0.5,T("선반 ×","棚 ×","Shelves ×")+N,MU,w/54);
     }
     // 상단면(꽂이판) = 별도 피스 (소형) — 제품 꽂이 구멍 칼선 포함
     if(isSmall){
       var ins=state.insert;
-      s+=face("top",topX,0,topX+W,D,"상단면",0,"top");
+      s+=face("top",topX,0,topX+W,D,FACE_KO.top,0,"top");
       s+=rectP(topX,0,topX+W,D,CUT);
       var tcols=Math.max(1,ins.count||1), trows=Math.max(1,ins.rows||1);
       var trmax=Math.min(ins.size,(W-30)/tcols-5,(D-18)/trows-5)/2, trr=Math.max(5,Math.min(ins.size/2,trmax));
@@ -616,15 +621,15 @@
         if(ins.shape==="square"){s+=rectP(thx-trr,thy-trr,thx+trr,thy+trr,ACC);}
         else{s+='<circle cx="'+X(thx)+'" cy="'+Y(thy)+'" r="'+trr.toFixed(1)+'" fill="none" stroke="'+ACC+'" stroke-width="'+sw+'"/>';}
       }}
-      s+=txt(topX+W/2,-m*0.5,"상단면 "+W+"×"+D,MU,w/54);
+      s+=txt(topX+W/2,-m*0.5,FACE_KO.top+" "+W+"×"+D,MU,w/54);
     }
     // 상단 광고 헤더 = 별도 삽입 피스
     if(hasHdr){
       s+=poly([[shX,hdY0],[shX+W,hdY0],[shX+W,hdY0+Hd],[shX+W*0.72,hdY0+Hd+hdTab],[shX+W*0.28,hdY0+Hd+hdTab],[shX,hdY0+Hd]],CUT);
       s+=line(shX,hdY0+Hd,shX+W,hdY0+Hd,CRE);
-      s+=face("header",shX,hdY0,shX+W,hdY0+Hd,"상단 광고");
-      s+=txt(shX+W/2,hdY0+Hd+hdTab*0.55,"↑ 삽입 탭",FA,w/62);
-      s+=txt(shX+W/2,hdY0-m*0.35,"상단 광고 (별도 삽입)",MU,w/56);
+      s+=face("header",shX,hdY0,shX+W,hdY0+Hd,T("상단 광고","上部広告","Top ad"));
+      s+=txt(shX+W/2,hdY0+Hd+hdTab*0.55,T("↑ 삽입 탭","↑ 差込タブ","↑ Insert tab"),FA,w/62);
+      s+=txt(shX+W/2,hdY0-m*0.35,T("상단 광고 (별도 삽입)","上部広告 (別差込)","Top ad (separate)"),MU,w/56);
     }
     s+='</svg>';return s;
   }
@@ -635,12 +640,12 @@
     var extra=state.W*state.Hd + state.N*(state.W*(state.D+LIP));
     var isSmall=state.type==="small";
     $("dimtbl").innerHTML=
-      row("종류", isSmall?"소형 · 카운터 트레이":"대형 · 바닥 다단 매대")+
-      row("전체 크기 (조립)", state.W+" W × "+state.D+" D × "+state.H+" H mm")+
-      (isSmall?row("뒤 광고판 높이", Hb+" mm"):row("몸통 / 헤더", Hb+" mm / "+state.Hd+" mm (별도 삽입)"))+
-      row(isSmall?"앞막음 높이":"하단 막음 높이", (Bs>0?Bs+" mm":"없음(열림)"))+
-      (isSmall?"":row("선반 수 · 간격", state.N+"단 · 하단 위 균등"))+
-      row("총 판지 면적", ((bodyArea+extra)/1e6).toFixed(3)+" ㎡");
+      row(T("종류","種類","Type"), isSmall?T("소형 · 카운터 트레이","小型・カウンタートレイ","Small · counter tray"):T("대형 · 바닥 다단 매대","大型・床置き多段","Large · floor FSDU"))+
+      row(T("전체 크기 (조립)","全体サイズ (組立)","Size (assembled)"), state.W+" W × "+state.D+" D × "+state.H+" H mm")+
+      (isSmall?row(T("뒤 광고판 높이","背面広告板 高さ","Back panel H"), Hb+" mm"):row(T("몸통 / 헤더","本体 / ヘッダー","Body / Header"), Hb+" mm / "+state.Hd+T(" mm (별도 삽입)"," mm (別差込)"," mm (insert)")))+
+      row(isSmall?T("앞막음 높이","前塞ぎ高さ","Front H"):T("하단 막음 높이","下部塞ぎ高さ","Base H"), (Bs>0?Bs+" mm":T("없음(열림)","なし(開放)","none (open)")))+
+      (isSmall?"":row(T("선반 수 · 간격","棚の数・間隔","Shelves · spacing"), state.N+T("단 · 하단 위 균등","段・下部上に均等"," tiers · even above base")))+
+      row(T("총 판지 면적","総ボード面積","Total board area"), ((bodyArea+extra)/1e6).toFixed(3)+" ㎡");
   }
   function row(k,v){return "<tr><td>"+k+"</td><td>"+v+"</td></tr>";}
 
@@ -652,7 +657,7 @@
       var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
       document.body.appendChild(a);a.click();
       setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-    }catch(e){alert("저장 실패: "+((e&&e.message)||e));}
+    }catch(e){alert(T("저장 실패: ","保存失敗: ","Save failed: ")+((e&&e.message)||e));}
   };
 
   /* ================= 3D ================= */
@@ -899,6 +904,45 @@
   if(window.matchMedia){try{matchMedia("(prefers-color-scheme:dark)").addEventListener("change",refreshSVG);}catch(e){}}
 
   /* ================= 사이트 통합 (제품페이지 모달 iframe) ================= */
+  // 2026-08-31: 스튜디오 UI 일본어/영어 번역 (정적 HTML 문자열은 텍스트노드 사전치환, 복합문은 selector innerHTML)
+  function applyStudioLang(){
+    if(LANG==="ko") return;
+    var D={
+      "매대 종류":["什器の種類","Display type"],"소형":["小型","Small"],"카운터 트레이":["カウンタートレイ","Counter tray"],
+      "대형":["大型","Large"],"바닥 다단":["床置き多段","Floor FSDU"],"모델 선택":["モデル選択","Model"],"추후 계속 추가":["順次追加","More soon"],
+      "디자인 (바깥면만 인쇄)":["デザイン (外面のみ印刷)","Design (outer face only)"],"브랜드 · 문구":["ブランド・文言","Brand · text"],"기본 패널 색상":["基本パネル色","Panel color"],
+      "치수 (mm)":["寸法 (mm)","Size (mm)"],"폭":["幅","Width"],"깊이":["奥行","Depth"],"전체 높이":["全体の高さ","Height"],"헤더 높이":["ヘッダー高さ","Header H"],
+      "하단(막음) 높이":["下部(塞ぎ)高さ","Base H"],"앞막음 높이":["前塞ぎ高さ","Front H"],"선반 수":["棚の数","Shelves"],"하단 위 균등 분할":["下部の上に均等分割","evenly above base"],
+      "삽입 틀 (제품 꽂이)":["差込トレイ (商品ホルダー)","Insert tray (holder)"],"구멍 모양":["穴の形","Hole shape"],"● 원형":["● 円形","● Circle"],"■ 사각":["■ 四角","■ Square"],
+      "구멍 크기":["穴サイズ","Hole size"],"가로 개수":["横の数","Columns"],"줄 수":["列数","Rows"],"배치":["配置","Layout"],"계단=뒤로 갈수록 높음":["階段=奥ほど高い","stair=higher at back"],
+      "평면":["平面","Flat"],"계단":["階段","Stair"],"삽입 깊이":["差込の深さ","Insert depth"],
+      "3D 미리보기":["3Dプレビュー","3D Preview"],"2D 전개도 · 칼선":["2D展開図・カットライン","2D dieline"],
+      "드래그: 회전 · 슬라이더: 조립 ↔ 분해도":["ドラッグ:回転 · スライダー:組立↔展開","Drag: rotate · Slider: assemble↔explode"],
+      "칼선 (재단 · Cut)":["カットライン(裁断)","Cut line"],"오시선 (접는 골 · Crease)":["折り筋(クリース)","Crease"],"면 클릭 → 이미지 넣기":["面クリック → 画像追加","Click a face → add image"],
+      "조립":["組立","Assemble"],"분해도":["展開","Explode"],"자동회전 끄기":["自動回転オフ","Auto-rotate off"],"자동회전 켜기":["自動回転オン","Auto-rotate on"],
+      "전개도 SVG 내려받기":["展開図SVGダウンロード","Download SVG"],"이 디자인으로 담기":["このデザインで追加","Add this design"],
+      "면별 이미지":["面別 画像","Images per face"],"AI 이미지 생성":["AI画像生成","AI image"],
+      "헤더":[FACE_KO.header,FACE_KO.header],"뒷판":[FACE_KO.back,FACE_KO.back],"좌측면":[FACE_KO.left,FACE_KO.left],"우측면":[FACE_KO.right,FACE_KO.right],
+      "하단":[FACE_KO.base,FACE_KO.base],"상단면 (꽂이판)":[FACE_KO.top,FACE_KO.top],"선반 앞띠":[FACE_KO.shelf,FACE_KO.shelf],"비어있음":["空","Empty"],
+      "종이매대 설계 스튜디오":["什器設計スタジオ","Display Design Studio"],"✕ 창 닫기":["✕ 閉じる","✕ Close"],
+      "AI 광고판 이미지 생성":["AI 広告面 画像生成","AI ad-panel image"],"테마 · 문구 설명":["テーマ・文言の説明","Theme · text"],"제품 사진 (선택 · 합성용)":["商品写真 (任意・合成用)","Product photo (optional · compositing)"],
+      "제품 사진 올리기":["商品写真をアップ","Upload product photo"],"광고판 이미지 생성":["広告面の画像を生成","Generate ad-panel image"],"보관함 · 적용 / 삭제":["保存 · 適用 / 削除","Saved · apply / delete"],"닫기":["閉じる","Close"]
+    };
+    function tr(k){ var e=D[k]; return e ? (LANG==="ja"?e[0]:e[1]) : null; }
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false),node,list=[];
+    while(node=w.nextNode()) list.push(node);
+    list.forEach(function(nd){ var raw=nd.nodeValue, k=raw.trim(); if(!k)return; var v=tr(k); if(v!=null) nd.nodeValue=raw.replace(k,v); });
+    // placeholder / 복합문
+    try{ var ap=$("aiPrompt"); if(ap) ap.setAttribute("placeholder", T("예) 손에 묻지 않는 스틱형 썬크림, 요즘 대세 모찌 썬블럭. 파랑·노랑, 시원한 여름 느낌, 큰 한글 헤드라인","例) 手に付かないスティック型日焼け止め、爽やかな夏、大きな見出し","e.g. Non-sticky stick sunscreen, cool summer vibe, bold headline")); }catch(_){}
+    try{ var rh=$("aiRefHint"); if(rh) rh.textContent=T("사진을 올리면 생성 이미지에 실제 제품이 자연스럽게 합성됩니다.","写真を上げると生成画像に実際の商品が自然に合成されます。","Upload a photo and the real product is composited into the image."); }catch(_){}
+    try{ var st=$("aiStatus"); if(st) st.textContent=T("테마를 입력하고 광고판 이미지를 생성하세요.","テーマを入力して広告面の画像を生成してください。","Enter a theme and generate the ad-panel image."); }catch(_){}
+    try{ var hh=document.querySelector(".faces .hint2"); if(hh) hh.innerHTML=T("직접 업로드하거나 <b>AI로 생성</b>할 수 있어요. 아래 <b>표시된 사이즈</b> 기준, 바깥면에만 인쇄됩니다.","直接アップロード、または <b>AIで生成</b> できます。下に <b>表示されたサイズ</b> 基準、外面のみ印刷されます。","Upload your own or <b>generate with AI</b>. Use the <b>size shown</b> below; only the outer face is printed."); }catch(_){}
+    try{ var fh=document.querySelector(".faces .hint2:last-of-type"); }catch(_){}
+    try{ var nt=document.querySelector("#view2d .note"); if(nt) nt.innerHTML=T("<b>대표 전개도입니다.</b> 실제 생산본은 접힘 보정·잠금 탭·풀칠 날개·재단기 별색(CutContour)·본체/선반 분리 피스가 자동 추가됩니다. 치수를 바꾸면 3D와 전개도가 실시간으로 다시 만들어집니다.","<b>代表的な展開図です。</b> 実生産では折り補正・ロックタブ・のりしろ・別色カットライン(CutContour)・本体/棚の分割ピースが自動追加されます。寸法を変えると3Dと展開図がリアルタイムで再生成されます。","<b>Representative dieline.</b> Production adds fold compensation, lock tabs, glue flaps, CutContour spot color, and split body/shelf pieces. Changing sizes regenerates the 3D and dieline live."); }catch(_){}
+    // AI 모달 안내문 2줄
+    try{ var subs=document.querySelectorAll("#aiModal .sub"); if(subs[0]) subs[0].innerHTML=T('AI 이미지는 <b id="aiAdFaceName">광고판</b>에만 생성됩니다. (소형=뒷판, 대형=헤더) 나머지 면은 배경색 + 작은 문구로 들어가요.','AI画像は <b id="aiAdFaceName">広告面</b> のみ生成します。(小型=背面 / 大型=ヘッダー) 他の面は背景色+小さな文言になります。','AI generates only the <b id="aiAdFaceName">ad panel</b> (small=back, large=header). Other faces use the panel color + small text.'); if(subs[1]) subs[1].textContent=T("20~60초 정도 걸릴 수 있어요. 생성 중에는 잠시 기다려 주세요. (생성 모델: gpt-image-2)","20〜60秒ほどかかる場合があります。生成中はお待ちください。(モデル: gpt-image-2)","May take 20–60s. Please wait during generation. (model: gpt-image-2)"); }catch(_){}
+    document.title = T("종이매대 설계 스튜디오","什器設計スタジオ","Display Design Studio");
+  }
   function _soApplyParams(){
     // 소형/대형 시작 모델: type 파라미터(best-effort). 불명확하면 소형(사용자가 상단 버튼으로 변경 가능).
     var t=(PARAMS.get("type")||"").toLowerCase();
@@ -910,6 +954,7 @@
       var bar=$("pdEmbedBar"); if(bar) bar.classList.add("on");
       var addBtn=$("pdAddBtn"); if(addBtn) addBtn.style.display="";
     }
+    try{ applyStudioLang(); }catch(e){ console.warn("[i18n]",e); }
   }
   window.pdEmbedClose=function(){ try{ window.parent.postMessage({type:"pd_studio_close"}, location.origin); }catch(_){} };
   function _pdDataURLToBlob(u){
@@ -924,10 +969,10 @@
     return sb.storage.from("design").getPublicUrl(path).data.publicUrl;
   }
   window.pdAddToOrder=async function(){
-    var btn=$("pdAddBtn"); if(btn){ if(btn._busy) return; btn._busy=true; btn.disabled=true; btn.textContent="담는 중…"; }
+    var btn=$("pdAddBtn"); if(btn){ if(btn._busy) return; btn._busy=true; btn.disabled=true; btn.textContent=T("담는 중…","追加中…","Adding…"); }
     try{
       var sb=pdSb();
-      if(!sb) throw new Error("연결이 준비되지 않았어요. 새로고침 후 다시 시도해 주세요.");
+      if(!sb) throw new Error(T("연결이 준비되지 않았어요. 새로고침 후 다시 시도해 주세요.","接続の準備ができていません。再読み込み後にお試しください。","Not connected yet. Please refresh and try again."));
       var faces=[], ts=Date.now().toString(36), root="paper_display/orders/"+ts+"_"+(PCODE||"pd");
       var order=["header","back","left","right","base","top","shelf"];
       for(var i=0;i<order.length;i++){
@@ -940,7 +985,7 @@
         var url=await _pdUpload(sb, root+"_"+f+"."+ext, blob);
         faces.push({face:FACE_KO[f]||f, key:f, name:FACE_KO[f]||f, url:url});
       }
-      if(!faces.length) throw new Error("먼저 면에 이미지를 넣어 주세요 (직접 업로드 또는 AI 생성).");
+      if(!faces.length) throw new Error(T("먼저 면에 이미지를 넣어 주세요 (직접 업로드 또는 AI 생성).","先に面へ画像を入れてください (アップロード または AI生成)。","Add an image to a face first (upload or AI)."));
       // 칼선 SVG
       var cutlineUrl=null;
       try{ var svgBlob=new Blob([renderSVG(true)],{type:"image/svg+xml"}); cutlineUrl=await _pdUpload(sb, root+"_cutline.svg", svgBlob); }catch(_c){}
@@ -950,10 +995,10 @@
       if(!previewUrl) previewUrl=faces[0].url;
       var meta={type:state.type,modelId:state.modelId,W:state.W,D:state.D,H:state.H,Hd:state.Hd,Bs:state.Bs,N:state.N,brand:state.brand,color:state.color,insert:state.insert};
       try{ window.parent && window.parent.postMessage({type:"pd_design_done",code:PCODE,faces:faces,cutlineUrl:cutlineUrl,previewUrl:previewUrl,meta:meta}, location.origin); }catch(_m){}
-      if(btn){ btn.textContent="담겼어요 ✓"; }
+      if(btn){ btn.textContent=T("담겼어요 ✓","追加しました ✓","Added ✓"); }
     }catch(e){
-      alert((e&&e.message)||"담기에 실패했어요.");
-      if(btn){ btn.textContent="이 디자인으로 담기"; }
+      alert((e&&e.message)||T("담기에 실패했어요.","追加に失敗しました。","Failed to add."));
+      if(btn){ btn.textContent=T("이 디자인으로 담기","このデザインで追加","Add this design"); }
     }
     if(btn){ btn._busy=false; btn.disabled=false; }
   };
