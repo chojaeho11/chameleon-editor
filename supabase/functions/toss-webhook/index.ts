@@ -38,10 +38,13 @@ function deriveMethod(p: any): string {
   return m || '카드/간편결제'
 }
 
-// 토스 orderId 형식 'CP-<timestamp>-<주문DB id>' (cotton_checkout.html) 에서 주문 id 추출.
-//   ★ 'CP-' 접두사 필수 — 중고장터 안전거래('SAFE-...', 별도 테이블/함수)나 기타 흐름을 건드리지 않음.
+// 토스 orderId 형식에서 주문 DB id 추출.
+//   'CP-<ts>-<id>'  = cotton_checkout.html (패브릭 단독 결제)
+//   'ORD-<ts>-<id>' = 메인 사이트 결제 (order.js:4623) — 2026-08-31 버그#47: 이게 누락돼 메인사이트
+//                     카드주문이 브라우저 미복귀 시 웹훅으로 확정 안 되던 문제 → ORD- 도 인식.
+//   ★ 그 외 접두사(중고장터 'SAFE-' 등)는 건드리지 않음.
 function extractDbId(orderId: string): string | null {
-  if (!orderId || !/^CP-/.test(String(orderId))) return null
+  if (!orderId || !/^(CP|ORD)-/.test(String(orderId))) return null
   const parts = String(orderId).split('-')
   const last = parts[parts.length - 1]
   return /^\d+$/.test(last) ? last : null

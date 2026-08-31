@@ -20084,7 +20084,7 @@ html, body { background: #ffffff !important; }
         var cart = _soReadAllCart();
         var calc = _soCalcCartTotal(cart);
         var grand = Math.max(0, calc.grandTotal || 0);
-        var blogMax = Math.min(bal, grand, 50000);   // 2026-08-14: SNS 무료쿠폰 1회 최대 5만원 제한
+        var blogMax = Math.min(bal, grand, 100000);   // 2026-08-31 버그#44(사장님): 포인트 1회 사용 최대 10만원
         window._soWallet = {
             ready: true, userId: uid,
             mileageBalKRW: 0, depositBalKRW: 0, eventCouponBalKRW: 0, blogCouponBalKRW: bal,
@@ -20230,7 +20230,7 @@ html, body { background: #ffffff !important; }
             '원');
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
-        var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase), 50000);   // 2026-08-14: SNS 무료쿠폰 1회 최대 5만원 제한
+        var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase), 100000);   // 2026-08-31 버그#44(사장님): 포인트 1회 사용 최대 10만원
         window._soWallet.blogCouponBalKRW = blogBal;
         window._soWallet.blogMax = blogMax;
         window._soWallet.blogOn = false;
@@ -20289,7 +20289,7 @@ html, body { background: #ffffff !important; }
         var afterDeposit = Math.max(0, afterDiscount - useDeposit);
         var _bcChkLive = document.getElementById('soDiscBlogChk');
         var _blogOnLive = !!(_bcChkLive && _bcChkLive.checked && !_bcChkLive.disabled);
-        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 50000) : 0;   // 2026-08-14: SNS 무료쿠폰 1회 최대 5만원
+        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 100000) : 0;   // 2026-08-31 버그#44(사장님): 포인트 1회 사용 최대 10만원
         return { useMileage: useMileage, useDeposit: useDeposit, useBlogCoupon: useBlogCoupon, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {
