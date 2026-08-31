@@ -9122,6 +9122,11 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
+        // 2026-08-31 버그#46: 나무조형물(기성품) — 택배비 없이 무료(용차/협의). 소형택배 자동부과 방지.
+        if (state.product && (state.product.code === '45245252' || state.product.code === '345353')) {
+            state._shipUpgradeReason = null;
+            return 0;
+        }
         // 2026-06-05: 자유인쇄커팅 — 광고인쇄와 동일 규칙. 큐+현재 라인 합계 10만 이상 무료 / 미만 1만원.
         // 2026-06-09: 단, hb_pt_1 (등신대 POP) 같이 시공가능 (isInstallEligible) 상품은 cutPrint 분기 skip — 새 시공 옵션 사용.
         if (state.isCutPrint && !state.isInstallEligible) {
@@ -15912,7 +15917,10 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 종이매대 — 항상 pd_bulk_free 기본 (MOQ 100 강제이므로 분기 불필요)
         var parcelKeys = ['parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel'];
         var defaultShip = 'self_pickup';
-        if (state.isPaperDisplay) {
+        // 2026-08-31 버그#46: 나무조형물(기성품 45245252/345353) — 대형 조형물이라 소형택배(2,500) 기본으로 튀지 않게 무료(용차/협의) 고정.
+        if (p && (p.code === '45245252' || p.code === '345353')) {
+            defaultShip = 'self_pickup';
+        } else if (state.isPaperDisplay) {
             defaultShip = 'pd_bulk_free'; // 항상 무료 벌크 기본
         } else if ((state.isWall || state.isPhotozone || _soIsTableProduct(p)) && allowed.indexOf('metro_install') >= 0) {
             // 2026-06-01: 가벽/포토존 — 기본 배송 = 수도권 설치 (사용자 요청)

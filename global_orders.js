@@ -3598,17 +3598,34 @@ async function generateRecoveryOrderSheet(order, addonDB) {
             optY += 6;
         }
 
-        // ★ 옵션 표시
+        // ★ 옵션 표시 (버그#45: 다운로드 작업지시서에 아크릴 색상·부자재·키링 옵션 누락 → 웹 작업지시서와 동일하게 보강)
+        let _optLines = [];
         if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = addonDB[code]; if (!add) return;
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                _dt(doc, `• ${add.name_kr || add.display_name || add.name || code} (x${qty})`, 25, optY);
-                optY += 6;
+                _optLines.push(`• ${add.name_kr || add.display_name || add.name || code} (x${qty})`);
             });
-        } else {
-            _dt(doc, '• 기본 사양', 25, optY); optY += 6;
         }
+        // 아크릴 색상 (예: BLACK (CA-340))
+        if (item.acrylicColor && (item.acrylicColor.name || item.acrylicColor.code)) {
+            const _ac = item.acrylicColor;
+            _optLines.push(`• 아크릴 색상: ${_ac.name || ''}${_ac.code ? ' (' + _ac.code + ')' : ''}`.trim());
+        }
+        // 마감/부자재/고리 (cotton-print·키링 등) — it.addons 배열 [{type,code,name}]
+        if (Array.isArray(item.addons)) {
+            item.addons.forEach(a => { if (a && (a.name || a.code)) _optLines.push(`• ${a.name || a.code}`); });
+        }
+        // 키링/코롯토 옵션 (모양·칼선 / 인쇄면 / 포장)
+        if (item._presetType === 'keyring' || item._presetType === 'korotto') {
+            const _kc = item._keyringCut;
+            if (_kc && (_kc.label || _kc.label_jp)) _optLines.push(`• 모양/칼선: ${_kc.label || _kc.label_jp}`);
+            if (item._keyringSide) _optLines.push(`• 인쇄면: ${item._keyringSide === 'double' ? '양면' : '단면'}`);
+            const _KWRAP = { plain: '개별포장(인쇄없음)', insert: '내지인쇄 포장', top: '상단인쇄 포장', bulk: '벌크포장(개별포장없음)', none: '포장없음' };
+            if (item._presetWrapType && item._presetWrapType !== 'none') _optLines.push(`• 포장: ${_KWRAP[item._presetWrapType] || item._presetWrapType}`);
+        }
+        if (_optLines.length === 0) _optLines.push('• 기본 사양');
+        _optLines.forEach(function (ln) { _dt(doc, ln, 25, optY); optY += 6; });
 
         // ★ 디자인 미리보기 (썸네일/원본 이미지)
         const imgBoxY = optY + 5;
