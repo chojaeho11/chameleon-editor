@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260831134342';
+    var CV = '20260831142153';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -984,11 +984,11 @@ if ('caches' in window) {
 <div id="topCatMenu" style="width:100%; background:#4338ca; border-bottom:none; padding:0; position:fixed; top:60px; left:0; right:0; z-index:60000; min-height:42px;">
     <div style="width:100%; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:0 16px;" id="topCatMenuTrack">
         <!-- 2026-06-01: 정적 fallback — renderQuickMenu DB 로드 전에도 즉시 메뉴바 표시. JS 로드 후 동적 렌더가 이걸 갈아치움. -->
-        <button class="tcm-btn tcm-fallback" data-fb-key="honeycomb_board" onclick="window._tcmFallbackClick('honeycomb_board')">허니콤보드</button>
-        <button class="tcm-btn tcm-fallback" data-fb-key="22222" onclick="window._tcmFallbackClick('22222')">패브릭인쇄</button>
-        <button class="tcm-btn tcm-fallback" data-fb-key="44444" onclick="window._tcmFallbackClick('44444')">광고인쇄</button>
-        <button class="tcm-btn tcm-fallback" data-fb-key="paper_display" onclick="window._tcmFallbackClick('paper_display')">종이매대</button>
-        <button class="tcm-btn tcm-fallback" data-fb-key="printe_product" onclick="window._tcmFallbackClick('printe_product')">상업 인쇄물</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="honeycomb_board" onclick="window._tcmFallbackClick('honeycomb_board')" data-i18n="tcm_honeycomb">허니콤보드</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="22222" onclick="window._tcmFallbackClick('22222')" data-i18n="tcm_fabric">패브릭인쇄</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="44444" onclick="window._tcmFallbackClick('44444')" data-i18n="tcm_ad">광고인쇄</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="paper_display" onclick="window._tcmFallbackClick('paper_display')" data-i18n="tcm_paper">종이매대</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="printe_product" onclick="window._tcmFallbackClick('printe_product')" data-i18n="tcm_commercial">상업 인쇄물</button>
     </div>
 </div>
 <script>
@@ -2495,7 +2495,7 @@ window._tcmFallbackClick = function(code) {
                         <div class="qf-label" data-i18n="mgr_quote_memo_label">주문 내용</div>
                         <div class="qf-input">
                             <input id="mgrQuoteMemo" type="text" maxlength="80" autocomplete="off"
-                                   placeholder="예: 등신대 10개"
+                                   placeholder="예: 등신대 10개" data-i18n-placeholder="qq_ph_ex"
                                    onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
                         </div>
                     </div>
@@ -2831,7 +2831,7 @@ window._tcmFallbackClick = function(code) {
                         }
                     }
                     if (couponModal) couponModal.style.display = 'flex';
-                    alert('🎉 가입 완료! 30,000원 이벤트 쿠폰이 마이페이지에 지급되었습니다.\n\nSNS 공유 인증으로 100,000원 추가 쿠폰도 받아보세요.');
+                    alert(window.t('signup_done_alert','🎉 가입 완료! 30,000원 이벤트 쿠폰이 마이페이지에 지급되었습니다.\n\nSNS 공유 인증으로 100,000원 추가 쿠폰도 받아보세요.'));
                 } catch(e) {}
             }, 400);
         });
@@ -4607,7 +4607,7 @@ window.addEventListener('load', function() {
                 </div>
                 <div style="margin-bottom:10px;">
                     <label style="font-size:12px;font-weight:700;color:#334155;">요청사항</label>
-                    <textarea name="memo" rows="3" placeholder="수량/사이즈/납품일/용도 등 자세히" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea>
+                    <textarea name="memo" rows="3" placeholder="수량/사이즈/납품일/용도 등 자세히" data-i18n-placeholder="qq_ph_memo" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;resize:vertical;"></textarea>
                 </div>
                 <div style="margin-bottom:14px;">
                     <label style="font-size:12px;font-weight:700;color:#334155;">파일 업로드 (다중 선택 가능)</label>
@@ -4718,7 +4718,7 @@ window.addEventListener('load', function() {
                 const { error } = await sb.from('vip_orders').insert(insertPayload);
                 if (error) { alert('전송 실패: ' + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
                 document.getElementById('qqSurveyModal').style.display = 'none';
-                alert('✅ ' + cat + ' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.');
+                alert('✅ ' + cat + window.t('quote_req_done',' 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.'));
             } catch(e) { alert('오류: ' + e.message); }
             if(btn){btn.disabled=false;btn.textContent=origLabel;}
             return false;
@@ -5822,7 +5822,7 @@ window.addEventListener('load', function() {
             var data = res.data || [];
             var total = res.count || 0;
             if (data.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; padding:50px 20px; text-align:center; color:#78350f;"><i class="fa-solid fa-palette" style="font-size:32px; opacity:0.3;"></i><div style="margin-top:10px; font-size:13px;">' + (_cpHomeSearch ? '검색 결과가 없습니다' : '해당 카테고리 패턴이 아직 없습니다') + '</div></div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; padding:50px 20px; text-align:center; color:#78350f;"><i class="fa-solid fa-palette" style="font-size:32px; opacity:0.3;"></i><div style="margin-top:10px; font-size:13px;">' + (_cpHomeSearch ? window.t('fab_no_result','검색 결과가 없습니다') : window.t('fab_no_pattern','해당 카테고리 패턴이 아직 없습니다')) + '</div></div>';
                 return;
             }
             // 2026-05-13: 패턴 카드 카테고리 뱃지 제거 (사용자 요청) — 다국어 사이트에서 한글로 잘못 노출되던 문제 해결
@@ -5886,7 +5886,7 @@ window.addEventListener('load', function() {
         // 끝 ▶▶
         html += '<button class="cp-page-btn" onclick="_cpHomeGoPage(' + totalPages + ')"' + (_cpHomePage===totalPages?' disabled':'') + '><i class="fa-solid fa-angles-right"></i></button>';
         // 총 개수
-        html += '<span style="margin-left:12px; font-size:11px; color:#78350f;">총 ' + totalCount + '개 · ' + _cpHomePage + '/' + totalPages + ' 페이지</span>';
+        html += '<span style="margin-left:12px; font-size:11px; color:#78350f;">' + window.t('fab_total_pre','총 ') + totalCount + window.t('fab_total_mid','개 · ') + _cpHomePage + '/' + totalPages + window.t('fab_total_suf',' 페이지') + '</span>';
         pager.innerHTML = html;
     }
 
@@ -6152,7 +6152,7 @@ function scrollHotdeal(gridId, dir) {
     <button type="button" onclick="document.getElementById('myDesignsModal').style.display='none'" aria-label="닫기" title="닫기" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#1e293b;color:#fff;border:none;font-size:20px;line-height:34px;text-align:center;cursor:pointer;z-index:5;padding:0;">×</button>
     <h3 style="margin:0 0 4px;font-size:19px;font-weight:900;color:#1e293b;">🖼️ <span data-i18n="me_intro_mine">내가 만든 디자인</span></h3>
     <div style="font-size:12.5px;color:#64748b;margin-bottom:16px;" data-i18n="my_design_sub">디자인을 고르면 그 디자인으로 제품을 주문할 수 있어요.</div>
-    <div id="myDesignsNote" style="text-align:center;color:#64748b;padding:40px 0;">불러오는 중...</div>
+    <div id="myDesignsNote" style="text-align:center;color:#64748b;padding:40px 0;" data-i18n="loading_generic">불러오는 중...</div>
     <div id="myDesignsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;"></div>
   </div>
 </div>
@@ -6162,29 +6162,29 @@ window.openMyDesignsModal = async function(){
     modal.style.display='flex';
     var grid = document.getElementById('myDesignsGrid');
     var note = document.getElementById('myDesignsNote');
-    grid.innerHTML=''; note.style.display='block'; note.textContent='불러오는 중...';
+    grid.innerHTML=''; note.style.display='block'; note.textContent=window.t('loading_generic','불러오는 중...');
     try {
         var sb = window.sb;
         if(!sb){ try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
-        if(!sb){ note.textContent='잠시 후 다시 시도해주세요.'; return; }
+        if(!sb){ note.textContent=window.t('retry_later','잠시 후 다시 시도해주세요.'); return; }
         var u = await sb.auth.getUser();
         var uid = u && u.data && u.data.user && u.data.user.id;
         if(!uid){ note.textContent=(window.translations&&window.translations.my_design_login)||'로그인하시면 만드신 디자인이 여기에 보관됩니다.'; return; }
         var r = await sb.from('design_gallery').select('id,image_url,thumb_url,prompt,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(30);
         if(r.error) throw r.error;
         var rows = r.data || [];
-        if(!rows.length){ note.textContent='아직 만드신 디자인이 없어요. 위 입력창에 문구를 적고 [만들기] 로 만들어 보세요.'; return; }
+        if(!rows.length){ note.textContent=window.t('my_design_empty','아직 만드신 디자인이 없어요. 위 입력창에 문구를 적고 [만들기] 로 만들어 보세요.'); return; }
         note.style.display='none';
         grid.innerHTML = rows.map(function(row){
             var img = row.thumb_url || row.image_url;
             var url = row.image_url || row.thumb_url;
             return '<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#f8fafc;display:flex;flex-direction:column;">'
                 + '<img src="'+String(img).replace(/"/g,'&quot;')+'" loading="lazy" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;">'
-                + '<button type="button" data-durl="'+String(url).replace(/"/g,'&quot;')+'" class="myDesignOrderBtn" style="width:100%;padding:10px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:12.5px;font-weight:800;cursor:pointer;">이 디자인으로 주문</button>'
+                + '<button type="button" data-durl="'+String(url).replace(/"/g,'&quot;')+'" class="myDesignOrderBtn" style="width:100%;padding:10px;border:none;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:12.5px;font-weight:800;cursor:pointer;">'+window.t('my_design_order','이 디자인으로 주문')+'</button>'
                 + '</div>';
         }).join('');
         grid.querySelectorAll('.myDesignOrderBtn').forEach(function(b){ b.addEventListener('click', function(){ window._myDesignOrder(b.getAttribute('data-durl')); }); });
-    } catch(e){ note.textContent='불러오지 못했어요: '+((e&&e.message)||e); note.style.display='block'; }
+    } catch(e){ note.textContent=window.t('my_design_loaderr','불러오지 못했어요: ')+((e&&e.message)||e); note.style.display='block'; }
 };
 window._myDesignOrder = function(url){
     if(!url) return;
@@ -9062,9 +9062,9 @@ async function handleSubReturn() {
         </div>
     </div>
 </div>
-<div id="libraryModal" class="modal-bg" style="z-index: 11000;"><div class="modal-box" style="width: 800px; max-width: 90%; height: 80%; display: flex; flex-direction: column;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0;">📂 내 디자인 보관함</h3><button onclick="document.getElementById('libraryModal').style.display='none'" style="border:none; background:none; cursor:pointer; font-size:20px;">✕</button></div><div id="myDesignGrid" style="flex:1; overflow-y:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px; padding:10px;"></div></div></div>
-<div id="saveDesignModal" class="modal-bg" style="z-index: 11001;"><div class="modal-box"><h3>💾 디자인 저장하기</h3><p style="font-size:13px; color:#666;">보관함에 저장하여 나중에 다시 불러올 수 있습니다.</p><input id="saveDesignTitle" class="ai-input-pretty" placeholder="디자인 제목을 입력하세요 (예: 여름 이벤트 배너)"><div style="display:flex; gap:10px; margin-top:20px;"><button id="btnConfirmSave" class="btn-round primary">저장하기</button><button onclick="document.getElementById('saveDesignModal').style.display='none'" class="btn-round">취소</button></div></div></div>
-<div id="loadModeModal" class="modal-bg" style="z-index: 10001;"><div class="modal-box" style="width: 450px;"><h3>🎨 템플릿 불러오기</h3><p style="color:#666; font-size:14px; margin-bottom:20px;">현재 캔버스 내용이 있습니다.</p><div style="display:flex; gap:10px;"><button id="btnLoadReplace" class="btn-round ai-red" style="height:100px;">새 작업으로<br>(기존 삭제)</button><button id="btnLoadAdd" class="btn-round primary" style="height:100px;">현재 작업에<br>추가하기</button></div><button onclick="document.getElementById('loadModeModal').style.display='none'" class="btn-round" style="margin-top:15px;">취소</button></div></div>
+<div id="libraryModal" class="modal-bg" style="z-index: 11000;"><div class="modal-box" style="width: 800px; max-width: 90%; height: 80%; display: flex; flex-direction: column;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0;" data-i18n="lib_title_mydesign">📂 내 디자인 보관함</h3><button onclick="document.getElementById('libraryModal').style.display='none'" style="border:none; background:none; cursor:pointer; font-size:20px;">✕</button></div><div id="myDesignGrid" style="flex:1; overflow-y:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px; padding:10px;"></div></div></div>
+<div id="saveDesignModal" class="modal-bg" style="z-index: 11001;"><div class="modal-box"><h3 data-i18n="save_title">💾 디자인 저장하기</h3><p style="font-size:13px; color:#666;" data-i18n="save_desc">보관함에 저장하여 나중에 다시 불러올 수 있습니다.</p><input id="saveDesignTitle" class="ai-input-pretty" placeholder="디자인 제목을 입력하세요 (예: 여름 이벤트 배너)" data-i18n-placeholder="save_ph"><div style="display:flex; gap:10px; margin-top:20px;"><button id="btnConfirmSave" class="btn-round primary" data-i18n="btn_save2">저장하기</button><button onclick="document.getElementById('saveDesignModal').style.display='none'" class="btn-round" data-i18n="btn_cancel2">취소</button></div></div></div>
+<div id="loadModeModal" class="modal-bg" style="z-index: 10001;"><div class="modal-box" style="width: 450px;"><h3 data-i18n="load_tpl_title">🎨 템플릿 불러오기</h3><p style="color:#666; font-size:14px; margin-bottom:20px;" data-i18n="load_tpl_desc">현재 캔버스 내용이 있습니다.</p><div style="display:flex; gap:10px;"><button id="btnLoadReplace" class="btn-round ai-red" style="height:100px;" data-i18n="load_new">새 작업으로<br>(기존 삭제)</button><button id="btnLoadAdd" class="btn-round primary" style="height:100px;" data-i18n="load_add">현재 작업에<br>추가하기</button></div><button onclick="document.getElementById('loadModeModal').style.display='none'" class="btn-round" style="margin-top:15px;" data-i18n="btn_cancel2">취소</button></div></div>
 <!-- 3D Preview Modal -->
 <div id="wall3DModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:15000; justify-content:center; align-items:center;">
 <div id="wall3DInner" style="position:relative; width:95%; max-width:1200px; height:85vh; background:#1a1a2e; border-radius:16px; overflow:hidden; display:flex; flex-direction:column;">
@@ -9415,12 +9415,12 @@ async function handleSubReturn() {
                         <span data-i18n="bulk_guide_title">작업 가이드</span>
                     </div>
                     <ul style="margin:0; padding-left:24px; font-size:14px; color:#334155; line-height:1.95;">
-                        <li><b style="color:#1e293b;">제작 사이즈</b> — 허니콤보드 가벽 · 배너는 <b style="color:#dc2626;">1/10 사이즈</b>로 작업하셔도 됩니다. 나머지 제품은 <b>1:1 실제 크기</b>로 작업해주세요.</li>
-                        <li><b style="color:#1e293b;">파일 형식</b> — 이미지(JPG/PNG), 일러스트(AI), PDF 등 <b>어떤 파일이든</b> 가능합니다.</li>
-                        <li><b style="color:#1e293b;">자동 칼선</b> — 이미지/AI 파일 모두 <b>자동으로 칼선이 생성</b>됩니다.</li>
-                        <li><b style="color:#1e293b;">모양 커팅</b> — 사진 모양대로 자르려면 에디터에서 <b>누끼따기</b>를 해서 <b>배경 없는 PNG</b>로 올려주세요.</li>
-                        <li><b style="color:#1e293b;">사각 커팅</b> — <b>흰색 배경의 사각 이미지</b>는 자동으로 사각형으로 커팅됩니다.</li>
-                        <li><b style="color:#1e293b;">일러스트 작업 시</b> — 작업물이 반드시 <b>아트보드(대지) 안에</b> 들어있어야 인식됩니다.</li>
+                        <li data-i18n="cart_guide_size"><b style="color:#1e293b;">제작 사이즈</b> — 허니콤보드 가벽 · 배너는 <b style="color:#dc2626;">1/10 사이즈</b>로 작업하셔도 됩니다. 나머지 제품은 <b>1:1 실제 크기</b>로 작업해주세요.</li>
+                        <li data-i18n="cart_guide_fmt"><b style="color:#1e293b;">파일 형식</b> — 이미지(JPG/PNG), 일러스트(AI), PDF 등 <b>어떤 파일이든</b> 가능합니다.</li>
+                        <li data-i18n="cart_guide_cut"><b style="color:#1e293b;">자동 칼선</b> — 이미지/AI 파일 모두 <b>자동으로 칼선이 생성</b>됩니다.</li>
+                        <li data-i18n="cart_guide_shape"><b style="color:#1e293b;">모양 커팅</b> — 사진 모양대로 자르려면 에디터에서 <b>누끼따기</b>를 해서 <b>배경 없는 PNG</b>로 올려주세요.</li>
+                        <li data-i18n="cart_guide_rect"><b style="color:#1e293b;">사각 커팅</b> — <b>흰색 배경의 사각 이미지</b>는 자동으로 사각형으로 커팅됩니다.</li>
+                        <li data-i18n="cart_guide_ai"><b style="color:#1e293b;">일러스트 작업 시</b> — 작업물이 반드시 <b>아트보드(대지) 안에</b> 들어있어야 인식됩니다.</li>
                     </ul>
                 </div>
 
@@ -9428,9 +9428,9 @@ async function handleSubReturn() {
                 <div style="margin-top:12px; background:#1f1015; border:1.5px solid #7f1d1d; border-radius:12px; padding:16px 18px;">
                     <div style="font-size:14px; color:#fca5a5; line-height:1.75;">
                         <div style="font-size:15px; font-weight:800; margin-bottom:8px; color:#fecaca;">
-                            <i class="fa-solid fa-triangle-exclamation"></i> 100MB 초과 파일은 업로드가 안 됩니다
+                            <i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="cart_drive_title">100MB 초과 파일은 업로드가 안 됩니다</span>
                         </div>
-                        <div style="margin-bottom:12px;">
+                        <div style="margin-bottom:12px;" data-i18n="cart_drive_desc">
                             아래 <b style="color:#fff;">구글 드라이브 링크</b>로 들어가서 <b style="color:#fff;">본인 이름(또는 주문번호)으로 폴더를 만들어</b> 큰 파일을 업로드해주세요.<br>
                             업로드 후 <b style="color:#fff;">카카오톡 또는 이메일로 담당자에게 알려주시면</b> 주문과 매칭하여 처리해드립니다.
                         </div>
@@ -9441,9 +9441,9 @@ async function handleSubReturn() {
                            style="display:inline-flex; align-items:center; gap:8px; background:#fff; border:2px solid #be185d; color:#be185d; padding:10px 18px; border-radius:10px; font-size:14px; font-weight:700; text-decoration:none; transition:all 0.15s;"
                            onmouseenter="this.style.background='#be185d'; this.style.color='#fff';"
                            onmouseleave="this.style.background='#fff'; this.style.color='#be185d';">
-                            <i class="fa-brands fa-google-drive"></i> 구글 드라이브 폴더 열기
+                            <i class="fa-brands fa-google-drive"></i> <span data-i18n="cart_drive_btn">구글 드라이브 폴더 열기</span>
                         </a>
-                        <div style="font-size:13px; margin-top:12px; color:#9f1239; line-height:1.7;">
+                        <div style="font-size:13px; margin-top:12px; color:#9f1239; line-height:1.7;" data-i18n="cart_drive_email">
                             드라이브에도 장바구니에서도 업로드가 안된다면 이메일(<b>design@chameleon.design</b>)로 올려주신 후 <b>담당자에게 연락해서 확인</b>해주세요.<br>
                             <b style="color:#be185d;">⚠ 이메일은 자동 데이터 처리가 되지 않아 제작이 늦어질 수 있으니 꼭 확인해주세요.</b>
                         </div>
@@ -9666,7 +9666,7 @@ async function handleSubReturn() {
                     </div>
 
                     <div id="cartShippingFeeRow" style="display:none; justify-content:space-between; align-items:center; margin-bottom: 5px; color:#0369a1; font-weight:bold;">
-                        <span id="cartShippingLabel">🚚 비수도권 추가 배송비</span>
+                        <span id="cartShippingLabel">🚚 <span data-i18n="label_non_metro_shipping">비수도권 추가 배송비</span></span>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span id="cartShippingAmount">0원</span>
                             <button id="cartShippingRemoveBtn" onclick="window._removeCartShipping()" title="배송비 삭제" style="background:#ef4444; color:#fff; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">×</button>
@@ -9764,7 +9764,7 @@ async function handleSubReturn() {
                                 var isCourierBlocked = _wallOnly && _courierFees[b.fee];
                                 if (isCourierBlocked) {
                                     btn.onclick = function(){
-                                        if (window.showToast) window.showToast('허니콤보드 제품은 용차/설치배송만 가능합니다. (배너·자유인쇄커팅 180cm 이하만 택배 가능)', 'warn');
+                                        if (window.showToast) window.showToast(window.t('hc_ship_warn','허니콤보드 제품은 용차/설치배송만 가능합니다. (배너·자유인쇄커팅 180cm 이하만 택배 가능)'), 'warn');
                                     };
                                 } else if (isMetroInst) btn.onclick = function(){ window._toggleMetroInstall(); };
                                 else if (isMetroRem) btn.onclick = function(){ window._toggleMetroRemoval(); };
@@ -21021,23 +21021,23 @@ if (w >= 20 && h >= 20) {
         var unitPrice = 0;
         var qty = 1;
         if (state.mode === 'hq') {
-            if (!state.product) { alert('의뢰할 상품을 선택해 주세요'); return; }
+            if (!state.product) { alert(window.t('dr_v_prod','의뢰할 상품을 선택해 주세요')); return; }
             qty = Math.max(1, parseInt(state.qty || 1, 10));
             title = '[본사의뢰] ' + state.product + (qty > 1 ? (' × ' + qty + '건') : '');
             category = state.product;
             unitPrice = state.price;
         } else {
             title = $('dreqCustTitle').value.trim();
-            if (!title) { alert('제목을 입력해 주세요'); return; }
+            if (!title) { alert(window.t('dr_v_title','제목을 입력해 주세요')); return; }
             var custPrice = parseInt($('dreqCustPrice').value, 10) || 0;
-            if (custPrice < 10000) { alert('의뢰 금액은 최소 10,000원 이상이어야 합니다.'); return; }
+            if (custPrice < 10000) { alert(window.t('dr_v_min','의뢰 금액은 최소 10,000원 이상이어야 합니다.')); return; }
             category = '자유의뢰';
             unitPrice = custPrice;
             qty = 1;
         }
-        if (!desc) { alert('상세 요청 사항을 입력해 주세요'); return; }
-        if (!name) { alert('성함을 입력해 주세요'); return; }
-        if (!phone) { alert('연락처를 입력해 주세요'); return; }
+        if (!desc) { alert(window.t('dr_v_desc','상세 요청 사항을 입력해 주세요')); return; }
+        if (!name) { alert(window.t('dr_v_name','성함을 입력해 주세요')); return; }
+        if (!phone) { alert(window.t('dr_v_phone','연락처를 입력해 주세요')); return; }
 
         var total = unitPrice * qty;
 
@@ -21148,7 +21148,7 @@ if (w >= 20 && h >= 20) {
             }
         } catch (e) {
             console.error('[submitDesignRequest]', e);
-            alert('등록 실패: ' + (e && e.message ? e.message : '알 수 없는 오류'));
+            alert(window.t('dr_v_fail','등록 실패: ') + (e && e.message ? e.message : window.t('unknown_err','알 수 없는 오류')));
         } finally {
             btn.disabled = false;
             btn.textContent = origLabel;
