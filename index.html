@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260831133509';
+    var CV = '20260831134342';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1147,7 +1147,7 @@ window._tcmFallbackClick = function(code) {
                      spellcheck="false" autocorrect="off" autocapitalize="off"
                      data-ph="어떤 디자인을 하고싶어?"></div>
                 <button type="button" id="hwGoBtn">만들기</button>
-                <button type="button" id="hwMineBtn" onclick="window.openMyDesignsModal && window.openMyDesignsModal()">🖼️ MY디자인</button>
+                <button type="button" id="hwMineBtn" onclick="window.openMyDesignsModal && window.openMyDesignsModal()">🖼️ <span data-i18n="btn_my_design">MY디자인</span></button>
             </div>
             <div class="me-gal-marquee" id="hwMarquee">
                 <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="hwTrackTop"></div></div>
@@ -6150,8 +6150,8 @@ function scrollHotdeal(gridId, dir) {
 <div id="myDesignsModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:100000;align-items:center;justify-content:center;padding:14px;">
   <div style="position:relative;background:#fff;border-radius:20px;padding:22px;width:760px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
     <button type="button" onclick="document.getElementById('myDesignsModal').style.display='none'" aria-label="닫기" title="닫기" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#1e293b;color:#fff;border:none;font-size:20px;line-height:34px;text-align:center;cursor:pointer;z-index:5;padding:0;">×</button>
-    <h3 style="margin:0 0 4px;font-size:19px;font-weight:900;color:#1e293b;">🖼️ <span>내가 만든 디자인</span></h3>
-    <div style="font-size:12.5px;color:#64748b;margin-bottom:16px;">디자인을 고르면 그 디자인으로 제품을 주문할 수 있어요.</div>
+    <h3 style="margin:0 0 4px;font-size:19px;font-weight:900;color:#1e293b;">🖼️ <span data-i18n="me_intro_mine">내가 만든 디자인</span></h3>
+    <div style="font-size:12.5px;color:#64748b;margin-bottom:16px;" data-i18n="my_design_sub">디자인을 고르면 그 디자인으로 제품을 주문할 수 있어요.</div>
     <div id="myDesignsNote" style="text-align:center;color:#64748b;padding:40px 0;">불러오는 중...</div>
     <div id="myDesignsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;"></div>
   </div>
@@ -6169,7 +6169,7 @@ window.openMyDesignsModal = async function(){
         if(!sb){ note.textContent='잠시 후 다시 시도해주세요.'; return; }
         var u = await sb.auth.getUser();
         var uid = u && u.data && u.data.user && u.data.user.id;
-        if(!uid){ note.textContent='로그인하시면 만드신 디자인이 여기에 보관됩니다.'; return; }
+        if(!uid){ note.textContent=(window.translations&&window.translations.my_design_login)||'로그인하시면 만드신 디자인이 여기에 보관됩니다.'; return; }
         var r = await sb.from('design_gallery').select('id,image_url,thumb_url,prompt,created_at').eq('user_id',uid).order('created_at',{ascending:false}).limit(30);
         if(r.error) throw r.error;
         var rows = r.data || [];
@@ -7258,7 +7258,7 @@ async function handleSubReturn() {
                 var dateStr = _dateStr(r.created_at);
                 var ctry = _ctryLabel[r.lang] || '';
                 var photoHtml = (r.photo_url && r.photo_url.trim())
-                    ? '<div class="home-rv-photo"><img src="'+_esc(r.photo_url)+'" alt="review" loading="lazy"></div>' : '';
+                    ? '<div class="home-rv-photo"><img src="'+_esc(r.photo_url)+'" alt="review" loading="lazy" onerror="var c=this.closest(\'.home-rv-card\'); if(c) c.style.display=\'none\';"></div>' : '';
                 var card = document.createElement('div');
                 card.className = 'home-rv-card';
                 if (dup) card.setAttribute('aria-hidden','true');
@@ -18031,7 +18031,7 @@ if (w >= 20 && h >= 20) {
             const countryFlag = _fc ? `<img src="https://flagcdn.com/w20/${_fc}.png" style="width:16px;height:12px;vertical-align:middle;border-radius:2px;">` : '<i class="fa-solid fa-globe" style="font-size:12px;color:#6366f1;"></i>';
             const photoHtml = hasPhoto ? `
                 <div class="review-photo-wrap">
-                    <img src="${r.photo_url}" class="review-photo" alt="${r.product_name || 'Customer review photo'}" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy">
+                    <img src="${r.photo_url}" class="review-photo" alt="${r.product_name || 'Customer review photo'}" onclick="window.openReviewPhoto('${r.photo_url}')" loading="lazy" onerror="var w=this.closest('.review-photo-wrap'); if(w) w.style.display='none';">
                 </div>` : '';
             html += `
                 <div class="review-card ${hasPhoto ? 'has-photo' : ''}">
