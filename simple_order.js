@@ -14497,7 +14497,8 @@ html, body { background: #ffffff !important; }
                 }
                 window._soLastLoadedProductCode = _pcNow;
             } catch (_pcw) {}
-            if (_pdSec) _pdSec.style.display = (state.isPaperDisplay || state.isHbTable || state.isHbBox) ? '' : 'none';
+            // 2026-08-31: 종이매대는 설계 스튜디오로 대체 → 컨셉 입력 카드 숨김 (허니콤 테이블/박스만 유지)
+            if (_pdSec) _pdSec.style.display = (state.isHbTable || state.isHbBox) ? '' : 'none';
             // 제목/설명을 제품군(매대 ↔ 테이블 ↔ 박스)에 맞게 교체
             try {
                 var _pdT = document.getElementById('soPdReqTitle');
