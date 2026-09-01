@@ -23,6 +23,7 @@ begin
         and o.payment_method is not null
         and o.payment_method not in ('포인트','예치금','블로그체험단쿠폰')
         and o.payment_method not ilike '%실패%'
+        and o.payment_status ilike '%결제완료%'          -- ★2026-09-01 결제완료(카드완료/무통장 입금확인)만 지급
         -- 당월(KST) 주문만 -> distinct on 최이른 = 그달 첫 구매. 첫 시행월은 8/15 런치 이후만(8/1~14 소급 방지)
         and (o.created_at at time zone 'Asia/Seoul') >= greatest(
               date_trunc('month', now() at time zone 'Asia/Seoul'),
@@ -34,7 +35,10 @@ begin
         select 1 from reward_events re
         where re.user_id=f.uid and re.event_type='first_purchase_cashback'
           and to_char(re.created_at at time zone 'Asia/Seoul','YYYY-MM')
-              = to_char(now() at time zone 'Asia/Seoul','YYYY-MM'))
+              = to_char(now() at time zone 'Asia/Seoul','YYYY-MM')
+          and not exists (                                -- ★2026-09-01 회수된 건은 제외(재입금 시 자가치유 재지급)
+            select 1 from reward_events rr
+            where rr.event_type='cashback_reversed' and rr.ref=re.ref and rr.user_id=re.user_id))
   loop
     _amt := least(floor(coalesce(_rec.tot,0) * 0.2)::int, 200000);
     if _amt > 0 then
@@ -67,11 +71,17 @@ begin
         and o.payment_method is not null
         and o.payment_method not in ('포인트','예치금','블로그체험단쿠폰')
         and o.payment_method not ilike '%실패%'
+        and o.payment_status ilike '%결제완료%'          -- ★2026-09-01 결제완료만 지급
       order by o.user_id, o.created_at asc   -- 생애 가장 이른 유효주문
     ) f
     -- 생애 첫 주문이 런치(8/16) 이후여야 함 -> 기존 고객(첫 주문 런치 전) 자동 제외 = 신규 고객만
     where f.cat >= '2026-08-16 00:00:00+09'::timestamptz
-      and not exists (select 1 from reward_events re where re.user_id=f.uid and re.event_type='first_ever_cashback')
+      and not exists (
+        select 1 from reward_events re
+        where re.user_id=f.uid and re.event_type='first_ever_cashback'
+          and not exists (                                -- ★2026-09-01 회수된 건은 제외(자가치유)
+            select 1 from reward_events rr
+            where rr.event_type='cashback_reversed' and rr.ref=re.ref and rr.user_id=re.user_id))
   loop
     _amt := least(coalesce(_rec.tot,0)::int, 100000);   -- 실입금액 100%, 최대 10만
     if _amt > 0 then
