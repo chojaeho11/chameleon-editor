@@ -6892,19 +6892,19 @@ html, body { background: #ffffff !important; }
     //   비규격 사이즈는 가로/세로 입력 → 가장 작은 표준 사이즈로 자동 매핑.
     //   용지/박/후가공은 명함 (BIZ_PAPERS/BIZ_FOILS/BIZ_FINISHES) 재사용.
     // 2026-06-14: per-sheet 가격 + 단순 3-tier 할인으로 재작성.
-    //   A4=500원/매, A3=1000원/매, A2=2000원/매. 양면=단면×1.5.
-    //   100매+ 20% / 500매+ 30% / 1000매+ 50%.
     //   박/후가공 옵션은 (100매+ ×2 / 500매+ ×3 / 1000매+ ×4) multiplier.
     // 2026-06-14: 양면 = 단면 × 1.2 (사용자 지정: A4 양면 600원).
+    // 2026-09-03 (사장님): 낱장 1장 단가를 공급업체(인디고) 수준으로 인상 — 전체 3.5배(A3 단면 1,000→3,500).
+    //   A4 단면 1,750 · A3 단면 3,500 · A2 단면 7,000. 양면=단면×1.2. 볼륨할인 구조는 그대로(전체 비례 인상).
     var LEAFLET_SIZES = [
-        { id:'A4', label:'A4', wMm:210, hMm:297, perSheet: { single: 500,  double: 600  } },
-        { id:'A3', label:'A3', wMm:297, hMm:420, perSheet: { single: 1000, double: 1200 } },
-        { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 2000, double: 2400 } }
+        { id:'A4', label:'A4', wMm:210, hMm:297, perSheet: { single: 1750, double: 2100 } },
+        { id:'A3', label:'A3', wMm:297, hMm:420, perSheet: { single: 3500, double: 4200 } },
+        { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 7000, double: 8400 } }
     ];
     function _soLeafletQtyDisc(qty) {
-        // 2026-07-02: 리플렛(낱장) 수량 볼륨 할인 재도입 — 일본(kingprinters) 대량가보다 저렴하게.
-        //   예) A3 양면 1,000장 = 1,200×1000×0.16 = 192,000원 = ¥19,200 (kingprinters 折パンフ ¥20,493 대비 ↓).
-        //   소량(1~99)은 정가 유지(1장부터 소량 특화). 100장↑부터 대량할인.
+        // 2026-07-02: 리플렛(낱장) 수량 볼륨 할인.
+        //   2026-09-03 단가 3.5배 인상(공급가 반영) — 볼륨할인 비율은 그대로라 대량가도 비례 인상됨.
+        //   예) A3 양면 1,000장 = 4,200×1000×0.16 = 672,000원. 소량(1~99)은 정가 유지, 100장↑부터 대량할인.
         qty = Math.max(1, parseInt(qty, 10) || 1);
         if (qty >= 3000) return 0.12;
         if (qty >= 1000) return 0.16;
