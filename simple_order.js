@@ -17348,6 +17348,9 @@ html, body { background: #ffffff !important; }
                 : null,
             // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
             isInstaPanel: !!state.isInstaPanel,
+            // 2026-09-03: 인스타판넬 — 고객이 완성 파일을 직접 업로드했으면(무료디자인 불필요) 표시.
+            //   → 주문 시 무료디자인 의뢰(design_requests) 자동등록 skip (불필요한 디자이너 지급 방지).
+            instaHasFinal: (state.isInstaPanel && !!state.file) || null,
             instaTitle: (state.instaTitle || '') || null,
             instaSub: (state.instaSub || '') || null,
             instaHashtag: (state.instaHashtag || '') || null,
@@ -21671,6 +21674,8 @@ html, body { background: #ffffff !important; }
                     var _in_it = items[_in];
                     if (!_inIsInsta(_in_it)) continue;
                     if (_in_it.designRequest && _in_it.designRequest.request_id) continue; // 유료 팝업 등으로 이미 생성됨
+                    // 2026-09-03: 고객이 완성 데이터(파일)를 직접 올린 경우 — 무료디자인 불필요 → 자동의뢰 skip
+                    if (_in_it.instaHasFinal) continue;
                     var _in_prodName = (_in_it.productName || (_in_it.product && (_in_it.product.name_kr || _in_it.product.name)) || '인스타판넬');
                     var _in_custName = (typeof name !== 'undefined' && name) ? name : '';
                     var _in_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';

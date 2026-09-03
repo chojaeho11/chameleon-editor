@@ -764,13 +764,47 @@ function parseCutlineMeta(desc) {
     try { return JSON.parse(s.substring(jsonStart, jsonEnd)); } catch (e) { return null; }
 }
 
+// 2026-09-03: 디자이너 정산액 단일 계산 (표시 payoutLabel + 완료계산 openCompleteModal/dbSubmitComplete 공용).
+//   기존엔 표시(FREE_REQ 우선=정답)와 완료계산(budget×0.7 fallback)이 달라 글씨스카시/인스타에 이중 70% 발생.
+//   이 헬퍼 하나로 통일해 재발 방지.
+function designerPayoutAmount(r) {
+    if (!r) return 0;
+    if (r.category === '명함') {
+        // 문구수정 주문(BIZ_META)은 tiered, 본사의뢰(메타 없음)는 고객가 70%
+        if (parseBizMeta(r.description)) return bizCardPayoutDetail(r.description).total;
+        var _mc = Number(r.budget_max || r.budget_min || 0);
+        return _mc > 0 ? Math.floor(_mc * 0.7) : 0;
+    }
+    if (r.category === '칼선작업') {
+        var cl = parseCutlineMeta(r.description);
+        var cust = cl ? (cl.total || 0) : Number(r.budget_max || r.budget_min || 0);
+        return Math.floor(cust * 0.7);
+    }
+    // 정찰가 카테고리(전단/배너/가벽/글씨포토존) = 고객가 70%
+    var hp = hqFixedPayout(r);
+    if (hp > 0) return hp;
+    // FREE_REQ.designerPayout = 이미 확정된 지급액 (자유의뢰·기본디자인·글씨스카시·인스타). ×0.7 절대 금지.
+    var fr = parseFreeReqMeta(r.description);
+    if (fr && fr.designerPayout) return Number(fr.designerPayout);
+    var custP = Number(r.budget_max || r.budget_min || 0);
+    if (custP > 0) return Math.floor(custP * 0.7);
+    var m = parseMeta(r.description);
+    if (m && m.agreedPayout) return Number(m.agreedPayout);
+    return 0;
+}
+
 function payoutLabel(r) {
     if (r && r.category === '명함') {
-        var d = bizCardPayoutDetail(r.description);
-        if (d.textModCount > 0) {
-            return d.total.toLocaleString() + '원 (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 × ' + d.textModCount + '건)';
+        // 문구수정 주문(BIZ_META)만 tiered, 본사의뢰는 고객가 70%
+        if (parseBizMeta(r.description)) {
+            var d = bizCardPayoutDetail(r.description);
+            if (d.textModCount > 0) {
+                return d.total.toLocaleString() + '원 (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 × ' + d.textModCount + '건)';
+            }
+            return d.total.toLocaleString() + '원' + (d.mult === 2 ? ' (양면 ×2)' : '');
         }
-        return d.total.toLocaleString() + '원' + (d.mult === 2 ? ' (양면 ×2)' : '');
+        var _mc = Number(r.budget_max || r.budget_min || 0);
+        return Math.floor(_mc * 0.7).toLocaleString() + '원 (의뢰금액 ' + _mc.toLocaleString() + '원의 70%)';
     }
     // 칼선작업 — 캐릭터 수 × 10,000원의 70% (디자이너 지급)
     if (r && r.category === '칼선작업') {
@@ -1841,35 +1875,9 @@ async function dbOpenComplete(id) {
     const { data: row } = await sb.from('design_requests').select('*').eq('id', id).single();
     currentCompleteRow = row;
     // 명함은 단면/양면 + 수량 기반 tiered, 그 외는 카테고리 정찰가
-    let fixed = 0;
-    let fixedLabel = '';
-    if (row && row.category === '명함') {
-        const d = bizCardPayoutDetail(row.description);
-        fixed = d.total;
-        fixedLabel = d.total.toLocaleString() + '원';
-        if (d.textModCount > 0) fixedLabel += ' (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 ' + d.textModPayout.toLocaleString() + ' × ' + d.textModCount + '건)';
-        if (d.mult === 2) fixedLabel += ' [양면]';
-    } else if (row && row.category === '칼선작업') {
-        // 2026-06-13: 칼선작업 — 캐릭터 수 × 10,000원의 70% 가 디자이너 정산금
-        const cl = parseCutlineMeta(row.description);
-        const cust = cl ? (cl.total || 0) : Number(row.budget_max || row.budget_min || 0);
-        const n = cl ? (cl.charCount || 1) : 1;
-        fixed = Math.floor(cust * 0.7);
-        fixedLabel = fixed.toLocaleString() + '원 (캐릭터 ' + n + '개 × 10,000원의 70%)';
-    } else if (row && row.category === '자유의뢰') {
-        // 2026-06-13: 자유의뢰 — 의뢰금액의 70% 자동 정산금
-        const fr = parseFreeReqMeta(row.description);
-        const cust = fr ? (fr.customerPrice || 0) : Number(row.budget_max || row.budget_min || 0);
-        if (cust > 0) {
-            fixed = Math.floor(cust * 0.7);
-            fixedLabel = fixed.toLocaleString() + '원 (의뢰금액 ' + cust.toLocaleString() + '원의 70%)';
-        }
-    } else {
-        fixed = hqFixedPayout(row);
-        // 2026-08-31: 종이매대 등 정찰가표 미등록 카테고리도 의뢰금액의 70% 자동 적용.
-        if (fixed <= 0) { const _c = Number(row.budget_max || row.budget_min || 0); if (_c > 0) fixed = Math.floor(_c * 0.7); }
-        fixedLabel = fixed.toLocaleString() + '원 (의뢰금액 ' + Number(row.budget_max || row.budget_min || 0).toLocaleString() + '원의 70%)';
-    }
+    // 2026-09-03: 정산액 단일 헬퍼로 통일 (표시=정산 일치). 라벨은 payoutLabel 재사용.
+    const fixed = designerPayoutAmount(row);
+    const fixedLabel = (fixed > 0) ? payoutLabel(row) : '';
     const fixedEl = document.getElementById('dbCompletePayoutFixed');
     const inpEl = document.getElementById('dbCompletePayoutInput');
     const hintEl = document.getElementById('dbCompletePayoutHint');
@@ -1914,24 +1922,8 @@ async function dbSubmitComplete() {
     if (!fi.files || fi.files.length === 0) { alert('시안 파일을 한 개 이상 첨부해 주세요.'); return; }
     const note = document.getElementById('dbCompleteNote').value.trim();
     const row = currentCompleteRow || {};
-    let fixedPayout = 0;
-    if (row.category === '명함') {
-        fixedPayout = bizCardPayoutDetail(row.description).total;
-    } else if (row.category === '칼선작업') {
-        // 2026-06-13: 칼선작업 — 캐릭터 수 × 10,000원의 70%
-        const cl2 = parseCutlineMeta(row.description);
-        const cust2 = cl2 ? (cl2.total || 0) : Number(row.budget_max || row.budget_min || 0);
-        fixedPayout = Math.floor(cust2 * 0.7);
-    } else if (row.category === '자유의뢰') {
-        // 2026-06-13: 자유의뢰 — 의뢰금액의 70%
-        const fr2 = parseFreeReqMeta(row.description);
-        const cust3 = fr2 ? (fr2.customerPrice || 0) : Number(row.budget_max || row.budget_min || 0);
-        if (cust3 > 0) fixedPayout = Math.floor(cust3 * 0.7);
-    } else {
-        fixedPayout = hqFixedPayout(row);
-        // 2026-08-31: 종이매대 등 정찰가표 미등록 카테고리도 의뢰금액의 70% 자동 적용.
-        if (fixedPayout <= 0) { const _c2 = Number(row.budget_max || row.budget_min || 0); if (_c2 > 0) fixedPayout = Math.floor(_c2 * 0.7); }
-    }
+    // 2026-09-03: 정산액 단일 헬퍼로 통일 (openCompleteModal/payoutLabel 과 동일 계산).
+    let fixedPayout = designerPayoutAmount(row);
     let payoutAmount = fixedPayout;
     if (fixedPayout <= 0) {
         const v = parseInt(document.getElementById('dbCompletePayoutInput').value, 10);

@@ -3,6 +3,8 @@
 -- 2026-09-01 확대: 미결제(payment_status 결제완료 아님 = 입금대기/미결제/결제실패/환불) 도 회수
 --   지급게이트(first_*_cashback_run 의 payment_status ilike '%결제완료%')와 물려 동작:
 --   미결제엔 애초에 안 나가고, 결제 후 환불/취소되면 회수, 회수 후 재결제되면 재지급(자가치유).
+-- 2026-09-01 가드: "당월(KST) 지급분만" 회수. 전월 캐시백은 월말리셋(monthly_coupon_reset)이 이미
+--   전부 소멸시키므로, 전월분을 또 회수하면 이중차감 → 구독마일리지/당월 정당포인트까지 잘못 깎임.
 CREATE OR REPLACE FUNCTION public.reverse_cancelled_cashback_run()
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -17,6 +19,8 @@ begin
     join orders o on o.id::text = re.ref
     where re.event_type in ('first_purchase_cashback','first_ever_cashback')
       and coalesce(re.mileage_delta,0) > 0
+      and to_char(re.created_at at time zone 'Asia/Seoul','YYYY-MM')          -- 당월 지급분만(전월은 월말리셋이 소멸)
+          = to_char(now() at time zone 'Asia/Seoul','YYYY-MM')
       and ( o.status in ('취소됨','취소','삭제됨','삭제','deleted','trash','관리자차단')
             or coalesce(o.payment_status,'') not ilike '%결제완료%' )   -- 미결제/실패/환불도 회수
       and not exists (
