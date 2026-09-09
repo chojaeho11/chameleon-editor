@@ -30,15 +30,15 @@ begin
               timestamp '2026-08-15 00:00:00')
       order by o.user_id, o.created_at asc
     ) f
-    -- 당월 중복 방지
+    -- 당월 중복 방지 (당월 이미 지급됐으면 재지급 안 함)
+    -- ★2026-09-10: 자가치유("회수된 건 제외") 로직 제거. ref 단위 회수매칭이라 회수 1건이 있으면
+    --   그 주문의 모든 지급이 "회수됨"으로 간주돼 매 크론마다 무한 재지급되는 버그가 있었음
+    --   (jc_lee/joo/vince 2,444건·2.6억 중복지급). 결제게이트가 미결제 지급을 이미 막으므로 자가치유 불필요.
     where not exists (
         select 1 from reward_events re
         where re.user_id=f.uid and re.event_type='first_purchase_cashback'
           and to_char(re.created_at at time zone 'Asia/Seoul','YYYY-MM')
-              = to_char(now() at time zone 'Asia/Seoul','YYYY-MM')
-          and not exists (                                -- ★2026-09-01 회수된 건은 제외(재입금 시 자가치유 재지급)
-            select 1 from reward_events rr
-            where rr.event_type='cashback_reversed' and rr.ref=re.ref and rr.user_id=re.user_id))
+              = to_char(now() at time zone 'Asia/Seoul','YYYY-MM'))
   loop
     _amt := least(floor(coalesce(_rec.tot,0) * 0.2)::int, 200000);
     if _amt > 0 then
@@ -76,12 +76,10 @@ begin
     ) f
     -- 생애 첫 주문이 런치(8/16) 이후여야 함 -> 기존 고객(첫 주문 런치 전) 자동 제외 = 신규 고객만
     where f.cat >= '2026-08-16 00:00:00+09'::timestamptz
+      -- ★2026-09-10: 자가치유 제거(무한루프 버그). 생애 1회 지급됐으면 재지급 안 함.
       and not exists (
         select 1 from reward_events re
-        where re.user_id=f.uid and re.event_type='first_ever_cashback'
-          and not exists (                                -- ★2026-09-01 회수된 건은 제외(자가치유)
-            select 1 from reward_events rr
-            where rr.event_type='cashback_reversed' and rr.ref=re.ref and rr.user_id=re.user_id))
+        where re.user_id=f.uid and re.event_type='first_ever_cashback')
   loop
     _amt := least(coalesce(_rec.tot,0)::int, 100000);   -- 실입금액 100%, 최대 10만
     if _amt > 0 then

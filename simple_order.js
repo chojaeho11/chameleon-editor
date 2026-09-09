@@ -3462,9 +3462,9 @@ html, body { background: #ffffff !important; }
             <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="soDiscProAmount">-</div>
             <div style="font-size:10.5px; color:#7c3aed;" id="soDiscProHint">${tr('주문의 10%','注文金額の10%','10% of order')}</div>
           </label>
-          <!-- (숨김) 통합 전 개별 카드 — JS 호환용 placeholder (event_coupon/mileage 는 포인트로 합쳐짐) -->
+          <!-- (숨김) 통합 전 개별 카드 — JS 호환용 placeholder (event_coupon 은 포인트로 합쳐짐) -->
+          <!-- 2026-09-10 A안: 레거시 마일리지 5% 카드 완전 제거 (통합 포인트 1회 10만 상한으로 일원화) -->
           <label class="so-disc-card" data-disc="event_coupon" style="display:none;"><input type="radio" name="soDiscChoice" value="event_coupon" style="display:none;"><span id="soDiscEventAmount"></span><span id="soDiscEventHint"></span></label>
-          <label class="so-disc-card" data-disc="mileage" style="display:none;"><input type="radio" name="soDiscChoice" value="mileage" style="display:none;"><span id="soDiscMileageAmount"></span><span id="soDiscMileageHint"></span></label>
         </div>
         <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
           * ${tr('포인트·예치금은 전액 사용 가능 (배송비 포함) · PRO는 구독 할인','ポイント·預り金は全額利用可(送料込み) · PROは会員割引','Points / Deposit: full balance (incl. shipping) · PRO: member discount')}
@@ -20097,8 +20097,8 @@ html, body { background: #ffffff !important; }
         // 4 옵션별 최대 가능 할인액 산출
         // 1) 이벤트 쿠폰: 잔액 vs 주문×10% vs 30,000 셋 중 최소
         var eventMax  = excluded ? 0 : Math.min(eventCouponBal, Math.floor(discBase * 0.1), 30000);
-        // 2) 마일리지(legacy 5%): 잔액 vs 주문×5%
-        var mileageMax = excluded ? 0 : Math.min(mileageBal, Math.floor(discBase * 0.05));
+        // 2) 마일리지(legacy 5%) — 2026-09-10 A안(사장님): 폐지. 통합 포인트 카드(1회 10만 상한)로 일원화.
+        var mileageMax = 0;
         // 3) 예치금: 잔액 vs 주문 전액
         var depositMax = excluded ? 0 : Math.min(depositBal, Math.max(0, calc.grandTotal || discBase));
         // 4) PRO 구독자 10%
@@ -20129,9 +20129,7 @@ html, body { background: #ffffff !important; }
         setCard('event_coupon', 'soDiscEventAmount', 'soDiscEventHint', eventCouponBal, eventMax,
             tr('보유 ','残高 ','Bal ') + eventCouponBal.toLocaleString() + ' · ' + tr('최대 3만원','最大3千円','Max $30'),
             ' P');
-        setCard('mileage', 'soDiscMileageAmount', 'soDiscMileageHint', mileageBal, mileageMax,
-            tr('보유 ','残高 ','Bal ') + mileageBal.toLocaleString() + ' · 5%',
-            ' P');
+        // 2026-09-10 A안: 레거시 마일리지 5% 카드 폐지 — setCard('mileage') 제거 (통합 포인트로 일원화).
         setCard('deposit', 'soDiscDepositAmount', 'soDiscDepositHint', depositBal, depositMax,
             tr('보유 ','残高 ','Bal ') + depositBal.toLocaleString() + ' · ' + tr('전액 사용','全額','full'),
             '원');
