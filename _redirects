@@ -12,8 +12,9 @@
 #   2026-09-10: 워커 env.ASSETS 가 언더스코어 extensionless pretty-URL 을 내부 해석 못 해
 #   랜딩이 index.html 로 빠지던 회귀 fix. 하이픈 별칭 200-rewrite 로 콘텐츠 직접 서빙 (308 루프 없음).
 #   _worker.js 가 랜딩 서빙 시 이 하이픈 경로들을 env.ASSETS.fetch 한다.
-# 2026-09-10: paper_stand/raw_board/cotton_print 은 하이픈 파일명(paper-stand.html 등)으로 리네임됨
-#   → 별칭 불필요(pretty-URL 로 직접 서빙). 별칭 두면 존재하지 않는 언더스코어 .html 로 rewrite 되어 깨짐.
+/paper-stand  /paper_stand.html  200
+/raw-board  /raw_board.html  200
+/cotton-print  /cotton_print.html  200
 /cotton-designer  /cotton_designer.html  200
 /fabric  /cotton_designer.html  200
 /fabric-designer  /cotton_designer.html  200

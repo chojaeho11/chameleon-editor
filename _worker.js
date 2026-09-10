@@ -569,13 +569,6 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
-        // [DIAG 2026-09-10] 워커 실행 여부 확인용 임시 마커 — 진단용(배포 라우팅 확인 후 제거 가능).
-        if (url.searchParams.has('__wtest')) {
-            return new Response('WORKER_ALIVE build=20260910b host=' + url.hostname, {
-                status: 200, headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }
-            });
-        }
-
         // ========== 2026-05-25: hexa-board.com → 허니콤보드 원판(Hexalite) 전용 도메인 ==========
         //   새로 구입한 hexa-board.com 전체를 raw_board.html(원판 랜딩) 전용으로 서빙. URL 은 그대로 유지.
         //   언어는 URL ?lang= 따름 (기본 한국어 — raw_board.html 의 hostLang 처리). cafe3355 블록과 동일 패턴.
@@ -630,12 +623,11 @@ export default {
             } else {
                 _hbTarget = '/raw-board';
             }
-            // 2026-09-10: 순수 URL 문자열로 fetch(원본 '/' navigation 요청 미상속) — 루트 SPA 폴백(index) 방지.
             const rbRewrite = new URL(_hbTarget, url.origin);
-            let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString()));
+            let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
             if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {
                 const loc = new URL(rbResp.headers.get('Location'), url.origin);
-                rbResp = await env.ASSETS.fetch(loc.toString());
+                rbResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
             }
             const rbHdrs = new Headers(rbResp.headers);
             rbHdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -699,13 +691,13 @@ export default {
                 path.endsWith('.gif')
             );
             if (isAsset3355) return await env.ASSETS.fetch(request);
-            // 모든 비-자산 경로 → paper-stand.html 프록시 (URL 은 cafe3355.com 유지)
-            // 2026-09-10: 순수 URL 문자열로 fetch(원본 '/' navigation 요청 미상속) — 루트 SPA 폴백(index) 방지.
+            // 모든 비-자산 경로 → paper_stand.html 프록시 (URL 은 cafe3355.com 유지)
+            // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 별칭(_redirects 200)으로 콘텐츠 직접 서빙.
             const psRewrite = new URL('/paper-stand', url.origin);
-            let psResp = await env.ASSETS.fetch(new Request(psRewrite.toString()));
+            let psResp = await env.ASSETS.fetch(new Request(psRewrite.toString(), request));
             if ((psResp.status === 308 || psResp.status === 301) && psResp.headers.get('Location')) {
                 const loc = new URL(psResp.headers.get('Location'), url.origin);
-                psResp = await env.ASSETS.fetch(loc.toString());
+                psResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
             }
             const psHdrs = new Headers(psResp.headers);
             psHdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -809,20 +801,29 @@ export default {
             //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 cotton-print.com 유지
             //   - 단, 로그인·카트는 cafe 도메인 origin 에 있으므로 login-required 경로는 redirect 유지
             if (path === '' || path === 'index.html') {
-                // 2026-09-10: env.ASSETS 바인딩이 구성된(non-genuine) 요청에 SPA index 폴백을 반환해
-                //   루트가 index 로 뜨던 회귀. 루트('/')는 /cotton-print 로 302 → 그 경로는 아래 블록에서
-                //   원본 request 그대로 env.ASSETS 에 넘겨(정적 레이어가 cotton-print.html 해석) 서빙됨.
-                return Response.redirect(url.origin + '/cotton-print', 302);
+                // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 별칭(_redirects 200)으로 콘텐츠 직접 서빙.
+                const rewriteUrl = new URL('/cotton-print', url.origin);
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
+                    const loc = new URL(resp.headers.get('Location'), url.origin);
+                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+                }
+                const hdrs = new Headers(resp.headers);
+                hdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+                return new Response(resp.body, { status: resp.status, headers: hdrs });
             }
             if (path === 'cotton-print' || path === 'cotton-print.html' ||
                 path === 'fabric' || path === 'fabric-print') {
-                // 랜딩 서빙: 원본 request 를 그대로 env.ASSETS 에 넘긴다(genuine passthrough).
-                //   구성한 Request/문자열로 넘기면 바인딩이 SPA index 를 반환하지만, 원본 request 는 정적 레이어가
-                //   /cotton-print → cotton-print.html 로 정상 해석함. URL 은 cotton-print.com 유지.
-                const _r = await env.ASSETS.fetch(request);
-                const hdrs = new Headers(_r.headers);
+                // 같은 랜딩 페이지의 대체 경로들 — 그대로 서빙 (2026-09-10: 하이픈 별칭)
+                const rewriteUrl = new URL('/cotton-print', url.origin);
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
+                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
+                    const loc = new URL(resp.headers.get('Location'), url.origin);
+                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+                }
+                const hdrs = new Headers(resp.headers);
                 hdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-                return new Response(_r.body, { status: _r.status, headers: hdrs });
+                return new Response(resp.body, { status: resp.status, headers: hdrs });
             }
 
             // 경로별 매핑 → 새 canonical 경로 (로그인·카트 필요한 페이지만 cafe 도메인으로 301)
@@ -1382,13 +1383,13 @@ ${hreflangTags('/editor')}
         // ========== STANDALONE PAGE REWRITES ==========
         // 별도 랜딩 페이지: 하이픈 경로만 사용 (언더스코어는 Pretty URLs 308 루프 발생)
         // 언더스코어 → 하이픈 301 리다이렉트
-        const UNDERSCORE_REDIRECTS = { 'paper_stand': '/paper-stand', 'raw_board': '/raw-board', 'jp_track': '/jp-track', 'pd_studio': '/pd-studio', 'cotton_print': '/cotton-print' };
+        const UNDERSCORE_REDIRECTS = { 'paper_stand': '/paper-stand', 'raw_board': '/raw-board', 'jp_track': '/jp-track', 'pd_studio': '/pd-studio' };
         if (UNDERSCORE_REDIRECTS[path]) {
             return new Response(null, { status: 301, headers: { 'Location': UNDERSCORE_REDIRECTS[path] } });
         }
         const STANDALONE_PAGES = {
-            'paper-stand': '/paper-stand.html',
-            'raw-board': '/raw-board.html',
+            'paper-stand': '/paper_stand.html',
+            'raw-board': '/raw_board.html',
             // 2026-08-31: 종이매대 3D 설계 스튜디오 (제품페이지 모달 iframe src=/pd-studio)
             'pd-studio': '/pd_studio.html',
             'franchise': '/franchise.html',
@@ -1399,7 +1400,7 @@ ${hreflangTags('/editor')}
             'partner': '/partner.html',
             'maker': '/maker.html',
             'design-pay': '/design-pay.html',
-            'cotton-print': '/cotton-print.html',
+            'cotton-print': '/cotton_print.html',
             'cotton-designer': '/cotton_designer.html',
             // 2026-05-12: 도메인 통합 — /fabric 이 패브릭 디자이너의 새 canonical 경로
             'fabric': '/cotton_designer.html',
