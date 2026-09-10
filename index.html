@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260911003955';
+    var CV = '20260911004418';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5986,6 +5986,9 @@ window.addEventListener('load', function() {
     </div>
 </div>
 
+<!-- 2026-09-11: 허니콤보드 원판 6번째(파렛트)는 PC 5열(≥1280px)에서만 혼자 2줄로 떨어져 숨김.
+     모바일 2열·태블릿 4열에서는 6개 다 노출해 칸을 채움. (_RAW_BOARD_CODES 6개 중 마지막=파렛트) -->
+<style>@media (min-width:1280px){ #wholesaleBoardGrid > .hotdeal-card:nth-child(6){ display:none !important; } }</style>
 <div id="wholesaleBoardSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #fef3c7; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
         <h2 style="color: #b45309;"><span data-i18n="home_wholesale_board_title">허니콤보드 원판</span> <span class="badge-hot" style="background:#b45309;">Raw Board</span></h2>
