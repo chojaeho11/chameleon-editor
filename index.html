@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260911002403';
+    var CV = '20260911003011';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1016,14 +1016,19 @@ window._fabricTopNav = function() {
 // 2026-09-10: 일시 판매중지 카테고리 상단메뉴 회색+클릭불가 (광고인쇄=44444 / 상업인쇄물=printe_product / 굿즈=goods).
 //   복구하려면 아래 window._SUSPENDED_NAV 배열을 [] 로 비우면 됨. 정적 fallback(data-fb-key) + 동적(data-top-code) + 굿즈(data-nav-key) 모두 커버.
 window._SUSPENDED_NAV = ['44444', 'printe_product', 'goods'];
+// 2026-09-11: 홈 '허니콤보드 원판'(#wholesaleBoardSection) 에 노출할 상품 5종(지정 순서). 관리자 상품코드. 변경 시 여기만 수정.
+window._RAW_BOARD_CODES = ['53453455435', 'w23443243', '675756756765', '34553545', '3454353676'];
 window._applySuspendedNav = function(){
     try {
         var track = document.getElementById('topCatMenuTrack');
         if (!track || !window._SUSPENDED_NAV || !window._SUSPENDED_NAV.length) return;
+        var suspended = [];
         track.querySelectorAll('.tcm-btn').forEach(function(b){
             var key = b.dataset.topCode || b.dataset.navKey || b.getAttribute('data-fb-key') || '';
-            if (window._SUSPENDED_NAV.indexOf(key) !== -1) b.classList.add('tcm-suspended');
+            if (window._SUSPENDED_NAV.indexOf(key) !== -1) { b.classList.add('tcm-suspended'); suspended.push(b); }
         });
+        // 2026-09-11: 회색(판매중지) 항목은 우측 끝으로 몰기 — 현재 DOM 순서 유지하며 맨 뒤로 이동.
+        suspended.forEach(function(b){ track.appendChild(b); });
     } catch(e){}
 };
 document.addEventListener('DOMContentLoaded', function(){ try { window._applySuspendedNav(); } catch(e){} });
@@ -12821,7 +12826,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
@@ -13166,15 +13171,21 @@ async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitC
     };
     const badge = (opts && opts.badge) || badgeByCat[topCategoryCode] || { label:'HOT', color:'#ef4444' };
     try {
-        // 대분류의 모든 소분류 코드 조회
-        const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', topCategoryCode);
-        const catCodes = (subCats || []).map(c => c.code);
-        if (catCodes.length === 0) catCodes.push(topCategoryCode);
-        const { data: products, error } = await sb.from('admin_products')
-            .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order')
-            .in('category', catCodes)
-            .order('sort_order', { ascending: true })
-            .limit(limitCount || 15);
+        const _rbCols = 'code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order';
+        let products, error;
+        if (opts && Array.isArray(opts.codes) && opts.codes.length) {
+            // 2026-09-11: 지정 코드 큐레이션 (원판 5종 등) — 카테고리 무시, 이 코드들만 지정 순서대로 노출.
+            const _rc = await sb.from('admin_products').select(_rbCols).in('code', opts.codes);
+            error = _rc.error;
+            products = (_rc.data || []).slice().sort(function(a,b){ return opts.codes.indexOf(a.code) - opts.codes.indexOf(b.code); });
+        } else {
+            // 대분류의 모든 소분류 코드 조회
+            const { data: subCats } = await sb.from('admin_categories').select('code').eq('top_category_code', topCategoryCode);
+            const catCodes = (subCats || []).map(c => c.code);
+            if (catCodes.length === 0) catCodes.push(topCategoryCode);
+            const _rc = await sb.from('admin_products').select(_rbCols).in('category', catCodes).order('sort_order', { ascending: true }).limit(limitCount || 15);
+            products = _rc.data; error = _rc.error;
+        }
         if (error) throw error;
         if (!products || products.length === 0) { if (section) section.style.display = 'none'; return; }
         if (section) section.style.display = 'block';
@@ -19419,7 +19430,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
         }
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
