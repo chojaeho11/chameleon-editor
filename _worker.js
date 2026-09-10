@@ -612,15 +612,16 @@ export default {
             //   카드결제 클릭 시 결제창 대신 hexa 메인(원판 랜딩)으로 튕기던 버그.
             //   (cotton_checkout=Toss / cotton_stripe_checkout=Stripe / success·fail=PG 콜백 / design-pay=디자인결제)
             const _hbPayPages = ['/cotton_checkout', '/cotton_stripe_checkout', '/success', '/fail', '/design-pay'];
+            // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 언더스코어 파일은 하이픈 별칭(_redirects 200)으로 서빙.
             let _hbTarget;
             if (url.searchParams.has('product') || url.searchParams.has('_p')) {
                 _hbTarget = '/index.html';
             } else if (_hbPath === '/distributors') {
                 _hbTarget = '/distributors.html';
             } else if (_hbPayPages.indexOf(_hbPath) >= 0) {
-                _hbTarget = _hbPath + '.html';
+                _hbTarget = _hbPath.replace(/_/g, '-');   // /cotton_checkout → /cotton-checkout (별칭 200)
             } else {
-                _hbTarget = '/raw_board.html';
+                _hbTarget = '/raw-board';
             }
             const rbRewrite = new URL(_hbTarget, url.origin);
             let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
@@ -635,7 +636,7 @@ export default {
             //   카카오는 og:title 을 ~30자 정도에서 잘라 노출하므로 첫 번째 언어가 중요. URL 별로 다른 OG 를 가지면
             //   캐시도 path 별로 잡혀 한 페이지 한 언어 일관성 확보.
             const ct = (rbHdrs.get('content-type') || '').toLowerCase();
-            if (ct.includes('text/html') && (_hbTarget === '/raw_board.html')) {
+            if (ct.includes('text/html') && (_hbTarget === '/raw-board')) {
                 const _hbLang = (_hbPath.match(/^\/(ko|kr|ja|jp|en|us|zh|ar|es|de|fr)\b/) || [, ''])[1].toLowerCase();
                 const _OG = {
                     ja: { t: 'ハニカムボード原板 卸売 · Hexalite | 韓国工場直送・全世界無料配送', d: '印刷・展示・パッケージ用ハニカムボード原板。8〜100mm 厚、カット可、全世界無料配送。代理店募集中。', loc: 'ja_JP' },
@@ -691,7 +692,8 @@ export default {
             );
             if (isAsset3355) return await env.ASSETS.fetch(request);
             // 모든 비-자산 경로 → paper_stand.html 프록시 (URL 은 cafe3355.com 유지)
-            const psRewrite = new URL('/paper_stand.html', url.origin);
+            // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 별칭(_redirects 200)으로 콘텐츠 직접 서빙.
+            const psRewrite = new URL('/paper-stand', url.origin);
             let psResp = await env.ASSETS.fetch(new Request(psRewrite.toString(), request));
             if ((psResp.status === 308 || psResp.status === 301) && psResp.headers.get('Location')) {
                 const loc = new URL(psResp.headers.get('Location'), url.origin);
@@ -799,7 +801,8 @@ export default {
             //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 cotton-print.com 유지
             //   - 단, 로그인·카트는 cafe 도메인 origin 에 있으므로 login-required 경로는 redirect 유지
             if (path === '' || path === 'index.html') {
-                const rewriteUrl = new URL('/cotton_print.html', url.origin);
+                // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 별칭(_redirects 200)으로 콘텐츠 직접 서빙.
+                const rewriteUrl = new URL('/cotton-print', url.origin);
                 let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
                 if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
                     const loc = new URL(resp.headers.get('Location'), url.origin);
@@ -811,8 +814,8 @@ export default {
             }
             if (path === 'cotton-print' || path === 'cotton-print.html' ||
                 path === 'fabric' || path === 'fabric-print') {
-                // 같은 랜딩 페이지의 대체 경로들 — 그대로 서빙
-                const rewriteUrl = new URL('/cotton_print.html', url.origin);
+                // 같은 랜딩 페이지의 대체 경로들 — 그대로 서빙 (2026-09-10: 하이픈 별칭)
+                const rewriteUrl = new URL('/cotton-print', url.origin);
                 let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
                 if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
                     const loc = new URL(resp.headers.get('Location'), url.origin);
@@ -1430,7 +1433,10 @@ ${hreflangTags('/editor')}
             return new Response(stoResp.body, { status: 200, headers: stoHeaders });
         }
         if (STANDALONE_PAGES[path]) {
-            const rewriteUrl = new URL(STANDALONE_PAGES[path], url.origin);
+            // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 key 경로를 직접 fetch.
+            //   비언더스코어(franchise 등)는 pretty-URL 로, 언더스코어(pd-studio→pd_studio.html 등)는
+            //   _redirects 하이픈 별칭 200-rewrite 로 콘텐츠가 옴. (env.ASSETS 는 언더스코어 extensionless 미해석)
+            const rewriteUrl = new URL('/' + path, url.origin);
             let stResp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
             // Pretty URLs가 308을 반환하면 Location을 따라가서 실제 콘텐츠를 가져옴
             if ((stResp.status === 308 || stResp.status === 301) && stResp.headers.get('Location')) {
