@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260910232510';
+    var CV = '20260910233509';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5542,6 +5542,12 @@ window.addEventListener('load', function() {
 
 <!-- 2026-06-01: 새 섹션 순서 — 허니콤보드 → 굿즈 → 광고 → 인쇄 → 패브릭 → 종이매대 → 허니콤보드 원지 → POPUP 영상.
      아래 3개 섹션(굿즈/광고/인쇄)을 패브릭 위로 끌어올림. 기존 위치(파일 하단)에 있던 동일 ID 섹션은 제거함. -->
+<!-- ====== [임시 숨김 2026-09-10] 광고인쇄(#popularSection) + 성수동 굿즈샵(#goodsSection) 메인 노출 중단. ======
+     사장님 요청: 추후 복구 예정 — 아래 <style> 블록만 지우면 즉시 원상복구됨 (섹션 마크업/렌더 로직은 그대로 유지).
+     JS 가 인라인 display:block 로 다시 켜므로 !important 로 덮어 숨김. -->
+<style id="tempHideSections20260910">
+  #goodsSection, #popularSection { display: none !important; }
+</style>
 <div id="goodsSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #fdf2f8; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
         <h2 style="color: #db2777;"><span data-i18n="home_goods_title">성수동 굿즈샵</span> <span class="badge-hot" style="background:#db2777;">Goods</span></h2>
