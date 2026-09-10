@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260911003605';
+    var CV = '20260911003955';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1017,7 +1017,7 @@ window._fabricTopNav = function() {
 //   복구하려면 아래 window._SUSPENDED_NAV 배열을 [] 로 비우면 됨. 정적 fallback(data-fb-key) + 동적(data-top-code) + 굿즈(data-nav-key) 모두 커버.
 window._SUSPENDED_NAV = ['44444', 'printe_product', 'goods'];
 // 2026-09-11: 홈 '허니콤보드 원판'(#wholesaleBoardSection) 에 노출할 상품 5종(지정 순서). 관리자 상품코드. 변경 시 여기만 수정.
-window._RAW_BOARD_CODES = ['53453455435', 'w23443243', '675756756765', '34553545', '3454353676'];
+window._RAW_BOARD_CODES = ['53453455435', 'w23443243', '675756756765', '34553545', '3454353676', '34535345'];
 window._applySuspendedNav = function(){
     try {
         var track = document.getElementById('topCatMenuTrack');
