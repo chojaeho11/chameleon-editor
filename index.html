@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260911000938';
+    var CV = '20260911001654';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1013,6 +1013,20 @@ window._fabricTopNav = function() {
     if (fbLang === 'ja') { location.href = 'https://www.cotton-printer.com/'; return; }
     location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
 };
+// 2026-09-10: 일시 판매중지 카테고리 상단메뉴 회색+클릭불가 (광고인쇄=44444 / 상업인쇄물=printe_product / 굿즈=goods).
+//   복구하려면 아래 window._SUSPENDED_NAV 배열을 [] 로 비우면 됨. 정적 fallback(data-fb-key) + 동적(data-top-code) + 굿즈(data-nav-key) 모두 커버.
+window._SUSPENDED_NAV = ['44444', 'printe_product', 'goods'];
+window._applySuspendedNav = function(){
+    try {
+        var track = document.getElementById('topCatMenuTrack');
+        if (!track || !window._SUSPENDED_NAV || !window._SUSPENDED_NAV.length) return;
+        track.querySelectorAll('.tcm-btn').forEach(function(b){
+            var key = b.dataset.topCode || b.dataset.navKey || b.getAttribute('data-fb-key') || '';
+            if (window._SUSPENDED_NAV.indexOf(key) !== -1) b.classList.add('tcm-suspended');
+        });
+    } catch(e){}
+};
+document.addEventListener('DOMContentLoaded', function(){ try { window._applySuspendedNav(); } catch(e){} });
 window._tcmFallbackClick = function(code) {
     var lang = (window.CURRENT_LANG || 'kr').toLowerCase();
     var lm = { ja:'ja', us:'en', en:'en', cn:'zh', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'ko', ko:'ko' };
@@ -5545,12 +5559,15 @@ window.addEventListener('load', function() {
 
 <!-- 2026-06-01: 새 섹션 순서 — 허니콤보드 → 굿즈 → 광고 → 인쇄 → 패브릭 → 종이매대 → 허니콤보드 원지 → POPUP 영상.
      아래 3개 섹션(굿즈/광고/인쇄)을 패브릭 위로 끌어올림. 기존 위치(파일 하단)에 있던 동일 ID 섹션은 제거함. -->
-<!-- ====== [일시 판매중지 2026-09-10, ~12월말] 인쇄물(#printServiceSection=충무로인쇄소) + 광고물(#popularSection=광고인쇄) + 굿즈제작(#goodsSection=성수동 굿즈샵) 메인 노출 중단. ======
-     사장님 요청: 허니콤보드 전시부스 과부하로 12월말까지 일시 판매중지 (아래 #suspendNoticeSection 안내문구와 세트).
-     복구: 이 <style> 블록 + #suspendNoticeSection 안내 div 를 지우면 원상복구 (섹션 마크업/렌더 로직은 그대로 유지).
-     JS 가 인라인 display:block 로 다시 켜므로 !important 로 덮어 숨김. -->
+<!-- ====== [일시 판매중지 2026-09-10, ~12월말] 인쇄물(#printServiceSection=충무로인쇄소) + 광고물(#popularSection=광고인쇄) + 굿즈제작(#goodsSection=성수동 굿즈샵). ======
+     사장님 요청(2026-09-10 갱신): 완전 숨김이 아니라 '연한 색 + 클릭 불가'로 맨 아래에 보이게. 상단 메뉴 3개도 회색 비활성.
+     허니콤보드 전시부스 과부하로 12월말까지 일시 판매중지 (아래 #suspendNoticeSection 안내와 세트).
+     복구: 이 <style> 블록 + #suspendNoticeSection div + JS의 window._SUSPENDED_NAV 배열 비우기 로 원상복구. -->
 <style id="tempHideSections20260910">
-  #goodsSection, #popularSection, #printServiceSection { display: none !important; }
+  /* 홈 섹션: 숨기지 않고 연하게 + 클릭 불가 (맨 아래 노출) */
+  #goodsSection, #popularSection, #printServiceSection { opacity:.5 !important; filter:grayscale(.75); pointer-events:none !important; }
+  /* 상단 메뉴 버튼: 회색 + 클릭 불가 */
+  #topCatMenuTrack .tcm-btn.tcm-suspended { color:#c2c2c2 !important; opacity:.6; pointer-events:none; cursor:default; }
 </style>
 <!-- 2026-09-10: 일시 판매중지 안내(인쇄물·광고물·굿즈 ~12월말). 위 tempHideSections 숨김과 세트. 복구 시 이 블록 삭제.
      JS(섹션 재배치)가 패브릭인쇄 섹션 바로 아래로 이동시킴. KR/JP/EN 은 __SITE_CODE 로 선택. 아이콘/그림자 없이 플랫. -->
@@ -13803,6 +13820,7 @@ async function renderQuickMenu() {
             (function _addGoodsLink(){
                 var goodsBtn = document.createElement('button');
                 goodsBtn.className = 'tcm-btn';
+                goodsBtn.dataset.navKey = 'goods';   // 2026-09-10: 일시중지 회색처리 대상 식별용
                 var lab = { kr:'🎁 굿즈', ko:'🎁 굿즈', ja:'🎁 グッズ', en:'🎁 Goods',
                             zh:'🎁 礼品', ar:'🎁 هدايا', es:'🎁 Goods', de:'🎁 Goods', fr:'🎁 Goods' };
                 goodsBtn.textContent = lab[CURRENT_LANG] || lab.en || lab.kr;
@@ -13813,6 +13831,8 @@ async function renderQuickMenu() {
                 };
                 tcmTrack.appendChild(goodsBtn);
             })();
+            // 2026-09-10: 동적 메뉴 렌더 완료 후 일시중지 카테고리(광고인쇄/상업인쇄물/굿즈) 회색+클릭불가 적용.
+            if (window._applySuspendedNav) window._applySuspendedNav();
 
             // 메뉴 밖 클릭 시 닫기
             document.addEventListener('click', e => {
