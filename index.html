@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260911001654';
+    var CV = '20260911002403';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5569,24 +5569,21 @@ window.addEventListener('load', function() {
   /* 상단 메뉴 버튼: 회색 + 클릭 불가 */
   #topCatMenuTrack .tcm-btn.tcm-suspended { color:#c2c2c2 !important; opacity:.6; pointer-events:none; cursor:default; }
 </style>
-<!-- 2026-09-10: 일시 판매중지 안내(인쇄물·광고물·굿즈 ~12월말). 위 tempHideSections 숨김과 세트. 복구 시 이 블록 삭제.
-     JS(섹션 재배치)가 패브릭인쇄 섹션 바로 아래로 이동시킴. KR/JP/EN 은 __SITE_CODE 로 선택. 아이콘/그림자 없이 플랫. -->
-<div id="suspendNoticeSection" class="hotdeal-wrapper" style="margin-top:0px; background:#fffbeb; border:1px solid #fde68a; padding:22px 24px; border-radius:12px; box-sizing:border-box;">
-    <div style="max-width:900px; margin:0 auto; line-height:1.8;">
-        <div id="suspendNoticeTitle" style="font-size:16px; color:#b45309; margin-bottom:8px;">일시 판매 중지 안내 (~12월 말)</div>
-        <div id="suspendNoticeBody" style="font-size:14px; color:#92400e;">인쇄물·광고물·굿즈 제작 카테고리는 허니콤보드 전시부스 주문 과부하로 12월 말까지 일시 판매를 중지합니다. 고객님들의 행사 일정에 차질을 드리지 않기 위한 조치이니 너른 양해 부탁드립니다.</div>
+<!-- 2026-09-10(→09-11 갱신): 일시 판매중지 안내 = 알약(pill)형 긴 버튼으로 더 눈에 띄게. 위 tempHideSections 숨김과 세트. 복구 시 이 블록 삭제.
+     JS(섹션 재배치)가 패브릭인쇄 섹션 바로 아래로 이동시킴. KR/JP/EN 은 __SITE_CODE 로 선택. 그림자 없이 플랫, 단색 알약. -->
+<div id="suspendNoticeSection" class="hotdeal-wrapper" style="margin-top:0px; padding:0; background:transparent; display:flex; justify-content:center;">
+    <div id="suspendNoticePill" style="display:inline-flex; align-items:center; justify-content:center; max-width:100%; background:#f59e0b; color:#3f2a00; padding:15px 34px; border-radius:999px; font-size:15.5px; font-weight:600; text-align:center; line-height:1.45; letter-spacing:-0.01em; box-sizing:border-box;">
+        <span id="suspendNoticeText">일부제품 (광고인쇄 / 굿즈) 일시 판매 중지 안내 - 12월 15일까지</span>
     </div>
 </div>
 <script>(function(){
     var c = window.__SITE_CODE;
     var T = {
-        KR: { t:'일시 판매 중지 안내 (~12월 말)', b:'인쇄물·광고물·굿즈 제작 카테고리는 허니콤보드 전시부스 주문 과부하로 12월 말까지 일시 판매를 중지합니다. 고객님들의 행사 일정에 차질을 드리지 않기 위한 조치이니 너른 양해 부탁드립니다.' },
-        JP: { t:'一時販売停止のお知らせ（～12月末）', b:'印刷物・広告物・グッズ製作カテゴリーは、ハニカムボード展示ブースのご注文集中により、12月末まで一時的に販売を停止いたします。お客様のイベント日程にご迷惑をおかけしないための措置です。何卒ご了承ください。' },
-        EN: { t:'Temporary Suspension Notice (through end of December)', b:'Printing, advertising, and goods-making categories are temporarily suspended through the end of December due to heavy demand for honeycomb-board exhibition booths. This is to avoid disrupting your event schedules. Thank you for your understanding.' }
+        KR:'일부제품 (광고인쇄 / 굿즈) 일시 판매 중지 안내 - 12월 15일까지',
+        JP:'一部商品（広告印刷 / グッズ）一時販売停止のお知らせ - 12月15日まで',
+        EN:'Some items (Ad Print / Goods) temporarily unavailable - through Dec 15'
     };
-    var d = T[c] || T.EN;
-    var te = document.getElementById('suspendNoticeTitle'); if (te) te.textContent = d.t;
-    var be = document.getElementById('suspendNoticeBody'); if (be) be.textContent = d.b;
+    var el = document.getElementById('suspendNoticeText'); if (el) el.textContent = T[c] || T.EN;
 })();</script>
 <div id="goodsSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #fdf2f8; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
