@@ -1433,10 +1433,11 @@ ${hreflangTags('/editor')}
             return new Response(stoResp.body, { status: 200, headers: stoHeaders });
         }
         if (STANDALONE_PAGES[path]) {
-            // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 key 경로를 직접 fetch.
-            //   비언더스코어(franchise 등)는 pretty-URL 로, 언더스코어(pd-studio→pd_studio.html 등)는
-            //   _redirects 하이픈 별칭 200-rewrite 로 콘텐츠가 옴. (env.ASSETS 는 언더스코어 extensionless 미해석)
-            const rewriteUrl = new URL('/' + path, url.origin);
+            // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 대상 .html 파일명을 하이픈으로 바꾼 pretty-URL 을 fetch.
+            //   env.ASSETS 는 언더스코어 extensionless(/cotton_designer)를 내부 해석 못 함(index 폴백) → 하이픈 사본(deploy.sh 생성) 해석.
+            //   비언더스코어(franchise.html→/franchise)는 원본 그대로 정상. fabric→cotton_designer.html→/cotton-designer 처럼 key≠파일명도 커버.
+            const _hyphenPath = '/' + STANDALONE_PAGES[path].replace(/^\/+/, '').replace(/\.html$/, '').replace(/_/g, '-');
+            const rewriteUrl = new URL(_hyphenPath, url.origin);
             let stResp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
             // Pretty URLs가 308을 반환하면 Location을 따라가서 실제 콘텐츠를 가져옴
             if ((stResp.status === 308 || stResp.status === 301) && stResp.headers.get('Location')) {

@@ -32,6 +32,18 @@ git add -A
 git commit -m "$MSG (build $STAMP)" || echo "[deploy] nothing to commit"
 git push origin main
 
+# 3.5) 언더스코어 파일명 랜딩 → 하이픈 사본 생성 (2026-09-10)
+#   Cloudflare Pages 워커 env.ASSETS 가 언더스코어 extensionless pretty-URL(/cotton_print 등)을
+#   내부 해석 못 해 단독도메인 랜딩이 index.html 로 빠지던 회귀 fix. 하이픈 파일명은 정상 해석됨.
+#   사본은 커밋하지 않고(배포에만 포함, gitignore 하면 배포서 제외되므로 X) 배포 후 정리한다.
+_HYPHEN_COPIES=""
+for _uf in cotton_print paper_stand raw_board cotton_designer pd_studio jp_track franchise_admin franchise_hq chatbot_learn_882 cotton_checkout cotton_stripe_checkout; do
+    _hf="$(echo "$_uf" | tr '_' '-').html"
+    if [ -f "$_uf.html" ]; then cp "$_uf.html" "$_hf"; _HYPHEN_COPIES="$_HYPHEN_COPIES $_hf"; fi
+done
+trap 'rm -f $_HYPHEN_COPIES' EXIT
+echo "[deploy] hyphen aliases:$_HYPHEN_COPIES"
+
 # 4) Cloudflare Pages (7개 도메인 동시 배포)
 npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message="$MSG build $STAMP"
 
