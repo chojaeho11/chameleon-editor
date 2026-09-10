@@ -39,7 +39,12 @@ git push origin main
 _HYPHEN_COPIES=""
 for _uf in cotton_print paper_stand raw_board cotton_designer pd_studio jp_track franchise_admin franchise_hq chatbot_learn_882 cotton_checkout cotton_stripe_checkout; do
     _hf="$(echo "$_uf" | tr '_' '-').html"
-    if [ -f "$_uf.html" ]; then cp "$_uf.html" "$_hf"; _HYPHEN_COPIES="$_HYPHEN_COPIES $_hf"; fi
+    if [ -f "$_uf.html" ]; then
+        cp "$_uf.html" "$_hf"
+        # 내용을 유니크하게(주석 1줄 추가) → Cloudflare 콘텐츠-dedup 회피(원본 언더스코어 canonical로 308되는 것 방지)
+        printf '\n<!-- hyphen-alias of %s (deploy %s) -->\n' "$_uf.html" "$STAMP" >> "$_hf"
+        _HYPHEN_COPIES="$_HYPHEN_COPIES $_hf"
+    fi
 done
 trap 'rm -f $_HYPHEN_COPIES' EXIT
 echo "[deploy] hyphen aliases:$_HYPHEN_COPIES"
