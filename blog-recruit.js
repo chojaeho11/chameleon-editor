@@ -102,7 +102,10 @@ async function _blogRecruitApply(){
             }).catch(function(){});
         }).catch(function(){});
     }
-    setTimeout(_initRecruit, 3500);
+    // 2026-09-10: 자동 팝업 중단(사장님 요청) — 새로고침마다 SNS 체험단 팝업이 떠서 쿠폰(리워드 허브) 화면을 덮던 문제.
+    //   SNS 체험단은 상단바 'SNS 체험단' 버튼 + 리워드 허브에서 계속 접근 가능. 복구하려면 아래 한 줄 주석 해제.
+    // setTimeout(_initRecruit, 3500);
+    void _initRecruit;   // 미사용 경고 방지(함수는 그대로 보존)
 })();
 // 전역 노출 (외부/rewards.js 에서 호출)
 window.openBlogRecruitInfo = openBlogRecruitInfo;
