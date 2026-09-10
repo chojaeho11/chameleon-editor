@@ -625,7 +625,7 @@ export default {
             }
             // 2026-09-10: 순수 URL 문자열로 fetch(원본 '/' navigation 요청 미상속) — 루트 SPA 폴백(index) 방지.
             const rbRewrite = new URL(_hbTarget, url.origin);
-            let rbResp = await env.ASSETS.fetch(rbRewrite.toString());
+            let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString()));
             if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {
                 const loc = new URL(rbResp.headers.get('Location'), url.origin);
                 rbResp = await env.ASSETS.fetch(loc.toString());
@@ -695,7 +695,7 @@ export default {
             // 모든 비-자산 경로 → paper-stand.html 프록시 (URL 은 cafe3355.com 유지)
             // 2026-09-10: 순수 URL 문자열로 fetch(원본 '/' navigation 요청 미상속) — 루트 SPA 폴백(index) 방지.
             const psRewrite = new URL('/paper-stand', url.origin);
-            let psResp = await env.ASSETS.fetch(psRewrite.toString());
+            let psResp = await env.ASSETS.fetch(new Request(psRewrite.toString()));
             if ((psResp.status === 308 || psResp.status === 301) && psResp.headers.get('Location')) {
                 const loc = new URL(psResp.headers.get('Location'), url.origin);
                 psResp = await env.ASSETS.fetch(loc.toString());
@@ -806,7 +806,7 @@ export default {
                 //   Cloudflare SPA 폴백이 index.html 을 반환함(alt 경로는 정상인데 루트만 index 되던 원인).
                 //   → 순수 URL 문자열로 fetch(원본 request 미상속)해 하이픈 랜딩 파일을 직접 받는다.
                 const rewriteUrl = new URL('/cotton-print', url.origin);
-                let resp = await env.ASSETS.fetch(rewriteUrl.toString());
+                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString()));
                 if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
                     const loc = new URL(resp.headers.get('Location'), url.origin);
                     resp = await env.ASSETS.fetch(loc.toString());
