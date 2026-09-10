@@ -569,6 +569,13 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // [DIAG 2026-09-10] 워커 실행 여부 확인용 임시 마커 — 확인 후 제거.
+        if (url.searchParams.has('__wtest')) {
+            return new Response('WORKER_ALIVE build=20260910a host=' + url.hostname, {
+                status: 200, headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }
+            });
+        }
+
         // ========== 2026-05-25: hexa-board.com → 허니콤보드 원판(Hexalite) 전용 도메인 ==========
         //   새로 구입한 hexa-board.com 전체를 raw_board.html(원판 랜딩) 전용으로 서빙. URL 은 그대로 유지.
         //   언어는 URL ?lang= 따름 (기본 한국어 — raw_board.html 의 hostLang 처리). cafe3355 블록과 동일 패턴.
