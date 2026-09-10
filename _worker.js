@@ -802,31 +802,20 @@ export default {
             //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 cotton-print.com 유지
             //   - 단, 로그인·카트는 cafe 도메인 origin 에 있으므로 login-required 경로는 redirect 유지
             if (path === '' || path === 'index.html') {
-                // 2026-09-10: 루트('/') navigation 요청을 그대로 상속시켜 env.ASSETS.fetch 하면
-                //   Cloudflare SPA 폴백이 index.html 을 반환함(alt 경로는 정상인데 루트만 index 되던 원인).
-                //   → 순수 URL 문자열로 fetch(원본 request 미상속)해 하이픈 랜딩 파일을 직접 받는다.
-                const rewriteUrl = new URL('/cotton-print', url.origin);
-                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString()));
-                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
-                    const loc = new URL(resp.headers.get('Location'), url.origin);
-                    resp = await env.ASSETS.fetch(loc.toString());
-                }
-                const hdrs = new Headers(resp.headers);
-                hdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-                return new Response(resp.body, { status: resp.status, headers: hdrs });
+                // 2026-09-10: env.ASSETS 바인딩이 구성된(non-genuine) 요청에 SPA index 폴백을 반환해
+                //   루트가 index 로 뜨던 회귀. 루트('/')는 /cotton-print 로 302 → 그 경로는 아래 블록에서
+                //   원본 request 그대로 env.ASSETS 에 넘겨(정적 레이어가 cotton-print.html 해석) 서빙됨.
+                return Response.redirect(url.origin + '/cotton-print', 302);
             }
             if (path === 'cotton-print' || path === 'cotton-print.html' ||
                 path === 'fabric' || path === 'fabric-print') {
-                // 같은 랜딩 페이지의 대체 경로들 — 그대로 서빙 (2026-09-10: 하이픈 별칭)
-                const rewriteUrl = new URL('/cotton-print', url.origin);
-                let resp = await env.ASSETS.fetch(new Request(rewriteUrl.toString(), request));
-                if ((resp.status === 308 || resp.status === 301) && resp.headers.get('Location')) {
-                    const loc = new URL(resp.headers.get('Location'), url.origin);
-                    resp = await env.ASSETS.fetch(new Request(loc.toString(), request));
-                }
-                const hdrs = new Headers(resp.headers);
+                // 랜딩 서빙: 원본 request 를 그대로 env.ASSETS 에 넘긴다(genuine passthrough).
+                //   구성한 Request/문자열로 넘기면 바인딩이 SPA index 를 반환하지만, 원본 request 는 정적 레이어가
+                //   /cotton-print → cotton-print.html 로 정상 해석함. URL 은 cotton-print.com 유지.
+                const _r = await env.ASSETS.fetch(request);
+                const hdrs = new Headers(_r.headers);
                 hdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-                return new Response(resp.body, { status: resp.status, headers: hdrs });
+                return new Response(_r.body, { status: _r.status, headers: hdrs });
             }
 
             // 경로별 매핑 → 새 canonical 경로 (로그인·카트 필요한 페이지만 cafe 도메인으로 301)
