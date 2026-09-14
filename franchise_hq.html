@@ -96,6 +96,10 @@ input:focus{border-color:#3b82f6;}
 
   <div id="screenDash">
     <div class="sum-row" id="sumRow"></div>
+    <div id="applySection" style="margin:0 0 22px;">
+      <h2 style="font-size:16px;color:#dbe2f5;margin:0 0 10px;">🗂 가맹 신청 · 승인</h2>
+      <div id="applyList"></div>
+    </div>
     <div id="frList"></div>
   </div>
 </div>
@@ -155,12 +159,12 @@ input:focus{border-color:#3b82f6;}
 
   async function loadAll(){
     try{
-      var fr=await sb.from('franchises').select('id,slug,company_name,phone,status').order('created_at',{ascending:true});
+      var fr=await sb.from('franchises').select('id,owner_id,slug,company_name,phone,email,country,status,created_at').order('created_at',{ascending:true});
       state.franchises=fr.data||[];
     }catch(e){state.franchises=[];}
     try{
       var od=await sb.from('orders')
-        .select('id,order_date,total_amount,franchise_commission,franchise_slug,status')
+        .select('id,order_date,total_amount,franchise_commission,franchise_slug,status,site_code,payment_method')
         .not('franchise_slug','is',null).order('order_date',{ascending:false}).limit(2000);
       state.orders=od.data||[];
     }catch(e){state.orders=[];}
@@ -179,15 +183,90 @@ input:focus{border-color:#3b82f6;}
     render();
   }
 
+  // 2026-09-15: 정산 모델 = 본사 로열티 1% + 카드수수료 차감 후 가맹점에 송금.
+  //   (가맹점 자재대금은 별도 후불 청구 — 이 정산엔 미포함. 마진은 가맹점이 자유 설정하여 total_amount 에 이미 반영됨.)
   function payoutOf(o){
     var amt=Number(o.total_amount||0);
-    var comm=(o.franchise_commission!=null)?Number(o.franchise_commission):Math.round(amt*0.20);
-    return {amt:amt,comm:comm,payout:amt-comm,done:DONE_STATUS.indexOf(o.status)>=0};
+    var royalty=Math.round(amt*0.01);   // 본사 로열티 1%
+    var dom=(String(o.site_code||'KR')==='KR');
+    var isCard=/card|카드|toss|stripe/i.test(String(o.payment_method||''));
+    var cardFee=isCard?Math.round(amt*(dom?0.033:0.044)):0;   // KR Toss 3.3% / 해외 Stripe 4.4% (무통장=0)
+    var payout=Math.max(0, amt-royalty-cardFee);
+    return {amt:amt,royalty:royalty,cardFee:cardFee,payout:payout,done:DONE_STATUS.indexOf(o.status)>=0};
   }
 
   // franchise_settlements 가 원장(ledger) — 주문 완료 시 DB 트리거가 status='eligible' 행을 자동 생성.
   //   미정산 = eligible 합계, 기송금 = paid 합계. 송금완료 = eligible → paid 업데이트.
+  // 2026-09-15: 가맹 신청 승인 패널 — pending 우선, approved/rejected/cancelled 도 관리.
+  function statusPill(st){
+    var m={ pending:['#fbbf24','대기'], approved:['#4ade80','승인'], rejected:['#f87171','반려'], cancelled:['#94a3b8','취소'] };
+    var x=m[st]||['#94a3b8', st||'미신청'];
+    return '<span style="background:'+x[0]+'22;color:'+x[0]+';border:1px solid '+x[0]+'66;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">'+x[1]+'</span>';
+  }
+  function renderApprovals(){
+    var el=$('applyList'); if(!el) return;
+    var list=(state.franchises||[]).slice().sort(function(a,b){
+      var rank={pending:0,approved:1,rejected:2,cancelled:3};
+      return (rank[a.status]==null?9:rank[a.status])-(rank[b.status]==null?9:rank[b.status]);
+    });
+    if(!list.length){ el.innerHTML='<div class="empty">신청한 가맹점이 없습니다.</div>'; return; }
+    el.innerHTML=list.map(function(f){
+      var st=f.status||'pending';
+      var d=f.created_at?new Date(f.created_at).toLocaleDateString():'-';
+      var btns='';
+      if(st!=='approved') btns+='<button class="btn btn-gold btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'">✅ 승인</button> ';
+      if(st==='pending') btns+='<button class="btn btn-ghost btn-sm" data-rej="'+esc(f.slug)+'">❌ 반려</button> ';
+      if(st==='approved') btns+='<button class="btn btn-ghost btn-sm" data-cxl="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'">⛔ 취소</button> ';
+      return '<div class="fr-card" style="margin-bottom:10px;">'
+        +'<div class="fr-card-top">'
+          +'<div class="fr-card-name">'+esc(f.company_name||f.slug)+' '+statusPill(st)
+            +'<small>/store/'+esc(f.slug)+' · '+esc(f.phone||'')+' · '+esc(f.email||'')+' · '+esc(f.country||'')+' · 신청일 '+d+'</small></div>'
+          +'<div>'+btns+'</div>'
+        +'</div></div>';
+    }).join('');
+    el.querySelectorAll('[data-appr]').forEach(function(b){ b.onclick=function(){ approveFr(b.dataset.appr, b.dataset.oid, b); }; });
+    el.querySelectorAll('[data-rej]').forEach(function(b){ b.onclick=function(){ rejectFr(b.dataset.rej, b); }; });
+    el.querySelectorAll('[data-cxl]').forEach(function(b){ b.onclick=function(){ cancelFr(b.dataset.cxl, b.dataset.oid, b); }; });
+  }
+  async function approveFr(slug, ownerId, btn){
+    if(!confirm('['+slug+'] 가맹점을 승인합니다.\n\n승인 시 이 회원은 본사 상품을 20% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
+    if(btn){btn.disabled=true;btn.textContent='처리 중…';}
+    try{
+      var r1=await sb.from('franchises').update({status:'approved'}).eq('slug',slug);
+      if(r1.error) throw r1.error;
+      if(ownerId){
+        var r2=await sb.from('profiles').update({role:'franchise'}).eq('id',ownerId);
+        if(r2.error) throw r2.error;
+      }
+      var f=state.franchises.filter(function(x){return x.slug===slug;})[0]; if(f) f.status='approved';
+      toast('승인 완료 — 가맹점(20% 할인) 활성화','ok');
+      renderApprovals();
+    }catch(e){ toast('승인 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent='✅ 승인';} }
+  }
+  async function rejectFr(slug, btn){
+    if(!confirm('['+slug+'] 신청을 반려합니다.\n\n반려하면 이 계정은 재신청이 불가합니다. 계속할까요?')) return;
+    if(btn){btn.disabled=true;btn.textContent='처리 중…';}
+    try{
+      var r=await sb.from('franchises').update({status:'rejected'}).eq('slug',slug);
+      if(r.error) throw r.error;
+      var f=state.franchises.filter(function(x){return x.slug===slug;})[0]; if(f) f.status='rejected';
+      toast('반려 처리됨','ok'); renderApprovals();
+    }catch(e){ toast('반려 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent='❌ 반려';} }
+  }
+  async function cancelFr(slug, ownerId, btn){
+    if(!confirm('['+slug+'] 가맹 계약을 취소합니다.\n\n취소하면 매입 할인이 해제되고(등급→일반), 재신청이 불가합니다. 계속할까요?')) return;
+    if(btn){btn.disabled=true;btn.textContent='처리 중…';}
+    try{
+      var r1=await sb.from('franchises').update({status:'cancelled'}).eq('slug',slug);
+      if(r1.error) throw r1.error;
+      if(ownerId){ await sb.from('profiles').update({role:'customer'}).eq('id',ownerId); }
+      var f=state.franchises.filter(function(x){return x.slug===slug;})[0]; if(f) f.status='cancelled';
+      toast('가맹 취소 처리됨 (등급 해제)','ok'); renderApprovals();
+    }catch(e){ toast('취소 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent='⛔ 취소';} }
+  }
+
   function render(){
+    renderApprovals();
     var byFr={}, setByFr={};
     state.orders.forEach(function(o){(byFr[o.franchise_slug]=byFr[o.franchise_slug]||[]).push(o);});
     state.settlements.forEach(function(s){(setByFr[s.franchise_slug]=setByFr[s.franchise_slug]||[]).push(s);});
@@ -231,7 +310,7 @@ input:focus{border-color:#3b82f6;}
       var rows=ords.slice(0,40).map(function(o){
         var p=payoutOf(o);
         var d=o.order_date?new Date(o.order_date).toLocaleDateString():'-';
-        return '<tr><td>'+d+'</td><td>#'+o.id+'</td><td>'+won(p.amt)+'</td><td>'+won(p.payout)+'</td><td>'+(p.done?'✅ 완료':esc(o.status||'진행중'))+'</td></tr>';
+        return '<tr><td>'+d+'</td><td>#'+o.id+'</td><td>'+won(p.amt)+'</td><td style="color:#fbbf24;">'+won(p.royalty)+'</td><td style="color:#7e8aac;">'+won(p.cardFee)+'</td><td>'+won(p.payout)+'</td><td>'+(p.done?'✅ 완료':esc(o.status||'진행중'))+'</td></tr>';
       }).join('');
       var reqBadge = s.req>0 ? '<span style="background:rgba(251,191,36,0.18);color:#fbbf24;border:1px solid rgba(251,191,36,0.45);font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;margin-left:8px;">🔔 정산요청 '+won(s.req)+'</span>' : '';
       return '<div class="fr-card"'+(s.req>0?' style="border-color:rgba(251,191,36,0.5);"':'')+'>'
@@ -250,7 +329,7 @@ input:focus{border-color:#3b82f6;}
         +'</div>'
         +(ords.length?'<div class="tg" data-tg="'+esc(f.slug)+'">▸ 주문 내역 보기 ('+ords.length+')</div>'
             +'<div class="fr-orders" id="ord-'+esc(f.slug)+'" style="display:none;">'
-            +'<table><thead><tr><th>주문일</th><th>번호</th><th>주문액</th><th>정산액</th><th>상태</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+            +'<table><thead><tr><th>주문일</th><th>번호</th><th>주문액</th><th>로열티1%</th><th>카드수수료</th><th>가맹점 정산액</th><th>상태</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
           :'')
         +(function(){
             var ms=msgByFr[f.slug]||[];

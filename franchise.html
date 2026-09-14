@@ -196,9 +196,9 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
             <h1 id="txtHeroH1"></h1>
             <p class="fr-hero-sub" id="txtHeroSub"></p>
             <!-- 2026-09-14: 히어로 간소화 — 안내문 + 원클릭 홈페이지 구축 버튼 1개 (신청/통화 버튼 제거) -->
-            <p style="color:rgba(255,255,255,0.9);font-size:15px;line-height:1.75;max-width:600px;margin:0 auto 22px;">클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.</p>
+            <p id="txtHeroPara" style="color:rgba(255,255,255,0.9);font-size:15px;line-height:1.75;max-width:600px;margin:0 auto 22px;">클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.</p>
             <div class="fr-hero-ctas">
-                <a href="/franchise-admin" class="btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> 원클릭 홈페이지 구축</a>
+                <a href="/franchise-admin" class="btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="txtBuildBtn">원클릭 홈페이지 구축</span></a>
             </div>
         </div>
     </div>
@@ -419,6 +419,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 const L = {
     ko:{
         langLabel:'한국어',
+        heroPara:'클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.',
+        buildBtn:'원클릭 홈페이지 구축',
         badge:'⚡ 무자본 창업 가능 · 홈페이지 복제 · 결제·정산·생산 지원',
         heroH1:['친환경 인쇄사업이 <span class="hl">대세</span>입니다.','카멜레온이 가이드할게요.'],
         heroSub:'자본이 없어도 괜찮아요. 열정만 있으면 됩니다. 친환경 인쇄·전시 사업은 전 세계적으로 <b>매년 50% 이상 성장</b>하고 있습니다. 카멜레온프린팅은 <b>독보적 기술력</b>으로 세계 시장의 중심에 있습니다. 함께해 주세요 — 멋진 미래를 꿈꾸어도 좋습니다.',
@@ -488,6 +490,8 @@ const L = {
     },
     ja:{
         langLabel:'日本語',
+        heroPara:'クリック数回で自分だけのホームページを構築できます。<b>すべて無料</b>です。マージンを自由に調整し、あなただけの商品も追加できます。',
+        buildBtn:'ワンクリックでHP構築',
         badge:'⚡ 完全無料 · 強力なエディタ搭載 · 印刷専門ショップ',
         heroH1:['印刷専門の<span class="hl">ショップ</span>を','無料で作りましょう'],
         heroSub:'クリック数回で、強力なエディタを搭載したショップが構築されます。カメレオンプリンティングの全製品をドロップシッピングで販売しましょう。マージン率を設定するだけで構築完了、仲介手数料もありません。さらに販売したい自社製品があれば登録して、あなただけの特別なショップを構成できます。',
@@ -554,6 +558,8 @@ const L = {
     },
     en:{
         langLabel:'English',
+        heroPara:'Build your own homepage in a few clicks. <b>It is all free.</b> Set your own margin freely and add your own products too.',
+        buildBtn:'One-Click Homepage',
         badge:'⚡ 100% free · Powerful editor built in · Print-specialist online store',
         heroH1:['Build your print-specialist','<span class="hl">online store</span> for free'],
         heroSub:'In just a few clicks you get an online store with a powerful editor built in. Sell Chameleon Printing\'s entire product range by dropshipping — just set your margin rate and your store is ready, with no brokerage commission. Want to sell your own products too? Register them and build a store that is uniquely yours.',
@@ -620,6 +626,8 @@ const L = {
     },
     zh:{
         langLabel:'中文',
+        heroPara:'只需点击几下即可搭建您自己的官网。<b>全部免费</b>。可自由设置利润率，还能添加您自己的产品。',
+        buildBtn:'一键搭建官网',
         badge:'⚡ 完全免费 · 内置强大编辑器 · 印刷专属商城',
         heroH1:['免费创建您的','印刷专属<span class="hl">商城</span>'],
         heroSub:'只需点击几下，即可构建一个内置强大编辑器的商城。以代发货方式销售卡米利翁印刷的全线产品——只需设置利润率，构建即告完成，且无中介手续费。若还有想销售的自有产品，登记后即可打造专属于您的特别商城。',
@@ -686,6 +694,8 @@ const L = {
     },
     ar:{
         langLabel:'العربية',
+        heroPara:'أنشئ موقعك الخاص ببضع نقرات. <b>كل ذلك مجاني.</b> حدّد هامش ربحك بحرية وأضف منتجاتك الخاصة أيضًا.',
+        buildBtn:'موقع بنقرة واحدة',
         badge:'⚡ مجاني تمامًا · محرر قوي مدمج · متجر متخصص بالطباعة',
         heroH1:['أنشئ متجرك المتخصص بالطباعة','<span class="hl">مجانًا</span>'],
         heroSub:'بنقرات قليلة تحصل على متجر مزوّد بمحرر قوي مدمج. بِع كامل تشكيلة منتجات كاميليون للطباعة عبر الدروبشيبينغ — فقط حدّد نسبة هامشك ويكتمل البناء، دون أي عمولة وساطة. وإذا كان لديك منتجات خاصة تريد بيعها، سجّلها لتبني متجرًا فريدًا خاصًا بك.',
@@ -752,6 +762,8 @@ const L = {
     },
     es:{
         langLabel:'Español',
+        heroPara:'Cree su propia página web en unos clics. <b>Todo es gratis.</b> Ajuste su margen libremente y añada también sus propios productos.',
+        buildBtn:'Web en un clic',
         badge:'⚡ Totalmente gratis · Editor potente integrado · Tienda especializada en impresión',
         heroH1:['Cree su tienda especializada','en impresión <span class="hl">gratis</span>'],
         heroSub:'Con unos pocos clics obtiene una tienda con un potente editor integrado. Venda toda la gama de Chameleon Printing por dropshipping — solo fije su margen y la tienda queda lista, sin comisión de intermediación. ¿Quiere vender también sus propios productos? Regístrelos y cree una tienda única.',
@@ -818,6 +830,8 @@ const L = {
     },
     de:{
         langLabel:'Deutsch',
+        heroPara:'Erstellen Sie Ihre eigene Website mit wenigen Klicks. <b>Alles kostenlos.</b> Legen Sie Ihre Marge frei fest und fügen Sie auch eigene Produkte hinzu.',
+        buildBtn:'Website per Klick',
         badge:'⚡ Komplett kostenlos · Mächtiger Editor integriert · Druck-Fachshop',
         heroH1:['Erstellen Sie Ihren Druck-Fachshop','<span class="hl">kostenlos</span>'],
         heroSub:'Mit wenigen Klicks erhalten Sie einen Online-Shop mit integriertem, leistungsstarkem Editor. Verkaufen Sie das gesamte Sortiment von Chameleon Printing per Dropshipping — legen Sie nur Ihre Marge fest, und der Shop ist fertig, ohne Vermittlungsprovision. Sie möchten auch eigene Produkte verkaufen? Registrieren Sie sie und bauen Sie einen ganz individuellen Shop.',
@@ -884,6 +898,8 @@ const L = {
     },
     fr:{
         langLabel:'Français',
+        heroPara:'Créez votre propre site en quelques clics. <b>Tout est gratuit.</b> Ajustez librement votre marge et ajoutez aussi vos propres produits.',
+        buildBtn:'Site en un clic',
         badge:'⚡ Entièrement gratuit · Éditeur puissant intégré · Boutique spécialisée impression',
         heroH1:['Créez votre boutique spécialisée','en impression <span class="hl">gratuitement</span>'],
         heroSub:'En quelques clics, vous obtenez une boutique dotée d\'un éditeur puissant intégré. Vendez toute la gamme de Chameleon Printing en dropshipping — il suffit de fixer votre marge et la boutique est prête, sans commission d\'intermédiation. Vous voulez aussi vendre vos propres produits ? Enregistrez-les et créez une boutique unique.',
@@ -1066,6 +1082,8 @@ function setTxt(id, html){ const el=document.getElementById(id); if(el) el.inner
 setTxt('txtBadge', T.badge);
 setTxt('txtHeroH1', T.heroH1[0] + '<br>' + T.heroH1[1]);
 setTxt('txtHeroSub', T.heroSub);
+setTxt('txtHeroPara', T.heroPara || '클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.');
+setTxt('txtBuildBtn', T.buildBtn || '원클릭 홈페이지 구축');
 setTxt('txtCtaInquiry', T.ctaInquiry);
 setTxt('txtCtaCall', T.ctaCall);
 setTxt('txtPitchHl', T.pitchHl);

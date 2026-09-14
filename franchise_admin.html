@@ -281,6 +281,7 @@ select option{background:#1d1640;}
       // 2026-09-14: 자동 위저드 실행 제거(폼과 중복) — 아래 폼에서 직접 입력.
     })();
     </script>
+    <div id="frStatusBanner" style="display:none;max-width:900px;margin:0 auto 14px;padding:13px 18px;border-radius:12px;font-size:14px;font-weight:600;line-height:1.5;"></div>
     <div class="card">
       <h2 data-i18n="c1Title">① 홈페이지 정보</h2>
       <div class="desc" data-i18n="c1Desc">고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.</div>
@@ -290,6 +291,7 @@ select option{background:#1d1640;}
         <div class="hint" data-i18n="slugHint">고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.</div>
       </label>
       <label class="fld"><span class="lb" data-i18n="companyLabel">상호 (회사명) *</span><input type="text" id="fCompany" data-i18n-ph="companyPh" placeholder="예: 행복광고기획" maxlength="60"></label>
+      <label class="fld"><span class="lb" data-i18n="bizNoLabel">사업자등록번호 *</span><input type="text" id="fBizNo" data-i18n-ph="bizNoPh" placeholder="예: 123-45-67890" maxlength="20"><span class="hint" data-i18n="bizNoHint">본사 승인에 필요합니다. 사업자만 신청 가능합니다.</span></label>
       <div class="row2">
         <label class="fld"><span class="lb" data-i18n="phoneLabel">대표 전화번호 *</span><input type="tel" id="fPhone" data-i18n-ph="phonePh" placeholder="예: 031-000-0000"></label>
         <label class="fld"><span class="lb" data-i18n="emailLabel">이메일</span><input type="email" id="fEmail" placeholder="contact@company.com"></label>
@@ -519,6 +521,7 @@ select option{background:#1d1640;}
       c1Title:'① 홈페이지 정보', c1Desc:'고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.',
       slugLabel:'홈페이지 주소', slugSmall:'— 영문 소문자·숫자·하이픈만', slugHint:'고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.',
       companyLabel:'상호 (회사명) *', companyPh:'예: 행복광고기획',
+      bizNoLabel:'사업자등록번호 *', bizNoPh:'예: 123-45-67890', bizNoHint:'본사 승인에 필요합니다. 사업자만 신청 가능합니다.', bizNoErr:'사업자등록번호를 입력하세요.', reapplyBlocked:'반려 또는 취소된 신청은 재신청이 불가합니다. 본사에 문의하세요.',
       phoneLabel:'대표 전화번호 *', phonePh:'예: 031-000-0000', emailLabel:'이메일', countryLabel:'국가',
       co_KR:'대한민국', co_JP:'일본', co_US:'미국', co_CN:'중국', co_SA:'사우디', co_ES:'스페인', co_DE:'독일', co_FR:'프랑스',
       logoLabel:'로고', logoSmall:'— 정사각 이미지 권장',
@@ -582,6 +585,7 @@ select option{background:#1d1640;}
       c1Title:'① ホームページ情報', c1Desc:'お客様に表示される会社情報です。商号・ロゴ・連絡先がホームページに表示されます。',
       slugLabel:'ホームページアドレス', slugSmall:'— 半角英数字・ハイフンのみ', slugHint:'お客様が訪問するホームページアドレスです。登録後の変更は難しいので慎重に決めてください。',
       companyLabel:'商号 (会社名) *', companyPh:'例: 幸せ広告企画',
+      bizNoLabel:'事業者登録番号 *', bizNoPh:'例: 123-45-67890', bizNoHint:'本社の承認に必要です。事業者のみ申請可能です。', bizNoErr:'事業者登録番号を入力してください。', reapplyBlocked:'却下またはキャンセルされた申請は再申請できません。本社までお問い合わせください。',
       phoneLabel:'代表電話番号 *', phonePh:'例: 03-0000-0000', emailLabel:'メール', countryLabel:'国',
       co_KR:'韓国', co_JP:'日本', co_US:'アメリカ', co_CN:'中国', co_SA:'サウジアラビア', co_ES:'スペイン', co_DE:'ドイツ', co_FR:'フランス',
       logoLabel:'ロゴ', logoSmall:'— 正方形画像推奨',
@@ -645,6 +649,7 @@ select option{background:#1d1640;}
       c1Title:'1. Homepage Info', c1Desc:'Your company info shown to customers. Name, logo and contact appear on your homepage.',
       slugLabel:'Homepage Address', slugSmall:'— lowercase letters, numbers, hyphens only', slugHint:'The address customers will visit. Hard to change later — choose carefully.',
       companyLabel:'Business Name *', companyPh:'e.g. Happy Ad Studio',
+      bizNoLabel:'Business Registration No. *', bizNoPh:'e.g. 123-45-67890', bizNoHint:'Required for HQ approval. Registered businesses only.', bizNoErr:'Enter your business registration number.', reapplyBlocked:'Rejected or cancelled applications cannot be resubmitted. Please contact HQ.',
       phoneLabel:'Phone Number *', phonePh:'e.g. 555-000-0000', emailLabel:'Email', countryLabel:'Country',
       co_KR:'South Korea', co_JP:'Japan', co_US:'United States', co_CN:'China', co_SA:'Saudi Arabia', co_ES:'Spain', co_DE:'Germany', co_FR:'France',
       logoLabel:'Logo', logoSmall:'— square image recommended',
@@ -708,6 +713,7 @@ select option{background:#1d1640;}
       c1Title:'1. 官网信息', c1Desc:'向顾客展示的公司信息。商号、LOGO与联系方式将显示在您的官网上。',
       slugLabel:'官网地址', slugSmall:'— 仅限小写字母、数字、连字符', slugHint:'顾客访问的地址。日后较难更改，请慎重选择。',
       companyLabel:'商号 *', companyPh:'例：快乐广告工作室',
+      bizNoLabel:'营业执照号 *', bizNoPh:'例：123-45-67890', bizNoHint:'总部审核需要。仅限企业申请。', bizNoErr:'请输入营业执照号。', reapplyBlocked:'被驳回或取消的申请无法重新提交。请联系总部。',
       phoneLabel:'电话号码 *', phonePh:'例：555-000-0000', emailLabel:'邮箱', countryLabel:'国家',
       co_KR:'韩国', co_JP:'日本', co_US:'美国', co_CN:'中国', co_SA:'沙特阿拉伯', co_ES:'西班牙', co_DE:'德国', co_FR:'法国',
       logoLabel:'LOGO', logoSmall:'— 建议使用正方形图片',
@@ -771,6 +777,7 @@ select option{background:#1d1640;}
       c1Title:'1. معلومات الموقع', c1Desc:'معلومات شركتك المعروضة للعملاء. يظهر الاسم والشعار وبيانات الاتصال على موقعك.',
       slugLabel:'عنوان الموقع', slugSmall:'— حروف صغيرة وأرقام وشرطات فقط', slugHint:'العنوان الذي يزوره العملاء. يصعب تغييره لاحقًا — اختر بعناية.',
       companyLabel:'اسم الشركة *', companyPh:'مثال: استوديو الإعلانات السعيد',
+      bizNoLabel:'رقم السجل التجاري *', bizNoPh:'مثال: 123-45-67890', bizNoHint:'مطلوب لموافقة المقر الرئيسي. للشركات المسجلة فقط.', bizNoErr:'أدخل رقم السجل التجاري.', reapplyBlocked:'لا يمكن إعادة تقديم الطلبات المرفوضة أو الملغاة. يرجى التواصل مع المقر الرئيسي.',
       phoneLabel:'رقم الهاتف *', phonePh:'مثال: 555-000-0000', emailLabel:'البريد الإلكتروني', countryLabel:'الدولة',
       co_KR:'كوريا الجنوبية', co_JP:'اليابان', co_US:'الولايات المتحدة', co_CN:'الصين', co_SA:'السعودية', co_ES:'إسبانيا', co_DE:'ألمانيا', co_FR:'فرنسا',
       logoLabel:'الشعار', logoSmall:'— يُفضّل صورة مربعة',
@@ -834,6 +841,7 @@ select option{background:#1d1640;}
       c1Title:'1. Información del sitio', c1Desc:'La información de su empresa que ven los clientes. Nombre, logo y contacto aparecen en su sitio.',
       slugLabel:'Dirección del sitio', slugSmall:'— solo minúsculas, números y guiones', slugHint:'La dirección que visitarán los clientes. Difícil de cambiar después — elíjala con cuidado.',
       companyLabel:'Nombre comercial *', companyPh:'ej. Estudio de Publicidad Feliz',
+      bizNoLabel:'N.º de registro mercantil *', bizNoPh:'ej. 123-45-67890', bizNoHint:'Necesario para la aprobación de la central. Solo empresas registradas.', bizNoErr:'Introduzca su número de registro mercantil.', reapplyBlocked:'Las solicitudes rechazadas o canceladas no pueden reenviarse. Contacte con la central.',
       phoneLabel:'Teléfono *', phonePh:'ej. 555-000-0000', emailLabel:'Correo', countryLabel:'País',
       co_KR:'Corea del Sur', co_JP:'Japón', co_US:'Estados Unidos', co_CN:'China', co_SA:'Arabia Saudita', co_ES:'España', co_DE:'Alemania', co_FR:'Francia',
       logoLabel:'Logo', logoSmall:'— se recomienda imagen cuadrada',
@@ -897,6 +905,7 @@ select option{background:#1d1640;}
       c1Title:'1. Website-Infos', c1Desc:'Ihre für Kunden sichtbaren Firmeninfos. Name, Logo und Kontakt erscheinen auf Ihrer Website.',
       slugLabel:'Website-Adresse', slugSmall:'— nur Kleinbuchstaben, Zahlen, Bindestriche', slugHint:'Die Adresse, die Kunden besuchen. Später schwer zu ändern — sorgfältig wählen.',
       companyLabel:'Firmenname *', companyPh:'z. B. Happy Werbestudio',
+      bizNoLabel:'Gewerbe-Reg.-Nr. *', bizNoPh:'z. B. 123-45-67890', bizNoHint:'Für die Freigabe der Zentrale erforderlich. Nur für registrierte Unternehmen.', bizNoErr:'Geben Sie Ihre Gewerberegisternummer ein.', reapplyBlocked:'Abgelehnte oder stornierte Anträge können nicht erneut eingereicht werden. Bitte kontaktieren Sie die Zentrale.',
       phoneLabel:'Telefonnummer *', phonePh:'z. B. 555-000-0000', emailLabel:'E-Mail', countryLabel:'Land',
       co_KR:'Südkorea', co_JP:'Japan', co_US:'USA', co_CN:'China', co_SA:'Saudi-Arabien', co_ES:'Spanien', co_DE:'Deutschland', co_FR:'Frankreich',
       logoLabel:'Logo', logoSmall:'— quadratisches Bild empfohlen',
@@ -960,6 +969,7 @@ select option{background:#1d1640;}
       c1Title:'1. Infos du site', c1Desc:'Les infos de votre entreprise visibles par les clients. Nom, logo et contact apparaissent sur votre site.',
       slugLabel:'Adresse du site', slugSmall:'— minuscules, chiffres et tirets uniquement', slugHint:'L\'adresse que visiteront les clients. Difficile à changer ensuite — choisissez bien.',
       companyLabel:'Nom commercial *', companyPh:'ex. Studio Pub Heureux',
+      bizNoLabel:'N° d\'enregistrement d\'entreprise *', bizNoPh:'ex. 123-45-67890', bizNoHint:'Requis pour l\'approbation du siège. Entreprises enregistrées uniquement.', bizNoErr:'Saisissez votre numéro d\'enregistrement d\'entreprise.', reapplyBlocked:'Les demandes rejetées ou annulées ne peuvent pas être resoumises. Veuillez contacter le siège.',
       phoneLabel:'Numéro de téléphone *', phonePh:'ex. 555-000-0000', emailLabel:'E-mail', countryLabel:'Pays',
       co_KR:'Corée du Sud', co_JP:'Japon', co_US:'États-Unis', co_CN:'Chine', co_SA:'Arabie saoudite', co_ES:'Espagne', co_DE:'Allemagne', co_FR:'France',
       logoLabel:'Logo', logoSmall:'— image carrée recommandée',
@@ -1529,6 +1539,9 @@ select option{background:#1d1640;}
       if (window._mgSetTier) window._mgSetTier('franchise');
       if (window._mgSetMargin) window._mgSetMargin(_sv);
     } catch(e){}
+    if ($('fBizNo')) $('fBizNo').value = th.bizNo || '';
+    // 2026-09-15: 승인 상태 배너
+    try { if (window._renderFrStatus) window._renderFrStatus(f && f.status); } catch(e){}
     // 결제 정보 (계좌·PG·도메인)
     var bk = th.bank || {};
     $('fBankName').value = bk.name || '';
@@ -1845,6 +1858,22 @@ select option{background:#1d1640;}
 
   $('fSlug').addEventListener('input', function(){ this.value = slugify(this.value); });
 
+  // 2026-09-15: 승인 상태 배너 (신청 후 pending / approved / rejected / cancelled)
+  window._renderFrStatus = function(status){
+    var el = $('frStatusBanner'); if (!el) return;
+    var map = {
+      pending:   { bg:'#fef9c3', bd:'#fde047', fg:'#854d0e', txt:'🕒 본사 승인 대기 중입니다. 승인되면 매입 할인(가맹점 20%)이 적용됩니다. 승인 전에도 홈페이지는 저장·수정할 수 있습니다.' },
+      approved:  { bg:'#dcfce7', bd:'#86efac', fg:'#166534', txt:'✅ 승인 완료 — 가맹점으로 활성화되었습니다. 본사 상품을 20% 할인가로 매입하실 수 있습니다.' },
+      rejected:  { bg:'#fee2e2', bd:'#fca5a5', fg:'#991b1b', txt:'❌ 신청이 반려되었습니다. 재신청은 불가하며, 자세한 사항은 본사에 문의해 주세요.' },
+      cancelled: { bg:'#f3f4f6', bd:'#d1d5db', fg:'#374151', txt:'⛔ 가맹 계약이 취소되었습니다. 재신청은 불가합니다. 본사에 문의해 주세요.' }
+    };
+    var m = map[status];
+    if (!m){ el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.style.background = m.bg; el.style.border = '1px solid ' + m.bd; el.style.color = m.fg;
+    el.textContent = m.txt;
+  };
+
   $('btnSave').onclick = async function(){
     // 2026-05-16: 비구독자는 체험만 — 저장 시 구독 안내
     if (!state.hasAccess){
@@ -1856,15 +1885,17 @@ select option{background:#1d1640;}
     var slug = slugify($('fSlug').value);
     var company = $('fCompany').value.trim();
     var phone = $('fPhone').value.trim();
+    var bizNo = ($('fBizNo') ? $('fBizNo').value.trim() : '');
     if (!slug || slug.length < 3){ toast(T.slugErr,'err'); return; }
     if (!company){ toast(T.companyErr,'err'); return; }
     if (!phone){ toast(T.phoneErr,'err'); return; }
+    if (!bizNo){ toast(T.bizNoErr || '사업자등록번호를 입력하세요.','err'); if($('fBizNo'))$('fBizNo').focus(); return; }
 
     this.disabled = true; this.textContent = T.saving;
     $('saveStatus').textContent = '';
     try {
       // slug 중복 체크 (본인 제외)
-      var dup = await sb.from('franchises').select('id,owner_id').eq('slug', slug).maybeSingle();
+      var dup = await sb.from('franchises').select('id,owner_id,status').eq('slug', slug).maybeSingle();
       if (dup.data && dup.data.owner_id !== state.user.id){
         throw new Error(T.slugDup);
       }
@@ -1872,10 +1903,14 @@ select option{background:#1d1640;}
       var isTestSave = TEST_EMAILS.indexOf((state.user.email||'').toLowerCase()) >= 0;
       var existing = null;
       if (dup.data && dup.data.owner_id === state.user.id){
-        existing = { id: dup.data.id };          // 이 slug 가맹점 수정
+        existing = { id: dup.data.id, status: dup.data.status };          // 이 slug 가맹점 수정
       } else if (!isTestSave){
-        var owned = await sb.from('franchises').select('id').eq('owner_id', state.user.id).maybeSingle();
+        var owned = await sb.from('franchises').select('id,status').eq('owner_id', state.user.id).maybeSingle();
         existing = owned.data || null;           // 일반 계정: 1계정 1홈페이지
+      }
+      // 2026-09-15: 반려·취소된 계정은 재신청 불가 (승인 모델).
+      if (existing && (existing.status === 'rejected' || existing.status === 'cancelled') && !isTestSave){
+        throw new Error(T.reapplyBlocked || '반려 또는 취소된 신청은 재신청이 불가합니다. 본사에 문의하세요.');
       }
       // isTestSave && 신규 slug → existing=null → 새 홈페이지 insert
       var payload = {
@@ -1890,6 +1925,8 @@ select option{background:#1d1640;}
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
+      // 2026-09-15: 신규 신청은 status='pending' (본사 승인 대기). 기존 행은 status 를 건드리지 않음(승인 상태 보존).
+      if (!(existing && existing.id)) payload.status = 'pending';
       var res = (existing && existing.id)
         ? await sb.from('franchises').update(payload).eq('id', existing.id).select().maybeSingle()
         : await sb.from('franchises').insert(payload).select().maybeSingle();
@@ -1903,6 +1940,8 @@ select option{background:#1d1640;}
           mode: $('fHeroMode').value,
           color: $('fHeroColor').value,
           image: state.heroImageUrl || '',
+          bizNo: bizNo,
+          applicantType: 'franchise',   // 리셀러는 인근 가맹점 필요(현재 등록 불가) → 신청은 가맹점으로 고정
           margin: Math.max(0, parseFloat($('fMargin').value) || 0),
           bank: { name:$('fBankName').value.trim(), number:$('fBankNumber').value.trim(), holder:$('fBankHolder').value.trim() },
           pg: $('fPgInfo').value.trim(),
@@ -1925,6 +1964,7 @@ select option{background:#1d1640;}
       else state.allFranchises.unshift(res.data);
       renderFrSwitcher(isTestSave);
       loadOrders(); loadMessages();
+      try { if (window._renderFrStatus) window._renderFrStatus(res.data && res.data.status); } catch(e){}
       $('saveStatus').innerHTML = T.savedAddr + '<b>/store/' + slug + '</b>';
       toast(T.saved,'ok');
     } catch(e){
