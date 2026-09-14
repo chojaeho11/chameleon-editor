@@ -1177,6 +1177,7 @@ select option{background:#1d1640;}
     });
     state._poRstat=rstat;
   }
+  // 2026-09-15(사장님): 제조사 발주 = 고객 주문을 그대로 전달. 제조사 없으면 본사(hq) 기본, 생기면 리스트+고정.
   async function loadMfgOrder(){
     var card=$('cardMfgOrder'), body=$('mfgOrderBody');
     if(!card||!body) return;
@@ -1185,7 +1186,6 @@ select option{background:#1d1640;}
     card.style.display='';
     var country=fr.country||'KR';
     state._poCountry=country;
-    state._mfg=null;
     body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.loadingShort+'</div>';
     var mfgs=[];
     try{
@@ -1193,87 +1193,84 @@ select option{background:#1d1640;}
       mfgs=(r.data||[]).filter(function(p){ return ctryCode(p.country)===country && (p.status==='active'||p.status==='verified'); });
     }catch(e){ console.warn('mfg load',e); }
     state._mfgs=mfgs;
-    state._poOrders=await _poLoadCountryOrders(country);
-    _poComputeRstat();
-    if(!mfgs.length){ body.innerHTML='<div style="color:#9b94c4;font-size:13px;">'+T.poNoMfg+'</div>'; return; }
-    if(mfgs.length===1) state._mfg=mfgs[0];
-    renderMfgPick();
+    try{ state._poOrders=await _poLoadCountryOrders(country); }catch(e){ state._poOrders=[]; }
+    if(!Array.isArray(state._frOrders)){ try{ await loadOrders(); }catch(e){} }
+    renderMfgDispatch();
   }
-  function renderMfgPick(){
+  function _mfgOptions(){
+    // 본사(hq) 항상 포함 + 등록·승인된 제조사
+    var opts=[{ id:'hq', name:'본사 (카멜레온프린팅)', hq:true }];
+    (state._mfgs||[]).forEach(function(m){ opts.push({ id:String(m.id), name:(m.company_name||'제조사')+(m.city?(' · '+m.city):''), raw:m }); });
+    return opts;
+  }
+  function _mfgPinnedId(){
+    var fr=state.franchise, v=null;
+    try{ v=localStorage.getItem('_fr_mfg_'+(fr&&fr.slug||'')); }catch(e){}
+    var opts=_mfgOptions();
+    return (v && opts.some(function(o){return o.id===v;})) ? v : 'hq';
+  }
+  function _mfgSetPinned(id){ var fr=state.franchise; try{ localStorage.setItem('_fr_mfg_'+(fr&&fr.slug||''), id); }catch(e){} }
+  function renderMfgDispatch(){
     var body=$('mfgOrderBody');
-    if(state._mfg){ renderMfgForm(); return; }
-    var html='<div style="font-size:13px;color:#c4b5fd;font-weight:800;margin-bottom:10px;">'+escA(T.poPickMfg)+'</div>';
-    state._mfgs.forEach(function(m){
-      var rs=(state._poRstat||{})[m.id]||{sum:0,n:0,orders:0};
-      var avg=rs.n?(rs.sum/rs.n):0;
-      var rt=rs.n?('<span style="color:#fbbf24;">'+_stars(avg)+'</span> <b>'+avg.toFixed(1)+'</b>'):('<span style="color:#7c7795;">'+escA(T.poRatingNone)+'</span>');
-      var loc=[m.city,m.country].filter(Boolean).join(', ');
-      html+='<div style="border:1px solid rgba(167,139,250,0.22);border-radius:11px;padding:13px;margin-bottom:8px;">'
-        +'<div style="font-weight:800;font-size:14px;">'+escA(m.company_name||'')+'</div>'
-        +'<div style="font-size:12px;color:#9b94c4;margin-top:4px;">📍 '+escA(loc||'-')+'</div>'
-        +'<div style="font-size:12.5px;margin-top:4px;">'+rt+' <span style="color:#7c7795;font-size:11px;">· '+escA(T.poOrdersN.replace('{n}',rs.orders))+'</span></div>'
-        +'<button class="po-pick btn btn-pri btn-sm" data-mid="'+escA(String(m.id))+'" style="margin-top:9px;">'+escA(T.poSelect)+'</button>'
-        +'</div>';
-    });
-    body.innerHTML=html;
-    body.querySelectorAll('.po-pick').forEach(function(b){
-      b.onclick=function(){ state._mfg=state._mfgs.filter(function(x){return String(x.id)===b.dataset.mid;})[0]; renderMfgPick(); };
-    });
-  }
-  function renderMfgForm(){
-    var body=$('mfgOrderBody'), mfg=state._mfg;
-    var rs=(state._poRstat||{})[mfg.id]||{sum:0,n:0,orders:0};
-    var avg=rs.n?(rs.sum/rs.n):0;
-    var rt=rs.n?('<span style="color:#fbbf24;">'+_stars(avg)+' '+avg.toFixed(1)+'</span>'):('<span style="color:#7c7795;">'+escA(T.poRatingNone)+'</span>');
-    var loc=[mfg.city,mfg.country].filter(Boolean).join(', ');
+    var opts=_mfgOptions(), pinned=_mfgPinnedId();
+    var noReal=(state._mfgs||[]).length===0;
+    var sel='<select id="poMfgSel" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(167,139,250,0.35);background:#221c3e;color:#fff;font-size:14px;font-family:inherit;">'
+      + opts.map(function(o){ return '<option value="'+escA(o.id)+'"'+(o.id===pinned?' selected':'')+'>'+(o.hq?'🏭 ':'')+escA(o.name)+(o.id===pinned?'  ★기본':'')+'</option>'; }).join('')
+      + '</select>';
+    var info = noReal
+      ? '<div style="font-size:12px;color:#9b94c4;margin-top:6px;line-height:1.6;">현재 등록·승인된 제조사가 없어 <b style="color:#c4b5fd;">본사에서 직접 제작</b>합니다. 제조사가 등록되면 여기 목록에 표시되며, 원하는 제조사를 선택하고 ★기본으로 고정할 수 있습니다.</div>'
+      : '<div style="font-size:12px;color:#9b94c4;margin-top:6px;line-height:1.6;">발주할 제조사를 선택하세요. <b style="color:#c4b5fd;">★고정</b> 하면 다음부터 자동 선택됩니다.</div>';
+    var orders=(state._frOrders||[]);
+    var orderHtml = orders.length ? orders.slice(0,50).map(function(o){
+      var d=o.order_date?new Date(o.order_date).toLocaleDateString():'-';
+      var itxt=_itemsText(o)||'주문 품목';
+      return '<div style="border:1px solid rgba(167,139,250,0.18);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">'
+        +'<div style="min-width:0;font-size:12.5px;flex:1;"><b style="color:#fff;">#'+o.id+'</b> <span style="color:#9b94c4;">'+escA(d)+' · '+escA(o.manager_name||'')+'</span><br><span style="color:#b3aad4;">'+escA(itxt.length>56?itxt.slice(0,56)+'…':itxt)+' · ₩'+Number(o.total_amount||0).toLocaleString()+'</span></div>'
+        +'<button class="btn btn-pri btn-sm po-dispatch" data-oid="'+escA(String(o.id))+'">📤 발주하기</button></div>';
+    }).join('') : '<div style="color:#9b94c4;font-size:12px;">발주할 고객 주문이 없습니다.</div>';
     body.innerHTML=
-       '<div style="border:1px solid rgba(167,139,250,0.25);border-radius:11px;padding:12px;margin-bottom:14px;">'
-      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;">'
-      +'<b style="font-size:14px;">'+escA(mfg.company_name||'')+'</b>'
-      +(state._mfgs.length>1?'<button class="btn btn-ghost btn-sm" id="btnPoChangeMfg">'+escA(T.poChangeMfg)+'</button>':'')+'</div>'
-      +'<div style="font-size:12px;color:#9b94c4;margin-top:5px;">📍 '+escA(loc||'-')+' · '+rt+'</div></div>'
-      +'<label class="fld"><span class="lb">'+escA(T.poItem)+'</span><input type="text" id="poItem" placeholder="'+escA(T.poItemPh)+'"></label>'
-      +'<div class="row2"><label class="fld"><span class="lb">'+escA(T.poQty)+'</span><input type="number" id="poQty" min="1" value="1"></label>'
-      +'<label class="fld"><span class="lb">'+escA(T.poCustName)+'</span><input type="text" id="poCustName"></label></div>'
-      +'<div class="row2"><label class="fld"><span class="lb">'+escA(T.poCustPhone)+'</span><input type="tel" id="poCustPhone"></label>'
-      +'<label class="fld"><span class="lb">'+escA(T.poCustAddr)+'</span><input type="text" id="poCustAddr"></label></div>'
-      +'<label class="fld"><span class="lb">'+escA(T.poNote)+'</span><input type="text" id="poNote"></label>'
-      +'<button class="btn btn-pri" id="btnPoSend">'+escA(T.poSubmit)+'</button>'
-      +'<div id="poResult" style="margin-top:10px;"></div>'
+       '<div style="font-size:12px;color:#cfc8ee;font-weight:700;margin-bottom:6px;">발주할 제조사</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'+sel+'<button class="btn btn-ghost btn-sm" id="poPinBtn" title="기본 제조사로 고정" style="white-space:nowrap;">★ 고정</button></div>'
+      +info
+      +'<div style="font-size:12px;color:#cfc8ee;font-weight:700;margin:16px 0 6px;">고객 주문 → 제조사 발주 <span style="color:#8b83ad;font-weight:500;">(고객이 주문한 내용 그대로 전달됩니다)</span></div>'
+      +orderHtml
       +'<div style="margin-top:20px;font-size:13px;font-weight:800;color:#c4b5fd;">'+escA(T.poMyTitle)+'</div>'
       +'<div id="poMyList" style="margin-top:8px;"></div>';
-    $('btnPoSend').onclick=sendPo;
-    var ch=$('btnPoChangeMfg'); if(ch) ch.onclick=function(){ state._mfg=null; renderMfgPick(); };
+    var selEl=$('poMfgSel');
+    if(selEl) selEl.onchange=function(){ _mfgSetPinned(selEl.value); renderMfgDispatch(); };
+    var pin=$('poPinBtn'); if(pin) pin.onclick=function(){ if(selEl){ _mfgSetPinned(selEl.value); toast('기본 제조사로 고정되었습니다.','ok'); renderMfgDispatch(); } };
+    body.querySelectorAll('.po-dispatch').forEach(function(b){ b.onclick=function(){ dispatchOrder(b.dataset.oid, b); }; });
     renderMyPo();
   }
-  async function sendPo(){
-    var fr=state.franchise, mfg=state._mfg;
-    if(!fr||!mfg) return;
-    var item=($('poItem').value||'').trim();
-    if(!item){ toast(T.poErr,'err'); return; }
+  async function dispatchOrder(orderId, btn){
+    var fr=state.franchise; if(!fr) return;
+    var o=(state._frOrders||[]).filter(function(x){return String(x.id)===String(orderId);})[0];
+    if(!o){ toast('주문을 찾을 수 없습니다.','err'); return; }
+    var selEl=$('poMfgSel'); var mfgId=selEl?selEl.value:'hq';
+    var opt=_mfgOptions().filter(function(x){return x.id===mfgId;})[0]||{id:'hq',name:'본사 (카멜레온프린팅)',hq:true};
+    if(!confirm('['+opt.name+'] 에 주문 #'+o.id+' 을(를) 발주합니다.\n\n고객이 주문한 내용 그대로 전달됩니다. 계속할까요?')) return;
+    if(btn){ btn.disabled=true; btn.textContent='발주 중…'; }
     var country=state._poCountry||fr.country||'KR';
-    var btn=$('btnPoSend'); btn.disabled=true; btn.textContent=T.poSending;
     var id='po_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    var order={ id:id, created:new Date().toISOString(),
+    var itxt=_itemsText(o)||'';
+    var record={ id:id, created:new Date().toISOString(),
       drop_slug:fr.slug, drop_company:fr.company_name||'', drop_phone:fr.phone||'',
-      mfg_id:mfg.id, mfg_company:mfg.company_name||'', country:country,
-      item:item, qty:Math.max(1,parseInt($('poQty').value,10)||1),
-      note:($('poNote').value||'').trim(),
-      cust_name:($('poCustName').value||'').trim(), cust_phone:($('poCustPhone').value||'').trim(), cust_addr:($('poCustAddr').value||'').trim(),
-      status:'new', rating:0 };
+      mfg_id:(opt.hq?'hq':opt.id), mfg_company:opt.name||'', country:country,
+      order_id:o.id, item:itxt, qty:1,
+      cust_name:o.manager_name||'', cust_phone:o.phone||'', cust_addr:o.address||'',
+      note:o.request_note||'', status:'new', rating:0 };
     try{
-      var blob=new Blob([JSON.stringify(order)],{type:'application/json'});
+      var blob=new Blob([JSON.stringify(record)],{type:'application/json'});
       var up=await sb.storage.from(LOGO_BUCKET).upload('porders/'+country+'/'+id+'.json',blob,{upsert:true,contentType:'application/json'});
       if(up.error) throw up.error;
-      var acc=mfg.bank_account?('<div style="margin-top:6px;font-size:13px;">'+escA(mfg.bank_name||'')+' <b>'+escA(mfg.bank_account||'')+'</b>'+(mfg.bank_holder?(' ('+escA(mfg.bank_holder)+')'):'')+'</div>'):'';
-      $('poResult').innerHTML='<div style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:12px;font-size:13px;color:#86efac;">'
-        +escA(T.poSent)+'<div style="color:#c4b5fd;font-weight:700;margin-top:8px;">'+escA(T.poBankLabel)+'</div>'+acc+'</div>';
-      $('poItem').value=''; $('poNote').value=''; $('poCustName').value=''; $('poCustPhone').value=''; $('poCustAddr').value='';
-      toast(T.poSent,'ok');
-      order._file=id+'.json'; state._poOrders.push(order); _poComputeRstat();
-      renderMyPo();
-    }catch(e){ toast((T.saveFail||'')+(e.message||e),'err'); }
-    btn.disabled=false; btn.textContent=T.poSubmit;
+      // 본사 발주는 본사에 메시지로 통지(본사 주문관리엔 이미 표시됨).
+      if(opt.hq){
+        try{ await sb.from('franchise_messages').insert({ franchise_slug:fr.slug, sender:'franchise', body:'📤 제작 발주 요청 — 주문 #'+o.id+' (제조사: 본사) · 고객 주문 그대로 제작 부탁드립니다.' }); }catch(e){}
+      }
+      record._file=id+'.json'; state._poOrders.push(record); try{ _poComputeRstat(); }catch(e){}
+      toast('발주 완료 — '+opt.name,'ok');
+      renderMfgDispatch();
+    }catch(e){ toast((T.saveFail||'')+(e.message||e),'err'); if(btn){ btn.disabled=false; btn.textContent='📤 발주하기'; } }
   }
   function renderMyPo(){
     var box=$('poMyList'); if(!box) return;
@@ -1293,8 +1290,10 @@ select option{background:#1d1640;}
             +[1,2,3,4,5].map(function(s){ return '<span class="po-rate" data-file="'+escA(o._file||'')+'" data-s="'+s+'" style="cursor:pointer;color:#7c7795;font-size:17px;">★</span>'; }).join('')+'</div>';
         }
       }
+      var _itm=(o.item||''); if(_itm.length>50) _itm=_itm.slice(0,50)+'…';
+      var _oh=(o.order_id?('<b>주문 #'+escA(String(o.order_id))+'</b> · '):'')+((o.mfg_company)?('<span style="color:#a78bfa;">'+escA(o.mfg_company)+'</span> · '):'');
       return '<div style="border:1px solid rgba(167,139,250,0.18);border-radius:9px;padding:9px 11px;margin-bottom:6px;font-size:12.5px;">'
-        +'<b>'+escA(o.item||'')+'</b> ×'+(o.qty||1)+' <span style="color:#9b94c4;">· '+escA(d)+'</span>'
+        +_oh+'<span style="color:#b3aad4;">'+escA(_itm)+'</span> <span style="color:#9b94c4;">· '+escA(d)+'</span>'
         +' <span style="float:right;color:#c4b5fd;font-weight:700;">'+escA(st)+'</span>'
         +rateHtml+'</div>';
     }).join('');
