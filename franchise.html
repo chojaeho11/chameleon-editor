@@ -195,16 +195,18 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
             <div class="fr-hero-badge" id="txtBadge"></div>
             <h1 id="txtHeroH1"></h1>
             <p class="fr-hero-sub" id="txtHeroSub"></p>
+            <!-- 2026-09-14: 히어로 간소화 — 안내문 + 원클릭 홈페이지 구축 버튼 1개 (신청/통화 버튼 제거) -->
+            <p style="color:rgba(255,255,255,0.9);font-size:15px;line-height:1.75;max-width:600px;margin:0 auto 22px;">클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.</p>
             <div class="fr-hero-ctas">
-                <a href="#join" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> <span id="txtCtaInquiry"></span></a>
-                <a href="#phones" class="btn-ghost"><i class="fa-solid fa-phone"></i> <span id="txtCtaCall"></span></a>
+                <a href="/franchise-admin" class="btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> 원클릭 홈페이지 구축</a>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Three headline value props -->
-<section class="fr-section fr-pitch">
+<!-- 2026-09-14: 파트너 2단계(pitch) 섹션 숨김 — 사장님 요청(불필요·간소화) -->
+<section class="fr-section fr-pitch" style="display:none;">
     <div class="container">
         <h2 class="fr-pitch-bigtitle" id="txtPitchHl"></h2>
         <p class="fr-pitch-bigsub" id="txtPitchSub"></p>
@@ -255,7 +257,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 .fr-join-cta:hover{filter:brightness(1.1);}
 .fr-join-note{max-width:760px;margin:26px auto 0;font-size:13px;color:#6b7280;line-height:1.7;text-align:center;}
 </style>
-<section class="fr-section" id="join">
+<!-- 2026-09-14: 무료가입·본사승인제(join) 섹션 숨김 — 사장님 요청(불필요·간소화) -->
+<section class="fr-section" id="join" style="display:none;">
     <div class="container">
         <h2 class="fr-section-title" id="txtJoinTitle"></h2>
         <p class="fr-section-sub" id="txtJoinSub"></p>
@@ -418,8 +421,8 @@ const L = {
     ko:{
         langLabel:'한국어',
         badge:'⚡ 무자본 창업 가능 · 홈페이지 복제 · 결제·정산·생산 지원',
-        heroH1:['카멜레온 쇼핑몰을 <span class="hl">복제</span>해','내 브랜드로 판매하세요'],
-        heroSub:'카멜레온프린팅 홈페이지를 그대로 복제해 상호·연락처·테마·가격까지 내 것으로 바꾸고, 내 상품도 올리세요. 판매만 하는 <b>리셀러</b>부터 직접 제작하는 <b>가맹점</b>까지 — 본사가 홈페이지·카드결제·월말정산·장비리스·자재공급·일부 제품 생산을 뒤에서 받쳐줍니다.',
+        heroH1:['친환경 인쇄사업이 <span class="hl">대세</span>입니다.','카멜레온이 가이드할게요.'],
+        heroSub:'자본이 없어도 괜찮아요. 열정만 있으면 됩니다. 친환경 인쇄·전시 사업은 전 세계적으로 <b>매년 50% 이상 성장</b>하고 있습니다. 카멜레온프린팅은 <b>독보적 기술력</b>으로 세계 시장의 중심에 있습니다. 함께해 주세요 — 멋진 미래를 꿈꾸어도 좋습니다.',
         ctaInquiry:'가맹·리셀러 신청',
         ctaCall:'바로 통화',
         catsH2:'본사에서 <span class="hl">저렴하게 공급받는</span> 재료·반제품',
