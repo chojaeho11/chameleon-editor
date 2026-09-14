@@ -32,7 +32,7 @@ input[type=text],input[type=email],input[type=tel],input[type=password],select{
   background:rgba(255,255,255,0.05);color:#ece9f7;font-size:14px;font-family:inherit;outline:none;}
 input:focus,select:focus{border-color:#a855f7;}
 select option{background:#1d1640;}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row2{display:grid;grid-template-columns:1fr;gap:12px;}  /* 2026-09-14: 1줄 1개 시원하게 */
 .hint{font-size:12px;color:#9b94c4;margin-top:5px;line-height:1.5;}
 .slugbox{display:flex;align-items:center;gap:0;}
 .slugbox .pre{padding:12px 10px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(167,139,250,0.3);border-right:none;border-radius:9px 0 0 9px;font-size:13px;color:#9b94c4;white-space:nowrap;}
@@ -128,8 +128,7 @@ select option{background:#1d1640;}
   <!-- 대시보드 -->
   <div id="screenDash">
     <div id="frSwitcher" style="display:none;"></div>
-    <!-- 2026-09-14: ✨ 매직 홈페이지 빌더 위저드 (신규 가입자 가이드 온보딩). 값 채운 뒤 기존 저장(btnSave) 재사용. -->
-    <div style="margin-bottom:18px;"><button type="button" id="mwOpenBtn" style="width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;">✨ 매직 빌더로 3분 만에 내 쇼핑몰 만들기</button></div>
+    <!-- 2026-09-14: 매직 빌더 버튼/자동실행 제거(아래 폼과 중복). 위저드 오버레이는 미사용 상태로 숨김 보존. -->
     <div id="magicWizard" style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,10,40,0.72);backdrop-filter:blur(3px);overflow-y:auto;padding:24px 14px;">
       <div style="max-width:560px;margin:0 auto;background:#1a1430;border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:28px 24px;color:#eee;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -228,8 +227,8 @@ select option{background:#1d1640;}
       }
       function openWiz(){ $w('magicWizard').style.display='block'; mw.step=1; show(); }
       function closeWiz(){ $w('magicWizard').style.display='none'; }
-      $w('mwOpenBtn').onclick = openWiz;
-      $w('mwClose').onclick = closeWiz;
+      if ($w('mwOpenBtn')) $w('mwOpenBtn').onclick = openWiz;
+      if ($w('mwClose')) $w('mwClose').onclick = closeWiz;
       // 마진 슬라이더
       $w('mwMargin').oninput = function(){
         var add = parseInt(this.value,10)||0;
@@ -279,8 +278,7 @@ select option{background:#1d1640;}
         alert('입력하신 내용으로 홈페이지를 저장합니다.\n\n선택: ' + tierName + ' 신청\n\n확인을 누르면 저장 후, 본사 승인 절차로 접수됩니다.');
         var bs = $w('btnSave'); if (bs) bs.click();
       }
-      // 신규 가입자(상호 비어있음)면 자동으로 위저드 열기
-      setTimeout(function(){ try { if ($w('fCompany') && !$w('fCompany').value.trim() && $w('screenDash') && $w('screenDash').style.display!=='none') openWiz(); } catch(e){} }, 1800);
+      // 2026-09-14: 자동 위저드 실행 제거(폼과 중복) — 아래 폼에서 직접 입력.
     })();
     </script>
     <div class="card">
@@ -339,9 +337,9 @@ select option{background:#1d1640;}
       </div>
       <!-- 2026-09-14: 판매 마진율 = 원형 다이얼(드래그 조정) + 파트너 유형(리셀러 10%~ / 가맹점 20%~). fMargin(hidden)에 동기화. -->
       <div class="lb" style="margin-bottom:10px;">판매 마진율 <small style="color:#9b94c4;font-weight:600;">— 다이얼을 마우스로 드래그해 조정</small></div>
-      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
-        <div style="position:relative;width:184px;height:184px;flex:0 0 auto;">
-          <svg id="mgDial" width="184" height="184" viewBox="0 0 200 200" style="touch-action:none;cursor:pointer;user-select:none;">
+      <div style="display:flex;gap:28px;align-items:center;flex-wrap:wrap;margin-bottom:6px;justify-content:center;">
+        <div style="position:relative;width:240px;height:240px;flex:0 0 auto;">
+          <svg id="mgDial" width="240" height="240" viewBox="0 0 200 200" style="touch-action:none;cursor:pointer;user-select:none;">
             <path d="M 32.3 167.7 A 95 95 0 1 1 167.7 167.7" fill="none" stroke="rgba(167,139,250,0.18)" stroke-width="14" stroke-linecap="round"/>
             <path id="mgArc" fill="none" stroke="#a855f7" stroke-width="14" stroke-linecap="round"/>
             <circle id="mgHandle" r="12" fill="#fff" stroke="#a855f7" stroke-width="3"/>
@@ -353,9 +351,9 @@ select option{background:#1d1640;}
         </div>
         <div style="flex:1;min-width:210px;">
           <div style="font-size:12px;color:#cfc8ee;font-weight:700;margin-bottom:8px;">파트너 유형</div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button type="button" id="mgTierR" style="flex:1;padding:10px 6px;border-radius:10px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.5;">🚀 리셀러<br><small style="font-weight:600;color:#9b94c4;">10%부터</small></button>
-            <button type="button" id="mgTierF" style="flex:1;padding:10px 6px;border-radius:10px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.5;">🏭 가맹점<br><small style="font-weight:600;color:#c4b5fd;">20%부터</small></button>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
+            <button type="button" id="mgTierR" style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🚀 리셀러 <small style="font-weight:600;color:#9b94c4;">— 마진 10%부터</small></button>
+            <button type="button" id="mgTierF" style="width:100%;padding:14px;border-radius:12px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🏭 가맹점 <small style="font-weight:600;color:#c4b5fd;">— 마진 20%부터</small></button>
           </div>
           <div style="font-size:12px;color:#b3aad4;line-height:1.65;"><b style="color:#fff;">기본 마진 20%</b>는 카멜레온프린팅 본사 판매 가격과 동일합니다. 리셀러는 <b style="color:#fff;">10%</b>, 가맹점은 <b style="color:#fff;">20%</b>부터 시작해 마우스로 올릴 수 있습니다.</div>
         </div>
@@ -436,21 +434,20 @@ select option{background:#1d1640;}
       </label>
     </div>
 
+    <!-- 2026-09-14: 제품 선택 삭제 → 카멜레온 전 제품 자동 연동. (prod* 요소는 JS 호환용 숨김 보존) -->
     <div class="card">
-      <h2 data-i18n="c2Title">② 판매할 제품 선택</h2>
-      <div class="desc" data-i18n="c2Desc">카멜레온의 전 제품 중, 사장님이 보유한 장비로 <b>제작 가능한 제품</b>을 골라 체크하세요. 체크한 제품만 사장님 홈페이지에 노출됩니다.</div>
-      <div class="prod-toolbar">
-        <input type="text" id="prodSearch" data-i18n-ph="searchPh" placeholder="제품 검색…">
-        <button class="btn btn-ghost btn-sm" id="btnSelectAll" data-i18n="selectAll">현재 목록 전체선택</button>
-        <button class="btn btn-ghost btn-sm" id="btnClearAll" data-i18n="clearAll">전체 해제</button>
-        <span class="prod-count" id="prodCount">0개 선택</span>
+      <h2>② 판매 제품 — 카멜레온 전 제품 자동 연동</h2>
+      <div class="desc">사장님 홈페이지에는 <b style="color:#cfc8ee;">카멜레온의 전 제품이 자동으로 연동</b>됩니다. 본사에서 제품이 추가·수정되면 사장님 홈페이지에도 <b style="color:#cfc8ee;">실시간 반영</b>돼요. 따로 고르실 필요 없습니다.</div>
+      <div style="display:none;">
+        <input type="text" id="prodSearch" placeholder="">
+        <button id="btnSelectAll"></button><button id="btnClearAll"></button><span id="prodCount"></span>
+        <div id="prodGrid"></div>
       </div>
-      <div id="prodGrid"><div style="color:#9b94c4;font-size:13px;padding:20px;" data-i18n="loadingProd">제품을 불러오는 중…</div></div>
     </div>
 
     <div class="card">
-      <h2 data-i18n="myProdTitle">🏷️ 내 제품 등록 (자체 상품)</h2>
-      <div class="desc" data-i18n="myProdDesc">카멜레온 제품 외에 사장님이 직접 제작·배송하는 자체 상품을 등록할 수 있습니다.</div>
+      <h2 data-i18n="myProdTitle">🏷️ 나만의 제품 업로드</h2>
+      <div class="desc">사장님만의 제품을 업로드하시면 <b style="color:#cfc8ee;">사장님 홈페이지에 함께 적용</b>됩니다. 스마트스토어·고도몰처럼 <b style="color:#cfc8ee;">사진(썸네일)·가격·옵션</b>까지 등록하세요.</div>
       <div id="myProdList"></div>
       <button class="btn btn-ghost btn-sm" id="btnAddMyProd" data-i18n="myProdAdd" style="margin-top:10px;">+ 제품 추가</button>
       <input type="file" id="myProdFileInput" accept="image/*" style="display:none;">
