@@ -618,11 +618,10 @@ async function fetchUserDiscountRate() {
         const { data } = await _sb.from('profiles').select('role').eq('id', _user.id).maybeSingle();
         const role = data?.role;
 
+        // 2026-09-15: 등급 4단계로 정리 — 가맹점(20%)/리셀러(10%)/일반(0%)/관리자. 구 파트너스·골드 폐지(→일반).
         if (role === 'franchise') currentUserDiscountRate = 0.20;
         else if (role === 'reseller') currentUserDiscountRate = 0.10;
-        else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05;
-        else if (role === 'gold') currentUserDiscountRate = 0.03;
-        else if (role === 'subscriber') currentUserDiscountRate = 0.10;
+        else if (role === 'subscriber') currentUserDiscountRate = 0.10;   // 레거시(리셀러 전환 대기) — 리셀러 취급
         else currentUserDiscountRate = 0;
 
         // 라이브 결제(simple_order)용 매입 할인 % + 티어 라벨
