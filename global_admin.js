@@ -10,6 +10,7 @@ import { checkAdminAccess } from "./global_common.js?v=435";
 import "./global_orders.js?v=501";
 import "./global_products.js?v=308";
 import "./global_users.js?v=320";
+import "./global_franchise.js?v=1";
 import "./global_safetx.js?v=1";
 import "./global_assets.js?v=296";
 import "./global_stats.js?v=439";
@@ -101,6 +102,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-bankda': if(window.loadBankdaList) window.loadBankdaList(); break;
         case 'sec-stats': if(window.loadStatsData) window.loadStatsData(); break;
         case 'sec-members': if(window.loadMembers) window.loadMembers(); if(window.loadFranchiseApplications) window.loadFranchiseApplications(); break;
+        case 'sec-franchise-mgmt': if(window.loadFranchiseManagement) window.loadFranchiseManagement(); break;
         case 'sec-templates': 
             // 템플릿 로드 함수가 있는지 확인 후 실행
             if(window.loadTemplates) window.loadTemplates(); 

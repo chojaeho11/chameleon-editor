@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260915021042';
+        var CV = '20260915021707';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -263,6 +263,7 @@
 
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 직원관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 고객관리</li>
+            <li class="nav-item" onclick="showSection('sec-franchise-mgmt', this)"><i class="fa-solid fa-store"></i> 🏪 가맹 관리</li>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 탬플릿</li>
             <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트관리</li>
             <!-- 2026-06-18 v551: 디자이너 템플릿 검토 — 디자이너들이 올린 템플릿 한번에 보고 승인/삭제 -->
@@ -2847,6 +2848,18 @@ function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>
         </div>
     </div> </div>
 
+    <!-- ==== SECTION: 가맹 관리 (가맹점·리셀러 매출·채팅) 2026-09-15 ==== -->
+    <div id="sec-franchise-mgmt" class="section">
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+                <h3>🏪 가맹 관리 <span style="font-size:13px;color:#64748b;font-weight:500;">— 가맹점·리셀러 매출 조회 · 본사 채팅</span></h3>
+                <button type="button" class="btn btn-sm" style="background:#64748b;color:#fff;" onclick="loadFranchiseManagement()">새로고침</button>
+            </div>
+            <div id="fmSummary"></div>
+            <div id="fmList"><div style="padding:20px;color:#64748b;">불러오는 중…</div></div>
+        </div>
+    </div>
+
     <!-- ==== SECTION: 안전거래 송금 관리 ==== -->
     <div id="sec-safetx" class="section">
         <h2 style="font-size:22px;font-weight:900;margin-bottom:6px;">🏦 안전거래 송금 관리</h2>
@@ -4130,7 +4143,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=303"></script>
+    <script type="module" src="global_admin.js?v=304"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
