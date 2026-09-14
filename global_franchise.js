@@ -13,7 +13,7 @@ window.loadFranchiseManagement = async () => {
     if (!wrap) return;
     wrap.innerHTML = '<div style="padding:20px;color:#64748b;"><span class="spinner"></span> 불러오는 중…</div>';
 
-    let frs = [], orders = [], msgs = [], roles = {};
+    let frs = [], orders = [], msgs = [], roles = {}, setts = [];
     try {
         const { data } = await sb.from('franchises')
             .select('id,owner_id,slug,company_name,phone,email,status,created_at')
@@ -31,22 +31,37 @@ window.loadFranchiseManagement = async () => {
     const ownerIds = frs.map((f) => f.owner_id).filter(Boolean);
     try { const { data } = await sb.from('orders').select('id,order_date,total_amount,franchise_slug,status').in('franchise_slug', slugs).order('order_date', { ascending: false }).limit(3000); orders = data || []; } catch (e) {}
     try { const { data } = await sb.from('franchise_messages').select('*').in('franchise_slug', slugs).order('created_at', { ascending: true }).limit(3000); msgs = data || []; } catch (e) {}
+    try { const { data } = await sb.from('franchise_settlements').select('*').in('franchise_slug', slugs).order('created_at', { ascending: false }).limit(3000); setts = data || []; } catch (e) {}
     if (ownerIds.length) { try { const { data } = await sb.from('profiles').select('id,role').in('id', ownerIds); (data || []).forEach((p) => { roles[p.id] = p.role; }); } catch (e) {} }
 
-    const ordByFr = {}, msgByFr = {};
+    const ordByFr = {}, msgByFr = {}, setByFr = {};
     orders.forEach((o) => { (ordByFr[o.franchise_slug] = ordByFr[o.franchise_slug] || []).push(o); });
     msgs.forEach((m) => { (msgByFr[m.franchise_slug] = msgByFr[m.franchise_slug] || []).push(m); });
+    setts.forEach((s) => { (setByFr[s.franchise_slug] = setByFr[s.franchise_slug] || []).push(s); });
 
-    let gSales = 0, nFr = 0, nRe = 0;
+    // 정산 원장 합계 (franchise_settlements: status eligible/requested = 미정산, paid = 기송금)
+    const _setSums = (slug) => {
+        let owed = 0, paid = 0;
+        (setByFr[slug] || []).forEach((s) => {
+            const p = Number(s.payout_amount || 0);
+            if (s.status === 'paid') paid += p; else owed += p;
+        });
+        return { owed, paid };
+    };
+
+    let gSales = 0, nFr = 0, nRe = 0, gOwed = 0, gPaid = 0;
     frs.forEach((f) => {
         (ordByFr[f.slug] || []).forEach((o) => { gSales += Number(o.total_amount || 0); });
         if (roles[f.owner_id] === 'franchise') nFr++; else nRe++;
+        const ss = _setSums(f.slug); gOwed += ss.owed; gPaid += ss.paid;
     });
     if (sum) {
         sum.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">'
             + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#9a3412;">🏭 가맹점</div><div style="font-size:22px;font-weight:800;color:#c2410c;">' + nFr + '</div></div>'
             + '<div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#6d28d9;">🚀 리셀러</div><div style="font-size:22px;font-weight:800;color:#6d28d9;">' + nRe + '</div></div>'
             + '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#166534;">총 매출</div><div style="font-size:22px;font-weight:800;color:#16a34a;">' + _fmWon(gSales) + '</div></div>'
+            + '<div style="background:#fefce8;border:1px solid #fde047;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#854d0e;">미정산 합계</div><div style="font-size:22px;font-weight:800;color:#ca8a04;">' + _fmWon(gOwed) + '</div></div>'
+            + '<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#1e40af;">기송금 누계</div><div style="font-size:22px;font-weight:800;color:#2563eb;">' + _fmWon(gPaid) + '</div></div>'
             + '</div>';
     }
 
@@ -76,6 +91,16 @@ window.loadFranchiseManagement = async () => {
                 + '<a href="/store/' + _fmEsc(f.slug) + '" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px;text-decoration:underline;">🔗 /store/' + _fmEsc(f.slug) + '</a> <span style="color:#94a3b8;font-size:12px;">· ' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + '</span></div>'
               + '<div style="text-align:right;"><div style="font-size:12px;color:#64748b;">매출 / 완료주문</div><div style="font-size:17px;font-weight:800;color:#16a34a;">' + _fmWon(sales) + ' <span style="font-size:12px;color:#64748b;">/ ' + doneN + '건</span></div></div>'
             + '</div>'
+            + (function () {
+                const ss = _setSums(f.slug);
+                const payBtn = ss.owed > 0
+                    ? '<button class="btn btn-sm" style="background:#ca8a04;color:#fff;font-weight:700;" onclick="fmPayout(\'' + _fmEsc(f.slug) + '\',' + ss.owed + ',this)">💸 ' + _fmWon(ss.owed) + ' 송금완료 처리</button>'
+                    : '<span style="font-size:13px;color:#16a34a;font-weight:700;">정산 완료</span>';
+                return '<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:#fafafa;border-radius:8px;padding:8px 12px;">'
+                    + '<div style="font-size:13px;color:#334155;">정산 — 미정산 <b style="color:#ca8a04;">' + _fmWon(ss.owed) + '</b> · 기송금 <b style="color:#2563eb;">' + _fmWon(ss.paid) + '</b></div>'
+                    + '<div>' + payBtn + '</div>'
+                  + '</div>';
+              })()
             + '<div style="margin-top:10px;">'
               + '<div onclick="var b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'block\':\'none\';" style="cursor:pointer;font-size:13px;color:#6366f1;font-weight:700;user-select:none;">▸ 주문 내역 보기 (' + ords.length + '건)</div>'
               + '<div style="display:none;margin-top:6px;overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="padding:5px 8px;text-align:left;">주문일</th><th style="padding:5px 8px;text-align:left;">번호</th><th style="padding:5px 8px;text-align:right;">금액</th><th style="padding:5px 8px;text-align:left;">상태</th></tr></thead><tbody>' + (orderRows || '<tr><td colspan="4" style="padding:10px;color:#94a3b8;">주문 없음</td></tr>') + '</tbody></table></div>'
@@ -105,4 +130,19 @@ window.fmSendMsg = async (slug, btn) => {
         _fmToast('메시지 전송됨', 'success');
         loadFranchiseManagement();
     } catch (e) { _fmToast('전송 실패: ' + (e.message || e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
+};
+
+window.fmPayout = async (slug, amount, btn) => {
+    if (!(amount > 0)) return;
+    if (!confirm('[' + slug + '] 에 ' + _fmWon(amount) + ' 을(를) 송금 완료로 처리할까요?\n\n(실제 계좌이체는 별도로 진행하세요. 이 처리는 정산 원장을 "송금완료"로 표시합니다.)')) return;
+    const orig = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r = await sb.from('franchise_settlements').update({ status: 'paid' })
+            .eq('franchise_slug', slug).in('status', ['eligible', 'requested']).select('id');
+        if (r.error) throw r.error;
+        if (!r.data || !r.data.length) throw new Error('반영된 정산 건이 없습니다. (미정산 건이 없거나 권한 문제)');
+        _fmToast(r.data.length + '건 송금완료 처리됨', 'success');
+        loadFranchiseManagement();
+    } catch (e) { _fmToast('정산 처리 실패: ' + (e.message || e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
 };
