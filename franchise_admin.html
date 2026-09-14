@@ -354,10 +354,16 @@ select option{background:#1d1640;}
         <div style="flex:1;min-width:210px;">
           <div style="font-size:12px;color:#cfc8ee;font-weight:700;margin-bottom:8px;">파트너 유형</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
-            <button type="button" id="mgTierF" style="width:100%;padding:14px;border-radius:12px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🏭 가맹점 <small style="font-weight:600;color:#c4b5fd;">— 본사에서 직접 공급</small></button>
-            <button type="button" id="mgTierR" style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🚀 리셀러 <small style="font-weight:600;color:#9b94c4;">— 인근 가맹점에서 공급</small></button>
+            <button type="button" id="mgTierF" style="width:100%;padding:13px 15px;border-radius:12px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;cursor:pointer;font-family:inherit;text-align:left;">
+              <div style="font-weight:800;font-size:14px;">🏭 가맹점 <span style="color:#c4b5fd;font-size:12px;">— 기본 할인 20%</span></div>
+              <div style="font-weight:500;font-size:11.5px;color:#c9c1e8;line-height:1.55;margin-top:4px;">60평 이상 공장·평판프린터·디지털커터 보유사 신청 가능. 장비 미보유 시 할부 구매 가능(초기자본 약 3천만원).</div>
+            </button>
+            <button type="button" id="mgTierR" style="width:100%;padding:13px 15px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;cursor:pointer;font-family:inherit;text-align:left;">
+              <div style="font-weight:800;font-size:14px;">🚀 리셀러 <span style="color:#9b94c4;font-size:12px;">— 기본 할인 10%</span></div>
+              <div style="font-weight:500;font-size:11.5px;color:#a49dc4;line-height:1.55;margin-top:4px;">열정만 있으면 신청 가능. 해당 국가·지역의 가맹점에서 제품을 공급받아 판매.</div>
+            </button>
           </div>
-          <div style="font-size:12px;color:#b3aad4;line-height:1.65;">마진율은 <b style="color:#fff;">자유롭게</b> 정하실 수 있습니다. 카멜레온프린팅 <b style="color:#fff;">본사 판매가에 설정하신 마진율(%)만큼 더한 금액</b>으로 사장님 홈페이지 가격이 만들어집니다. (가맹점은 본사에서 직접 공급받아 판매)</div>
+          <div style="font-size:12px;color:#b3aad4;line-height:1.65;"><b style="color:#fff;">가맹점은 본사 홈페이지 판매가에서 20% 할인된 금액</b>으로 매입합니다. 좌측 <b style="color:#fff;">판매 마진</b>은 그 위에 추가로 붙이는 마진율로, 여기서 정하고 <b style="color:#fff;">저장(홈페이지 생성)</b>하면 사장님 홈페이지 가격이 자동으로 만들어집니다.</div>
         </div>
       </div>
       <input type="hidden" id="fMargin" value="20">
