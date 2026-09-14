@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914230408';
+    var CV = '20260914231535';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -840,13 +840,24 @@ if ('caches' in window) {
                     fetch(SUPA + '/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(f.slug) + '.json?_t=' + Date.now())
                         .then(function(tr){ return tr.ok ? tr.json() : null; })
                         .then(function(theme){
-                            if (theme && typeof theme.margin === 'number' && theme.margin > 0) {
+                            if (!theme) return;
+                            if (typeof theme.margin === 'number' && theme.margin > 0) {
                                 window.__FR_MARGIN = theme.margin;
                                 // 마진 로드가 카드 렌더보다 늦을 수 있어 재적용 (패브릭 하드코딩 가격 + 일반 카드 재렌더 트리거)
                                 var rt = 0;
                                 (function reapply(){
                                     if (typeof window._applyFabPrices === 'function') window._applyFabPrices();
                                     if (rt++ < 8) setTimeout(reapply, 500);
+                                })();
+                            }
+                            // 2026-09-14: 테마 단색 지정 시 상단 메뉴바(#topCatMenu) 색상도 변경.
+                            if (theme.mode === 'color' && theme.color) {
+                                var rtc = 0;
+                                (function applyBar(){
+                                    var bar = document.getElementById('topCatMenu');
+                                    if (!bar){ if (rtc++ < 30) setTimeout(applyBar, 300); return; }
+                                    bar.style.background = theme.color;
+                                    if (rtc++ < 10) setTimeout(applyBar, 500);   // 늦게 덮이면 재적용
                                 })();
                             }
                         })

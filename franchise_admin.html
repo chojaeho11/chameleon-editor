@@ -337,28 +337,102 @@ select option{background:#1d1640;}
       <div id="heroImgPreview" style="display:none;margin-top:-4px;margin-bottom:14px;">
         <img id="heroImg" style="height:70px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);">
       </div>
-      <label class="fld">
-        <span class="lb"><span data-i18n="marginLabel">판매 마진율 (%)</span> <small data-i18n="marginSmall">— 본사 가격에 붙는 이익률</small></span>
-        <input type="number" id="fMargin" min="0" max="500" step="1" value="0" placeholder="0">
-      </label>
+      <!-- 2026-09-14: 판매 마진율 = 원형 다이얼(드래그 조정) + 파트너 유형(리셀러 10%~ / 가맹점 20%~). fMargin(hidden)에 동기화. -->
+      <div class="lb" style="margin-bottom:10px;">판매 마진율 <small style="color:#9b94c4;font-weight:600;">— 다이얼을 마우스로 드래그해 조정</small></div>
+      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+        <div style="position:relative;width:184px;height:184px;flex:0 0 auto;">
+          <svg id="mgDial" width="184" height="184" viewBox="0 0 200 200" style="touch-action:none;cursor:pointer;user-select:none;">
+            <path d="M 32.3 167.7 A 95 95 0 1 1 167.7 167.7" fill="none" stroke="rgba(167,139,250,0.18)" stroke-width="14" stroke-linecap="round"/>
+            <path id="mgArc" fill="none" stroke="#a855f7" stroke-width="14" stroke-linecap="round"/>
+            <circle id="mgHandle" r="12" fill="#fff" stroke="#a855f7" stroke-width="3"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+            <div style="font-size:34px;font-weight:900;color:#fff;line-height:1;"><span id="mgVal">20</span><span style="font-size:18px;">%</span></div>
+            <div style="font-size:11px;color:#9b94c4;margin-top:4px;">판매 마진</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:210px;">
+          <div style="font-size:12px;color:#cfc8ee;font-weight:700;margin-bottom:8px;">파트너 유형</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button type="button" id="mgTierR" style="flex:1;padding:10px 6px;border-radius:10px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.5;">🚀 리셀러<br><small style="font-weight:600;color:#9b94c4;">10%부터</small></button>
+            <button type="button" id="mgTierF" style="flex:1;padding:10px 6px;border-radius:10px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.5;">🏭 가맹점<br><small style="font-weight:600;color:#c4b5fd;">20%부터</small></button>
+          </div>
+          <div style="font-size:12px;color:#b3aad4;line-height:1.65;"><b style="color:#fff;">기본 마진 20%</b>는 카멜레온프린팅 본사 판매 가격과 동일합니다. 리셀러는 <b style="color:#fff;">10%</b>, 가맹점은 <b style="color:#fff;">20%</b>부터 시작해 마우스로 올릴 수 있습니다.</div>
+        </div>
+      </div>
+      <input type="hidden" id="fMargin" value="20">
     </div>
+    <script>
+    (function(){
+      var CX=100, CY=100, R=95, MIN=20, MAX=120;   // MIN = 티어 하한(리셀러 10 / 가맹점 20)
+      var margin = 20;
+      function $d(id){ return document.getElementById(id); }
+      function polar(f){ var a=(135 + f*270)*Math.PI/180; return { x:CX+R*Math.cos(a), y:CY+R*Math.sin(a) }; }
+      function render(){
+        var f = Math.max(0, Math.min(1, margin/MAX));
+        var p = polar(f), s = polar(0);
+        var arc = $d('mgArc'), hd = $d('mgHandle'), vv=$d('mgVal'), fm=$d('fMargin');
+        if (arc) arc.setAttribute('d', 'M '+s.x.toFixed(1)+' '+s.y.toFixed(1)+' A '+R+' '+R+' 0 '+(f*270>180?1:0)+' 1 '+p.x.toFixed(1)+' '+p.y.toFixed(1));
+        if (hd){ hd.setAttribute('cx', p.x.toFixed(1)); hd.setAttribute('cy', p.y.toFixed(1)); }
+        if (vv) vv.textContent = Math.round(margin);
+        if (fm) fm.value = String(Math.round(margin));
+      }
+      function setMargin(m){ margin = Math.max(MIN, Math.min(MAX, m)); render(); }
+      window._mgSetMargin = setMargin;   // 저장 로드/위저드에서 값 세팅용
+      window._mgGetMargin = function(){ return Math.round(margin); };
+      function fromEvent(e){
+        var svg=$d('mgDial'); if(!svg) return;
+        var r=svg.getBoundingClientRect();
+        var cx=e.clientX!=null?e.clientX:(e.touches&&e.touches[0].clientX);
+        var cy=e.clientY!=null?e.clientY:(e.touches&&e.touches[0].clientY);
+        var mx=(cx-r.left)/r.width*200, my=(cy-r.top)/r.height*200;
+        var ang=Math.atan2(my-CY, mx-CX)*180/Math.PI;   // -180..180
+        var f=((ang-135)%360+360)%360/270;              // 0..1.33 (하단 갭은 clamp)
+        if (f>1) f = (f>1.16)?0:1;                        // 갭 근처는 양끝으로 스냅
+        setMargin(f*MAX);
+      }
+      var dragging=false;
+      function start(e){ dragging=true; fromEvent(e); e.preventDefault(); }
+      function move(e){ if(dragging) fromEvent(e); }
+      function end(){ dragging=false; }
+      var svg=$d('mgDial');
+      if (svg){
+        svg.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+        svg.addEventListener('touchstart', start, {passive:false}); window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', end);
+      }
+      function tier(which){
+        MIN = which==='reseller' ? 10 : 20;
+        $d('mgTierR').style.borderColor = which==='reseller'?'#a855f7':'rgba(167,139,250,0.3)';
+        $d('mgTierR').style.background   = which==='reseller'?'rgba(124,58,237,0.15)':'none';
+        $d('mgTierR').style.color        = which==='reseller'?'#fff':'#cfc8ee';
+        $d('mgTierF').style.borderColor = which==='franchise'?'#a855f7':'rgba(167,139,250,0.3)';
+        $d('mgTierF').style.background   = which==='franchise'?'rgba(124,58,237,0.15)':'none';
+        $d('mgTierF').style.color        = which==='franchise'?'#fff':'#cfc8ee';
+        try { localStorage.setItem('_fr_tier', which); } catch(e){}
+        setMargin(Math.max(MIN, margin));
+      }
+      window._mgSetTier = tier;
+      if ($d('mgTierR')) $d('mgTierR').onclick = function(){ tier('reseller'); setMargin(10); };
+      if ($d('mgTierF')) $d('mgTierF').onclick = function(){ tier('franchise'); setMargin(20); };
+      render();
+    })();
+    </script>
 
     <div class="card">
       <h2 data-i18n="payTitle">② 결제 정보</h2>
-      <div class="desc" data-i18n="payDesc">고객 결제는 본사를 거치지 않고 사장님께 직접 들어옵니다.</div>
+      <!-- 2026-09-14: 결제=본사 공용 PG·본사 정산(신 모델). 계좌이체만 가맹점 계좌 직접. PG 개별입력 제거. -->
+      <div class="desc">카드결제는 <b style="color:#cfc8ee;">본사 공용 PG</b>로 처리되고 <b style="color:#cfc8ee;">본사에서 월말 정산</b>해 드립니다(카드 수수료·로열티 제외). 계좌이체는 아래 등록하신 가맹점 계좌로 고객이 직접 입금합니다.</div>
       <div class="row2">
         <label class="fld"><span class="lb" data-i18n="bankName">은행명</span><input type="text" id="fBankName" maxlength="40"></label>
         <label class="fld"><span class="lb" data-i18n="bankHolder">예금주</span><input type="text" id="fBankHolder" maxlength="40"></label>
       </div>
       <label class="fld"><span class="lb" data-i18n="bankNumber">계좌번호</span><input type="text" id="fBankNumber" maxlength="40"></label>
-      <label class="fld">
-        <span class="lb"><span data-i18n="pgLabel">카드결제 (PG) 연동</span> <small data-i18n="pgSmall">— PG사 가입 후 정보를 입력하면 카드결제가 켜집니다</small></span>
-        <textarea id="fPgInfo" rows="3" data-i18n-ph="pgPh" placeholder="" style="width:100%;padding:11px;border:1.5px solid rgba(167,139,250,0.3);border-radius:9px;background:rgba(255,255,255,0.05);color:#ece9f7;font-size:13px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
-      </label>
-      <div id="pgStatusBadge" style="font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;display:inline-block;margin-top:2px;"></div>
+      <div style="padding:13px 16px;border-radius:10px;background:rgba(124,58,237,0.1);border:1px solid rgba(167,139,250,0.25);font-size:12.5px;color:#b3aad4;line-height:1.65;margin-bottom:6px;">💳 <b style="color:#fff;">카드결제(PG)는 본사 공용 시스템</b>을 함께 씁니다. 별도 PG 가입 불필요 — 카드 매출은 본사가 수취해 카드 수수료·로열티를 제외하고 월말에 정산해 드립니다.</div>
+      <textarea id="fPgInfo" style="display:none;"></textarea>
       <label class="fld" style="margin-top:14px;">
-        <span class="lb"><span data-i18n="domainLabel">사용자 도메인 (선택)</span> <small data-i18n="domainSmall">— 직접 구입한 도메인을 연결하려면 입력하세요</small></span>
-        <input type="text" id="fDomain" maxlength="120" data-i18n-ph="domainPh" placeholder="">
+        <span class="lb">사용자 도메인 (선택) <small style="color:#9b94c4;font-weight:600;">— 구입한 도메인 주소를 적어 신청하시면 원하는 주소로 연결해 드립니다 (연결은 본사가 처리)</small></span>
+        <input type="text" id="fDomain" maxlength="120" placeholder="예: www.myshop.com">
+        <div class="hint" style="margin-top:6px;">도메인이 없으신가요? 여기서 구입하세요 → <a href="https://domain.gabia.com" target="_blank" rel="noopener" style="color:#a855f7;font-weight:700;">가비아</a> · <a href="https://www.whois.co.kr" target="_blank" rel="noopener" style="color:#a855f7;font-weight:700;">후이즈</a> · <a href="https://www.godaddy.com/ko-kr/domains" target="_blank" rel="noopener" style="color:#a855f7;font-weight:700;">GoDaddy</a></div>
       </label>
     </div>
 
@@ -1448,7 +1522,14 @@ select option{background:#1d1640;}
     state.heroImageUrl = th.image || '';
     $('fHeroMode').value = th.mode || (th.image ? 'image' : (th.color ? 'color' : 'default'));
     if (state.heroImageUrl){ $('heroImg').src = state.heroImageUrl; }
-    $('fMargin').value = (th.margin != null) ? th.margin : 0;
+    $('fMargin').value = (th.margin != null) ? th.margin : 20;
+    // 2026-09-14: 원형 마진 다이얼 동기화 + 저장된 파트너 유형 반영
+    try {
+      var _sv = (th.margin != null) ? Number(th.margin) : 20;
+      var _tr = null; try { _tr = localStorage.getItem('_fr_tier'); } catch(e){}
+      if (window._mgSetTier && _tr) window._mgSetTier(_tr);
+      if (window._mgSetMargin) window._mgSetMargin(_sv);
+    } catch(e){}
     // 결제 정보 (계좌·PG·도메인)
     var bk = th.bank || {};
     $('fBankName').value = bk.name || '';
