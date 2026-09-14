@@ -600,8 +600,13 @@ export async function initOrderSystem() {
 }
 
 // 사용자 등급별 할인율 가져오기
+// 2026-09-15: 가맹/리셀러 매입 할인 도입 — 가맹점(franchise)=소비자가 20%, 리셀러(reseller)=10%, 기존 PRO(subscriber)=10%.
+//   window.memberDiscountPct(정수%) 를 라이브 결제(simple_order)에서 사용. currentUserDiscountRate 는 레거시 order.js 경로 유지.
+//   partner/platinum/gold 는 라이브 결제엔 미노출(memberDiscountPct=0) — 기존 동작 보존.
 async function fetchUserDiscountRate() {
     window.isProSubscriber = false;
+    window.memberDiscountPct = 0;
+    window.memberTier = '';
     const _user = currentUser || window.currentUser;
     if (!_user) {
         currentUserDiscountRate = 0;
@@ -613,13 +618,17 @@ async function fetchUserDiscountRate() {
         const { data } = await _sb.from('profiles').select('role').eq('id', _user.id).maybeSingle();
         const role = data?.role;
 
-        if (role === 'franchise') currentUserDiscountRate = 0.10;
+        if (role === 'franchise') currentUserDiscountRate = 0.20;
+        else if (role === 'reseller') currentUserDiscountRate = 0.10;
         else if (role === 'platinum' || role === 'partner' || role === 'partners') currentUserDiscountRate = 0.05;
         else if (role === 'gold') currentUserDiscountRate = 0.03;
         else if (role === 'subscriber') currentUserDiscountRate = 0.10;
         else currentUserDiscountRate = 0;
 
-        if (role === 'subscriber') window.isProSubscriber = true;
+        // 라이브 결제(simple_order)용 매입 할인 % + 티어 라벨
+        if (role === 'franchise') { window.memberDiscountPct = 20; window.memberTier = 'franchise'; window.isProSubscriber = true; }
+        else if (role === 'reseller') { window.memberDiscountPct = 10; window.memberTier = 'reseller'; window.isProSubscriber = true; }
+        else if (role === 'subscriber') { window.memberDiscountPct = 10; window.memberTier = 'pro'; window.isProSubscriber = true; }
 
         // PRO 구독자: subscriptions.status='active' 확인 → 최소 10% 보장 + PRO 플래그
         try {
@@ -631,10 +640,11 @@ async function fetchUserDiscountRate() {
             if (subData) {
                 window.isProSubscriber = true;
                 currentUserDiscountRate = Math.max(currentUserDiscountRate, 0.10);
+                if (window.memberDiscountPct < 10) { window.memberDiscountPct = 10; if (!window.memberTier) window.memberTier = 'pro'; }
             }
         } catch(subErr) { console.warn('[discount] sub query err:', subErr); }
 
-        console.log('[discount] role=', role, 'PRO=', window.isProSubscriber, 'rate=', currentUserDiscountRate);
+        console.log('[discount] role=', role, 'PRO=', window.isProSubscriber, 'rate=', currentUserDiscountRate, 'memberPct=', window.memberDiscountPct, 'tier=', window.memberTier);
 
         // 할인율 반영 후 카트 재렌더 (항상 시도 — 화면이 떠 있을 때만 visible 영향)
         try { if (window.renderCart) window.renderCart(); } catch(e) {}

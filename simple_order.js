@@ -132,6 +132,18 @@
     }
     function pickImg(p) { return p.img_url || p.img || p.image_url || p.image_kr || p.image || p.thumb_url || ''; }
 
+    // 2026-09-15: 회원 매입 할인 라벨 (가맹점 20% / 리셀러 10% / PRO 10%). memberDiscountPct·memberTier 기반.
+    function _soMemberDiscInfo(){
+        var pct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
+        var t = window.memberTier || 'pro';
+        var nmK = (t==='franchise'?'가맹점':t==='reseller'?'리셀러':'PRO');
+        var nmJ = (t==='franchise'?'加盟店':t==='reseller'?'リセラー':'PRO');
+        var nmE = (t==='franchise'?'Franchise':t==='reseller'?'Reseller':'PRO');
+        return { pct: pct, tier: t,
+            kr: nmK + ' ' + pct + '% 할인', ja: nmJ + ' ' + pct + '%割引', en: nmE + ' ' + pct + '% off' };
+    }
+    window._soMemberDiscInfo = _soMemberDiscInfo;
+
     // ─────────────────────────────────────────────
     // CSS + 모달 HTML 주입
     // ─────────────────────────────────────────────
@@ -4911,8 +4923,10 @@ html, body { background: #ffffff !important; }
         let amountPct = 0;
         const isPro = !!window.isProSubscriber;
         // 2026-06-04: PRO 구독자 10% 할인 — 원판은 적용 (사용자 요청). 볼륨티어만 _noDisc 로 제외.
+        // 2026-09-15: 가맹/리셀러 매입 할인 — 가맹점 20% / 리셀러·PRO 10% (window.memberDiscountPct). 미설정 시 10% 폴백.
         const _noProDisc = state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint;
-        const proPct = (isPro && !_noProDisc) ? 10 : 0;
+        const _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
+        const proPct = (isPro && !_noProDisc) ? _memberPct : 0;
         const totalDiscPct = amountPct + proPct;
         const amountDiscount = Math.round(taxBase * amountPct / 100);
         const proDiscount = Math.round(taxBase * proPct / 100);
@@ -5081,9 +5095,10 @@ html, body { background: #ffffff !important; }
         showRow('soAmountDiscRow', amountPct > 0);
         setText('soAmountTier', amountPct + '%');
         setText('soAmountDisc', '-' + fmtPrice(amountDiscount));
-        // 구독자 할인
+        // 구독자/가맹/리셀러 할인 (티어 태그를 실제 % 로 갱신 — 가맹점 20% 등)
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
+        try { var _ptag = document.querySelector('#soProDiscRow .so-tier-tag'); if (_ptag) _ptag.textContent = proPct + '%'; } catch(e){}
         // 2026-05-29: 베스트굿즈 프리셋 50% 할인 라인 (100개+ — 티셔츠는 인쇄비 라인에서 별도 처리)
         // 2026-06-12: 종이매대 / 배너 family — 수량 티어 별 라벨
         showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
@@ -7749,8 +7764,8 @@ html, body { background: #ffffff !important; }
             var shipFee;
             if (shipMethod === 'regional_delivery') shipFee = (totalQty >= 100) ? 0 : 200000;
             else                                    shipFee = (totalQty >= 10)  ? 0 : 100000;
-            // PRO 10%
-            var proPct = (!!window.isProSubscriber) ? 10 : 0;
+            // PRO/가맹/리셀러 매입 할인 (가맹점 20% / 리셀러·PRO 10%)
+            var proPct = (!!window.isProSubscriber) ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
             // 2026-08-16: 커팅비 — 판당 3만원 flat × 원판 장수 (기존 개수 구간제 폐지).
             var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
@@ -19889,8 +19904,9 @@ html, body { background: #ffffff !important; }
             shipTotal = 2500;   // 2026-07-28: JP 정액 배송비 500엔(5,000원)→250엔(2,500원) (사장님 지시)
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
+        // 2026-09-15: 가맹/리셀러 매입 할인 — 가맹점 20% / 리셀러·PRO 10% (window.memberDiscountPct). 미설정 시 10% 폴백.
         var amountPct = 0;
-        var proPct = window.isProSubscriber ? 10 : 0;
+        var proPct = window.isProSubscriber ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
         var amountDisc = Math.round(taxBase * amountPct / 100);
         // 2026-07-03: PRO(구독) 할인 base = taxBase + 원판(rawBoardBase). 원판(hexa-board 메인상품)도 구독할인 적용.
         var proDisc = Math.round((taxBase + rawBoardBase) * proPct / 100);
@@ -20101,8 +20117,9 @@ html, body { background: #ffffff !important; }
         var mileageMax = 0;
         // 3) 예치금: 잔액 vs 주문 전액
         var depositMax = excluded ? 0 : Math.min(depositBal, Math.max(0, calc.grandTotal || discBase));
-        // 4) PRO 구독자 10%
-        var proMax = isPro ? Math.floor(discBase * 0.1) : 0;
+        // 4) PRO/가맹/리셀러 매입 할인 (가맹점 20% / 리셀러·PRO 10%)
+        var _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
+        var proMax = isPro ? Math.floor(discBase * _memberPct / 100) : 0;
 
         window._soWallet = {
             ready: true, userId: uid,
@@ -20134,7 +20151,7 @@ html, body { background: #ffffff !important; }
             tr('보유 ','残高 ','Bal ') + depositBal.toLocaleString() + ' · ' + tr('전액 사용','全額','full'),
             '원');
         setCard('pro', 'soDiscProAmount', 'soDiscProHint', isPro ? 1 : 0, proMax,
-            isPro ? tr('주문의 10%','注文金額の10%','10% of order') : tr('미구독','未加入','Not subscribed'),
+            isPro ? tr('주문의 ' + _memberPct + '%','注文金額の' + _memberPct + '%',_memberPct + '% of order') : tr('미구독','未加入','Not subscribed'),
             '원');
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
@@ -20225,14 +20242,15 @@ html, body { background: #ffffff !important; }
                 html += '<div style="display:flex; justify-content:space-between; color:#4338ca;"><span>· ' + tr('포인트 사용','ポイント使用','Points') + '</span><span>-' + _soFormatPrice(w.useBlogCoupon) + '</span></div>';
             }
             // 2026-08-16: 자동 PRO 10% 할인은 grand 에 이미 녹아있어 명세에 안 보였음 → 포인트/예치금과 "동시 적용"이 보이도록 라인 표시(총액 불변, 표시만)
+            var _mdi = _soMemberDiscInfo();
             if (!w.proSuppressed && proDisc > 0) {
-                html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(proDisc) + '</span></div>';
+                html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr(_mdi.kr,_mdi.ja,_mdi.en) + '</span><span>-' + _soFormatPrice(proDisc) + '</span></div>';
             }
             if (w.source === 'pro' && (w.proApplied || 0) > 0) {
-                html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(w.proApplied) + '</span></div>';
+                html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr(_mdi.kr,_mdi.ja,_mdi.en) + '</span><span>-' + _soFormatPrice(w.proApplied) + '</span></div>';
             }
             if (w.proSuppressed && proDisc > 0) {
-                html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr('PRO 10% 할인 — 위 할인 선택으로 자동 제외','PRO 10%割引 — 上記割引選択により自動除外','PRO 10% — auto-excluded by selected discount') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
+                html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr(_mdi.kr + ' — 위 할인 선택으로 자동 제외',_mdi.ja + ' — 上記割引選択により自動除外',_mdi.en + ' — auto-excluded by selected discount') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
             }
             // 마일리지/예치금/SNS포인트가 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
             if ((w.useMileage > 0 || w.useDeposit > 0 || (w.useBlogCoupon || 0) > 0) && finalAmt > 0) {
@@ -20432,7 +20450,8 @@ html, body { background: #ffffff !important; }
                 discHtml += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('구매금액','購入金額','Volume') + ' ' + calc.amountPct + '% ' + tr('할인','割引','off') + '</span><span>-' + _soFormatPrice(calc.amountDisc) + '</span></div>';
             }
             if (calc.proPct > 0) {
-                discHtml += '<div style="display:flex; justify-content:space-between; color:#7c3aed;"><span>· ' + tr('PRO 구독자 10% 할인','PRO会員 10%割引','PRO member 10% off') + '</span><span>-' + _soFormatPrice(calc.proDisc) + '</span></div>';
+                var _mdiC = _soMemberDiscInfo();
+                discHtml += '<div style="display:flex; justify-content:space-between; color:#7c3aed;"><span>· ' + tr(_mdiC.kr,_mdiC.ja,_mdiC.en) + '</span><span>-' + _soFormatPrice(calc.proDisc) + '</span></div>';
             }
             if (calc.shipTotal > 0) {
                 discHtml += '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('+ 배송/시공비','+ 配送/施工費','+ Shipping/Install') + '</span><span>+' + _soFormatPrice(calc.shipTotal) + '</span></div>';
@@ -21407,10 +21426,13 @@ html, body { background: #ffffff !important; }
             if (cartCalc.amountPct > 0) {
                 discountSummary += '\n할인: 구매금액 ' + cartCalc.amountPct + '% (-' + cartCalc.amountDisc.toLocaleString() + '원)';
             }
-            if (cartCalc.proPct > 0 && !_proSuppressed) {
-                discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원)';
-            } else if (cartCalc.proPct > 0 && _proSuppressed) {
-                discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원) — 쿠폰 사용으로 자동 제외';
+            if (cartCalc.proPct > 0) {
+                var _mtN = (window.memberTier === 'franchise' ? '가맹점' : (window.memberTier === 'reseller' ? '리셀러' : 'PRO 구독자'));
+                if (!_proSuppressed) {
+                    discountSummary += '\n' + _mtN + ' ' + cartCalc.proPct + '% (-' + cartCalc.proDisc.toLocaleString() + '원)';
+                } else {
+                    discountSummary += '\n' + _mtN + ' ' + cartCalc.proPct + '% (-' + cartCalc.proDisc.toLocaleString() + '원) — 쿠폰 사용으로 자동 제외';
+                }
             }
             // 2026-06-25: 베스트굿즈/수량 자동 할인 폐지 (사용자 요청) — 요약 표기 제거.
             if (_useMileage > 0) discountSummary += '\n🎁 이벤트 쿠폰 사용 (-' + _useMileage.toLocaleString() + '원, 최대 50,000원 한도)';
