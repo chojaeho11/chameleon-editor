@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915025900';
+    var CV = '20260915031255';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1187,6 +1187,17 @@ a { text-decoration: none; color: inherit; }
                 }
             } catch (e) {}
         })();
+        // 2026-09-15(사장님): 가맹점/리셀러 클론에서 넘어온 경우 — 로고·메인·메인으로 링크를 본사가 아닌 그 가맹점 홈으로.
+        (function(){
+            var ref = null; try { ref = sessionStorage.getItem('_franchise_ref'); } catch(e){}
+            if (!ref) return;
+            ref = String(ref).toLowerCase().replace(/[^a-z0-9-]/g,'');
+            if (!ref) return;
+            var cloneHome = 'https://www.cafe2626.com/?fr=' + encodeURIComponent(ref);
+            var logo = document.getElementById('brandLogoLink'); if (logo) { logo.href = cloneHome; logo.removeAttribute('target'); }
+            var mall = document.getElementById('brandMallLink'); if (mall) mall.style.display = 'none';   // 클론엔 '종합인쇄몰(본사)' 숨김
+            try { document.querySelectorAll('a.brand-back[href="/"]').forEach(function(a){ a.setAttribute('href', cloneHome); }); } catch(e){}
+        })();
         </script>
         <div style="display:flex; align-items:center; gap:10px;">
             <!-- 국기 언어 전환 -->
@@ -2150,7 +2161,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=135"></script>
+<script src="/cotton_designer.js?v=136"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

@@ -31,6 +31,8 @@ function _cdFrMul() { var m = Number(window.__FR_MARGIN) || 0; return m > 0 ? (1
         .then(function(theme){
             if (theme && typeof theme.margin === 'number' && theme.margin > 0) {
                 window.__FR_MARGIN = theme.margin;
+                // 기본 마감(가재단 raw)은 모듈 로드시 base 1000 으로 세팅됨(state 159-161) → 마진 반영. (선택 마감은 _cdOnFinishChange 에서 반영)
+                try { if (typeof state !== 'undefined' && state && state.finishCode === 'raw') state.finishExtra = Math.round(1000 * _cdFrMul()); } catch(e){}
                 var t = 0;
                 (function retry(){ if (typeof updatePrice === 'function') { try { updatePrice(); } catch(e){} return; } if (t++ < 40) setTimeout(retry, 150); })();
             }
