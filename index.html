@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260915000847';
+    var CV = '20260915001407';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -890,6 +890,17 @@ if ('caches' in window) {
                             })();
                             if (theme.customProducts && theme.customProducts.length) {
                                 var cps = theme.customProducts, rtcp = 0;
+                                // 2026-09-15: 가맹점 자체상품 통화 표기 — __SITE_CODE(가맹점 언어) 기준. 가맹점이 정한 KRW 값을 환산 표기.
+                                var _frSC = (window.__SITE_CODE || 'KR');
+                                var _frL = function(kr,ja,en){ return _frSC==='JP'?ja:(_frSC==='KR'?kr:en); };
+                                var _frFmt = function(krw){
+                                    krw = Number(krw)||0;
+                                    if (_frSC==='JP') return '¥'+Math.floor(krw*0.1).toLocaleString();
+                                    if (_frSC==='US'||_frSC==='SA') return '$'+Math.round(krw*0.001).toLocaleString();
+                                    if (_frSC==='CN') return '¥'+Math.round(krw*0.05).toLocaleString();
+                                    if (_frSC==='ES'||_frSC==='DE'||_frSC==='FR') return '€'+(krw*0.001).toFixed(2);
+                                    return krw.toLocaleString()+'원';
+                                };
                                 (function insertCP(){
                                     var anchor = document.getElementById('popularSection');   // 기타상품 바로 아래
                                     var fw = document.querySelector('.footer-wrap');
@@ -897,37 +908,84 @@ if ('caches' in window) {
                                     if (document.getElementById('frCustomProducts')) return;
                                     var cards = cps.map(function(p){
                                         var img = (p.images && p.images[0]) || 'https://placehold.co/300?text=%EC%83%81%ED%92%88';
-                                        var pr = (Number(p.price)||0).toLocaleString() + '원';
+                                        var pr = _frFmt(Number(p.price)||0);
                                         var nm = (p.name||'상품').replace(/</g,'&lt;');
                                         return '<div class="hotdeal-card" style="cursor:pointer;" onclick="window._frCpDetail(\''+(p.id||'')+'\')">'
                                             + '<div class="hotdeal-img-box"><img src="'+img+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'">'
                                             + '<div style="position:absolute;top:10px;left:10px;background:#c2410c;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">SHOP</div></div>'
-                                            + '<div class="hotdeal-info"><div class="hotdeal-title">'+nm+'</div><div class="hotdeal-meta">'+((p.options&&p.options.length)?'옵션 있음':'&nbsp;')+'</div><div class="hotdeal-price">'+pr+'</div></div></div>';
+                                            + '<div class="hotdeal-info"><div class="hotdeal-title">'+nm+'</div><div class="hotdeal-meta">'+((p.options&&p.options.length)?_frL('옵션 있음','オプションあり','Options'):'&nbsp;')+'</div><div class="hotdeal-price">'+pr+'</div></div></div>';
                                     }).join('');
                                     var sec = document.createElement('div');
                                     sec.id = 'frCustomProducts';
                                     sec.className = 'hotdeal-wrapper';
                                     sec.style.cssText = 'max-width:1400px;margin:24px auto;padding:20px;background:#fff7ed;border-radius:12px;box-sizing:border-box;';
-                                    sec.innerHTML = '<div class="hotdeal-header"><h2 style="color:#c2410c;">가맹점 상품 <span class="badge-hot" style="background:#c2410c;">Shop</span></h2><p>'+((f.company_name||'')+' 자체 상품 — 주문 문의는 아래 연락처로')+'</p></div><div class="hotdeal-grid">'+cards+'</div>';
+                                    sec.innerHTML = '<div class="hotdeal-header"><h2 style="color:#c2410c;">'+_frL('가맹점 상품','店舗オリジナル商品','Shop Products')+' <span class="badge-hot" style="background:#c2410c;">Shop</span></h2><p>'+(f.company_name||'')+' '+_frL('자체 상품','オリジナル商品','own products')+'</p></div><div class="hotdeal-grid">'+cards+'</div>';
                                     if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(sec, anchor.nextSibling);
                                     else fw.parentNode.insertBefore(sec, fw);
                                 })();
-                                // 자체상품 상세 모달
+                                // 2026-09-15: 가맹점 자체상품도 일반 상품처럼 장바구니 담기·주문 가능.
+                                //   가격 = 가맹점이 정한 금액(KRW 저장) 그대로 — 판매마진(__FR_MARGIN) 미적용(#3).
+                                // 상세 모달 — 옵션 선택 + 수량 + 장바구니 담기
                                 window._frCpDetail = function(id){
                                     var p = cps.filter(function(x){ return (x.id||'')===id; })[0]; if (!p) return;
-                                    var opts = (p.options||[]).map(function(o){ return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;"><span>'+(o.name||'')+'</span><span>+'+((Number(o.price)||0).toLocaleString())+'원</span></div>'; }).join('');
+                                    var optRows = (p.options||[]).map(function(o,oi){ return '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;cursor:pointer;"><span style="display:flex;align-items:center;gap:8px;"><input type="checkbox" class="_frCpOpt" data-oi="'+oi+'" data-op="'+(Number(o.price)||0)+'" data-on="'+String(o.name||'').replace(/"/g,'&quot;')+'" style="width:17px;height:17px;">'+(String(o.name||'').replace(/</g,'&lt;'))+'</span><span style="color:#c2410c;">+'+_frFmt(Number(o.price)||0)+'</span></label>'; }).join('');
                                     var imgs = (p.images||[]).map(function(u){ return '<img src="'+u+'" style="width:100%;border-radius:10px;margin-bottom:8px;">'; }).join('');
                                     var ov = document.createElement('div');
                                     ov.style.cssText = 'position:fixed;inset:0;z-index:100050;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;';
                                     ov.onclick = function(e){ if (e.target===ov) document.body.removeChild(ov); };
                                     ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;">'
-                                        + imgs + '<div style="font-size:18px;font-weight:800;margin:6px 0;">'+(p.name||'')+'</div>'
-                                        + '<div style="font-size:20px;font-weight:900;color:#c2410c;margin-bottom:10px;">'+((Number(p.price)||0).toLocaleString())+'원</div>'
+                                        + imgs + '<div style="font-size:18px;font-weight:800;margin:6px 0;">'+(String(p.name||'').replace(/</g,'&lt;'))+'</div>'
+                                        + '<div style="font-size:20px;font-weight:900;color:#c2410c;margin-bottom:10px;">'+_frFmt(Number(p.price)||0)+'</div>'
                                         + (p.desc?('<div style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:12px;white-space:pre-wrap;">'+String(p.desc).replace(/</g,'&lt;')+'</div>'):'')
-                                        + opts
-                                        + '<div style="margin-top:16px;padding:12px;border-radius:10px;background:#fff7ed;font-size:13px;color:#7c2d12;">주문 문의: <b>'+(f.phone||'')+'</b></div>'
-                                        + '<button onclick="this.closest(\'div[style*=fixed]\')&&document.body.removeChild(this.closest(\'div[style*=fixed]\'))" style="margin-top:14px;width:100%;padding:12px;border:none;border-radius:10px;background:#1a1430;color:#fff;font-weight:800;cursor:pointer;">닫기</button></div>';
+                                        + (optRows?('<div style="font-size:12px;color:#7c2d12;font-weight:700;margin:6px 0 2px;">'+_frL('옵션 선택','オプション選択','Options')+'</div>'+optRows):'')
+                                        + '<div style="display:flex;align-items:center;gap:10px;margin-top:14px;"><span style="font-size:13px;color:#475569;">'+_frL('수량','数量','Qty')+'</span>'
+                                          + '<button type="button" onclick="var i=this.parentNode.querySelector(\'input\');i.value=Math.max(1,(parseInt(i.value,10)||1)-1);" style="width:34px;height:34px;border:1px solid #e2d5c5;background:#fff;border-radius:8px;font-size:18px;cursor:pointer;">-</button>'
+                                          + '<input id="_frCpQty" type="number" min="1" value="1" style="width:56px;height:34px;text-align:center;border:1px solid #e2d5c5;border-radius:8px;font-size:14px;">'
+                                          + '<button type="button" onclick="var i=this.parentNode.querySelector(\'input\');i.value=(parseInt(i.value,10)||1)+1;" style="width:34px;height:34px;border:1px solid #e2d5c5;background:#fff;border-radius:8px;font-size:18px;cursor:pointer;">+</button></div>'
+                                        + '<button onclick="window._frCpAddToCart(\''+(p.id||'')+'\', this)" style="margin-top:16px;width:100%;padding:14px;border:none;border-radius:10px;background:#c2410c;color:#fff;font-weight:800;font-size:15px;cursor:pointer;">'+_frL('장바구니 담기','カートに入れる','Add to cart')+'</button>'
+                                        + '<button onclick="this.closest(\'div[style*=fixed]\')&&document.body.removeChild(this.closest(\'div[style*=fixed]\'))" style="margin-top:10px;width:100%;padding:11px;border:1px solid #e2d5c5;border-radius:10px;background:#fff;color:#475569;font-weight:700;cursor:pointer;">'+_frL('닫기','閉じる','Close')+'</button></div>';
                                     document.body.appendChild(ov);
+                                };
+                                // 장바구니 담기 — 일반 상품과 동일한 카트 구조로 push (공유 CART_KEY).
+                                window._frCpAddToCart = function(id, btn){
+                                    var p = cps.filter(function(x){ return (x.id||'')===id; })[0]; if (!p) return;
+                                    var ov = btn && btn.closest ? btn.closest('div[style*=fixed]') : null;
+                                    var qty = 1, chosen = [], optSum = 0;
+                                    if (ov){
+                                        var qi = ov.querySelector('#_frCpQty'); qty = Math.max(1, parseInt(qi&&qi.value,10)||1);
+                                        Array.prototype.forEach.call(ov.querySelectorAll('._frCpOpt:checked'), function(c){
+                                            var op = Number(c.getAttribute('data-op'))||0; optSum += op;
+                                            chosen.push(c.getAttribute('data-on') + (op?(' (+'+_frFmt(op)+')'):''));
+                                        });
+                                    }
+                                    var unit = (Number(p.price)||0) + optSum;
+                                    var img = (p.images && p.images[0]) || '';
+                                    var CART_KEY = 'chameleon_cart_current';
+                                    var cart = []; try { cart = JSON.parse(localStorage.getItem(CART_KEY)||'[]')||[]; } catch(e){ cart = []; }
+                                    cart.push({
+                                        uid: Date.now() + Math.floor(Math.random()*1000),
+                                        product: {
+                                            code: 'frcp_' + (f.slug||'') + '_' + (p.id||''),
+                                            name: p.name, name_kr: p.name, name_jp: p.name, name_us: p.name,
+                                            price: unit, price_jp: Math.round(unit*0.1), price_us: Math.round(unit*0.001*100)/100,
+                                            category: 'Franchise Custom', img: img
+                                        },
+                                        type: 'file_upload', fileName: '(가맹점 상품)',
+                                        mimeType: '', fileData: null, originalUrl: null, filePath: null,
+                                        thumb: img || null, isOpen: false, qty: qty,
+                                        selectedAddons: {}, addonQuantities: {},
+                                        shipping: { method: 'metro_delivery', fee: 0, delivery_date: '', delivery_time: '' },
+                                        item_note: (chosen.length? (_frL('옵션','オプション','Options')+': '+chosen.join(', ')) : ''),
+                                        _isFranchiseCustom: true
+                                    });
+                                    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e){}
+                                    try { localStorage.setItem('chameleon_cart_updated_at', new Date().toISOString()); } catch(e){}
+                                    if (Array.isArray(window.cartData)) { window.cartData.length = 0; cart.forEach(function(i){ window.cartData.push(i); }); }
+                                    try { if (window.renderCart) window.renderCart(); } catch(e){}
+                                    try { if (window._soUpdateHeaderCartCount) window._soUpdateHeaderCartCount(); } catch(e){}
+                                    if (ov) { try { document.body.removeChild(ov); } catch(e){} }
+                                    // 카트 드로어 열기 (일반 상품과 동일 흐름)
+                                    try { if (window._soToggleCart) window._soToggleCart(true); else if (window._tbRetry) window._tbRetry('_soToggleCart', true); } catch(e){}
                                 };
                             }
                         })
