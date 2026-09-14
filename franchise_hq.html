@@ -240,12 +240,14 @@ input:focus{border-color:#3b82f6;}
     try{
       var r1=await sb.from('franchises').update({status:'approved'}).eq('slug',slug);
       if(r1.error) throw r1.error;
+      var _skipped=false;
       if(ownerId){
-        var r2=await sb.from('profiles').update({role:role}).eq('id',ownerId);
-        if(r2.error) throw r2.error;
+        var _cur=null; try{ var _pp=await sb.from('profiles').select('role').eq('id',ownerId).single(); _cur=_pp.data&&_pp.data.role; }catch(e){}
+        if(['admin','superadmin','manager'].indexOf(_cur)>=0){ _skipped=true; }
+        else { var r2=await sb.from('profiles').update({role:role}).eq('id',ownerId); if(r2.error) throw r2.error; }
       }
       var f=state.franchises.filter(function(x){return x.slug===slug;})[0]; if(f) f.status='approved';
-      toast('승인 완료 — '+pctTxt+' 활성화','ok');
+      toast(_skipped ? '승인됨 — 관리자/매니저 계정이라 등급 미변경' : ('승인 완료 — '+pctTxt+' 활성화'),'ok');
       renderApprovals();
     }catch(e){ toast('승인 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent=orig;} }
   }
@@ -265,7 +267,7 @@ input:focus{border-color:#3b82f6;}
     try{
       var r1=await sb.from('franchises').update({status:'cancelled'}).eq('slug',slug);
       if(r1.error) throw r1.error;
-      if(ownerId){ await sb.from('profiles').update({role:'customer'}).eq('id',ownerId); }
+      if(ownerId){ var _cc=null; try{ var _pc=await sb.from('profiles').select('role').eq('id',ownerId).single(); _cc=_pc.data&&_pc.data.role; }catch(e){} if(['admin','superadmin','manager'].indexOf(_cc)<0){ await sb.from('profiles').update({role:'customer'}).eq('id',ownerId); } }
       var f=state.franchises.filter(function(x){return x.slug===slug;})[0]; if(f) f.status='cancelled';
       toast('가맹 취소 처리됨 (등급 해제)','ok'); renderApprovals();
     }catch(e){ toast('취소 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent='⛔ 취소';} }

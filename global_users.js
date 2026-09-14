@@ -359,12 +359,20 @@ window.approveFranchise = async (slug, ownerId, role, btn) => {
         const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug).select('id');
         if (r1.error) throw r1.error;
         if (!r1.data || !r1.data.length) throw new Error(_FR_RLS_MSG);
+        let _roleSkipped = false;
         if (ownerId) {
-            const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId).select('id');
-            if (r2.error) throw r2.error;
-            if (!r2.data || !r2.data.length) throw new Error('가맹점 상태는 승인됐지만 등급 부여가 RLS 로 막혔습니다. ' + _FR_RLS_MSG);
+            // 2026-09-15: 관리자/매니저 계정은 등급을 바꾸지 않음 (본인 계정을 가맹점으로 승인 시 관리자 권한 상실 방지).
+            let _cur = null;
+            try { const { data: _p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); _cur = _p && _p.role; } catch (e) {}
+            if (['admin', 'superadmin', 'manager'].indexOf(_cur) >= 0) {
+                _roleSkipped = true;
+            } else {
+                const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId).select('id');
+                if (r2.error) throw r2.error;
+                if (!r2.data || !r2.data.length) throw new Error('가맹점 상태는 승인됐지만 등급 부여가 RLS 로 막혔습니다. ' + _FR_RLS_MSG);
+            }
         }
-        showToast('승인 완료 — ' + pctTxt, 'success');
+        showToast(_roleSkipped ? '승인 완료 — 관리자/매니저 계정이라 등급은 변경하지 않았습니다.' : ('승인 완료 — ' + pctTxt), 'success');
         loadFranchiseApplications();
         if (window.loadMembers) loadMembers(false);
     } catch(e) { showToast('승인 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
@@ -400,7 +408,14 @@ window.cancelFranchise = async (slug, ownerId, btn) => {
         const r1 = await sb.from('franchises').update({ status: 'cancelled' }).eq('slug', slug).select('id');
         if (r1.error) throw r1.error;
         if (!r1.data || !r1.data.length) throw new Error(_FR_RLS_MSG);
-        if (ownerId) await sb.from('profiles').update({ role: 'customer' }).eq('id', ownerId);
+        if (ownerId) {
+            // 관리자/매니저 계정은 등급 유지 (권한 보호)
+            let _cur = null;
+            try { const { data: _p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); _cur = _p && _p.role; } catch (e) {}
+            if (['admin', 'superadmin', 'manager'].indexOf(_cur) < 0) {
+                await sb.from('profiles').update({ role: 'customer' }).eq('id', ownerId);
+            }
+        }
         showToast('취소 처리됨 (등급 해제)', 'success'); loadFranchiseApplications();
         if (window.loadMembers) loadMembers(false);
     } catch(e) { showToast('취소 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = '⛔ 취소'; } }
