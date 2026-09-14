@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914233118';
+    var CV = '20260914234259';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -861,6 +861,53 @@ if ('caches' in window) {
                                     if (rtc++ < 10) setTimeout(applyBar, 500);   // 늦게 덮이면 재적용
                                 })();
                             }
+                            // 2026-09-14: 가맹점 홈에는 리셀러 모집 배너 숨김 + 가맹점 자체상품 노출.
+                            var rtb = 0;
+                            (function hideBanner(){
+                                var bn = document.getElementById('frCtaBanner');
+                                if (bn){ bn.style.display = 'none'; }
+                                else if (rtb++ < 20){ setTimeout(hideBanner, 300); }
+                            })();
+                            if (theme.customProducts && theme.customProducts.length) {
+                                var cps = theme.customProducts, rtcp = 0;
+                                (function insertCP(){
+                                    var fw = document.querySelector('.footer-wrap');
+                                    if (!fw || !fw.parentNode){ if (rtcp++ < 30) setTimeout(insertCP, 300); return; }
+                                    if (document.getElementById('frCustomProducts')) return;
+                                    var cards = cps.map(function(p){
+                                        var img = (p.images && p.images[0]) || 'https://placehold.co/300?text=%EC%83%81%ED%92%88';
+                                        var pr = (Number(p.price)||0).toLocaleString() + '원';
+                                        var nm = (p.name||'상품').replace(/</g,'&lt;');
+                                        return '<div class="hotdeal-card" style="cursor:pointer;" onclick="window._frCpDetail(\''+(p.id||'')+'\')">'
+                                            + '<div class="hotdeal-img-box"><img src="'+img+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'">'
+                                            + '<div style="position:absolute;top:10px;left:10px;background:#c2410c;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">SHOP</div></div>'
+                                            + '<div class="hotdeal-info"><div class="hotdeal-title">'+nm+'</div><div class="hotdeal-meta">'+((p.options&&p.options.length)?'옵션 있음':'&nbsp;')+'</div><div class="hotdeal-price">'+pr+'</div></div></div>';
+                                    }).join('');
+                                    var sec = document.createElement('div');
+                                    sec.id = 'frCustomProducts';
+                                    sec.className = 'hotdeal-wrapper';
+                                    sec.style.cssText = 'max-width:1400px;margin:24px auto;padding:20px;background:#fff7ed;border-radius:12px;box-sizing:border-box;';
+                                    sec.innerHTML = '<div class="hotdeal-header"><h2 style="color:#c2410c;">가맹점 상품 <span class="badge-hot" style="background:#c2410c;">Shop</span></h2><p>'+((f.company_name||'')+' 자체 상품 — 주문 문의는 아래 연락처로')+'</p></div><div class="hotdeal-grid">'+cards+'</div>';
+                                    fw.parentNode.insertBefore(sec, fw);
+                                })();
+                                // 자체상품 상세 모달
+                                window._frCpDetail = function(id){
+                                    var p = cps.filter(function(x){ return (x.id||'')===id; })[0]; if (!p) return;
+                                    var opts = (p.options||[]).map(function(o){ return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;"><span>'+(o.name||'')+'</span><span>+'+((Number(o.price)||0).toLocaleString())+'원</span></div>'; }).join('');
+                                    var imgs = (p.images||[]).map(function(u){ return '<img src="'+u+'" style="width:100%;border-radius:10px;margin-bottom:8px;">'; }).join('');
+                                    var ov = document.createElement('div');
+                                    ov.style.cssText = 'position:fixed;inset:0;z-index:100050;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+                                    ov.onclick = function(e){ if (e.target===ov) document.body.removeChild(ov); };
+                                    ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;">'
+                                        + imgs + '<div style="font-size:18px;font-weight:800;margin:6px 0;">'+(p.name||'')+'</div>'
+                                        + '<div style="font-size:20px;font-weight:900;color:#c2410c;margin-bottom:10px;">'+((Number(p.price)||0).toLocaleString())+'원</div>'
+                                        + (p.desc?('<div style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:12px;white-space:pre-wrap;">'+String(p.desc).replace(/</g,'&lt;')+'</div>'):'')
+                                        + opts
+                                        + '<div style="margin-top:16px;padding:12px;border-radius:10px;background:#fff7ed;font-size:13px;color:#7c2d12;">주문 문의: <b>'+(f.phone||'')+'</b></div>'
+                                        + '<button onclick="this.closest(\'div[style*=fixed]\')&&document.body.removeChild(this.closest(\'div[style*=fixed]\'))" style="margin-top:14px;width:100%;padding:12px;border:none;border-radius:10px;background:#1a1430;color:#fff;font-weight:800;cursor:pointer;">닫기</button></div>';
+                                    document.body.appendChild(ov);
+                                };
+                            }
                         })
                         .catch(function(){});
                 } catch(e){}
@@ -1075,19 +1122,24 @@ window._fabricTopNav = function() {
 };
 // 2026-09-10: 일시 판매중지 카테고리 상단메뉴 회색+클릭불가 (광고인쇄=44444 / 상업인쇄물=printe_product / 굿즈=goods).
 //   복구하려면 아래 window._SUSPENDED_NAV 배열을 [] 로 비우면 됨. 정적 fallback(data-fb-key) + 동적(data-top-code) + 굿즈(data-nav-key) 모두 커버.
-window._SUSPENDED_NAV = ['44444', 'printe_product', 'goods'];
+// 2026-09-14: 광고인쇄(44444)·굿즈(goods)는 상단 탑뷰에서 완전 숨김. 상업인쇄물(printe_product)은 회색 유지.
+window._SUSPENDED_NAV = ['printe_product'];
+window._HIDDEN_NAV = ['44444', 'goods'];
 // 2026-09-11: 홈 '허니콤보드 원판'(#wholesaleBoardSection) 에 노출할 상품 5종(지정 순서). 관리자 상품코드. 변경 시 여기만 수정.
 window._RAW_BOARD_CODES = ['53453455435', 'w23443243', '675756756765', '34553545', '3454353676', '34535345'];
+// 2026-09-14: '기타상품' 섹션(구 광고인쇄 popularSection 재활용)에 노출할 10종. 변경 시 여기만 수정.
+window._ETC_CODES = ['44578', '345645645', 'acrl20003', '752005', '96587-2', 'gds_acr_kr_10', 'gds_ksty_kr_03', 'gds_ksty_kr_02', 'gds_acr_kr_05', '345345353'];
 window._applySuspendedNav = function(){
     try {
         var track = document.getElementById('topCatMenuTrack');
-        if (!track || !window._SUSPENDED_NAV || !window._SUSPENDED_NAV.length) return;
+        if (!track) return;
         var suspended = [];
         track.querySelectorAll('.tcm-btn').forEach(function(b){
             var key = b.dataset.topCode || b.dataset.navKey || b.getAttribute('data-fb-key') || '';
-            if (window._SUSPENDED_NAV.indexOf(key) !== -1) { b.classList.add('tcm-suspended'); suspended.push(b); }
+            if (window._HIDDEN_NAV && window._HIDDEN_NAV.indexOf(key) !== -1) { b.classList.add('tcm-navhidden'); return; }
+            if (window._SUSPENDED_NAV && window._SUSPENDED_NAV.indexOf(key) !== -1) { b.classList.add('tcm-suspended'); suspended.push(b); }
         });
-        // 2026-09-11: 회색(판매중지) 항목은 우측 끝으로 몰기 — 현재 DOM 순서 유지하며 맨 뒤로 이동.
+        // 회색(판매중지) 항목은 우측 끝으로 몰기.
         suspended.forEach(function(b){ track.appendChild(b); });
     } catch(e){}
 };
@@ -5624,10 +5676,13 @@ window.addEventListener('load', function() {
      허니콤보드 전시부스 과부하로 12월말까지 일시 판매중지 (아래 #suspendNoticeSection 안내와 세트).
      복구: 이 <style> 블록 + #suspendNoticeSection div + JS의 window._SUSPENDED_NAV 배열 비우기 로 원상복구. -->
 <style id="tempHideSections20260910">
-  /* 홈 섹션: 숨기지 않고 연하게 + 클릭 불가 (맨 아래 노출) */
-  #goodsSection, #popularSection, #printServiceSection { opacity:.5 !important; filter:grayscale(.75); pointer-events:none !important; }
-  /* 상단 메뉴 버튼: 회색 + 클릭 불가 */
+  /* 2026-09-14: 광고인쇄(popular)→'기타상품' 10개로 재활용(숨김 해제), 굿즈샵 숨김, 인쇄물 흐림 유지, 안내 숨김 */
+  #goodsSection { display:none !important; }
+  #printServiceSection { opacity:.5 !important; filter:grayscale(.75); pointer-events:none !important; }
+  #suspendNoticeSection { display:none !important; }
+  /* 상단 메뉴 버튼: 회색 + 클릭 불가 / 완전 숨김 */
   #topCatMenuTrack .tcm-btn.tcm-suspended { color:#c2c2c2 !important; opacity:.6; pointer-events:none; cursor:default; }
+  #topCatMenuTrack .tcm-btn.tcm-navhidden { display:none !important; }
 </style>
 <!-- 2026-09-10(→09-11 갱신): 일시 판매중지 안내 = 알약(pill)형 긴 버튼으로 더 눈에 띄게. 위 tempHideSections 숨김과 세트. 복구 시 이 블록 삭제.
      JS(섹션 재배치)가 패브릭인쇄 섹션 바로 아래로 이동시킴. KR/JP/EN 은 __SITE_CODE 로 선택. 그림자 없이 플랫, 단색 알약. -->
@@ -6120,8 +6175,8 @@ window.addEventListener('load', function() {
 <!-- 2026-06-01: 인기절정샵 → 광고인쇄로 재활용. is_popular 플래그는 그대로 — 관리자 큐레이션이 이쪽 카드로 노출됨. -->
 <div id="popularSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #eff6ff; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
-        <h2 style="color: #2563eb;"><span data-i18n="home_popular_title">광고인쇄</span> <span class="badge-hot" style="background:#2563eb;">Ad Print</span></h2>
-        <p data-i18n="home_popular_desc">현수막·베너·실사출력·간판 등 광고용 인쇄물</p>
+        <h2 style="color: #0891b2;">기타상품 <span class="badge-hot" style="background:#0891b2;">Etc</span></h2>
+        <p>현수막·실사출력·아크릴·시트지·키링 등 다양한 상품</p>
     </div>
     <div class="hotdeal-scroll-wrap">
         <button class="hotdeal-arrow left" onclick="scrollHotdeal('popularGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -12902,7 +12957,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
-            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
+            loadProductsByCategory('popularSection', 'popularGrid', '기타상품', 10, { codes: window._ETC_CODES, badge:{ label:'기타', color:'#0891b2' } });
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
@@ -12915,7 +12970,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                     loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
                     loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
                     loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
-                    loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
+                    loadProductsByCategory('popularSection', 'popularGrid', '기타상품', 10, { codes: window._ETC_CODES, badge:{ label:'기타', color:'#0891b2' } });
                 }
                 if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
                 if (typeof window._applyFabPrices === 'function') window._applyFabPrices();
@@ -19522,7 +19577,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
-            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
+            loadProductsByCategory('popularSection', 'popularGrid', '기타상품', 10, { codes: window._ETC_CODES, badge:{ label:'기타', color:'#0891b2' } });
         }
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
