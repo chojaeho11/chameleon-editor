@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914231535';
+    var CV = '20260914232156';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -843,11 +843,12 @@ if ('caches' in window) {
                             if (!theme) return;
                             if (typeof theme.margin === 'number' && theme.margin > 0) {
                                 window.__FR_MARGIN = theme.margin;
-                                // 마진 로드가 카드 렌더보다 늦을 수 있어 재적용 (패브릭 하드코딩 가격 + 일반 카드 재렌더 트리거)
+                                // 마진이 비동기로 늦게 로드되므로, 홈 카드 전체를 다시 그려 마진을 반영한다.
                                 var rt = 0;
-                                (function reapply(){
+                                (function waitRerender(){
+                                    if (window._frRerenderHome) { window._frRerenderHome(); setTimeout(window._frRerenderHome, 1300); return; }
                                     if (typeof window._applyFabPrices === 'function') window._applyFabPrices();
-                                    if (rt++ < 8) setTimeout(reapply, 500);
+                                    if (rt++ < 20) setTimeout(waitRerender, 300);
                                 })();
                             }
                             // 2026-09-14: 테마 단색 지정 시 상단 메뉴바(#topCatMenu) 색상도 변경.
@@ -12905,6 +12906,21 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
+        // 2026-09-14: 가맹점 마진(__FR_MARGIN)이 비동기로 늦게 로드될 때 홈 카드 전체를 다시 그려 마진 반영.
+        window._frRerenderHome = function(){
+            try {
+                if (typeof loadSpecialProducts === 'function') {
+                    loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 20);
+                    loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 15);
+                    loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
+                    loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
+                    loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
+                    loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
+                }
+                if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
+                if (typeof window._applyFabPrices === 'function') window._applyFabPrices();
+            } catch(e){}
+        };
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시

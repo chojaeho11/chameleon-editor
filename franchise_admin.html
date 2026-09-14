@@ -377,7 +377,7 @@ select option{background:#1d1640;}
         if (vv) vv.textContent = Math.round(margin);
         if (fm) fm.value = String(Math.round(margin));
       }
-      function setMargin(m){ margin = Math.max(MIN, Math.min(MAX, m)); render(); }
+      function setMargin(m){ margin = Math.round(Math.max(MIN, Math.min(MAX, m))); render(); }   // 정수 단위로 스냅(소수점 방지)
       window._mgSetMargin = setMargin;   // 저장 로드/위저드에서 값 세팅용
       window._mgGetMargin = function(){ return Math.round(margin); };
       function fromEvent(e){
