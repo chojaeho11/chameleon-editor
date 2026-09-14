@@ -4691,6 +4691,8 @@ html, body { background: #ffffff !important; }
         const tierPct = 0;
         const discount = 0;
         // 옵션별 breakdown (이름 + 가격)
+        // 2026-09-15: 가맹점 클론 판매 마진(%) — 옵션(추가옵션·받침·포장)에도 반영해 상세표시=결제 일치. 본사는 ×1.
+        const _frMulR = (state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;
         const addonBreakdownLines = [];
         let addonTotal = 0;
         try {
@@ -4711,7 +4713,7 @@ html, body { background: #ffffff !important; }
                 }
                 // 2026-05-29: 프리셋 굿즈 — 고리 옵션은 300원 균일 (DB 가격 무시)
                 // 2026-05-30: 티셔츠 — 사이즈/색상 추가금 0원
-                const addonPrice = state.presetHasHooks ? 300 : (state.presetType === 'tshirt' ? 0 : (addon.price || 0));
+                const addonPrice = Math.round((state.presetHasHooks ? 300 : (state.presetType === 'tshirt' ? 0 : (addon.price || 0))) * _frMulR);
                 const line = addonPrice * aQty;
                 addonTotal += line;
                 let nm = addon.display_name || addon.name || code;   // 2026-06-30: 언어별 이름(config display_name=name_jp/us)
@@ -4731,7 +4733,7 @@ html, body { background: #ffffff !important; }
                 var bOpt = BASE_STAND_OPTS[bk];
                 if (!bOpt) return;
                 var bQty = state.baseStands[bk] || 1;
-                var _bFeeRaw = state.isStandeeV2 ? 0 : (bOpt.fee || 0);
+                var _bFeeRaw = state.isStandeeV2 ? 0 : Math.round((bOpt.fee || 0) * _frMulR);
                 var bLine = _bFeeRaw * bQty;
                 if (bLine > 0) {
                     baseStandFee += bLine;
@@ -4950,7 +4952,7 @@ html, body { background: #ffffff !important; }
             var _basePrint = 0;
             state.tshirtPrintAreas.forEach(function(a){ _basePrint += (_PRINT_FEE_PER_AREA[a] || 0); });
             // 2026-06-25: 3장+ 인쇄비 50% 할인 폐지 (사용자 요청) — 정가.
-            tshirtPrintFee = Math.round(_basePrint * qty);
+            tshirtPrintFee = Math.round(_basePrint * _frMulR * qty);
         }
         // 2026-06-29: 베스트굿즈 프리셋 — 개별포장 3종 모두 개당(×수량) 과금
         //   개별포장(인쇄없음) plain = 200원/개 / 내지인쇄·상단인쇄 = 500원/개 (JP 20엔 / 50엔)
@@ -4959,10 +4961,10 @@ html, body { background: #ffffff !important; }
             if (state.presetWrapType === 'bulk') {
                 presetWrapFee = 0;   // 2026-07-28: 벌크포장 무료
             } else if (state.presetWrapType === 'insert' || state.presetWrapType === 'top') {
-                presetWrapFee = 500 * qty;
+                presetWrapFee = Math.round(500 * _frMulR) * qty;
             } else {
                 // 'plain' (인쇄없음) 또는 미설정/legacy → 200원/개
-                presetWrapFee = 200 * qty;
+                presetWrapFee = Math.round(200 * _frMulR) * qty;
             }
         }
 
@@ -9641,7 +9643,9 @@ html, body { background: #ffffff !important; }
             // 2026-05-29: 프리셋 굿즈(키링/코롯토) — 고리/색상 옵션은 모두 300원 균일 (DB 가격 무시)
             //   2026-05-30: 손수건 등 고리 없는 프리셋은 override 비적용 (DB 가격 유지)
             //   2026-05-30: 티셔츠 — 사이즈·색상 모두 추가금 0원
-            var price = (compactMode && state.presetHasHooks) ? 300 : (_isTshirt ? 0 : (a.price || 0));
+            // 2026-09-15: 옵션 표시가에도 가맹점 마진 반영(본사 ×1) — 결제가와 일치.
+            var _frMulOpt = (state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;
+            var price = Math.round(((compactMode && state.presetHasHooks) ? 300 : (_isTshirt ? 0 : (a.price || 0))) * _frMulOpt);
             // 2026-05-30: 티셔츠 사이즈 addon 은 S/M/L 로 라벨 단축
             if (_isTshirt) {
                 var alias = _tshirtSizeAlias(name);
@@ -15276,10 +15280,12 @@ html, body { background: #ffffff !important; }
                     // 2026-07-28: 벌크포장(개별포장 없음) — 무료 (사장님 지시)
                     { type:'bulk',   img:'', label_ko:'벌크포장 (개별포장 없음)', label_jp:'バルク梱包（個別なし）', label_en:'Bulk (no wrap)', fee:0 }
                 ];
+                var _frMulW = (state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;   // 가맹점 마진(본사 ×1)
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
                     var lbl = tr(w.label_ko, w.label_jp, w.label_en);
                     // 2026-07-28: 무료(벌크)면 초록 '무료', 유료면 빨강 '+원/개'
-                    var feeStr = (w.fee > 0) ? ('+' + fmtPrice(w.fee) + '/' + tr('개', '個', 'pc')) : tr('무료', '無料', 'FREE');
+                    var _wFeeDisp = Math.round(w.fee * _frMulW);   // 표시가 마진 반영(실제 과금은 recalc presetWrapFee)
+                    var feeStr = (w.fee > 0) ? ('+' + fmtPrice(_wFeeDisp) + '/' + tr('개', '個', 'pc')) : tr('무료', '無料', 'FREE');
                     var feeColor = (w.fee > 0) ? '#dc2626' : '#059669';
                     // 2026-07-28: 벌크포장 — 사진 없이 가로로 긴 바 (그리드 전체 폭) (사장님 지시)
                     if (w.type === 'bulk') {
@@ -17519,6 +17525,8 @@ html, body { background: #ffffff !important; }
             // 2026-07-21: 위치별 배치도 PDF (인쇄 위치마다 1페이지) — 작업지시서·주문관리에서 열람
             tshirtLayoutPdfUrl: (state.presetType === 'tshirt') ? (state._cartTshirtLayoutPdfUrl || null) : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.discount, final: calc.final },
+            // 2026-09-15: 가맹점 클론 판매 마진(%) — 옵션/일반상품 base 를 _soCalcItemPrice 에서 마진 반영(면적상품 customSize.unit 은 이미 마진).
+            _frMargin: (state && state.frMargin) || 0,
             // 2026-06-13: 낱장 인쇄 — 사이즈/면/용지/박/후가공 + 비규격 입력값
             leafletSize: state.isLeaflet ? (state.leafletSize || 'A4') : null,
             leafletSide: state.isLeaflet ? (state.leafletSide || 'single') : null,
@@ -19443,7 +19451,9 @@ html, body { background: #ffffff !important; }
             return (it._simple && Number(it._simple.final)) || (it.product && Number(it.product.price)) || 0;
         }
         var qty = it.qty || 1;
-        var unit = (it.product && it.product.price) || 0;
+        // 2026-09-15: 가맹점 클론 판매 마진(%) — 옵션/일반상품 base 에 반영. 면적상품 customSize.unit 은 이미 마진(아래서 unit 덮어씀 → 이중 아님).
+        var _frMul = (it && it._frMargin > 0) ? (1 + it._frMargin / 100) : 1;
+        var unit = Math.round(((it.product && it.product.price) || 0) * _frMul);
         // 2026-07-03: early-return 상품(명함·리플렛·스티커·책자)도 일반 경로(하단 base += shipping.fee)와 동일하게
         //   배송비를 포함해 반환해야 함. 미포함 시 카트합계 taxBase += (subPrice - shipFee) 에서 배송비만큼 상품가가
         //   깎여, JP 명함 카트 合計가 상품가 0 + 배송 5000 = ¥500 으로만 표시되던 버그. (KR 은 shipFee 0 이라 변화 없음)
@@ -19636,7 +19646,7 @@ html, body { background: #ffffff !important; }
                 var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
                 // 키링/코롯토 고리: 저장된 addonQty 가 잘못된 경우 (모달 외부에서 담긴 경우 등) 안전망으로 product qty 사용
                 if (_hasHooks && aQty < qty) aQty = qty;
-                var addonPrice = _hasHooks ? 300 : (_isTshirtItm ? 0 : (addon.price || 0));
+                var addonPrice = Math.round((_hasHooks ? 300 : (_isTshirtItm ? 0 : (addon.price || 0))) * _frMul);
                 base += addonPrice * aQty;
             });
         }
@@ -19645,9 +19655,9 @@ html, body { background: #ffffff !important; }
         //   "제품이 2개면 받침도 2개 값이 올라가야함" — 모달 큐 표시와 동일 로직.
         var _bsMult = it.cutPrint ? (qty || 1) : 1;
         if (Array.isArray(it.baseStands)) {
-            it.baseStands.forEach(function (b) { base += (b.fee || 0) * (b.qty || 1) * _bsMult; });
+            it.baseStands.forEach(function (b) { base += Math.round((b.fee || 0) * _frMul) * (b.qty || 1) * _bsMult; });
         } else if (it.baseStand && typeof it.baseStand.fee === 'number') {
-            base += it.baseStand.fee * (it.baseStand.qty || 1) * _bsMult;
+            base += Math.round(it.baseStand.fee * _frMul) * (it.baseStand.qty || 1) * _bsMult;
         }
         // 2026-06-30: 프리셋 굿즈 개별포장 — 전부 개당(×수량). plain(인쇄없음)=200, 내지/상단인쇄=500. (recalc 와 일치)
         if (_isPreset) {
@@ -19655,9 +19665,9 @@ html, body { background: #ffffff !important; }
             if (_wt === 'bulk') {
                 // 2026-07-28: 벌크포장 무료 — 포장비 없음
             } else if (_wt && _wt !== 'none') {
-                base += ((_wt === 'insert' || _wt === 'top') ? 500 : 200) * qty;
+                base += Math.round(((_wt === 'insert' || _wt === 'top') ? 500 : 200) * _frMul) * qty;
             } else if (it._presetWrap) {
-                base += 200 * qty;   // legacy
+                base += Math.round(200 * _frMul) * qty;   // legacy
             }
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (로고 3000, 앞면전체 8000, 뒷면전체 8000 / 장)
@@ -19667,7 +19677,7 @@ html, body { background: #ffffff !important; }
             var _bpr = 0;
             it._tshirtPrintAreas.forEach(function(a){ _bpr += (_FEE[a] || 0); });
             // 2026-06-25: 3장+ 인쇄비 50% 할인 폐지 — 정가.
-            base += Math.round(_bpr * qty);
+            base += Math.round(_bpr * _frMul * qty);
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
