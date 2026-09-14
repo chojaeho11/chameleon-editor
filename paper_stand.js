@@ -111,6 +111,10 @@
         return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
 
+    // 2026-09-15(사장님): 가맹점/리셀러 클론에서 종이매대 카드가격도 판매 마진(window.__FR_MARGIN %) 반영.
+    //   (paper_stand.html 이 sessionStorage._franchise_ref 로 테마 마진을 __FR_MARGIN 에 세팅. 본사=0→×1.)
+    function _psFrMul() { var m = Number(window.__FR_MARGIN) || 0; return m > 0 ? (1 + m / 100) : 1; }
+
     // 가격 포맷 (언어별 통화 위치)
     function formatPrice(krwPrice) {
         var converted = (krwPrice || 0) * LANG.currencyRate;
@@ -193,7 +197,7 @@
         const sizeText = getSizeText(product);
         // 2026-07-15: 카드 표기 = 실제 주문 단가(정가)와 일치. 이전엔 ×0.5(50% 할인가)만 크게 보여줘
         //   상세/주문 결제금액(정가)과 표기가 어긋났음(사장님 지적). 정가 그대로 표시.
-        var price = formatPrice(product.price);
+        var price = formatPrice(Math.round((product.price || 0) * _psFrMul()));
 
         card.innerHTML =
             '<img class="product-img" src="' + imgSrc + '" alt="' + name + '" loading="lazy" ' +
@@ -279,6 +283,7 @@
 
     // 초기화
     document.addEventListener('DOMContentLoaded', loadProducts);
+    window._psReloadProducts = loadProducts;   // 2026-09-15: 가맹점 마진 로드 후 재렌더용
 
     // 2026-07-18: 뒤로가기(bfcache 복귀) 시 이동중 잠금·오버레이 해제 — 안 풀면 카드가 안 눌림
     window.addEventListener('pageshow', function() {

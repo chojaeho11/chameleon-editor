@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915024151';
+    var CV = '20260915025101';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1772,7 +1772,29 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="paper_stand.js?v=192"></script>
+<script>
+// 2026-09-15(사장님): 가맹점/리셀러 클론에서 종이매대로 넘어와도 판매 마진 유지.
+//   같은 cafe2626 도메인이라 sessionStorage._franchise_ref 유지됨 → 테마 마진을 __FR_MARGIN 에 세팅 후 카드 재렌더.
+(function(){
+    var ref = null;
+    try { ref = sessionStorage.getItem('_franchise_ref'); } catch(e){}
+    if (!ref) return;
+    var SUPA = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    fetch(SUPA + '/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(ref) + '.json?_t=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(theme){
+            if (theme && typeof theme.margin === 'number' && theme.margin > 0) {
+                window.__FR_MARGIN = theme.margin;
+                var t = 0;
+                (function waitReload(){
+                    if (window._psReloadProducts) { window._psReloadProducts(); return; }
+                    if (t++ < 40) setTimeout(waitReload, 150);
+                })();
+            }
+        }).catch(function(){});
+})();
+</script>
+<script src="paper_stand.js?v=193"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
