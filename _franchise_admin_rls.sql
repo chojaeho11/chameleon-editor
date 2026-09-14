@@ -1,23 +1,27 @@
 -- ============================================================
--- (필요 시에만) 본사 관리자 가맹 승인 RLS 정책  (2026-09-15)
--- franchise_hq 승인/반려/취소 버튼이 "동작 안 함/권한 오류" 가 뜰 때만 실행하세요.
--- 정상 동작하면 이 파일은 실행할 필요 없습니다.
+-- 본사 관리자 가맹/리셀러 승인·반려 RLS 정책  (2026-09-15)
+-- 관리자 페이지(고객관리)의 승인/반려/취소 버튼이 "토스트만 뜨고 실제로 안 바뀔" 때 실행하세요.
 --
--- 증상: franchise_hq 에서 ✅승인 눌렀는데 상태가 안 바뀜 (RLS 가 남의 franchises 행 UPDATE 를 막음).
--- 원인: franchises 는 원래 "본인 소유 행만 수정" RLS 라, 관리자가 남의 신청을 승인 못 함.
--- 해결: profiles.role='admin' 인 사용자는 모든 franchises 행을 수정할 수 있게 허용.
+-- 원인: franchises 테이블 RLS 가 "본인 소유 행만 수정" 이라, 관리자가 남의 신청을
+--       승인/반려하려 하면 UPDATE 가 0행만 반영(조용한 실패) → 화면이 안 바뀜.
+-- 해결: 관리자 이메일(korea900as@gmail.com) 은 franchises 전체를 수정할 수 있게 허용.
 -- ============================================================
 
--- 관리자(본사) 계정이 admin 등급인지 먼저 확인
-SELECT id, email, role FROM profiles WHERE email = 'korea900as@gmail.com';
--- role 이 'admin' 이 아니면:  UPDATE profiles SET role='admin' WHERE email='korea900as@gmail.com';
+-- franchises: 관리자 전체 접근(조회·수정) 정책
+DROP POLICY IF EXISTS hq_admin_all_franchises ON franchises;
+CREATE POLICY hq_admin_all_franchises ON franchises
+  FOR ALL
+  USING ( (auth.jwt() ->> 'email') = 'korea900as@gmail.com' )
+  WITH CHECK ( (auth.jwt() ->> 'email') = 'korea900as@gmail.com' );
 
--- franchises UPDATE 관리자 정책 (승인/반려/취소용)
-DROP POLICY IF EXISTS hq_admin_update_franchises ON franchises;
-CREATE POLICY hq_admin_update_franchises ON franchises
+-- profiles: 승인 시 등급(role) 부여도 관리자가 할 수 있어야 함.
+--   (이미 회원관리 등급변경이 되고 있으면 이 블록은 없어도 됩니다. 안 되면 같이 실행.)
+DROP POLICY IF EXISTS hq_admin_update_profiles ON profiles;
+CREATE POLICY hq_admin_update_profiles ON profiles
   FOR UPDATE
-  USING ( (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin' )
-  WITH CHECK ( (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin' );
+  USING ( (auth.jwt() ->> 'email') = 'korea900as@gmail.com' )
+  WITH CHECK ( (auth.jwt() ->> 'email') = 'korea900as@gmail.com' );
 
--- (profiles.role 변경 정책은 이미 global_admin 회원관리에서 동작 중이므로 별도 불필요.
---  만약 승인 시 등급 부여가 안 되면 profiles 에도 동일 admin UPDATE 정책이 필요합니다.)
+-- 확인: 정책 목록
+SELECT tablename, policyname, cmd FROM pg_policies
+WHERE tablename IN ('franchises','profiles') ORDER BY tablename, policyname;

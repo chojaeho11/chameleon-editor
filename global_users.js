@@ -298,13 +298,17 @@ window.loadFranchiseApplications = async () => {
         rows = data || [];
     } catch(e) { if (wrap) wrap.innerHTML = '<div style="color:#ef4444;font-size:13px;">신청 목록 로드 실패: ' + _frEsc(e.message||e) + '</div>'; return; }
 
-    const rank = { pending:0, approved:1, rejected:2, cancelled:3 };
-    rows.sort((a,b) => (rank[a.status]==null?9:rank[a.status]) - (rank[b.status]==null?9:rank[b.status]));
-    const pendingN = rows.filter(r => (r.status||'pending')==='pending').length;
-    if (cnt) cnt.textContent = '대기 ' + pendingN + ' / 전체 ' + rows.length;
+    // 2026-09-15: 대기(pending) 신청만 큐에 표시. 승인/반려/취소된 건은 큐에서 사라짐(처리 완료).
+    const processed = rows.filter(r => (r.status||'pending') !== 'pending');
+    const pApproved = processed.filter(r => r.status==='approved').length;
+    const pRejected = processed.filter(r => r.status==='rejected').length;
+    rows = rows.filter(r => (r.status||'pending') === 'pending');
+    rows.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
+    if (cnt) cnt.textContent = '대기 ' + rows.length;
     if (!wrap || wrap.style.display === 'none') return;   // 접혀 있으면 카운트만 갱신
 
-    if (!rows.length) { wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">신청한 가맹/리셀러가 없습니다.</div>'; return; }
+    const foot = `<div style="color:#94a3b8; font-size:12px; padding:8px 4px 0;">처리 완료 — 승인 ${pApproved} · 반려 ${pRejected} (승인 회원은 회원 목록/등급, 반려 회원은 재신청 시 다시 대기로 표시)</div>`;
+    if (!rows.length) { wrap.innerHTML = '<div style="color:#16a34a; font-size:13px; padding:8px;">✅ 대기 중인 신청이 없습니다.</div>' + foot; return; }
     wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">불러오는 중…</div>';
 
     // 신청 유형(리셀러/가맹점) 병렬 조회
@@ -341,8 +345,10 @@ window.loadFranchiseApplications = async () => {
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">${btns}</div>
         </div>`;
-    }).join('');
+    }).join('') + `<div style="margin-top:6px;"><button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;font-weight:700;" onclick="rejectAllPendingFranchises(this)">❌ 대기 ${rows.length}건 전체 반려</button></div>` + foot;
 };
+// RLS 로 UPDATE 가 0행 반영(조용한 실패)일 때 명확히 알림. .select() 로 반영 행 확인.
+const _FR_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_admin_rls.sql 을 Supabase SQL Editor 에서 먼저 실행하세요.';
 window.approveFranchise = async (slug, ownerId, role, btn) => {
     role = (role === 'franchise') ? 'franchise' : 'reseller';
     const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 10%';
@@ -350,11 +356,13 @@ window.approveFranchise = async (slug, ownerId, role, btn) => {
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
-        const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug);
+        const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug).select('id');
         if (r1.error) throw r1.error;
+        if (!r1.data || !r1.data.length) throw new Error(_FR_RLS_MSG);
         if (ownerId) {
-            const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId);
+            const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId).select('id');
             if (r2.error) throw r2.error;
+            if (!r2.data || !r2.data.length) throw new Error('가맹점 상태는 승인됐지만 등급 부여가 RLS 로 막혔습니다. ' + _FR_RLS_MSG);
         }
         showToast('승인 완료 — ' + pctTxt, 'success');
         loadFranchiseApplications();
@@ -362,20 +370,36 @@ window.approveFranchise = async (slug, ownerId, role, btn) => {
     } catch(e) { showToast('승인 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
 };
 window.rejectFranchise = async (slug, btn) => {
-    if (!confirm(`[${slug}] 신청을 반려합니다.\n\n반려하면 이 계정은 재신청이 불가합니다. 계속할까요?`)) return;
+    if (!confirm(`[${slug}] 신청을 반려합니다.\n\n반려해도 신청자가 다시 저장하면 재신청됩니다. 계속할까요?`)) return;
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
-        const r = await sb.from('franchises').update({ status: 'rejected' }).eq('slug', slug);
+        const r = await sb.from('franchises').update({ status: 'rejected' }).eq('slug', slug).select('id');
         if (r.error) throw r.error;
+        if (!r.data || !r.data.length) throw new Error(_FR_RLS_MSG);
         showToast('반려 처리됨', 'success'); loadFranchiseApplications();
     } catch(e) { showToast('반려 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = '❌ 반려'; } }
+};
+window.rejectAllPendingFranchises = async (btn) => {
+    if (!confirm('현재 대기 중인 신청을 전부 반려합니다.\n\n반려해도 신청자가 다시 저장하면 재신청됩니다. 계속할까요?')) return;
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r = await sb.from('franchises').update({ status: 'rejected' }).eq('status', 'pending').select('id');
+        if (r.error) throw r.error;
+        // status 가 null 인 옛 행도 반려
+        const r2 = await sb.from('franchises').update({ status: 'rejected' }).is('status', null).select('id');
+        if (r2.error) throw r2.error;
+        const n = (r.data ? r.data.length : 0) + (r2.data ? r2.data.length : 0);
+        if (!n) throw new Error('반영된 행이 없습니다. 이미 반려됐거나, ' + _FR_RLS_MSG);
+        showToast(n + '건 전체 반려됨', 'success'); loadFranchiseApplications();
+    } catch(e) { showToast('전체 반려 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = '❌ 대기 전체 반려'; } }
 };
 window.cancelFranchise = async (slug, ownerId, btn) => {
     if (!confirm(`[${slug}] 가맹/리셀러 계약을 취소합니다.\n\n취소하면 매입 할인이 해제되고(등급→일반), 재신청이 불가합니다. 계속할까요?`)) return;
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
-        const r1 = await sb.from('franchises').update({ status: 'cancelled' }).eq('slug', slug);
+        const r1 = await sb.from('franchises').update({ status: 'cancelled' }).eq('slug', slug).select('id');
         if (r1.error) throw r1.error;
+        if (!r1.data || !r1.data.length) throw new Error(_FR_RLS_MSG);
         if (ownerId) await sb.from('profiles').update({ role: 'customer' }).eq('id', ownerId);
         showToast('취소 처리됨 (등급 해제)', 'success'); loadFranchiseApplications();
         if (window.loadMembers) loadMembers(false);
