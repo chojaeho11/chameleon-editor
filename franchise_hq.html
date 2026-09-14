@@ -214,7 +214,10 @@ input:focus{border-color:#3b82f6;}
       var st=f.status||'pending';
       var d=f.created_at?new Date(f.created_at).toLocaleDateString():'-';
       var btns='';
-      if(st!=='approved') btns+='<button class="btn btn-gold btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'">✅ 승인</button> ';
+      if(st!=='approved'){
+        btns+='<button class="btn btn-pri btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'" data-role="reseller">✅ 리셀러 승인 (10%)</button> ';
+        btns+='<button class="btn btn-gold btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'" data-role="franchise">🏭 가맹점 승인 (20%)</button> ';
+      }
       if(st==='pending') btns+='<button class="btn btn-ghost btn-sm" data-rej="'+esc(f.slug)+'">❌ 반려</button> ';
       if(st==='approved') btns+='<button class="btn btn-ghost btn-sm" data-cxl="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'">⛔ 취소</button> ';
       return '<div class="fr-card" style="margin-bottom:10px;">'
@@ -224,24 +227,27 @@ input:focus{border-color:#3b82f6;}
           +'<div>'+btns+'</div>'
         +'</div></div>';
     }).join('');
-    el.querySelectorAll('[data-appr]').forEach(function(b){ b.onclick=function(){ approveFr(b.dataset.appr, b.dataset.oid, b); }; });
+    el.querySelectorAll('[data-appr]').forEach(function(b){ b.onclick=function(){ approveFr(b.dataset.appr, b.dataset.oid, b.dataset.role, b); }; });
     el.querySelectorAll('[data-rej]').forEach(function(b){ b.onclick=function(){ rejectFr(b.dataset.rej, b); }; });
     el.querySelectorAll('[data-cxl]').forEach(function(b){ b.onclick=function(){ cancelFr(b.dataset.cxl, b.dataset.oid, b); }; });
   }
-  async function approveFr(slug, ownerId, btn){
-    if(!confirm('['+slug+'] 가맹점을 승인합니다.\n\n승인 시 이 회원은 본사 상품을 20% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
+  async function approveFr(slug, ownerId, role, btn){
+    role = (role==='franchise') ? 'franchise' : 'reseller';
+    var pctTxt = (role==='franchise') ? '가맹점 20%' : '리셀러 10%';
+    if(!confirm('['+slug+'] 을(를) '+pctTxt+' 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 '+(role==='franchise'?'20':'10')+'% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
+    var orig = btn ? btn.textContent : '';
     if(btn){btn.disabled=true;btn.textContent='처리 중…';}
     try{
       var r1=await sb.from('franchises').update({status:'approved'}).eq('slug',slug);
       if(r1.error) throw r1.error;
       if(ownerId){
-        var r2=await sb.from('profiles').update({role:'franchise'}).eq('id',ownerId);
+        var r2=await sb.from('profiles').update({role:role}).eq('id',ownerId);
         if(r2.error) throw r2.error;
       }
       var f=state.franchises.filter(function(x){return x.slug===slug;})[0]; if(f) f.status='approved';
-      toast('승인 완료 — 가맹점(20% 할인) 활성화','ok');
+      toast('승인 완료 — '+pctTxt+' 활성화','ok');
       renderApprovals();
-    }catch(e){ toast('승인 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent='✅ 승인';} }
+    }catch(e){ toast('승인 실패: '+(e.message||e),'err'); if(btn){btn.disabled=false;btn.textContent=orig;} }
   }
   async function rejectFr(slug, btn){
     if(!confirm('['+slug+'] 신청을 반려합니다.\n\n반려하면 이 계정은 재신청이 불가합니다. 계속할까요?')) return;
