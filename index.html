@@ -72,13 +72,19 @@
         var fr = new URLSearchParams(location.search).get('fr');
         if (fr) sessionStorage.setItem('_franchise_ref', fr.toLowerCase().replace(/[^a-z0-9-]/g,''));
     } catch(e){}
+    // 2026-09-15(사장님): 가맹점/리셀러 클론이면 <html> 에 fr-clone 클래스 → 허니콤보드 원판(도매상품) 숨김(CSS).
+    try {
+        var _isClone = false;
+        try { _isClone = !!(new URLSearchParams(location.search).get('fr') || sessionStorage.getItem('_franchise_ref')); } catch(e){}
+        if (_isClone) document.documentElement.classList.add('fr-clone');
+    } catch(e){}
 })();
 
 // [버전 자동 갱신] 배포된 version.txt 와 내장 CV 불일치 = 구버전 → 자동 새로고침 (고객 수동 새로고침 불필요).
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260915023752';
+    var CV = '20260915024151';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1248,6 +1254,10 @@ window._tcmScrollEtc = function(){
 };
 </script>
 <style>
+/* 2026-09-15(사장님): 가맹점/리셀러 클론(html.fr-clone) 에서는 허니콤보드 원판(도매상품) 숨김 — 상단 나브 + 홈 섹션 */
+html.fr-clone #topCatMenuTrack .tcm-btn[data-top-code="Wholesale Board Prices"],
+html.fr-clone #topCatMenuTrack .tcm-btn[data-fb-key="Wholesale Board Prices"],
+html.fr-clone #wholesaleBoardSection { display:none !important; }
 #topCatMenuTrack::-webkit-scrollbar { display:none; }
 #topCatMenu .tcm-btn {
     flex-shrink:0; padding:12px 14px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.8);
