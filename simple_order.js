@@ -3433,7 +3433,7 @@ html, body { background: #ffffff !important; }
           <button type="button" id="soSnsCouponBtn" onclick="window._soToggleSnsCoupon&&window._soToggleSnsCoupon()" style="flex:1; min-width:0; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:10px; padding:13px 15px; border:2px solid #16a34a; background:linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
             <span style="display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0;">
               <span style="font-size:14px;">🎁 ${tr('SNS 홍보 무료쿠폰으로 주문','SNS PR無料クーポンで注文','Order with SNS free coupon')}</span>
-              <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 적용 · 1회 최대 5만원 (배송비 포함)','タップで適用 · 1回最大5,000円','Tap to apply · up to 50,000 KRW/order')}</span>
+              <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 적용 · 구매금액 10% 이내 (최대 5만원)','タップで適用 · 購入金額の10%以内（最大5,000円）','Tap to apply · up to 10% of order (max 50,000 KRW)')}</span>
             </span>
             <span id="soSnsCouponBal" style="flex-shrink:0; text-align:right; line-height:1.05;"></span>
           </button>
@@ -3481,11 +3481,8 @@ html, body { background: #ffffff !important; }
         <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
           * ${tr('포인트·예치금은 전액 사용 가능 (배송비 포함) · PRO는 구독 할인','ポイント·預り金は全額利用可(送料込み) · PROは会員割引','Points / Deposit: full balance (incl. shipping) · PRO: member discount')}
         </div>
-        <!-- 2026-08-16: 구독 서비스 링크 — 비구독자에게 노출 (구독하면 모든 구매 10% + 포인트 동시 사용). isPro 면 _soInitWallet 에서 숨김 -->
-        <a id="soSubLink" href="javascript:void(0)" onclick="if(window.openSubPopup){window.openSubPopup();}else{location.href='/#subscriptionSection';}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; padding:10px 12px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:2px solid #7c3aed; border-radius:10px; text-decoration:none; color:#5b21b6; font-weight:800; font-size:12.5px; cursor:pointer;">
-          <span>👑 ${tr('구독하면 모든 구매 10% 할인 · 포인트와 동시 사용','購読で全商品10%割引 · ポイント併用可','Subscribe: 10% off everything · stacks with points')}</span>
-          <span style="background:#fff; color:#7c3aed; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:900; flex-shrink:0;">${tr('구독하기 →','購読 →','Subscribe →')}</span>
-        </a>
+        <!-- 2026-09-15(사장님): PRO 구독 폐지 — 구독하기 CTA 제거. JS 호환용 hidden placeholder 만 유지. -->
+        <a id="soSubLink" style="display:none;"></a>
         <!-- legacy hidden inputs — 기존 코드 호환용 (값은 _soOnDiscountSelect 에서 동기화) -->
         <input id="soUseMileage" type="hidden" value="0">
         <input id="soUseDepositAll" type="checkbox" style="display:none;">
@@ -19999,12 +19996,12 @@ html, body { background: #ffffff !important; }
             btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
             btn.style.color = '#fff';
             btn.style.borderColor = '#15803d';
-            if (sub) sub.textContent = tr('✓ 적용됨 · 1회 최대 5만원', '✓ 適用中 · 1回最大5,000円', '✓ Applied · up to 50,000 KRW/order');
+            if (sub) sub.textContent = tr('✓ 적용됨 · 구매금액 10% 이내 (최대 5만원)', '✓ 適用中 · 購入金額の10%以内（最大5,000円）', '✓ Applied · up to 10% of order (max 50,000)');
         } else {
             btn.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
             btn.style.color = '#065f46';
             btn.style.borderColor = '#16a34a';
-            if (sub) sub.textContent = tr('눌러서 적용 · 1회 최대 5만원', 'タップで適用 · 1回最大5,000円', 'Tap to apply · up to 50,000 KRW');
+            if (sub) sub.textContent = tr('눌러서 적용 · 구매금액 10% 이내 (최대 5만원)', 'タップで適用 · 購入金額の10%以内（最大5,000円）', 'Tap to apply · up to 10% of order (max 50,000)');
         }
     };
     window._soToggleSnsCoupon = function () {
@@ -20027,7 +20024,8 @@ html, body { background: #ffffff !important; }
         var cart = _soReadAllCart();
         var calc = _soCalcCartTotal(cart);
         var grand = Math.max(0, calc.grandTotal || 0);
-        var blogMax = Math.min(bal, grand, 100000);   // 2026-08-31 버그#44(사장님): 포인트 1회 사용 최대 10만원
+        // 2026-09-15(사장님): 포인트/무료쿠폰 1회 사용 = 구매금액의 10% 이내 + 최대 5만원. (전액 결제 방지)
+        var blogMax = Math.min(bal, 50000, Math.floor(grand * 0.1));
         window._soWallet = {
             ready: true, userId: uid,
             mileageBalKRW: 0, depositBalKRW: 0, eventCouponBalKRW: 0, blogCouponBalKRW: bal,
@@ -20110,7 +20108,7 @@ html, body { background: #ffffff !important; }
         var eventCouponBal = parseInt(prof.event_coupon || 0) || 0;
         var isPro = !!window.isProSubscriber;
         // 2026-08-16: 구독 서비스 링크는 비구독자에게만 (구독자는 이미 10% 자동적용)
-        var _subLinkEl = document.getElementById('soSubLink'); if (_subLinkEl) _subLinkEl.style.display = isPro ? 'none' : 'flex';
+        var _subLinkEl = document.getElementById('soSubLink'); if (_subLinkEl) _subLinkEl.style.display = 'none';   // 2026-09-15: 구독 CTA 폐지 — 항상 숨김
         // 2026-06-04: 로그인 + 0잔액 + 비PRO 도 박스 표시 (사용자가 어떤 할인이 있는지 인지 + PRO 가입 유도)
         var cart = _soReadAllCart();
         var excludedSet = window.excludedCategoryCodes || new Set();
@@ -20172,7 +20170,7 @@ html, body { background: #ffffff !important; }
             '원');
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
-        var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase), 100000);   // 2026-08-31 버그#44(사장님): 포인트 1회 사용 최대 10만원
+        var blogMax = Math.min(blogBal, 50000, Math.floor((calc.grandTotal || discBase || 0) * 0.1));   // 2026-09-15: 구매금액 10% 이내 + 최대 5만원
         window._soWallet.blogCouponBalKRW = blogBal;
         window._soWallet.blogMax = blogMax;
         window._soWallet.blogOn = false;
@@ -20231,7 +20229,7 @@ html, body { background: #ffffff !important; }
         var afterDeposit = Math.max(0, afterDiscount - useDeposit);
         var _bcChkLive = document.getElementById('soDiscBlogChk');
         var _blogOnLive = !!(_bcChkLive && _bcChkLive.checked && !_bcChkLive.disabled);
-        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 100000) : 0;   // 2026-08-31 버그#44(사장님): 포인트 1회 사용 최대 10만원
+        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 50000, Math.floor(grand * 0.1)) : 0;   // 2026-09-15: 구매금액 10% 이내 + 최대 5만원
         return { useMileage: useMileage, useDeposit: useDeposit, useBlogCoupon: useBlogCoupon, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {
