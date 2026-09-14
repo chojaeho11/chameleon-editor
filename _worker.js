@@ -1420,17 +1420,15 @@ ${hreflangTags('/editor')}
             // 2026-07-10: 일본어 인쇄통판 SEO 랜딩 (名刺·チラシ·ポスター·大判·冊子 키워드 집중, cafe0101.com/insatsu)
             'insatsu': '/insatsu.html',
         };
-        // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
+        // 2026-09-14: 가맹점 스토어 = 메인 홈페이지 전체 복제 (전 제품·에디터·실시간 동기화).
+        //   반쪽짜리 store.html 폐기 → /store/{slug} 를 메인 홈으로 리다이렉트(?fr={slug}).
+        //   메인 홈이 ?fr= 로 상호·연락처·마진만 바꿔 우리 홈페이지 전체를 그대로 노출한다.
         if (path.indexOf('store/') === 0 && path.length > 6) {
-            const stoUrl = new URL('/store.html', url.origin);
-            let stoResp = await env.ASSETS.fetch(new Request(stoUrl.toString(), request));
-            if ((stoResp.status === 308 || stoResp.status === 301) && stoResp.headers.get('Location')) {
-                const loc = new URL(stoResp.headers.get('Location'), url.origin);
-                stoResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
-            }
-            const stoHeaders = new Headers(stoResp.headers);
-            stoHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-            return new Response(stoResp.body, { status: 200, headers: stoHeaders });
+            const slug = path.slice(6).split('/')[0];
+            const dest = new URL('/', url.origin);
+            dest.search = url.search;            // ?editor=1 / ?search=1 등 유지
+            dest.searchParams.set('fr', slug);
+            return Response.redirect(dest.toString(), 302);
         }
         if (STANDALONE_PAGES[path]) {
             // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 key 경로를 직접 fetch.

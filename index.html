@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914152413';
+    var CV = '20260914153432';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -835,6 +835,13 @@ if ('caches' in window) {
                 if (!rows || !rows.length) return;
                 var f = rows[0];
                 window.__FRANCHISE = f;
+                // 2026-09-14: 가맹점 마진 로드(theme JSON) → window.__FR_MARGIN (simple_order state.frMargin 및 카드가격에 반영).
+                try {
+                    fetch(SUPA + '/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(f.slug) + '.json?_t=' + Date.now())
+                        .then(function(tr){ return tr.ok ? tr.json() : null; })
+                        .then(function(theme){ if (theme && typeof theme.margin === 'number' && theme.margin > 0) { window.__FR_MARGIN = theme.margin; } })
+                        .catch(function(){});
+                } catch(e){}
                 var tries = 0;
                 (function apply(){
                     var b = document.getElementById('siteBrand');
@@ -843,9 +850,18 @@ if ('caches' in window) {
                         ? '<img src="' + f.logo_url + '" alt="" style="height:30px;max-width:130px;object-fit:contain;vertical-align:middle;border-radius:6px;background:#fff;padding:2px;">'
                         : '<i class="fa-solid fa-store"></i>';
                     b.innerHTML = logo + ' ' + (f.company_name || '');
-                    b.onclick = function(){ location.href = '/store/' + f.slug; };
+                    b.onclick = function(){ location.href = '/?fr=' + f.slug; };
                     if (f.company_name) document.title = f.company_name;
                 })();
+                // 2026-09-14: 푸터 고객센터 전화도 가맹점 번호로 리브랜딩.
+                if (f.phone) {
+                    var trc = 0;
+                    (function applyPhone(){
+                        var ps = document.querySelectorAll('.cs-contact-kr a, .cs-contact-jp a');
+                        if (!ps.length){ if (trc++ < 30) setTimeout(applyPhone, 300); return; }
+                        ps.forEach(function(a){ a.textContent = f.phone; a.setAttribute('href', 'tel:' + f.phone.replace(/[^0-9+]/g,'')); });
+                    })();
+                }
             }).catch(function(){});
         })();
         // 2026-05-16: 가맹점 스토어에서 ?editor=1 / ?search=1 로 들어오면 해당 기능 자동 실행
