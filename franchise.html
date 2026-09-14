@@ -1292,10 +1292,10 @@ function showToast(msg, type){
 (function(){
     var fl = (new URLSearchParams(location.search).get('lang') || window.__FR_LANG || 'ko').toLowerCase();
     var J = {
-        ko:{ title:'가맹 <span class="hl">홈페이지 이용료</span>', sub:'리셀러도 가맹점도 이 이용료 하나로 카멜레온 복제 홈페이지를 운영합니다. 가맹점은 여기에 장비 리스·자재 공급이 더해집니다.',
+        ko:{ title:'<span class="hl">무료 가입</span> · 본사 승인제', sub:'가입비·구독료가 없습니다. 무료로 신청하고 본사 승인을 받으면, 그 즉시 카멜레온 전 제품을 소비자가 −20%로 구매·판매할 수 있습니다.',
              monthly:'월 이용료', annual:'연 이용료', lifetime:'평생', perM:'/월', perY:'/년', perL:'1회 결제 · 평생',
-             cta:'이 이용료로 시작', best:'인기',
-             note:'카드결제는 본사 PG로 받아 카드수수료·로열티(1%)를 뺀 뒤 월말 정산해 드립니다. 계좌이체는 사장님 계좌로 바로 받고 본사 로열티는 1%뿐입니다. 가맹점의 자재대금은 후불로 월말 정산에서 차감됩니다.' },
+             cta:'가맹·리셀러 신청', best:'꼭 확인',
+             note:'⚠️ 가맹 회원 유의사항 — 가맹 회원은 출석 쿠폰·첫구매 할인·페이백 등 다른 할인 서비스와 마일리지 적립을 이용할 수 없으며, 승인 시 기존 마일리지는 모두 소멸됩니다. 본사가 원하지 않는 경우 가맹 자격은 언제든 취소될 수 있고, 반려되거나 취소된 계정은 재신청이 불가능합니다. 신청 전 반드시 담당자와 충분히 상담한 뒤 신청해 주세요.' },
         ja:{ title:'<span class="hl">6ヶ月無料</span>でご利用', sub:'登録料なしで今すぐショップを作成できます。6ヶ月間は無料で運営、その後は下記プランのいずれかをご契約いただくとホームページが継続して正常に運営されます。',
              monthly:'月額', annual:'年額', lifetime:'永久', perM:'/月', perY:'/年', perL:'1回決済 · 永久',
              cta:'このプランで契約', best:'人気',
@@ -1366,19 +1366,23 @@ function showToast(msg, type){
         };
         tryLine.textContent = TL[fl] || TL.ko;
     }
-    // 2026-09-14: 가맹 홈페이지 이용료 3플랜(월/연/평생) — 리셀러·가맹점 공통. (구 PRO 가격 재사용, 구독 클릭→홈페이지 만들기)
-    var plans = [
-        { name:t.monthly,  price:pr.m, per:t.perM, best:false },
-        { name:t.annual,   price:pr.y, per:t.perY, best:true  },
-        { name:t.lifetime, price:pr.l, per:t.perL, best:false }
-    ];
-    plans.forEach(function(pl){
+    // 2026-09-14: 구독료 폐지 → 무료가입+승인제. 혜택/제한/조건 3카드. (ko + en 폴백)
+    var INFO = {
+        ko:[{ic:'💎',n:'승인 즉시 20% 할인',d:'홈페이지 전 제품을 소비자가 −20%로 구매·판매합니다.',best:false},
+            {ic:'⚠️',n:'다른 할인·마일리지 불가',d:'출석 쿠폰·첫구매 할인·페이백 등 이용 불가. 승인 시 기존 마일리지 소멸.',best:true},
+            {ic:'📋',n:'신청 조건',d:'사업자등록 필수 · 충분한 상담 후 신청 · 본사 승인 후 활성화 · 반려/취소 시 재신청 불가.',best:false}],
+        en:[{ic:'💎',n:'20% Off on Approval',d:'Buy & sell all products at 20% below retail.',best:false},
+            {ic:'⚠️',n:'No Other Discounts / Mileage',d:'No attendance coupons, first-order discount or payback. Existing mileage is cleared on approval.',best:true},
+            {ic:'📋',n:'Requirements',d:'Business registration required. Apply after consultation. Activated after HQ approval. No re-application if rejected/cancelled.',best:false}]
+    };
+    var info = INFO[fl] || INFO.en;
+    info.forEach(function(pl){
         var card = document.createElement('div');
         card.className = 'fr-join-card' + (pl.best ? ' best' : '');
-        card.innerHTML = (pl.best ? '<div class="fr-join-badge">' + (t.best||'BEST') + '</div>' : '')
-            + '<div class="fr-join-name">' + pl.name + '</div>'
-            + '<div class="fr-join-price">' + pl.price + '<small>' + pl.per + '</small></div>'
-            + '<a class="fr-join-cta" href="/franchise-admin?lang=' + fl + '" style="display:block;text-decoration:none;">' + (t.cta||'시작하기') + '</a>';
+        card.innerHTML = (pl.best ? '<div class="fr-join-badge">' + (t.best||'!') + '</div>' : '')
+            + '<div style="font-size:34px;margin-bottom:8px;">' + pl.ic + '</div>'
+            + '<div class="fr-join-name" style="font-size:16px;">' + pl.n + '</div>'
+            + '<div style="font-size:13px;color:#6b7280;line-height:1.65;margin-top:8px;">' + pl.d + '</div>';
         grid.appendChild(card);
     });
 })();
