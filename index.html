@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914234259';
+    var CV = '20260914235259';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -829,12 +829,19 @@ if ('caches' in window) {
             if (!ref) return;
             var SUPA = 'https://qinvtnhiidtmrzosyvys.supabase.co';
             var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-            fetch(SUPA + '/rest/v1/franchises?slug=eq.' + encodeURIComponent(ref) + '&select=company_name,logo_url,slug,phone,email,tagline&limit=1', {
+            fetch(SUPA + '/rest/v1/franchises?slug=eq.' + encodeURIComponent(ref) + '&select=company_name,logo_url,slug,phone,email,tagline,country&limit=1', {
                 headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }
             }).then(function(r){ return r.json(); }).then(function(rows){
                 if (!rows || !rows.length) return;
                 var f = rows[0];
                 window.__FRANCHISE = f;
+                // 2026-09-14: 가맹점 국가 → 홈페이지 언어 자동 (?lang= 없으면 국가 언어로 이동).
+                try {
+                    var _cl = ({ KR:'ko', JP:'ja', US:'en', CN:'zh', SA:'ar', ES:'es', DE:'de', FR:'fr' })[f.country || 'KR'] || 'ko';
+                    if (_cl !== 'ko' && !new URLSearchParams(location.search).get('lang')) {
+                        var _u = new URL(location.href); _u.searchParams.set('lang', _cl); location.replace(_u.toString()); return;
+                    }
+                } catch(e){}
                 // 2026-09-14: 가맹점 마진 로드(theme JSON) → window.__FR_MARGIN (simple_order state.frMargin 및 카드가격에 반영).
                 try {
                     fetch(SUPA + '/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(f.slug) + '.json?_t=' + Date.now())
@@ -871,8 +878,9 @@ if ('caches' in window) {
                             if (theme.customProducts && theme.customProducts.length) {
                                 var cps = theme.customProducts, rtcp = 0;
                                 (function insertCP(){
+                                    var anchor = document.getElementById('popularSection');   // 기타상품 바로 아래
                                     var fw = document.querySelector('.footer-wrap');
-                                    if (!fw || !fw.parentNode){ if (rtcp++ < 30) setTimeout(insertCP, 300); return; }
+                                    if (!anchor && (!fw || !fw.parentNode)){ if (rtcp++ < 30) setTimeout(insertCP, 300); return; }
                                     if (document.getElementById('frCustomProducts')) return;
                                     var cards = cps.map(function(p){
                                         var img = (p.images && p.images[0]) || 'https://placehold.co/300?text=%EC%83%81%ED%92%88';
@@ -888,7 +896,8 @@ if ('caches' in window) {
                                     sec.className = 'hotdeal-wrapper';
                                     sec.style.cssText = 'max-width:1400px;margin:24px auto;padding:20px;background:#fff7ed;border-radius:12px;box-sizing:border-box;';
                                     sec.innerHTML = '<div class="hotdeal-header"><h2 style="color:#c2410c;">가맹점 상품 <span class="badge-hot" style="background:#c2410c;">Shop</span></h2><p>'+((f.company_name||'')+' 자체 상품 — 주문 문의는 아래 연락처로')+'</p></div><div class="hotdeal-grid">'+cards+'</div>';
-                                    fw.parentNode.insertBefore(sec, fw);
+                                    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(sec, anchor.nextSibling);
+                                    else fw.parentNode.insertBefore(sec, fw);
                                 })();
                                 // 자체상품 상세 모달
                                 window._frCpDetail = function(id){
@@ -13320,7 +13329,7 @@ async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitC
     };
     const badge = (opts && opts.badge) || badgeByCat[topCategoryCode] || { label:'HOT', color:'#ef4444' };
     try {
-        const _rbCols = 'code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order';
+        const _rbCols = 'code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order, is_custom_size';
         let products, error;
         if (opts && Array.isArray(opts.codes) && opts.codes.length) {
             // 2026-09-11: 지정 코드 큐레이션 (원판 5종 등) — 카테고리 무시, 이 코드들만 지정 순서대로 노출.
@@ -13348,7 +13357,17 @@ async function loadProductsByCategory(sectionId, gridId, topCategoryCode, limitC
             var rawImg = p.img_url || 'https://via.placeholder.com/300?text=No+Image';
             var imgSrc = window.getTinyThumb ? window.getTinyThumb(rawImg, 400) : rawImg;
             var sizeText = (p.width_mm && p.height_mm) ? (window._isUSsite && window._isUSsite() ? (p.width_mm/25.4).toFixed(1)+' x '+(p.height_mm/25.4).toFixed(1)+' in' : p.width_mm+' x '+p.height_mm+'mm') : 'Option';
-            card.innerHTML = '<div class="hotdeal-img-box"><img src="'+imgSrc+'" alt="'+(seoAlt(p)||loc.name)+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div style="position:absolute;top:10px;left:10px;background:'+badge.color+';color:white;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">'+badge.label+'</div></div><div class="hotdeal-info"><div class="hotdeal-title">'+loc.name+'</div><div class="hotdeal-meta">'+sizeText+'</div><div class="hotdeal-price">'+loc.formattedPrice+'</div></div>';
+            // 2026-09-14: 면적가(회배당) 상품(아크릴·키링·시트지·스티커)은 5×5cm 기준 소액가로 표시 (loadSpecialProducts 와 동일). 마진(__FR_MARGIN)도 반영.
+            var _cardPrice = loc.formattedPrice, _cardSize = sizeText;
+            var _frM2 = (Number(window.__FR_MARGIN) > 0) ? (1 + Number(window.__FR_MARGIN)/100) : 1;
+            var _agCat2 = (p.category||'').toLowerCase();
+            var _agName2 = ((p.name||'')+' '+(p.name_us||'')).toLowerCase();
+            if (p.is_custom_size === true && Number(p.price) > 0 && (/^acr/.test(_agCat2) || _agCat2==='acrylic' || _agCat2.indexOf('acr')>=0 || _agCat2.indexOf('sticker')>=0 || _agCat2.indexOf('gds_')>=0 || /키링|아크릴|시트지|스티커|sticker|keyring|acrylic/i.test(_agName2))) {
+                var _small2 = Math.max(100, Math.round(Number(p.price) * 25 / 10000 * _frM2));
+                _cardPrice = (window.formatCurrency ? window.formatCurrency(_small2) : _small2.toLocaleString()+'원') + '~';
+                _cardSize = (window._isUSsite && window._isUSsite()) ? '2 x 2 in~' : '5 x 5cm~';
+            }
+            card.innerHTML = '<div class="hotdeal-img-box"><img src="'+imgSrc+'" alt="'+(seoAlt(p)||loc.name)+'" loading="lazy" onerror="this.src=\'https://placehold.co/300?text=No+Img\'"><div style="position:absolute;top:10px;left:10px;background:'+badge.color+';color:white;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;">'+badge.label+'</div></div><div class="hotdeal-info"><div class="hotdeal-title">'+loc.name+'</div><div class="hotdeal-meta">'+_cardSize+'</div><div class="hotdeal-price">'+_cardPrice+'</div></div>';
             card.onclick = function() { window.loadProductDetailAndOpen(p.code); };
             grid.appendChild(card);
         });
