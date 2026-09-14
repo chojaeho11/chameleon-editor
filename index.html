@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260915025101';
+    var CV = '20260915025900';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1197,14 +1197,26 @@ window._fabricTopNav = function() {
     var lm = { ja:'ja', jp:'ja', us:'en', en:'en', cn:'zh', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'ko', ko:'ko' };
     var fbLang = lm[lang] || '';
     var host = (location.hostname || '').toLowerCase();
+    // 2026-09-15(사장님): 가맹점/리셀러 클론이면 fr 슬러그를 URL 로 실어보냄(크로스도메인 패브릭에서도 마진 유지).
+    var frRef = ''; try { frRef = (sessionStorage.getItem('_franchise_ref') || '').replace(/[^a-z0-9-]/g,''); } catch(e){}
+    var _q = function(arr){ return arr.length ? ('?' + arr.join('&')) : ''; };
     // 'cotton-print' 는 cotton-print.com 과 cotton-printer.com 을 모두 포함.
     if (host.indexOf('cotton-print') !== -1) {
         var isPrinterJp = host.indexOf('cotton-printer') !== -1;   // JP 전용 도메인은 도메인이 언어를 결정 → lang 불필요
-        location.href = '/fabric' + ((!isPrinterJp && fbLang && fbLang !== 'ko') ? '?lang=' + fbLang : '');
+        var q0 = [];
+        if (!isPrinterJp && fbLang && fbLang !== 'ko') q0.push('lang=' + fbLang);
+        if (frRef) q0.push('fr=' + encodeURIComponent(frRef));
+        location.href = '/fabric' + _q(q0);
         return;
     }
-    if (fbLang === 'ja') { location.href = 'https://www.cotton-printer.com/'; return; }
-    location.href = 'https://www.cotton-print.com/' + (fbLang && fbLang !== 'ko' ? '?lang=' + fbLang : '');
+    if (fbLang === 'ja') {
+        var qj = []; if (frRef) qj.push('fr=' + encodeURIComponent(frRef));
+        location.href = 'https://www.cotton-printer.com/' + _q(qj); return;
+    }
+    var q1 = [];
+    if (fbLang && fbLang !== 'ko') q1.push('lang=' + fbLang);
+    if (frRef) q1.push('fr=' + encodeURIComponent(frRef));
+    location.href = 'https://www.cotton-print.com/' + _q(q1);
 };
 // 2026-09-10: 일시 판매중지 카테고리 상단메뉴 회색+클릭불가 (광고인쇄=44444 / 상업인쇄물=printe_product / 굿즈=goods).
 //   복구하려면 아래 window._SUSPENDED_NAV 배열을 [] 로 비우면 됨. 정적 fallback(data-fb-key) + 동적(data-top-code) + 굿즈(data-nav-key) 모두 커버.

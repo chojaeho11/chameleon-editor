@@ -2,12 +2,16 @@
 <html lang="ko">
 <head>
 <script>
+// 2026-09-15(사장님): 가맹점/리셀러 클론에서 넘어온 ?fr= 를 세션에 저장 → /fabric 에디터가 마진 적용.
+(function(){ try { var fr = new URLSearchParams(location.search).get('fr'); if (fr) sessionStorage.setItem('_franchise_ref', fr.toLowerCase().replace(/[^a-z0-9-]/g,'')); } catch(e){} })();
+</script>
+<script>
 // [버전 자동 갱신] 2026-07-21: index.html 에만 있던 자가치유를 고객 진입 페이지 전체로 확대.
 //   배포된 version.txt 와 아래 CV 가 다르면 구버전 → 스스로 새로고침 (고객 수동 새로고침 불필요).
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915025101';
+    var CV = '20260915025900';
     function _verBusy(){
         try {
             var ae = document.activeElement;

@@ -15,6 +15,27 @@ const HOEBAE_AREA_CM2 = 100 * 100; // 1 m² = 10,000 cm²
 const ROLL_MAX_WIDTH_CM = 130;     // 대폭 한계 — 초과 시 이어박기
 const SEAM_EXTRA_KRW = 10000;      // 이어박기 추가비 (130cm 초과 시, 1회 부과)
 const HALF_HOEBAE_PRICE = 8000;    // 반마(0.5회배 이하) 특가 — 2026-06-01: 6000→8000
+// 2026-09-15(사장님): 가맹점/리셀러 클론에서 패브릭 가격도 판매 마진(window.__FR_MARGIN %) 반영.
+//   base 단가(회배·롤·부자재)에만 곱하고 cdFmtPrice(표시 포맷)는 건드리지 않음 → 이중적용 없음. 본사=0→×1.
+function _cdFrMul() { var m = Number(window.__FR_MARGIN) || 0; return m > 0 ? (1 + m / 100) : 1; }
+// 가맹점/리셀러 클론에서 넘어온 경우(?fr= 또는 sessionStorage) 테마 마진을 __FR_MARGIN 에 세팅 후 가격 재계산.
+(function _cdLoadFrMargin(){
+    var ref = '';
+    try { ref = new URLSearchParams(location.search).get('fr') || ''; } catch(e){}
+    if (ref) { try { sessionStorage.setItem('_franchise_ref', ref.toLowerCase().replace(/[^a-z0-9-]/g,'')); } catch(e){} }
+    if (!ref) { try { ref = sessionStorage.getItem('_franchise_ref') || ''; } catch(e){} }
+    ref = (ref || '').toLowerCase().replace(/[^a-z0-9-]/g,'');
+    if (!ref) return;
+    fetch('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(ref) + '.json?_t=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(theme){
+            if (theme && typeof theme.margin === 'number' && theme.margin > 0) {
+                window.__FR_MARGIN = theme.margin;
+                var t = 0;
+                (function retry(){ if (typeof updatePrice === 'function') { try { updatePrice(); } catch(e){} return; } if (t++ < 40) setTimeout(retry, 150); })();
+            }
+        }).catch(function(){});
+})();
 
 // 2026-05-23: 화면 표시·입력은 mm, 내부 계산·저장은 cm 그대로 유지 (가격 100% 동일).
 //   경계(입력 읽기 / 입력 쓰기 / 라벨)에서만 변환한다. cm↔mm.
@@ -1118,7 +1139,7 @@ window._cdCalcHoebae = function() {
         const iH = document.getElementById('imgHcm'); if (iH && document.activeElement !== iH) iH.value = _cdMm(h);
     }
     // 이어박기 자동 결정 — 2026-05-22: 가로·세로 둘 다 130cm 초과일 때만 (한 변이 130 이하면 돌려서 출력 가능)
-    state.seamExtra = (w > ROLL_MAX_WIDTH_CM && h > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
+    state.seamExtra = (w > ROLL_MAX_WIDTH_CM && h > ROLL_MAX_WIDTH_CM) ? Math.round(SEAM_EXTRA_KRW * _cdFrMul()) : 0;
     const seamEl = document.getElementById('seamNotice');
     if (seamEl) seamEl.style.display = state.seamExtra > 0 ? '' : 'none';
     const rawHoebae = calcHoebae();
@@ -1188,10 +1209,11 @@ function calcBillableHoebae() {
 
 // 출력 단가 — 반마(W+H≤1500)는 8,000원 / 1배 미만은 12,000원 / 1배 이상은 회배×12,000
 function calcItemPrice() {
-    if (_cdIsHalfTier()) return HALF_HOEBAE_PRICE;   // 반마 특가
+    var _m = _cdFrMul();
+    if (_cdIsHalfTier()) return Math.round(HALF_HOEBAE_PRICE * _m);   // 반마 특가
     var h = calcHoebae();
-    if (h < 1) return HOEBAE_UNIT_PRICE;             // 1회배 미만은 1회배 가격
-    return Math.round(h * HOEBAE_UNIT_PRICE);
+    if (h < 1) return Math.round(HOEBAE_UNIT_PRICE * _m);             // 1회배 미만은 1회배 가격
+    return Math.round(h * HOEBAE_UNIT_PRICE * _m);
 }
 
 // 현재 사이즈가 어느 단계인지 — 표시용 라벨
@@ -1205,7 +1227,7 @@ function getHoebaeTier() {
 function updatePrice() {
     // 2026-05-31: 패턴 원단 인쇄 모드 — 롤 폭(단가) × 마 수, 마감/고리/부자재/회배 무시.
     if (state.layout !== 'centered') {
-        const perYard = ROLL_PRICE_PER_YARD[state.rollWidth] || ROLL_PRICE_PER_YARD.wide;
+        const perYard = Math.round((ROLL_PRICE_PER_YARD[state.rollWidth] || ROLL_PRICE_PER_YARD.wide) * _cdFrMul());
         const yards = Math.max(1, state.rollYards || 1);
         const subtotal = perYard * yards;
         const disc = getVolumeDiscount(yards);
@@ -1335,7 +1357,7 @@ window._cdOnFinishChange = function() {
     // 2026-05-11: i18n 적용된 <b> 텍스트 우선 (한국어 dataset.name 폴백)
     var b = label.querySelector('b');
     state.finishName = (b && b.textContent.trim()) || label.dataset.name || '';
-    state.finishExtra = parseInt(label.dataset.extra || '0', 10);
+    state.finishExtra = Math.round((parseInt(label.dataset.extra || '0', 10) || 0) * _cdFrMul());
     updatePrice();
 };
 // 2) 고리 변경
@@ -1347,7 +1369,7 @@ window._cdOnHookChange = function() {
     // 2026-05-11: 번역된 <b> 우선
     var b = label.querySelector('b');
     state.hookName = state.hookCode ? ((b && b.textContent.trim()) || label.dataset.name || '') : '';
-    state.hookExtra = parseInt(label.dataset.extra || '0', 10);
+    state.hookExtra = Math.round((parseInt(label.dataset.extra || '0', 10) || 0) * _cdFrMul());
     updatePrice();
 };
 // 3) 부자재 변경
@@ -1359,7 +1381,7 @@ window._cdOnAccessoryChange = function() {
     // 2026-05-13: 번역된 <b> 우선 (i18n 적용 후 텍스트), dataset.name 은 KR 폴백
     var b = label.querySelector('b');
     state.accName = state.accCode ? ((b && b.textContent.trim()) || label.dataset.name || '') : '';
-    state.accExtra = parseInt(label.dataset.extra || '0', 10);
+    state.accExtra = Math.round((parseInt(label.dataset.extra || '0', 10) || 0) * _cdFrMul());
     // 2026-08-24: 부자재 개수 입력 노출 — 선택 시 기본값 = 현재 주문수량(기존 '주문수량만큼' 동작 보존), 이후 자유 조절.
     var qWrap = document.getElementById('accQtyWrap');
     var qInp = document.getElementById('accQtyInput');
@@ -2153,7 +2175,7 @@ function buildCartItem() {
     const isPatternMode = (state.layout !== 'centered');
     let rawHoebae, hoebae, itemPrice, finishPerItem, otherPerItem, subtotal, disc, discountAmt, price;
     if (isPatternMode) {
-        const perYard = ROLL_PRICE_PER_YARD[state.rollWidth] || ROLL_PRICE_PER_YARD.wide;
+        const perYard = Math.round((ROLL_PRICE_PER_YARD[state.rollWidth] || ROLL_PRICE_PER_YARD.wide) * _cdFrMul());
         const yards = Math.max(1, state.rollYards || 1);
         rawHoebae = 0; hoebae = 0; itemPrice = perYard; finishPerItem = 0; otherPerItem = 0;
         subtotal = perYard * yards;
