@@ -6798,7 +6798,9 @@ html, body { background: #ffffff !important; }
                 var img = p.img_url || 'https://placehold.co/200?text=Acrylic';
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
-                var priceVal = p.price || 0;
+                // 2026-09-15: 가맹점 클론 마진 반영(본사는 ×1)
+                var _frMulA = (state && state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;
+                var priceVal = Math.round((p.price || 0) * _frMulA);
                 // 인쇄형은 5×5cm = perSqm × (0.05 × 0.05) = perSqm/400
                 var priceLabel;
                 if (_isAcrylicPrintFlat(p)) {
@@ -10823,6 +10825,10 @@ html, body { background: #ffffff !important; }
             foamboard_5mm:        30000,
             foamboard_10mm:       50000
         };
+        // 2026-09-15: 가맹점 클론 판매 마진(state.frMargin %) — 면적/플랫 단가에도 반영.
+        //   (메인 카드는 getLocalizedData 로 마진 적용되는데 상세 면적단가는 raw price 라 키링 등 상세가가 본사가와 동일하던 버그.)
+        //   본사(메인)에선 frMargin=0 → 배수 1 → 변화 없음.
+        var _frMul = (state && state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;
         var perSqm;
         if (state.isCutPrint) {
             perSqm = _CUT_BOARD_RATE[state.cutBoardMaterial || 'honeycomb_16mm_white'] || 50000;
@@ -10833,6 +10839,7 @@ html, body { background: #ffffff !important; }
         } else {
             perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
         }
+        perSqm = Math.round(perSqm * _frMul);   // 가맹점 마진 반영(본사는 ×1)
         var areaM2 = (wCm / 100) * (hCm / 100);
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
@@ -10840,7 +10847,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-14 fix: 현수막 9종 (placard) 은 m² 기반 — 면적 곱셈 유지. 어깨띠는 flat 1000원이라 isCustomSize=false 이므로 여기 안 들어옴.
         var _isPlacardKeepCalc = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(state.product);
         if (state.isBannerOutput && !_isPlacardKeepCalc && state.product && state.product.price) {
-            calcPrice = state.product.price;
+            calcPrice = Math.round(state.product.price * _frMul);
         }
         // 2026-06-14: 전단지 N천매 / N만매 번들 상품 — 사이즈 무관 flat DB 가격. 이름 패턴 매칭.
         //   예: "전단지 4천매" → 50,000원 (4000장 묶음). 면적 계산 결과 무시.
@@ -10848,14 +10855,14 @@ html, body { background: #ffffff !important; }
             var _pNm = (state.product && (state.product.name_kr || state.product.name || '')) || '';
             var _isFlyerBundle = /전단지.*(\d+(천|만)매|매)/.test(_pNm);
             if (_isFlyerBundle && state.product && state.product.price) {
-                calcPrice = state.product.price;
+                calcPrice = Math.round(state.product.price * _frMul);
             }
         } catch (e) {}
         // 2026-07-07: 봉투(pp_envelope) 8종 — 고정 사이즈·flat DB 가격(500매 74,000원 등). 면적상품 아님.
         //   product.price 를 perSqm 로 오용 → 면적가·최소단가(perSqm×0.1)가 1/10(7,400원)로 깎던 버그 수정.
         try {
             if (typeof _soIsEnvelopeProduct === 'function' && _soIsEnvelopeProduct(state.product) && state.product && state.product.price) {
-                calcPrice = state.product.price;
+                calcPrice = Math.round(state.product.price * _frMul);
             }
         } catch (e) {}
         // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
