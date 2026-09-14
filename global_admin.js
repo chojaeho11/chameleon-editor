@@ -9,7 +9,7 @@ import { checkAdminAccess } from "./global_common.js?v=435";
 // 나머지 기능 파일들 불러오기
 import "./global_orders.js?v=501";
 import "./global_products.js?v=308";
-import "./global_users.js?v=317";
+import "./global_users.js?v=318";
 import "./global_safetx.js?v=1";
 import "./global_assets.js?v=296";
 import "./global_stats.js?v=439";
@@ -100,7 +100,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-vip': if(window.loadVipOrders) window.loadVipOrders(); break;
         case 'sec-bankda': if(window.loadBankdaList) window.loadBankdaList(); break;
         case 'sec-stats': if(window.loadStatsData) window.loadStatsData(); break;
-        case 'sec-members': if(window.loadMembers) window.loadMembers(); break;
+        case 'sec-members': if(window.loadMembers) window.loadMembers(); if(window.loadFranchiseApplications) window.loadFranchiseApplications(); break;
         case 'sec-templates': 
             // 템플릿 로드 함수가 있는지 확인 후 실행
             if(window.loadTemplates) window.loadTemplates(); 

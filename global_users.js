@@ -146,16 +146,18 @@ window.loadMembers = async (isNewSearch = false) => {
             ? `<span style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px;" title="추천인 적립 ${ref.count}건 / 총 ${ref.total.toLocaleString()}원">🤝 추천 ${ref.total.toLocaleString()}원</span>`
             : '';
 
-        // 등급 선택 박스
+        // 등급 선택 박스 — 2026-09-15: 일반/리셀러/가맹점/관리자 4단계로 정리.
+        //   (구 등급 gold/platinum/subscriber 는 해당 회원이 아직 그 등급일 때만 옵션 표시 → 오표기 방지)
+        const _legacyRoles = { gold:'골드(구)', platinum:'파트너스(구)', subscriber:'구독자(구)' };
+        const _legacyOpt = _legacyRoles[m.role]
+            ? `<option value="${m.role}" selected>${_legacyRoles[m.role]}</option>` : '';
         const roleSelect = `
             <select onchange="updateMemberRole('${m.id}', this.value)" style="border:1px solid #ddd; font-size:11px;">
                 <option value="customer" ${m.role==='customer'?'selected':''}>일반</option>
-                <option value="gold" ${m.role==='gold'?'selected':''}>골드</option>
-                <option value="platinum" ${m.role==='platinum'?'selected':''}>플레티넘</option>
-                <option value="subscriber" ${m.role==='subscriber'?'selected':''}>⭐구독자</option>
                 <option value="reseller" ${m.role==='reseller'?'selected':''}>🚀리셀러 10%</option>
                 <option value="franchise" ${m.role==='franchise'?'selected':''}>🏢가맹점 20%</option>
                 <option value="admin" ${m.role==='admin'?'selected':''}>관리자</option>
+                ${_legacyOpt}
             </select>
         `;
 
@@ -255,9 +257,98 @@ window.updateMemberRole = async (id, newRole) => {
     if(!confirm(`등급을 '${newRole}'(으)로 변경하시겠습니까?`)) { 
         loadMembers(false); return; 
     } 
-    const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id); 
+    const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', id);
     if(error) showToast("실패: " + error.message, "error");
     else showToast("변경되었습니다.", "success");
+};
+
+// ==========================================
+// [가맹/리셀러 신청·승인] 2026-09-15 — 고객관리 상단 패널
+//   franchises.status: pending(대기) → approved / rejected / cancelled
+//   승인 시 profiles.role 부여 (리셀러=reseller / 가맹점=franchise)
+// ==========================================
+const _frEsc = (s) => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+window.loadFranchiseApplications = async () => {
+    const wrap = document.getElementById('frApplyList');
+    const cnt = document.getElementById('frApplyCount');
+    if (!wrap) return;
+    wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">불러오는 중…</div>';
+    let rows = [];
+    try {
+        const { data } = await sb.from('franchises')
+            .select('id,owner_id,slug,company_name,phone,email,country,status,created_at')
+            .order('created_at', { ascending: false });
+        rows = data || [];
+    } catch(e) { wrap.innerHTML = '<div style="color:#ef4444;font-size:13px;">신청 목록 로드 실패: ' + _frEsc(e.message||e) + '</div>'; return; }
+
+    const rank = { pending:0, approved:1, rejected:2, cancelled:3 };
+    rows.sort((a,b) => (rank[a.status]==null?9:rank[a.status]) - (rank[b.status]==null?9:rank[b.status]));
+    const pendingN = rows.filter(r => (r.status||'pending')==='pending').length;
+    if (cnt) cnt.textContent = '대기 ' + pendingN + ' / 전체 ' + rows.length;
+
+    if (!rows.length) { wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">신청한 가맹/리셀러가 없습니다.</div>'; return; }
+
+    const pill = (st) => {
+        const m = { pending:['#f59e0b','대기'], approved:['#16a34a','승인'], rejected:['#ef4444','반려'], cancelled:['#6b7280','취소'] };
+        const x = m[st] || ['#6b7280', st||'대기'];
+        return `<span style="background:${x[0]}22;color:${x[0]};border:1px solid ${x[0]}66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">${x[1]}</span>`;
+    };
+    wrap.innerHTML = rows.map(f => {
+        const st = f.status || 'pending';
+        const d = f.created_at ? new Date(f.created_at).toLocaleDateString() : '-';
+        let btns = '';
+        if (st !== 'approved') {
+            btns += `<button class="btn btn-sm" style="background:#6366f1;color:#fff;" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','reseller',this)">✅ 리셀러 승인(10%)</button> `;
+            btns += `<button class="btn btn-sm" style="background:#c2410c;color:#fff;" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','franchise',this)">🏭 가맹점 승인(20%)</button> `;
+        }
+        if (st === 'pending') btns += `<button class="btn btn-sm" style="background:#e2e8f0;color:#334155;" onclick="rejectFranchise('${_frEsc(f.slug)}',this)">❌ 반려</button> `;
+        if (st === 'approved') btns += `<button class="btn btn-sm" style="background:#e2e8f0;color:#334155;" onclick="cancelFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}',this)">⛔ 취소</button> `;
+        return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="font-size:13px;color:#334155;min-width:240px;">
+                <b style="font-size:14px;">${_frEsc(f.company_name||f.slug)}</b> ${pill(st)}<br>
+                <span style="color:#94a3b8;">/store/${_frEsc(f.slug)} · ${_frEsc(f.phone||'')} · ${_frEsc(f.email||'')} · ${_frEsc(f.country||'')} · 신청 ${d}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">${btns}</div>
+        </div>`;
+    }).join('');
+};
+window.approveFranchise = async (slug, ownerId, role, btn) => {
+    role = (role === 'franchise') ? 'franchise' : 'reseller';
+    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 10%';
+    if (!confirm(`[${slug}] 을(를) ${pctTxt} 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 ${role==='franchise'?'20':'10'}% 할인가로 매입할 수 있습니다. 계속할까요?`)) return;
+    const orig = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug);
+        if (r1.error) throw r1.error;
+        if (ownerId) {
+            const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId);
+            if (r2.error) throw r2.error;
+        }
+        showToast('승인 완료 — ' + pctTxt, 'success');
+        loadFranchiseApplications();
+        if (window.loadMembers) loadMembers(false);
+    } catch(e) { showToast('승인 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
+};
+window.rejectFranchise = async (slug, btn) => {
+    if (!confirm(`[${slug}] 신청을 반려합니다.\n\n반려하면 이 계정은 재신청이 불가합니다. 계속할까요?`)) return;
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r = await sb.from('franchises').update({ status: 'rejected' }).eq('slug', slug);
+        if (r.error) throw r.error;
+        showToast('반려 처리됨', 'success'); loadFranchiseApplications();
+    } catch(e) { showToast('반려 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = '❌ 반려'; } }
+};
+window.cancelFranchise = async (slug, ownerId, btn) => {
+    if (!confirm(`[${slug}] 가맹/리셀러 계약을 취소합니다.\n\n취소하면 매입 할인이 해제되고(등급→일반), 재신청이 불가합니다. 계속할까요?`)) return;
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r1 = await sb.from('franchises').update({ status: 'cancelled' }).eq('slug', slug);
+        if (r1.error) throw r1.error;
+        if (ownerId) await sb.from('profiles').update({ role: 'customer' }).eq('id', ownerId);
+        showToast('취소 처리됨 (등급 해제)', 'success'); loadFranchiseApplications();
+        if (window.loadMembers) loadMembers(false);
+    } catch(e) { showToast('취소 실패: ' + (e.message||e), 'error'); if (btn) { btn.disabled = false; btn.textContent = '⛔ 취소'; } }
 };
 
 // [기여자 등급 변경] - 패널티 사유 입력 기능 추가
