@@ -268,45 +268,76 @@ window.updateMemberRole = async (id, newRole) => {
 //   승인 시 profiles.role 부여 (리셀러=reseller / 가맹점=franchise)
 // ==========================================
 const _frEsc = (s) => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const _FR_THEME_BASE = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/';
+// 신청 유형(리셀러/가맹점)은 테마 JSON(applicantType)에 저장됨 → 슬러그별로 조회.
+async function _frApplicantType(slug) {
+    try {
+        const r = await fetch(_FR_THEME_BASE + encodeURIComponent(slug) + '.json?_t=' + Date.now());
+        if (!r.ok) return 'reseller';
+        const t = await r.json();
+        return (t && t.applicantType === 'franchise') ? 'franchise' : 'reseller';
+    } catch(e) { return 'reseller'; }
+}
+window.toggleFranchisePanel = () => {
+    const list = document.getElementById('frApplyList');
+    const btn = document.getElementById('frApplyToggleBtn');
+    if (!list) return;
+    const open = list.style.display === 'none';
+    list.style.display = open ? 'block' : 'none';
+    if (btn) btn.querySelector('span:last-child').textContent = open ? '▴' : '▾';
+    if (open) loadFranchiseApplications();
+};
 window.loadFranchiseApplications = async () => {
     const wrap = document.getElementById('frApplyList');
     const cnt = document.getElementById('frApplyCount');
-    if (!wrap) return;
-    wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">불러오는 중…</div>';
     let rows = [];
     try {
         const { data } = await sb.from('franchises')
             .select('id,owner_id,slug,company_name,phone,email,country,status,created_at')
             .order('created_at', { ascending: false });
         rows = data || [];
-    } catch(e) { wrap.innerHTML = '<div style="color:#ef4444;font-size:13px;">신청 목록 로드 실패: ' + _frEsc(e.message||e) + '</div>'; return; }
+    } catch(e) { if (wrap) wrap.innerHTML = '<div style="color:#ef4444;font-size:13px;">신청 목록 로드 실패: ' + _frEsc(e.message||e) + '</div>'; return; }
 
     const rank = { pending:0, approved:1, rejected:2, cancelled:3 };
     rows.sort((a,b) => (rank[a.status]==null?9:rank[a.status]) - (rank[b.status]==null?9:rank[b.status]));
     const pendingN = rows.filter(r => (r.status||'pending')==='pending').length;
     if (cnt) cnt.textContent = '대기 ' + pendingN + ' / 전체 ' + rows.length;
+    if (!wrap || wrap.style.display === 'none') return;   // 접혀 있으면 카운트만 갱신
 
     if (!rows.length) { wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">신청한 가맹/리셀러가 없습니다.</div>'; return; }
+    wrap.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:8px;">불러오는 중…</div>';
+
+    // 신청 유형(리셀러/가맹점) 병렬 조회
+    const types = await Promise.all(rows.map(f => _frApplicantType(f.slug)));
 
     const pill = (st) => {
         const m = { pending:['#f59e0b','대기'], approved:['#16a34a','승인'], rejected:['#ef4444','반려'], cancelled:['#6b7280','취소'] };
         const x = m[st] || ['#6b7280', st||'대기'];
         return `<span style="background:${x[0]}22;color:${x[0]};border:1px solid ${x[0]}66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">${x[1]}</span>`;
     };
-    wrap.innerHTML = rows.map(f => {
+    const typeBadge = (t) => t === 'franchise'
+        ? '<span style="background:#ffedd5;color:#c2410c;border:1px solid #fdba74;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🏭 가맹점 신청</span>'
+        : '<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🚀 리셀러 신청</span>';
+
+    wrap.innerHTML = rows.map((f, i) => {
         const st = f.status || 'pending';
+        const at = types[i];
         const d = f.created_at ? new Date(f.created_at).toLocaleDateString() : '-';
+        const storeUrl = '/store/' + encodeURIComponent(f.slug);
+        // 신청 유형에 맞는 승인 버튼을 강조(primary), 반대쪽은 약하게.
+        const resPrimary = at !== 'franchise';
         let btns = '';
         if (st !== 'approved') {
-            btns += `<button class="btn btn-sm" style="background:#6366f1;color:#fff;" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','reseller',this)">✅ 리셀러 승인(10%)</button> `;
-            btns += `<button class="btn btn-sm" style="background:#c2410c;color:#fff;" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','franchise',this)">🏭 가맹점 승인(20%)</button> `;
+            btns += `<button class="btn btn-sm" style="background:${resPrimary?'#6366f1':'#c7d2fe'};color:${resPrimary?'#fff':'#3730a3'};font-weight:${resPrimary?'800':'600'};" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','reseller',this)">✅ 리셀러 승인(10%)</button> `;
+            btns += `<button class="btn btn-sm" style="background:${!resPrimary?'#c2410c':'#fed7aa'};color:${!resPrimary?'#fff':'#9a3412'};font-weight:${!resPrimary?'800':'600'};" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','franchise',this)">🏭 가맹점 승인(20%)</button> `;
         }
-        if (st === 'pending') btns += `<button class="btn btn-sm" style="background:#e2e8f0;color:#334155;" onclick="rejectFranchise('${_frEsc(f.slug)}',this)">❌ 반려</button> `;
+        if (st === 'pending') btns += `<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="rejectFranchise('${_frEsc(f.slug)}',this)">❌ 반려</button> `;
         if (st === 'approved') btns += `<button class="btn btn-sm" style="background:#e2e8f0;color:#334155;" onclick="cancelFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}',this)">⛔ 취소</button> `;
         return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-            <div style="font-size:13px;color:#334155;min-width:240px;">
-                <b style="font-size:14px;">${_frEsc(f.company_name||f.slug)}</b> ${pill(st)}<br>
-                <span style="color:#94a3b8;">/store/${_frEsc(f.slug)} · ${_frEsc(f.phone||'')} · ${_frEsc(f.email||'')} · ${_frEsc(f.country||'')} · 신청 ${d}</span>
+            <div style="font-size:13px;color:#334155;min-width:260px;">
+                <b style="font-size:14px;">${_frEsc(f.company_name||f.slug)}</b> ${typeBadge(at)} ${pill(st)}<br>
+                <a href="${storeUrl}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600;">🔗 홈페이지 보기 (/store/${_frEsc(f.slug)})</a><br>
+                <span style="color:#94a3b8;">${_frEsc(f.phone||'')} · ${_frEsc(f.email||'')} · ${_frEsc(f.country||'')} · 신청 ${d}</span>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">${btns}</div>
         </div>`;

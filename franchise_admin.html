@@ -401,21 +401,22 @@ select option{background:#1d1640;}
         svg.addEventListener('touchstart', start, {passive:false}); window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', end);
       }
       function tier(which){
-        // 2026-09-15: 마진은 티어와 무관(자유). 스타일만 토글.
+        // 2026-09-15: 신청 유형 선택(리셀러/가맹점). 마진은 티어와 무관(자유). 스타일 토글 + 유형 저장.
+        which = (which==='franchise') ? 'franchise' : 'reseller';
         $d('mgTierR').style.borderColor = which==='reseller'?'#a855f7':'rgba(167,139,250,0.3)';
         $d('mgTierR').style.background   = which==='reseller'?'rgba(124,58,237,0.15)':'none';
         $d('mgTierR').style.color        = which==='reseller'?'#fff':'#cfc8ee';
         $d('mgTierF').style.borderColor = which==='franchise'?'#a855f7':'rgba(167,139,250,0.3)';
         $d('mgTierF').style.background   = which==='franchise'?'rgba(124,58,237,0.15)':'none';
         $d('mgTierF').style.color        = which==='franchise'?'#fff':'#cfc8ee';
+        window._frApplicantType = which;
         try { localStorage.setItem('_fr_tier', which); } catch(e){}
       }
       window._mgSetTier = tier;
-      // 2026-09-15: 리셀러는 인근 가맹점에서 공급받아야 하는데 아직 가맹점이 없으므로 등록 불가 안내.
-      if ($d('mgTierR')) $d('mgTierR').onclick = function(){
-        alert('현재 해당 지역에 가맹점이 없어 리셀러 등록이 불가합니다.\n\n리셀러는 인근 가맹점에서 상품을 공급받아 판매하는 구조인데, 아직 해당 지역에 가맹점이 없습니다. 가맹점이 생기면 리셀러 등록이 가능합니다.');
-      };
+      // 2026-09-15: 리셀러/가맹점 둘 다 선택 가능(신청 유형). 본사가 승인 시 유형 확인.
+      if ($d('mgTierR')) $d('mgTierR').onclick = function(){ tier('reseller'); };
       if ($d('mgTierF')) $d('mgTierF').onclick = function(){ tier('franchise'); };
+      tier('reseller');   // 기본 신청 유형 = 리셀러 (저장된 값 있으면 로드 시 덮어씀)
       render();
     })();
     </script>
@@ -521,7 +522,7 @@ select option{background:#1d1640;}
       c1Title:'① 홈페이지 정보', c1Desc:'고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.',
       slugLabel:'홈페이지 주소', slugSmall:'— 영문 소문자·숫자·하이픈만', slugHint:'고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.',
       companyLabel:'상호 (회사명) *', companyPh:'예: 행복광고기획',
-      bizNoLabel:'사업자등록번호 *', bizNoPh:'예: 123-45-67890', bizNoHint:'본사 승인에 필요합니다. 사업자만 신청 가능합니다.', bizNoErr:'사업자등록번호를 입력하세요.', reapplyBlocked:'반려 또는 취소된 신청은 재신청이 불가합니다. 본사에 문의하세요.',
+      bizNoLabel:'사업자등록번호 *', bizNoPh:'예: 123-45-67890', bizNoHint:'본사 승인에 필요합니다. 사업자만 신청 가능합니다.', bizNoErr:'사업자등록번호를 입력하세요.', reapplyBlocked:'취소된 계정은 재신청이 불가합니다. 본사에 문의하세요.',
       phoneLabel:'대표 전화번호 *', phonePh:'예: 031-000-0000', emailLabel:'이메일', countryLabel:'국가',
       co_KR:'대한민국', co_JP:'일본', co_US:'미국', co_CN:'중국', co_SA:'사우디', co_ES:'스페인', co_DE:'독일', co_FR:'프랑스',
       logoLabel:'로고', logoSmall:'— 정사각 이미지 권장',
@@ -1535,8 +1536,10 @@ select option{background:#1d1640;}
     // 2026-09-14: 원형 마진 다이얼 동기화 + 저장된 파트너 유형 반영
     try {
       var _sv = (th.margin != null) ? Number(th.margin) : 20;
-      // 2026-09-15: 리셀러 등록은 인근 가맹점 필요(현재 불가) → 항상 가맹점으로 표시
-      if (window._mgSetTier) window._mgSetTier('franchise');
+      // 2026-09-15: 저장된 신청 유형 복원(기본 리셀러). 없으면 리셀러.
+      var _at = (th.applicantType === 'franchise') ? 'franchise' : 'reseller';
+      window._frApplicantType = _at;
+      if (window._mgSetTier) window._mgSetTier(_at);
       if (window._mgSetMargin) window._mgSetMargin(_sv);
     } catch(e){}
     if ($('fBizNo')) $('fBizNo').value = th.bizNo || '';
@@ -1864,7 +1867,7 @@ select option{background:#1d1640;}
     var map = {
       pending:   { bg:'#fef9c3', bd:'#fde047', fg:'#854d0e', txt:'🕒 본사 승인 대기 중입니다. 승인되면 리셀러 매입 할인(10%)이 적용됩니다. 승인 전에도 홈페이지는 저장·수정할 수 있습니다.' },
       approved:  { bg:'#dcfce7', bd:'#86efac', fg:'#166534', txt:'✅ 승인 완료 — 리셀러로 활성화되었습니다. 본사 상품을 할인가로 매입하실 수 있습니다.' },
-      rejected:  { bg:'#fee2e2', bd:'#fca5a5', fg:'#991b1b', txt:'❌ 신청이 반려되었습니다. 재신청은 불가하며, 자세한 사항은 본사에 문의해 주세요.' },
+      rejected:  { bg:'#fee2e2', bd:'#fca5a5', fg:'#991b1b', txt:'❌ 신청이 반려되었습니다. 내용을 보완해 다시 저장하시면 재신청됩니다. (문의는 본사로)' },
       cancelled: { bg:'#f3f4f6', bd:'#d1d5db', fg:'#374151', txt:'⛔ 가맹 계약이 취소되었습니다. 재신청은 불가합니다. 본사에 문의해 주세요.' }
     };
     var m = map[status];
@@ -1908,9 +1911,9 @@ select option{background:#1d1640;}
         var owned = await sb.from('franchises').select('id,status').eq('owner_id', state.user.id).maybeSingle();
         existing = owned.data || null;           // 일반 계정: 1계정 1홈페이지
       }
-      // 2026-09-15: 반려·취소된 계정은 재신청 불가 (승인 모델).
-      if (existing && (existing.status === 'rejected' || existing.status === 'cancelled') && !isTestSave){
-        throw new Error(T.reapplyBlocked || '반려 또는 취소된 신청은 재신청이 불가합니다. 본사에 문의하세요.');
+      // 2026-09-15: 취소(계약 해지)만 재신청 불가. 반려(rejected)는 재신청 허용(저장 시 다시 pending).
+      if (existing && existing.status === 'cancelled' && !isTestSave){
+        throw new Error(T.reapplyBlocked || '취소된 계정은 재신청이 불가합니다. 본사에 문의하세요.');
       }
       // isTestSave && 신규 slug → existing=null → 새 홈페이지 insert
       var payload = {
@@ -1925,8 +1928,9 @@ select option{background:#1d1640;}
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
-      // 2026-09-15: 신규 신청은 status='pending' (본사 승인 대기). 기존 행은 status 를 건드리지 않음(승인 상태 보존).
+      // 2026-09-15: 신규 신청 = pending. 반려(rejected) 후 재저장 = 다시 pending(재신청). 그 외 기존행은 status 보존.
       if (!(existing && existing.id)) payload.status = 'pending';
+      else if (existing.status === 'rejected') payload.status = 'pending';
       var res = (existing && existing.id)
         ? await sb.from('franchises').update(payload).eq('id', existing.id).select().maybeSingle()
         : await sb.from('franchises').insert(payload).select().maybeSingle();
@@ -1941,7 +1945,7 @@ select option{background:#1d1640;}
           color: $('fHeroColor').value,
           image: state.heroImageUrl || '',
           bizNo: bizNo,
-          applicantType: 'reseller',   // 2026-09-15: 기본 신청 유형 = 리셀러(10%). 가맹점(20%)은 본사가 승인 시 별도 지정.
+          applicantType: (window._frApplicantType === 'franchise' ? 'franchise' : 'reseller'),   // 신청 유형(리셀러/가맹점) — 승인 시 본사가 확인
           margin: Math.max(0, parseFloat($('fMargin').value) || 0),
           bank: { name:$('fBankName').value.trim(), number:$('fBankNumber').value.trim(), holder:$('fBankHolder').value.trim() },
           pg: $('fPgInfo').value.trim(),
