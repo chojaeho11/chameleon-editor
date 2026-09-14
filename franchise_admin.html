@@ -352,17 +352,17 @@ select option{background:#1d1640;}
         <div style="flex:1;min-width:210px;">
           <div style="font-size:12px;color:#cfc8ee;font-weight:700;margin-bottom:8px;">파트너 유형</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
-            <button type="button" id="mgTierR" style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🚀 리셀러 <small style="font-weight:600;color:#9b94c4;">— 마진 10%부터</small></button>
-            <button type="button" id="mgTierF" style="width:100%;padding:14px;border-radius:12px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🏭 가맹점 <small style="font-weight:600;color:#c4b5fd;">— 마진 20%부터</small></button>
+            <button type="button" id="mgTierF" style="width:100%;padding:14px;border-radius:12px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🏭 가맹점 <small style="font-weight:600;color:#c4b5fd;">— 본사에서 직접 공급</small></button>
+            <button type="button" id="mgTierR" style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;text-align:left;">🚀 리셀러 <small style="font-weight:600;color:#9b94c4;">— 인근 가맹점에서 공급</small></button>
           </div>
-          <div style="font-size:12px;color:#b3aad4;line-height:1.65;"><b style="color:#fff;">기본 마진 20%</b>는 카멜레온프린팅 본사 판매 가격과 동일합니다. 리셀러는 <b style="color:#fff;">10%</b>, 가맹점은 <b style="color:#fff;">20%</b>부터 시작해 마우스로 올릴 수 있습니다.</div>
+          <div style="font-size:12px;color:#b3aad4;line-height:1.65;">마진율은 <b style="color:#fff;">자유롭게</b> 정하실 수 있습니다. 카멜레온프린팅 <b style="color:#fff;">본사 판매가에 설정하신 마진율(%)만큼 더한 금액</b>으로 사장님 홈페이지 가격이 만들어집니다. (가맹점은 본사에서 직접 공급받아 판매)</div>
         </div>
       </div>
       <input type="hidden" id="fMargin" value="20">
     </div>
     <script>
     (function(){
-      var CX=100, CY=100, R=95, MIN=20, MAX=120;   // MIN = 티어 하한(리셀러 10 / 가맹점 20)
+      var CX=100, CY=100, R=95, MIN=0, MAX=120;   // 2026-09-15: 자유 마진(티어 하한 없음, 0%~120%)
       var margin = 20;
       function $d(id){ return document.getElementById(id); }
       function polar(f){ var a=(135 + f*270)*Math.PI/180; return { x:CX+R*Math.cos(a), y:CY+R*Math.sin(a) }; }
@@ -399,7 +399,7 @@ select option{background:#1d1640;}
         svg.addEventListener('touchstart', start, {passive:false}); window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', end);
       }
       function tier(which){
-        MIN = which==='reseller' ? 10 : 20;
+        // 2026-09-15: 마진은 티어와 무관(자유). 스타일만 토글.
         $d('mgTierR').style.borderColor = which==='reseller'?'#a855f7':'rgba(167,139,250,0.3)';
         $d('mgTierR').style.background   = which==='reseller'?'rgba(124,58,237,0.15)':'none';
         $d('mgTierR').style.color        = which==='reseller'?'#fff':'#cfc8ee';
@@ -407,11 +407,13 @@ select option{background:#1d1640;}
         $d('mgTierF').style.background   = which==='franchise'?'rgba(124,58,237,0.15)':'none';
         $d('mgTierF').style.color        = which==='franchise'?'#fff':'#cfc8ee';
         try { localStorage.setItem('_fr_tier', which); } catch(e){}
-        setMargin(Math.max(MIN, margin));
       }
       window._mgSetTier = tier;
-      if ($d('mgTierR')) $d('mgTierR').onclick = function(){ tier('reseller'); setMargin(10); };
-      if ($d('mgTierF')) $d('mgTierF').onclick = function(){ tier('franchise'); setMargin(20); };
+      // 2026-09-15: 리셀러는 인근 가맹점에서 공급받아야 하는데 아직 가맹점이 없으므로 등록 불가 안내.
+      if ($d('mgTierR')) $d('mgTierR').onclick = function(){
+        alert('현재 해당 지역에 가맹점이 없어 리셀러 등록이 불가합니다.\n\n리셀러는 인근 가맹점에서 상품을 공급받아 판매하는 구조인데, 아직 해당 지역에 가맹점이 없습니다. 가맹점이 생기면 리셀러 등록이 가능합니다.');
+      };
+      if ($d('mgTierF')) $d('mgTierF').onclick = function(){ tier('franchise'); };
       render();
     })();
     </script>
@@ -1523,8 +1525,8 @@ select option{background:#1d1640;}
     // 2026-09-14: 원형 마진 다이얼 동기화 + 저장된 파트너 유형 반영
     try {
       var _sv = (th.margin != null) ? Number(th.margin) : 20;
-      var _tr = null; try { _tr = localStorage.getItem('_fr_tier'); } catch(e){}
-      if (window._mgSetTier && _tr) window._mgSetTier(_tr);
+      // 2026-09-15: 리셀러 등록은 인근 가맹점 필요(현재 불가) → 항상 가맹점으로 표시
+      if (window._mgSetTier) window._mgSetTier('franchise');
       if (window._mgSetMargin) window._mgSetMargin(_sv);
     } catch(e){}
     // 결제 정보 (계좌·PG·도메인)

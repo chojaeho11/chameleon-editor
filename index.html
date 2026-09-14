@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914235259';
+    var CV = '20260915000847';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -685,6 +685,19 @@ if ('serviceWorker' in navigator) {
             code = (_hl === 'ja') ? 'JP' : (_hl === 'en' || _hl === 'zh' || _hl === 'es' || _hl === 'de' || _hl === 'fr' || _hl === 'ar') ? 'US' : 'KR';
             try { document.documentElement.classList.add('hexa-mode'); } catch(e) {}
         }
+        // 2026-09-15: 가맹점 복제 홈페이지(?fr=)는 ?lang= 이 붙으면 그 언어로 __SITE_CODE 를 맞춘다.
+        //   (고정도메인 cafe2626 이라도 가맹점 클론이면 일본어/영어 사이트로 동작 — __SITE_CODE 기반 라벨이 한글로 남던 문제 해결.)
+        //   currency(getLocalizedData/site-config)는 ?lang 을 별도로 보므로 이중환산 없음(동일 국가로 수렴).
+        try {
+            var _fqs = new URLSearchParams(location.search);
+            var _frRef = _fqs.get('fr');
+            if (!_frRef) { try { _frRef = sessionStorage.getItem('_franchise_ref'); } catch(e){} }
+            if (_frRef) {
+                var _frLang = (_fqs.get('lang') || '').toLowerCase();
+                var _frCode = ({ ja:'JP', jp:'JP', en:'US', us:'US', zh:'CN', cn:'CN', ar:'SA', es:'ES', de:'DE', fr:'FR' })[_frLang];
+                if (_frCode) code = _frCode;
+            }
+        } catch(e){}
         window.__SITE_CODE = code;
         // 2026-05-14: 해외 사이트는 매니저 견적 카드 숨기고 타이틀 키움 (CSS 분기용 data 속성)
         try { document.documentElement.setAttribute('data-site', code); } catch(e) {}
@@ -12607,9 +12620,15 @@ window.getTinyThumb = function(url, size = 150) {
     const urlParams = new URLSearchParams(window.location.search);
     let detectedLang = urlParams.get('lang');
 
-    // 1. 도메인 기본값 설정 (고정 도메인은 lang 파라미터 무시)
+    // 2026-09-15: 가맹점 복제 홈페이지(?fr=)는 고정도메인이라도 가맹점 국가 언어(?lang=)를 따른다.
+    //   (일본 가맹점 = 일본어 사이트. 아래 고정도메인 강제 override 를 건너뛰어 ?lang 이 살아있게 한다.)
+    let _isFrClone = false;
+    try { _isFrClone = !!(urlParams.get('fr') || sessionStorage.getItem('_franchise_ref')); } catch(e){}
+    // 1. 도메인 기본값 설정 (고정 도메인은 lang 파라미터 무시 — 단 가맹점 클론은 예외)
     const _langHostname = window.location.hostname;
-    if (_langHostname.includes('cafe0101.com') || _langHostname.includes('cafe0101')) {
+    if (_isFrClone && detectedLang) {
+        // 가맹점 클론: ?lang= 값을 그대로 사용 (도메인 강제 override 생략)
+    } else if (_langHostname.includes('cafe0101.com') || _langHostname.includes('cafe0101')) {
         detectedLang = 'ja'; // 일본 도메인: 항상 일본어
     } else if (_langHostname.includes('cafe2626.com') || _langHostname.includes('cafe2626')) {
         detectedLang = 'kr'; // 한국 도메인: 항상 한국어
