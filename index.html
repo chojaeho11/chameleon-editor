@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260915023118';
+    var CV = '20260915023752';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1175,7 +1175,7 @@ if ('caches' in window) {
         <button class="tcm-btn tcm-fallback" data-fb-key="22222" onclick="window._tcmFallbackClick('22222')" data-i18n="tcm_fabric">패브릭인쇄</button>
         <button class="tcm-btn tcm-fallback" data-fb-key="44444" onclick="window._tcmFallbackClick('44444')" data-i18n="tcm_ad">광고인쇄</button>
         <button class="tcm-btn tcm-fallback" data-fb-key="paper_display" onclick="window._tcmFallbackClick('paper_display')" data-i18n="tcm_paper">종이매대</button>
-        <button class="tcm-btn tcm-fallback" data-fb-key="printe_product" onclick="window._tcmFallbackClick('printe_product')" data-i18n="tcm_commercial">상업 인쇄물</button>
+        <button class="tcm-btn" data-fb-key="printe_product" onclick="window._tcmScrollEtc()">기타상품</button>
     </div>
 </div>
 <script>
@@ -1202,8 +1202,9 @@ window._fabricTopNav = function() {
 };
 // 2026-09-10: 일시 판매중지 카테고리 상단메뉴 회색+클릭불가 (광고인쇄=44444 / 상업인쇄물=printe_product / 굿즈=goods).
 //   복구하려면 아래 window._SUSPENDED_NAV 배열을 [] 로 비우면 됨. 정적 fallback(data-fb-key) + 동적(data-top-code) + 굿즈(data-nav-key) 모두 커버.
-// 2026-09-14: 광고인쇄(44444)·굿즈(goods)는 상단 탑뷰에서 완전 숨김. 상업인쇄물(printe_product)은 회색 유지.
-window._SUSPENDED_NAV = ['printe_product'];
+// 2026-09-14: 광고인쇄(44444)·굿즈(goods)는 상단 탑뷰에서 완전 숨김.
+// 2026-09-15(사장님): 상업인쇄물(printe_product)은 "기타상품"으로 바꿔 홈 기타상품 섹션으로 스크롤 → 회색(suspended) 해제.
+window._SUSPENDED_NAV = [];
 window._HIDDEN_NAV = ['44444', 'goods'];
 // 2026-09-11: 홈 '허니콤보드 원판'(#wholesaleBoardSection) 에 노출할 상품 5종(지정 순서). 관리자 상품코드. 변경 시 여기만 수정.
 window._RAW_BOARD_CODES = ['53453455435', 'w23443243', '675756756765', '34553545', '3454353676', '34535345'];
@@ -1234,6 +1235,16 @@ window._tcmFallbackClick = function(code) {
     // honeycomb_board / 44444 / printe_product: 같은 페이지 상단 카테고리로 스크롤. (DB 로드 후 동적 핸들러로 교체됨)
     var grid = document.getElementById('cpHomePatterns') || document.getElementById('hotDealSection') || document.getElementById('bizDealSection');
     if (grid) grid.scrollIntoView({behavior:'smooth', block:'start'});
+};
+// 2026-09-15(사장님): "기타상품" 탭 → 홈 기타상품 섹션(#popularSection)으로 스크롤.
+window._tcmScrollEtc = function(){
+    try {
+        var track = document.getElementById('topCatMenuTrack');
+        if (track) track.querySelectorAll('.tcm-btn').forEach(function(b){ b.classList.remove('active'); });
+        var dd = document.getElementById('topCatDropdown'); if (dd) dd.style.display = 'none';
+    } catch(e){}
+    var sec = document.getElementById('popularSection');
+    if (sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
 };
 </script>
 <style>
@@ -14003,6 +14014,13 @@ async function renderQuickMenu() {
                 if (CURRENT_LANG === 'fr') tName = top.name_fr || top.name_us || tName;
                 btn.textContent = tName;
                 btn.dataset.topCode = top.code;  // 2026-05-13: selector 로 찾기 위해 추가
+                // 2026-09-15(사장님): 상업인쇄물(printe_product) → "기타상품" 라벨 + 클릭 시 홈 기타상품 섹션으로 스크롤.
+                if (top.code === 'printe_product') {
+                    btn.textContent = (CURRENT_LANG==='ja'?'その他商品':CURRENT_LANG==='en'?'Etc':CURRENT_LANG==='zh'?'其他商品':CURRENT_LANG==='ar'?'منتجات أخرى':CURRENT_LANG==='es'?'Otros':CURRENT_LANG==='de'?'Sonstiges':CURRENT_LANG==='fr'?'Autres':'기타상품');
+                    btn.onclick = () => { if (window._tcmScrollEtc) window._tcmScrollEtc(); };
+                    tcmTrack.appendChild(btn);
+                    return;
+                }
                 btn.onclick = () => {
                     // ★ 종이매대 → paper-stand 페이지로 이동
                     if (top.code === 'paper_display') {
