@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260914153432';
+    var CV = '20260914154241';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -829,7 +829,7 @@ if ('caches' in window) {
             if (!ref) return;
             var SUPA = 'https://qinvtnhiidtmrzosyvys.supabase.co';
             var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-            fetch(SUPA + '/rest/v1/franchises?slug=eq.' + encodeURIComponent(ref) + '&select=company_name,logo_url,slug,phone&limit=1', {
+            fetch(SUPA + '/rest/v1/franchises?slug=eq.' + encodeURIComponent(ref) + '&select=company_name,logo_url,slug,phone,email,tagline&limit=1', {
                 headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }
             }).then(function(r){ return r.json(); }).then(function(rows){
                 if (!rows || !rows.length) return;
@@ -862,6 +862,28 @@ if ('caches' in window) {
                         ps.forEach(function(a){ a.textContent = f.phone; a.setAttribute('href', 'tel:' + f.phone.replace(/[^0-9+]/g,'')); });
                     })();
                 }
+                // 2026-09-14: 히어로 메인 타이틀 → 가맹점 타이틀(tagline). 프로모 문구 세팅(hwTitle) 이후 덮어씀 + 잠깐 반복.
+                if (f.tagline) {
+                    var trh = 0;
+                    (function applyHero(){
+                        var h = document.getElementById('hwTitle');
+                        if (!h){ if (trh++ < 40) setTimeout(applyHero, 300); return; }
+                        h.textContent = f.tagline;
+                        var sub = document.getElementById('hwSub'); if (sub && f.company_name) sub.textContent = f.company_name;
+                        if (trh++ < 12) setTimeout(applyHero, 500);   // 프로모 로직이 다시 덮으면 재적용
+                    })();
+                }
+                // 2026-09-14: 푸터 상호명 + Copyright → 가맹점 상호로 리브랜딩.
+                (function applyFooter(){
+                    var trf = 0;
+                    (function ap(){
+                        var cn = document.querySelector('[data-i18n="footer_company_value"]');
+                        var cp = document.querySelector('.copyright');
+                        if (!cn && !cp){ if (trf++ < 30) setTimeout(ap, 300); return; }
+                        if (cn && f.company_name){ cn.textContent = f.company_name; cn.removeAttribute('data-i18n'); }
+                        if (cp && f.company_name){ cp.innerHTML = 'Copyright © <strong>' + f.company_name + '</strong>. all rights reserved.'; }
+                    })();
+                })();
             }).catch(function(){});
         })();
         // 2026-05-16: 가맹점 스토어에서 ?editor=1 / ?search=1 로 들어오면 해당 기능 자동 실행
@@ -2416,7 +2438,7 @@ window._tcmFallbackClick = function(code) {
                     try {
                         var sb = window.sb;
                         if (!sb) {
-                            try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
+                            try { var mod = await import('./config.js?v=446'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
                         }
                         if (!sb) { console.warn('[mgrPhones] sb 미초기화 — 슬롯 정리'); _cleanupSlot(); return; }
                         // 1차 fetch 실패 시 1.5초 후 재시도 (모바일 네트워크 불안정 대응)
@@ -3467,7 +3489,7 @@ window._tcmFallbackClick = function(code) {
                 if (quoteId) _addPendingId(quoteId);
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; }
+                    try { var mod = await import('./config.js?v=446'); sb = mod.sb || window.sb; }
                     catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
@@ -3799,7 +3821,7 @@ window._tcmFallbackClick = function(code) {
             msg.textContent = '...';
             try {
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=446'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { msg.style.color = '#dc2626'; msg.textContent = 'Supabase ' + t.lookupErr; return; }
                 var res = await sb.from('orders').select('id, total_amount, payment_status, status').eq('id', val).maybeSingle();
                 if (res.error || !res.data) {
@@ -3827,7 +3849,7 @@ window._tcmFallbackClick = function(code) {
                 // 1) 주문의 items 를 카트에 로드
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){}
+                    try { var mod = await import('./config.js?v=446'); sb = mod.sb || window.sb; } catch(e){}
                 }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var { data: order, error } = await sb
@@ -3933,7 +3955,7 @@ window._tcmFallbackClick = function(code) {
             try {
                 if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 처리중...'; }
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=446'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var em = '';
                 try { var { data: sess } = await sb.auth.getUser(); em = sess?.user?.email || ''; } catch (e) {}
@@ -6249,7 +6271,7 @@ window.openMyDesignsModal = async function(){
     grid.innerHTML=''; note.style.display='block'; note.textContent=window.t('loading_generic','불러오는 중...');
     try {
         var sb = window.sb;
-        if(!sb){ try { var mod = await import('./config.js?v=445'); sb = mod.sb || window.sb; } catch(e){} }
+        if(!sb){ try { var mod = await import('./config.js?v=446'); sb = mod.sb || window.sb; } catch(e){} }
         if(!sb){ note.textContent=window.t('retry_later','잠시 후 다시 시도해주세요.'); return; }
         var u = await sb.auth.getUser();
         var uid = u && u.data && u.data.user && u.data.user.id;
@@ -10694,7 +10716,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 메인 페이지에서 ~16개 모듈, 약 1MB JS 다운로드/파싱 절감. -->
 <!-- 남은 정적 import: config(필수), order(필수, canvas-core/size/pages/export 도 자동 동반), login(필수), main(orchestrator). -->
 <!-- wall-3d-* 는 에디터 진입 후 wall 3D 미리보기에서 lazy-init 되도록 defer 유지. -->
-<script type="module" src="./config.js?v=445"></script>
+<script type="module" src="./config.js?v=446"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
 <script src="/attribution.js?v=1"></script>
@@ -12209,7 +12231,7 @@ window.filterFxCards = function(cat, btn) {
     import { canvas, setMaxLimits } from './canvas-core.js?v=435';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=740'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=435';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=445';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=446';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -17630,7 +17652,7 @@ if (w >= 20 && h >= 20) {
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=445')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=446')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -17682,7 +17704,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=445')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=446')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -21837,7 +21859,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=445';
+    import { sb, initConfig } from './config.js?v=446';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {

@@ -480,16 +480,19 @@ export function getLocalizedData(item) {
     const _stripSize = (n) => (n || '').replace(/\s*\([\d.,]+\s*[×xX]\s*[\d.,]+\s*(ft|in|mm|cm|m)\)/gi, '').trim();
 
     let name = _stripSize(item.name || '');
-    let price = Number(item.price) || 0;
+    // 2026-09-14: 가맹점 복제 홈페이지(?fr=) 판매 마진율 — window.__FR_MARGIN(%) 만큼 모든 표시가에 반영.
+    //   simple_order.js 는 getLocalizedData 를 쓰지 않고 state.frMargin 으로 별도 적용하므로 이중적용 없음.
+    const _frM = (typeof window !== 'undefined' && Number(window.__FR_MARGIN) > 0) ? (1 + Number(window.__FR_MARGIN) / 100) : 1;
+    let price = (Number(item.price) || 0) * _frM;
     let formattedPrice = '';
 
     if (country === 'JP') {
         name = _stripSize(item.name_jp || item.name_us || item.name);
-        price = Number(item.price_jp) || price;
+        price = item.price_jp ? Number(item.price_jp) * _frM : price;
         formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {
         name = _stripSize(item.name_us || item.name);
-        price = Number(item.price_us) || price;
+        price = item.price_us ? Number(item.price_us) * _frM : price;
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
         name = item.name_cn || item.name_us || item.name;
