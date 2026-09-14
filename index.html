@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260911004418';
+    var CV = '20260914135151';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -7442,6 +7442,8 @@ async function handleSubReturn() {
                     <li><a href="#" data-i18n="footer_menu_notice">공지사항</a></li>
                     <li><a href="#" data-i18n="footer_menu_terms">이용약관</a></li>
                     <li><a href="#"><strong data-i18n="footer_menu_privacy">개인정보처리방침</strong></a></li>
+                    <!-- 2026-09-14: 가맹점·리셀러 모집 탭. data-i18n 미사용(번역키/투명CSS 함정 회피) — __SITE_CODE 로 라벨 선택. -->
+                    <li><a href="/franchise" id="footerFranchiseLink" style="color:#7c3aed;">가맹점·리셀러 모집</a></li>
                     <li id="footerTokushoLink" style="display:none;"><a href="#" onclick="document.getElementById('tokushoModal').style.display='flex';return false;" data-i18n="footer_menu_tokusho">特定商取引法に基づく表示</a></li>
                 </ul>
             </div>
@@ -7489,6 +7491,14 @@ async function handleSubReturn() {
 </div>
     </div>
 </div>
+
+<!-- 2026-09-14: 푸터 가맹점·리셀러 링크 라벨 다국어 (번역파일 미수정 self-contained) -->
+<script>(function(){
+    var m = { KR:'가맹점·리셀러 모집', JP:'加盟店・リセラー募集', US:'Become a Partner',
+              CN:'加盟·经销招募', SA:'انضم كشريك', ES:'Sé Socio', DE:'Partner werden', FR:'Devenir Partenaire' };
+    var el = document.getElementById('footerFranchiseLink');
+    if (el) el.textContent = m[window.__SITE_CODE] || m.US;
+})();</script>
 
 <!-- 特定商取引法に基づく表示 (JP only) -->
 <div id="tokushoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
