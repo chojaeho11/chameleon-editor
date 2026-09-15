@@ -786,6 +786,8 @@ function designerPayoutAmount(r) {
     // FREE_REQ.designerPayout = 이미 확정된 지급액 (자유의뢰·기본디자인·글씨스카시·인스타). ×0.7 절대 금지.
     var fr = parseFreeReqMeta(r.description);
     if (fr && fr.designerPayout) return Number(fr.designerPayout);
+    // 2026-09-15(버그#51): 글씨스카시 = 4만원 정액(무료디자인·본사결제). FREE_REQ 태그 누락 데이터도 70% 로 떨어지지 않게 정액 보장.
+    if (r.category === '글씨스카시') return 40000;
     var custP = Number(r.budget_max || r.budget_min || 0);
     if (custP > 0) return Math.floor(custP * 0.7);
     var m = parseMeta(r.description);

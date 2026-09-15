@@ -3,7 +3,7 @@ import { ADDON_DB as _IMPORTED_ADDON_DB, currentUser, sb } from "./config.js?v=4
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=435"; // 페이지 인덱스 가져오기
 import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=294";
 
-// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=443 / index.html?v=439 등).
+// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=444 / index.html?v=439 등).
 //   index.html 만 initConfig() 를 실행해 ADDON_DB 를 채우고 window.ADDON_DB 에 노출.
 //   export.js 가 import 한 ADDON_DB 는 빈 객체로 남아 견적서에서 b0001 등 addon 가격 누락.
 //   getter 로 항상 window.ADDON_DB 를 우선 사용.
@@ -2005,10 +2005,12 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             //   기존엔 단순 pdfPrice × qty 라 단면/세로3m 무시되어 견적서 금액이 결제 금액보다 작게 나옴.
             let rawTotal;
             let _wallSizeLine = '';
+            let _wallDispQty = item.qty;   // 2026-09-15(버그#53): 가벽 수량 = 폭(m) × 면수. 양면 6m → 12 (단가 pdfPrice 와 곱해 총액 일치).
             if (item.wallSize && item.wallSize.w_m) {
                 const _wM = parseFloat(item.wallSize.w_m) || 1;
                 const _hM = parseFloat(item.wallSize.h_m) || 0;
                 const _sideMult = (item.wallSide === 'double') ? 2 : 1;
+                _wallDispQty = _wM * _sideMult;
                 const _baseSubtotal = (pdfPrice || 0) * _wM * _sideMult;
                 // 세로 3m면 가로 m당 +50,000원 (양면이면 ×2) — recalc() 와 동일
                 const _heightExtra = (_hM === 3) ? 50000 * _wM * _sideMult : 0;
@@ -2033,7 +2035,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             drawCell(doc, curX, y, cols[0], rowHeight, no++, 'center'); curX += cols[0];
             drawCell(doc, curX, y, cols[1], rowHeight, splitTitle, 'left'); curX += cols[1];
             drawCell(doc, curX, y, cols[2], rowHeight, pdfOptionLabel, 'left'); curX += cols[2];
-            drawCell(doc, curX, y, cols[3], rowHeight, String(item.qty), 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[3], rowHeight, String(_wallDispQty), 'center'); curX += cols[3];
 
             const priceStr = formatCurrencyForPDF(pdfPrice);
             const totalStr = formatCurrencyForPDF(pTotal);

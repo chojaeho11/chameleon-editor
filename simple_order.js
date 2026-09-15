@@ -19726,6 +19726,11 @@ html, body { background: #ffffff !important; }
         if (/허니콤|honeycomb/.test(n)) return true;
         // 가벽/등신대/박스/자유인쇄커팅 — 허니콤보드 family 로 간주
         if (it.product.isWall || it.product.isBox || it.product.isStandee || it.product.isCutPrint) return true;
+        // 2026-09-15(버그#50/#52): 인스타판넬(hb_insta, lll0/0ll/lllllp/ppp)·포토존 — 허니콤 family 로 인식.
+        //   미인식 시 카트가 일반 flat 2,500원 택배 규칙에 걸려 무료여야 할 인스타판넬/포토존에 배송비 오부과됨.
+        if (cat === 'hb_insta') return true;
+        if (typeof _soIsInstaPanelProduct === 'function' && _soIsInstaPanelProduct(it.product)) return true;
+        if (typeof _soIsPhotozoneProduct === 'function' && _soIsPhotozoneProduct(it.product)) return true;
         return false;
     }
     window._soIsHoneycombCartItem = _soIsHoneycombCartItem;
@@ -19786,7 +19791,11 @@ html, body { background: #ffffff !important; }
             //   실사출력은 batch 룰 (real-print 합계 < 100K → 10K, ≥ 100K → 0) 별도 가산.
             var _itIsRealPrintCk = !!it._isRealPrint || (it.product && it.product.code &&
                 ['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(it.product.code) >= 0);
-            if (!it._isBestGoods && !it._isAdPrint && !_itIsRealPrintCk) itemShipFees.push(shipFee);
+            // 2026-09-15(버그, 백승호 #6795): 원판 커팅/라텍스 등 fee=0 동반 라인이 무료배송 carryover(_hasFreeNonWall)를
+            //   오염시켜 1장 주문의 100,000원 배송비가 통째로 0 되던 버그 → 원판 fee=0 동반라인은 carryover 후보에서 제외.
+            //   (배송비를 가진 원판 첫 라인은 그대로 push 되어 max 룰로 정상 부과)
+            var _itIsRawBoardCk = !!it._isRawBoardAuto || (it.product && typeof _soIsRawBoardProduct === 'function' && _soIsRawBoardProduct(it.product));
+            if (!it._isBestGoods && !it._isAdPrint && !_itIsRealPrintCk && !(_itIsRawBoardCk && shipFee === 0)) itemShipFees.push(shipFee);
         });
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송).
         // 2026-06-06: 가벽 우선 룰 — 가벽이 카트에 있으면 가벽 자체 시공/철거비 (100K/200K/700K 등) 만 부과,
@@ -20585,7 +20594,7 @@ html, body { background: #ffffff !important; }
             if (!cart || cart.length === 0) { alert(tr('장바구니가 비어있습니다.','カートが空です。','Your cart is empty.')); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=443');
+            var mod = await import('./export.js?v=444');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
