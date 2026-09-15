@@ -235,43 +235,65 @@
                 .in('category', catCodes);
             if (error) throw error;
 
-            // 3단계: 소분류별 그룹핑 + 렌더링
+            // 3단계: 렌더링 — 2026-09-15(사장님): 베스트상품(화이트 4종) 맨 위, 허니콤보드 16·10 통합(올크라프트 먼저), 그 외 카테고리 아래.
             grid.innerHTML = '';
             grid.style.display = 'block';
             grid.className = '';
 
-            var hasAny = false;
-            subCats.forEach(function(cat) {
-                var catProducts = (products || [])
-                    .filter(function(p) { return p.category === cat.code; })
-                    .sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
-                if (catProducts.length === 0) return;
-                hasAny = true;
-
-                // 소분류명 (다국어)
-                var catName = cat.name;
-                if (psLang === 'ja' && cat.name_jp) catName = cat.name_jp;
-                else if ((psLang === 'en') && cat.name_us) catName = cat.name_us;
-                else if (psLang === 'zh' && cat.name_cn) catName = cat.name_cn;
-                else if (psLang === 'ar' && cat.name_ar) catName = cat.name_ar;
-                else if (psLang === 'es' && cat.name_es) catName = cat.name_es;
-                else if (psLang === 'de' && cat.name_de) catName = cat.name_de;
-                else if (psLang === 'fr' && cat.name_fr) catName = cat.name_fr;
-
-                // 섹션 헤더
+            var _bg = { bg:'linear-gradient(135deg,#fef3c7,#fde68a)', bar:'#b45309', txt:'#92400e' };
+            function _renderSection(title, prods, style){
+                if (!prods || !prods.length) return;
+                var st = style || _bg;
                 var header = document.createElement('div');
-                header.style.cssText = 'margin:32px 0 12px; padding:10px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:10px; border-left:4px solid #b45309;';
-                header.innerHTML = '<span style="font-size:16px; font-weight:800; color:#92400e;">' + catName + '</span>' +
-                    '<span style="font-size:12px; color:#b45309; margin-left:8px;">(' + catProducts.length + ')</span>';
+                header.style.cssText = 'margin:32px 0 12px; padding:10px 16px; background:'+st.bg+'; border-radius:10px; border-left:4px solid '+st.bar+';';
+                header.innerHTML = '<span style="font-size:16px; font-weight:800; color:'+st.txt+';">' + title + '</span>' +
+                    '<span style="font-size:12px; color:'+st.bar+'; margin-left:8px;">(' + prods.length + ')</span>';
                 grid.appendChild(header);
-
-                // 상품 그리드
                 var subGrid = document.createElement('div');
                 subGrid.className = 'product-grid';
-                catProducts.forEach(function(product) {
-                    subGrid.appendChild(createProductCard(product));
-                });
+                prods.forEach(function(p){ subGrid.appendChild(createProductCard(p)); });
                 grid.appendChild(subGrid);
+            }
+            function _catName(cat){
+                var n = cat.name;
+                if (psLang === 'ja' && cat.name_jp) n = cat.name_jp;
+                else if (psLang === 'en' && cat.name_us) n = cat.name_us;
+                else if (psLang === 'zh' && cat.name_cn) n = cat.name_cn;
+                else if (psLang === 'ar' && cat.name_ar) n = cat.name_ar;
+                else if (psLang === 'es' && cat.name_es) n = cat.name_es;
+                else if (psLang === 'de' && cat.name_de) n = cat.name_de;
+                else if (psLang === 'fr' && cat.name_fr) n = cat.name_fr;
+                return n;
+            }
+
+            var BEST_CODES = ['53453455435','675756756765','345535456','34553545'];   // 16올화이트·16표면화이트/크라프트·10표면화이트/크라프트·10화이트
+            var CRAFT_FIRST = ['w23443243','3454353676'];                              // 16 올크라프트·10 올크라프트
+            var HC_BOARD_CATS = ['Honeycomb Board','10mm34244'];                       // 16mm + 10mm 허니콤보드
+            var byCode = {}; (products || []).forEach(function(p){ byCode[p.code] = p; });
+            var _sortSo = function(a,b){ return (a.sort_order||999)-(b.sort_order||999); };
+
+            var hasAny = false;
+
+            // (1) 베스트상품 — 화이트 4종
+            var best = BEST_CODES.map(function(c){ return byCode[c]; }).filter(Boolean);
+            var _bestT = (psLang==='ja')?'⭐ ベスト商品':(psLang==='en')?'⭐ Best Sellers':(psLang==='zh')?'⭐ 热销商品':'⭐ 베스트 상품';
+            if (best.length){ hasAny = true; _renderSection(_bestT, best, { bg:'linear-gradient(135deg,#ede9fe,#ddd6fe)', bar:'#7c3aed', txt:'#5b21b6' }); }
+
+            // (2) 허니콤보드 (16·10mm 통합) — 베스트 제외, 올크라프트 2종 먼저
+            var hcRest = (products || []).filter(function(p){ return HC_BOARD_CATS.indexOf(p.category) >= 0 && BEST_CODES.indexOf(p.code) < 0; });
+            var hcCraft = CRAFT_FIRST.map(function(c){ return byCode[c]; }).filter(function(p){ return p && hcRest.indexOf(p) >= 0; });
+            var hcOther = hcRest.filter(function(p){ return CRAFT_FIRST.indexOf(p.code) < 0; }).sort(_sortSo);
+            var hcMerged = hcCraft.concat(hcOther);
+            var _hcT = (psLang==='ja')?'ハニカムボード (16·10mm)':(psLang==='en')?'Honeycomb Board (16·10mm)':(psLang==='zh')?'蜂窝板 (16·10mm)':'허니콤보드 (16·10mm)';
+            if (hcMerged.length){ hasAny = true; _renderSection(_hcT, hcMerged); }
+
+            // (3) 그 외 카테고리 (방염보드·종이파렛트·특수소재 등) — 기존 소분류별
+            subCats.forEach(function(cat){
+                if (HC_BOARD_CATS.indexOf(cat.code) >= 0) return;   // 허니콤보드는 위에서 통합 렌더
+                var catProducts = (products || []).filter(function(p){ return p.category === cat.code; }).sort(_sortSo);
+                if (!catProducts.length) return;
+                hasAny = true;
+                _renderSection(_catName(cat), catProducts);
             });
 
             if (!hasAny) {
