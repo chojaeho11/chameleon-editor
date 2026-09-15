@@ -9,7 +9,7 @@ import { checkAdminAccess } from "./global_common.js?v=435";
 // 나머지 기능 파일들 불러오기
 import "./global_orders.js?v=501";
 import "./global_products.js?v=308";
-import "./global_users.js?v=321";
+import "./global_users.js?v=322";
 import "./global_franchise.js?v=2";
 import "./global_safetx.js?v=1";
 import "./global_assets.js?v=296";

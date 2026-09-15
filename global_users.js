@@ -1811,9 +1811,14 @@ function _doRenderUnsettled(area, reqs){
     const grandTotal = unsettled.reduce((s, r) => s + (Number(r._amtPayout) || 0), 0);
     const grandCount = unsettled.length;
 
-    let html = `<div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    let html = `<div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <div style="font-weight:900;color:#b91c1c;font-size:15px;">🔴 전체 미정산 ${grandCount}건</div>
         <div style="font-weight:900;color:#b91c1c;font-size:18px;">${_doMoney(grandTotal)}</div>
+    </div>
+    <!-- 2026-09-15(버그#54): 여러 건 선택 → 일괄 정산완료 -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <label style="font-size:13px;font-weight:700;color:#334155;cursor:pointer;"><input type="checkbox" id="doUnsettledAll" onclick="_doToggleAllUnsettled(this)" style="vertical-align:middle;margin-right:5px;">전체 선택</label>
+        <button class="btn btn-sm" style="background:#7c3aed;color:#fff;font-weight:800;" onclick="markDesignSettledBulk()"><i class="fa-solid fa-coins"></i> 선택 건 일괄 정산완료 <span id="doBulkCount" style="background:rgba(255,255,255,0.25);padding:1px 7px;border-radius:10px;margin-left:4px;">0</span></button>
     </div>`;
 
     Object.keys(groups).sort((a, b) => {
@@ -1833,7 +1838,7 @@ function _doRenderUnsettled(area, reqs){
                 <td style="font-size:12px;">${_doEsc(r._custName)}</td>
                 <td style="font-size:12px;font-family:monospace;">${_doEsc(r._custPhone)}</td>
                 <td style="text-align:right;font-size:12px;font-weight:800;">${_doMoney(r._amtPayout)}</td>
-                <td style="text-align:center;"><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;" onclick="markDesignSettled('${r.id}', this)"><i class="fa-solid fa-coins"></i> 정산완료</button></td>
+                <td style="text-align:center;white-space:nowrap;"><input type="checkbox" class="do-unsettled-chk" value="${r.id}" onclick="_doUpdateBulkCount()" style="vertical-align:middle;margin-right:6px;"><button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;" onclick="markDesignSettled('${r.id}', this)"><i class="fa-solid fa-coins"></i> 정산완료</button></td>
             </tr>`;
         });
         html += `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden;">
@@ -1889,6 +1894,34 @@ window.markDesignSettled = async (reqId, btn) => {
         alert('정산완료 처리되었습니다. (디자이너 지갑·미정산 목록·출금현황에도 자동 반영됩니다)');
         loadDesignOrders();
     } catch (e) { alert('처리 실패: ' + (e.message || e)); if (btn) btn.disabled = false; }
+};
+// 2026-09-15(버그#54): 미정산 다중선택 → 일괄 정산완료
+window._doToggleAllUnsettled = function(cb){
+    document.querySelectorAll('.do-unsettled-chk').forEach(function(x){ x.checked = cb.checked; });
+    _doUpdateBulkCount();
+};
+window._doUpdateBulkCount = function(){
+    var n = document.querySelectorAll('.do-unsettled-chk:checked').length;
+    var el = document.getElementById('doBulkCount'); if (el) el.textContent = n;
+};
+window.markDesignSettledBulk = async function(){
+    var ids = Array.prototype.map.call(document.querySelectorAll('.do-unsettled-chk:checked'), function(x){ return x.value; });
+    if (!ids.length) { alert('정산완료할 건을 선택하세요.'); return; }
+    if (!confirm(ids.length + '건을 일괄 정산완료 처리할까요?')) return;
+    try {
+        var { data, error } = await sb.from('design_requests').update({ status: 'settled' }).in('id', ids).select('id, description');
+        if (error) throw error;
+        if (!data || !data.length) throw new Error('반영된 건이 없습니다 (권한/대상 확인). 새로고침 후 다시 시도해 주세요.');
+        // 영향 디자이너별 출금 동기화 (중복 제거)
+        var dids = {};
+        (data || []).forEach(function(r){
+            var _did = (String(r.description || '').match(/\[DESIGNER:([^\s\]]+)/) || [])[1];
+            if (_did) dids[_did] = 1;
+        });
+        for (var k in dids){ try { await _syncDesignerWithdrawalIfAllSettled(k); } catch(e){ console.warn('[bulk settle sync]', e); } }
+        alert(data.length + '건 정산완료 처리되었습니다.');
+        loadDesignOrders();
+    } catch (e) { alert('일괄 처리 실패: ' + (e.message || e)); }
 };
 // 2026-08-24 (버그#24): 디자이너의 미정산 작업이 모두 정산되면 그 디자이너의 대기/승인 출금요청을 지급완료 처리.
 async function _syncDesignerWithdrawalIfAllSettled(designerId) {
