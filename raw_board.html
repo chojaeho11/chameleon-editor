@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915233848';
+    var CV = '20260915234521';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -865,6 +865,7 @@ async function submitPdSample() {
 .rb-res-total b{color:#6366f1;font-size:20px;}
 .rb-res-note{font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.5;}
 .rb-order-info{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:760px;margin:0 auto;}
+.rb-order-info.rb-order-info-single{grid-template-columns:1fr;max-width:520px;}
 .rb-oi-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:0;overflow:hidden;}
 .rb-oi-flag{display:none;}
 /* v707: 카드 상단 보라 그라데이션 배지 */
@@ -950,20 +951,14 @@ async function submitPdSample() {
             <div class="rb-res-note" data-i18n="calc_res_note">VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.</div>
         </div>
     </div>
-    <!-- v707: 배송 안내 — 카드 위쪽에 보라색 그라데이션 헤더 -->
-    <div class="rb-order-info">
-        <div class="rb-oi-card">
-            <div class="rb-oi-badge" data-i18n="calc_ship_small_h">소량주문 배송안내</div>
-            <div class="rb-oi-title" data-i18n="calc_ship_small_t">소량 주문 (100매 이하)</div>
-            <div class="rb-oi-desc" data-i18n-html="calc_ship_small_d">수도권(서울·경기) 무료배송<br>지방은 착불 또는 20만원 정액 배송</div>
-        </div>
+    <!-- v707: 배송 안내 — 카드 위쪽에 보라색 그라데이션 헤더. 2026-09-15(사장님): 소량 카드·오픈안내 삭제, 유통사 카드만 유지 -->
+    <div class="rb-order-info rb-order-info-single">
         <div class="rb-oi-card">
             <div class="rb-oi-badge" data-i18n="calc_ship_dist_h">유통사 배송안내</div>
-            <div class="rb-oi-title" data-i18n="calc_ship_dist_t">유통사 (100매 이상)</div>
-            <div class="rb-oi-desc" data-i18n-html="calc_ship_dist_d">수도권 무료배송<br>지방은 300매 이상 무료배송</div>
+            <div class="rb-oi-title" data-i18n="calc_ship_dist_t">100매 이상 구매 시 가격입니다</div>
+            <div class="rb-oi-desc" data-i18n-html="calc_ship_dist_d">소량은 아래 제품을 클릭해주세요.<br>수도권 무료배송 · 지방은 300매 이상 무료배송</div>
         </div>
     </div>
-    <div class="rb-ship-notice" data-i18n-html="calc_ship_notice">지금은 일반 구매만 가능합니다. <b class="rb-emph">유통사 판매</b>는 <b class="rb-emph-date">8월 15일</b>부터 가능합니다.</div>
 </section>
 
 <!-- ===== 장점 4가지 ===== -->
@@ -1013,8 +1008,8 @@ async function submitPdSample() {
     function rbFillThick(){
         var sel = document.getElementById('rbT'); if(!sel) return;
         sel.innerHTML = RB_THICK[rbType].map(function(v){ return '<option value="'+v+'">'+v+' mm</option>'; }).join('');
-        // 2026-09-15(사장님): 내장재용 기본 두께 100mm.
-        sel.value = (rbType === 'core') ? '100' : String(RB_THICK[rbType][0]);
+        // 2026-09-15(사장님): 내장재용 기본 100mm, 고급인쇄용 기본 16mm.
+        sel.value = (rbType === 'core') ? '100' : '16';
     }
     window.rbSetType = function(t){
         rbType = t;
@@ -1505,8 +1500,8 @@ calc_ship_dist_h: { ko:'유통사 배송안내', ja:'代理店 配送のご案�
 // v705: 배송 안내 — 아이콘/볼드 제거, 깔끔한 텍스트
 calc_ship_small_t: { ko:'소량 주문 (100매 이하)', ja:'少量注文 (100枚以下)', en:'Small Orders (under 100 sheets)', zh:'少量订单 (100张以下)', ar:'الطلبات الصغيرة (أقل من 100 لوح)', es:'Pedidos pequeños (menos de 100 hojas)', de:'Kleinmengen (unter 100 Blatt)', fr:'Petites commandes (moins de 100 feuilles)' },
 calc_ship_small_d: { ko:'수도권(서울·경기) 무료배송<br>지방은 착불 또는 20만원 정액 배송', ja:'首都圏(ソウル·京畿) 送料無料<br>地方は着払 または20万ウォンの定額配送', en:'Free shipping within Seoul and Gyeonggi.<br>Other regions: cash on delivery or a flat 200,000 KRW shipping fee.', zh:'首尔·京畿地区免运费。<br>其他地区为到付或20万韩元定额运费。', ar:'شحن مجاني داخل سيول وجيونجي.<br>المناطق الأخرى: الدفع عند الاستلام أو رسوم شحن ثابتة 200,000 وون.', es:'Envío gratuito dentro de Seúl y Gyeonggi.<br>Otras regiones: contra reembolso o una tarifa fija de 200.000 KRW.', de:'Kostenloser Versand in Seoul und Gyeonggi.<br>Andere Regionen: Nachnahme oder pauschal 200.000 KRW Versandkosten.', fr:'Livraison gratuite à Séoul et Gyeonggi.<br>Autres régions : contre-remboursement ou frais fixes de 200 000 KRW.' },
-calc_ship_dist_t: { ko:'유통사 (100매 이상)', ja:'代理店 (100枚以上)', en:'Distributor (100 sheets or more)', zh:'经销商 (100张以上)', ar:'الموزع (100 لوح أو أكثر)', es:'Distribuidor (100 hojas o más)', de:'Vertriebspartner (100 Blatt oder mehr)', fr:'Distributeur (100 feuilles ou plus)' },
-calc_ship_dist_d: { ko:'수도권 무료배송<br>지방은 300매 이상 무료배송', ja:'首都圏 送料無料<br>地方は300枚以上で送料無料', en:'Free shipping within Seoul and Gyeonggi.<br>Other regions: free shipping on orders of 300 sheets or more.', zh:'首尔·京畿地区免运费。<br>其他地区订购300张以上免运费。', ar:'شحن مجاني داخل سيول وجيونجي.<br>المناطق الأخرى: شحن مجاني للطلبات من 300 لوح فأكثر.', es:'Envío gratuito dentro de Seúl y Gyeonggi.<br>Otras regiones: envío gratuito para pedidos de 300 hojas o más.', de:'Kostenloser Versand in Seoul und Gyeonggi.<br>Andere Regionen: kostenloser Versand ab 300 Blatt.', fr:'Livraison gratuite à Séoul et Gyeonggi.<br>Autres régions : livraison gratuite à partir de 300 feuilles.' },
+calc_ship_dist_t: { ko:'100매 이상 구매 시 가격입니다', ja:'100枚以上 購入時の価格です', en:'Price applies to orders of 100 sheets or more', zh:'此价格适用于100张以上的订单', ar:'يسري هذا السعر على الطلبات من 100 لوح فأكثر', es:'Precio válido para pedidos de 100 hojas o más', de:'Preis gilt für Bestellungen ab 100 Blatt', fr:'Prix applicable aux commandes de 100 feuilles ou plus' },
+calc_ship_dist_d: { ko:'소량은 아래 제품을 클릭해주세요.<br>수도권 무료배송 · 지방은 300매 이상 무료배송', ja:'少量は下の商品をクリックしてください。<br>首都圏 送料無料 · 地方は300枚以上で送料無料', en:'For small quantities, click the products below.<br>Free shipping in Seoul/Gyeonggi · other regions free from 300 sheets.', zh:'少量请点击下方商品。<br>首尔·京畿免运费 · 其他地区300张以上免运费。', ar:'للكميات الصغيرة، اضغط على المنتجات أدناه.<br>شحن مجاني في سيول/جيونجي · مناطق أخرى مجاني من 300 لوح.', es:'Para cantidades pequeñas, haga clic en los productos de abajo.<br>Envío gratis en Seúl/Gyeonggi · otras regiones gratis desde 300 hojas.', de:'Für Kleinmengen unten auf die Produkte klicken.<br>Kostenloser Versand in Seoul/Gyeonggi · andere Regionen ab 300 Blatt.', fr:'Pour de petites quantités, cliquez sur les produits ci-dessous.<br>Livraison gratuite à Séoul/Gyeonggi · autres régions dès 300 feuilles.' },
 // v707: 안내 변경 — 8월 15일부터 유통사판매 오픈 (강조)
 calc_ship_notice: { ko:'지금은 일반 구매만 가능합니다. <b class="rb-emph">유통사 판매</b>는 <b class="rb-emph-date">8월 15일</b>부터 가능합니다.', ja:'現在は一般購入のみ可能です。<b class="rb-emph">代理店販売</b>は <b class="rb-emph-date">8月15日</b>から開始いたします。', en:'Currently only retail purchases are available. <b class="rb-emph">Distributor sales</b> open on <b class="rb-emph-date">August 15</b>.', zh:'目前仅开放零售购买。<b class="rb-emph">经销商销售</b>将于 <b class="rb-emph-date">8月15日</b> 起开放。', ar:'حالياً متاح الشراء بالتجزئة فقط. <b class="rb-emph">مبيعات الموزعين</b> ستفتح في <b class="rb-emph-date">15 أغسطس</b>.', es:'Actualmente solo están disponibles las compras minoristas. <b class="rb-emph">Las ventas a distribuidores</b> se abren el <b class="rb-emph-date">15 de agosto</b>.', de:'Aktuell sind nur Einzelkäufe möglich. <b class="rb-emph">Der Vertrieb für Distributoren</b> startet am <b class="rb-emph-date">15. August</b>.', fr:'Seuls les achats au détail sont actuellement disponibles. <b class="rb-emph">Les ventes aux distributeurs</b> ouvrent le <b class="rb-emph-date">15 août</b>.' },
 // v704: 용지 선택 (premium 만 노출)
