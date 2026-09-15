@@ -4921,9 +4921,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M → 10/20/30%) 완전 제거 (사용자 요청 — PRO 가입 유도로 단일화)
         let amountPct = 0;
         const isPro = !!window.isProSubscriber;
-        // 2026-06-04: PRO 구독자 10% 할인 — 원판은 적용 (사용자 요청). 볼륨티어만 _noDisc 로 제외.
+        // 2026-09-15(사장님): 원판(허니콤보드 원판)은 이미 도매가라 가맹/리셀러 매입할인 제외.
         // 2026-09-15: 가맹/리셀러 매입 할인 — 가맹점 20% / 리셀러·PRO 10% (window.memberDiscountPct). 미설정 시 10% 폴백.
-        const _noProDisc = state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint;
+        const _noProDisc = state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint || state.isRawBoard;
         const _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
         const proPct = (isPro && !_noProDisc) ? _memberPct : 0;
         const totalDiscPct = amountPct + proPct;
@@ -19931,8 +19931,8 @@ html, body { background: #ffffff !important; }
         var amountPct = 0;
         var proPct = window.isProSubscriber ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
         var amountDisc = Math.round(taxBase * amountPct / 100);
-        // 2026-07-03: PRO(구독) 할인 base = taxBase + 원판(rawBoardBase). 원판(hexa-board 메인상품)도 구독할인 적용.
-        var proDisc = Math.round((taxBase + rawBoardBase) * proPct / 100);
+        // 2026-09-15(사장님): 원판(rawBoardBase)은 이미 도매가 — 가맹/리셀러/구독 할인 제외. proDisc base 에서 뺌.
+        var proDisc = Math.round(taxBase * proPct / 100);
         var grandTotal = taxBase + nonDiscountBase - amountDisc - proDisc + shipTotal;
         return {
             taxBase: taxBase,

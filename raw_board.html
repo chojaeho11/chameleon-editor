@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915111421';
+    var CV = '20260915233848';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1000,7 +1000,13 @@ async function submitPdSample() {
         return function(krw){ return '$' + (krw*0.001).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
     }
     function rbPerSqmKRW(){
-        if (rbType === 'premium') return 5000;
+        if (rbType === 'premium') {
+            // 2026-09-15(사장님): 고급인쇄용 유통사 도매 단가 — 표준 1300×2500(=3.25m²) 기준 장당가에서 역산.
+            //   16mm = 22,000원/장 · 12mm = 21,000원/장 · 10mm/8mm = 20,000원/장.
+            var t = parseInt((document.getElementById('rbT')||{}).value, 10) || 16;
+            var perSheet = (t >= 16) ? 22000 : (t >= 12) ? 21000 : 20000;
+            return perSheet / 3.25;
+        }
         // 2026-09-15(사장님): 내장재용은 두께(mm) 상관없이 1제곱미터당 1,800원 정액.
         return 1800;
     }
