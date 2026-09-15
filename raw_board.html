@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915105257';
+    var CV = '20260915110240';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1235,35 +1235,34 @@ function toggleKapuChat() {
 @media (max-width:480px) { .rv-grid { grid-template-columns:repeat(2,1fr); gap:8px; } .rv-body { padding:8px 10px; } }
 </style>
 
-<!-- 푸터 -->
-<footer class="site-footer" style="background:#1e293b; color:#94a3b8; padding:48px 24px 32px; margin-top:0;">
-    <div style="max-width:1000px; margin:0 auto;">
-        <div class="rb-footer-cols" style="display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between; margin-bottom:32px;">
-            <!-- 브랜드 -->
-            <div style="min-width:220px;">
-                <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:10px;">
-                    <i class="fa-solid fa-layer-group" style="color:#818cf8; margin-right:6px;"></i><span data-i18n="brand_logo">Hexalite</span>
-                </div>
-                <p style="font-size:12px; line-height:1.7; margin-bottom:12px;" data-i18n="footer_brand_desc">허니콤보드 원판·인쇄 전용 보드 전문</p>
-                <div style="font-size:13px; color:#cbd5e1; font-weight:700;"><span data-i18n="footer_main_tel_label">대표번호</span> <a href="tel:+82313661984" style="color:#a5b4fc; font-weight:800; text-decoration:none;">+82 31 366 1984</a></div>
+<!-- 푸터 — 2026-09-15(사장님): 카멜레온 표준 푸터(회사정보 + CS센터)로 교체 -->
+<footer class="site-footer" style="background:#f8fafc; color:#64748b; padding:40px 24px 32px; margin-top:0; border-top:1px solid #e5e7eb;">
+    <div style="max-width:1100px; margin:0 auto; display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between;">
+        <div style="min-width:280px; flex:1;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px 20px; font-size:13px; font-weight:700; color:#334155; margin-bottom:18px;">
+                <a href="https://www.cafe2626.com/about" target="_blank" style="color:#334155; text-decoration:none;">회사소개</a>
+                <a href="https://www.cafe2626.com/" target="_blank" style="color:#334155; text-decoration:none;">공지사항</a>
+                <a href="https://www.cafe2626.com/terms.html" target="_blank" style="color:#334155; text-decoration:none;">이용약관</a>
+                <a href="https://www.cafe2626.com/privacy.html" target="_blank" style="color:#334155; text-decoration:none;">개인정보처리방침</a>
+                <a href="https://www.cafe2626.com/franchise" target="_blank" style="color:#7c3aed; text-decoration:none; font-weight:800;">가맹점·리셀러 모집</a>
             </div>
-            <!-- 국가별 문의 -->
-            <div style="min-width:280px;">
-                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_country_title">국가별 문의</div>
-                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; line-height:1.5;">
-                    <div>🇰🇷 <span data-i18n="raw_contact_kr">한국 사무실</span> <a href="tel:0313661984" style="color:#cbd5e1;text-decoration:none;font-weight:700;">031-366-1984</a></div>
-                    <div>🇯🇵 <span data-i18n="raw_contact_jp">도쿄·오사카 직통 나나미</span> <a href="tel:09053970420" style="color:#cbd5e1;text-decoration:none;font-weight:700;">090-5397-0420</a></div>
-                    <div>🇬🇧 English <a href="tel:+821034913535" style="color:#cbd5e1;text-decoration:none;font-weight:700;">+82 10 3491 3535</a></div>
-                </div>
+            <div style="font-size:12px; line-height:1.9; color:#64748b;">
+                <div><b style="color:#475569;">상호명 :</b> (주)카멜레온프린팅 &nbsp;&nbsp; <b style="color:#475569;">대표 :</b> 조재호</div>
+                <div><b style="color:#475569;">주소 :</b> 경기도 화성시 우정읍 한말길 72-2</div>
+                <div><b style="color:#475569;">사업자등록번호 :</b> 470-81-02808</div>
+                <div><b style="color:#475569;">통신판매업신고번호 :</b> 2025-화성우정-0033</div>
+                <div><b style="color:#475569;">개인정보관리자 :</b> Haruto</div>
             </div>
-            <!-- 이메일/시간 -->
-            <div style="min-width:170px;">
-                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
-                <div style="font-size:12px; line-height:2;" data-i18n-html="footer_contact_info">📧 design@chameleon.design<br>🕐 평일 09:00~18:00</div>
-            </div>
+            <p style="font-size:11px; color:#94a3b8; margin-top:16px;">Copyright © <strong style="color:#64748b;">Chameleon Canvas</strong>. all rights reserved.</p>
         </div>
-        <div style="border-top:1px solid #334155; padding-top:16px; text-align:center; font-size:11px; color:#64748b;">
-            &copy; 2026 Hexalite. All rights reserved.
+        <div style="min-width:200px; text-align:left;">
+            <h3 style="font-size:15px; font-weight:800; color:#334155; margin:0 0 8px;">고객센터 (CS CENTER)</h3>
+            <strong style="font-size:24px; font-weight:900; color:#6366f1; display:block; margin-bottom:8px;"><a href="tel:031-366-1984" style="color:inherit; text-decoration:none;">031-366-1984</a></strong>
+            <p style="font-size:12px; line-height:1.8; color:#64748b; margin:0;">
+                평일 09:00 ~ 18:00<br>
+                <span style="color:#f59e0b;">점심 12:00 ~ 13:00</span><br>
+                * 주말 및 공휴일 휴무
+            </p>
         </div>
     </div>
 </footer>
