@@ -290,7 +290,9 @@
                 return n;
             }
 
-            var BEST_CODES = ['53453455435','675756756765','345535456','34553545'];   // 16올화이트·16표면화이트/크라프트·10표면화이트/크라프트·10화이트
+            var BEST_CODES = ['53453455435','675756756765','345535456','34553545'];   // 16올화이트·16표면화이트/크라프트·10표면화이트/크라프트·10화이트 (1300×2500)
+            // 2026-09-16(사장님): 위 4종과 동일하되 1300×3200 / 40,000원 (베스트 바로 아래 2번째 줄)
+            var BEST2_CODES = ['hb16white3200','hb16kraft3200','hb10kraft3200','hb10white3200'];
             var CRAFT_FIRST = ['w23443243','3454353676'];                              // 16 올크라프트·10 올크라프트
             var HC_BOARD_CATS = ['Honeycomb Board','10mm34244'];                       // 16mm + 10mm 허니콤보드
             // 2026-09-16(사장님): 허니콤보드 섹션 순서 — 1행: 크라프트16·크라프트10·옐로우·코어 / 2행: 그린·레드·오렌지·블랙(내지컬러 4종 한 줄).
@@ -300,13 +302,14 @@
 
             var hasAny = false;
 
-            // (1) 베스트상품 — 화이트 4종
-            var best = BEST_CODES.map(function(c){ return byCode[c]; }).filter(Boolean);
+            // (1) 베스트상품 — 화이트 4종(1300×2500) + 동일 4종(1300×3200) 을 한 섹션에 2줄로.
+            var _allBestCodes = BEST_CODES.concat(BEST2_CODES);
+            var best = _allBestCodes.map(function(c){ return byCode[c]; }).filter(Boolean);
             var _bestT = (psLang==='ja')?'⭐ ベスト商品':(psLang==='en')?'⭐ Best Sellers':(psLang==='zh')?'⭐ 热销商品':'⭐ 베스트 상품';
             if (best.length){ hasAny = true; _renderSection(_bestT, best, { bg:'linear-gradient(135deg,#ede9fe,#ddd6fe)', bar:'#7c3aed', txt:'#5b21b6' }); }
 
-            // (2) 허니콤보드 (16·10mm 통합) — 베스트 제외, HC_ORDER 명시 순서(모르는 코드는 sort_order 로 뒤에 append)
-            var hcRest = (products || []).filter(function(p){ return HC_BOARD_CATS.indexOf(p.category) >= 0 && BEST_CODES.indexOf(p.code) < 0; });
+            // (2) 허니콤보드 (16·10mm 통합) — 베스트(2500·3200) 제외, HC_ORDER 명시 순서(모르는 코드는 sort_order 로 뒤에 append)
+            var hcRest = (products || []).filter(function(p){ return HC_BOARD_CATS.indexOf(p.category) >= 0 && _allBestCodes.indexOf(p.code) < 0; });
             var _hcRank = function(p){ var i = HC_ORDER.indexOf(p.code); return i < 0 ? 900 + (p.sort_order||99) : i; };
             var hcMerged = hcRest.slice().sort(function(a,b){ return _hcRank(a) - _hcRank(b); });
             var _hcT = (psLang==='ja')?'ハニカムボード (16·10mm)':(psLang==='en')?'Honeycomb Board (16·10mm)':(psLang==='zh')?'蜂窝板 (16·10mm)':'허니콤보드 (16·10mm)';
