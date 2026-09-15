@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915110534';
+    var CV = '20260915110813';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1007,6 +1007,8 @@ async function submitPdSample() {
     function rbFillThick(){
         var sel = document.getElementById('rbT'); if(!sel) return;
         sel.innerHTML = RB_THICK[rbType].map(function(v){ return '<option value="'+v+'">'+v+' mm</option>'; }).join('');
+        // 2026-09-15(사장님): 내장재용 기본 두께 100mm.
+        sel.value = (rbType === 'core') ? '100' : String(RB_THICK[rbType][0]);
     }
     window.rbSetType = function(t){
         rbType = t;
@@ -1016,6 +1018,10 @@ async function submitPdSample() {
         var coreNotice = document.getElementById('rbCorePaperNotice');
         if (paperRow) paperRow.style.display = (t === 'premium') ? 'grid' : 'none';
         if (coreNotice) coreNotice.style.display = (t === 'core') ? 'block' : 'none';
+        // 2026-09-15(사장님): 내장재용 기본 사이즈 1000×1000mm (고급 인쇄용은 1300×2500 유지).
+        var wEl=document.getElementById('rbW'), lEl=document.getElementById('rbL');
+        if (t === 'core') { if(wEl) wEl.value=1000; if(lEl) lEl.value=1000; }
+        else { if(wEl) wEl.value=1300; if(lEl) lEl.value=2500; }
         rbFillThick(); rbCalc();
     };
     window.rbCalc = function(){
