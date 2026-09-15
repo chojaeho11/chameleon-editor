@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915235752';
+    var CV = '20260916000214';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -318,8 +318,7 @@ a { text-decoration: none; color: inherit; }
     transition: all 0.25s;
 }
 .product-card:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-/* 2026-09-15(사장님): 품절 표시 */
-.product-card.rb-soldout .product-img { filter: grayscale(0.85); opacity: 0.6; }
+/* 2026-09-16(사장님): 품절 표시 — 이미지 색상은 그대로, 배지만. (흑백/투명 필터 제거) */
 .product-card.rb-soldout .product-price { color:#94a3b8; text-decoration: line-through; }
 .rb-soldout-badge { position:absolute; top:10px; left:10px; background:#64748b; color:#fff; font-size:12px; font-weight:600; padding:4px 12px; border-radius:6px; letter-spacing:0.02em; }
 .product-img {
@@ -2168,7 +2167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="raw_board.js?v=193"></script>
+<script src="raw_board.js?v=194"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
