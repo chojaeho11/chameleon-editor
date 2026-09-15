@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260915033214';
+    var CV = '20260915103349';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -3738,7 +3738,12 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                 if (error) { console.warn('[mgrQuote banner] fetch err:', error); return; }
 
                 var active = [];
+                var _myQuoteIds = (allIds || []).map(String);
                 (orders || []).forEach(function (o) {
+                    // 2026-09-15(사장님, 긴급 보안수정): 비관리자는 '본인이 받은 결제링크(localStorage 추적)' 주문만 노출.
+                    //   기존엔 전체 결제대기 주문을 모두 노출 → 다른 고객 주문이 결제창에 떠서 오결제(이름·품목 뒤바뀜) 발생.
+                    //   관리자/매니저만 전체 목록 조회 가능.
+                    if (!isAdm && _myQuoteIds.indexOf(String(o.id)) < 0) { return; }
                     // 2026-05-14: 통합주문관리 '결제완료' / '결제전' 탭 과 동일한 status 화이트리스트
                     //   → 제작중/칼선작업/완료됨/발송완료/배송완료/취소 등은 메인 배너에서 제외
                     if (!o.status || PRE_PROD_STATUSES.indexOf(o.status) < 0) {
@@ -11089,7 +11094,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
-<script src="/simple_order.js?v=902"></script>
+<script src="/simple_order.js?v=903"></script>
 <script src="/sns-ranking.js?v=11"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>

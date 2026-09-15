@@ -21542,7 +21542,10 @@ html, body { background: #ffffff !important; }
             if (window._soPendingQuoteId) {
                 var pendingId = window._soPendingQuoteId;
                 // 상담대기 → 정상 결제 흐름으로 전환: address 등 고객 입력 보강 + payment_method/status 갱신
+                // 2026-09-15(사장님, 긴급): 결제창에서 고객이 수정한 이름·연락처도 반드시 저장(기존엔 누락돼 영수증에 옛 이름이 남던 버그).
                 var updateRow = {
+                    manager_name: name || orderRow.manager_name,
+                    phone: phone || orderRow.phone,
                     address: fullAddr || orderRow.address,
                     request_note: memo || orderRow.request_note,
                     status: orderRow.status,
