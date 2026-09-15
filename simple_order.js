@@ -20532,7 +20532,8 @@ html, body { background: #ffffff !important; }
         var isKR = (window.__SITE_CODE || 'KR') === 'KR';
         // 2026-06-14: 디자인비 전용 카트면 증빙 박스 자체를 숨겨야 함 (pay 토글로 다시 노출 금지)
         var _designFeeOnly = (typeof window._soIsDesignFeeOnlyCart === 'function') && window._soIsDesignFeeOnlyCart();
-        if (box) box.style.display = (!_designFeeOnly && pay === 'bank' && isKR) ? '' : 'none';
+        // 2026-09-15(버그#56): 세금계산서(증빙)는 카드 결제에서도 필요(B2B 패브릭 등) → 무통장/카드 모두 KR 에서 노출.
+        if (box) box.style.display = (!_designFeeOnly && isKR) ? '' : 'none';
         // 입금자 이름 — 무통장 입금이면 표시 (가맹점 해외 계좌이체 포함)
         var depBox = document.getElementById('soCoDepositorBox');
         if (depBox) depBox.style.display = (pay === 'bank') ? '' : 'none';
@@ -20965,14 +20966,14 @@ html, body { background: #ffffff !important; }
         if (!phone) { alert(tr('연락처를 입력해주세요.','連絡先を入力してください。','Please enter a contact number.')); return; }
         if (!addr1) { alert(tr('배송지를 입력해주세요.','配送先を入力してください。','Please enter a delivery address.')); return; }
 
-        // 2026-05-14: 무통장 입금 + KR 한정으로 증빙 정보 수집 (선택)
+        // 2026-05-14: KR 한정 증빙 정보 수집 (선택)
+        // 2026-09-15(버그#56): 세금계산서는 카드 결제에서도 필요(B2B) → 카드/무통장 모두 증빙 수집. 입금자명만 무통장 전용.
         var receiptInfo = null;
-        // 2026-05-18: 무통장 입금자 이름 (주문자명과 다를 수 있음) — 미입력 시 주문자명 사용
         var depositorName = '';
+        var _collected = _soCollectReceiptInfo();
+        if (_collected === false) return; // 필수 미입력 → 사용자에게 알림 후 중단
+        if (_collected && _collected.type && _collected.type !== 'none') receiptInfo = _collected;
         if (payMethod === 'bank') {
-            var collected = _soCollectReceiptInfo();
-            if (collected === false) return; // 필수 미입력 → 사용자에게 알림 후 중단
-            if (collected && collected.type && collected.type !== 'none') receiptInfo = collected;
             var _depEl = document.getElementById('soCoDepositor');
             depositorName = (_depEl && _depEl.value || '').trim() || name;
         }
