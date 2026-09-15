@@ -77,8 +77,23 @@
             ko:'상품명 없음', ja:'商品名なし', en:'No Name',
             zh:'无名称', ar:'بدون اسم', es:'Sin Nombre',
             de:'Kein Name', fr:'Sans Nom'
+        },
+        soldOut: {
+            ko:'품절', ja:'品切れ', en:'Sold Out',
+            zh:'售罄', ar:'نفد', es:'Agotado',
+            de:'Ausverkauft', fr:'Épuisé'
+        },
+        inquiry: {
+            ko:'비규격 문의', ja:'規格外はお問い合わせ', en:'Custom — Inquire',
+            zh:'非标准 请咨询', ar:'استفسار للمقاسات الخاصة', es:'Consultar medida',
+            de:'Sondermaß anfragen', fr:'Sur mesure — nous consulter'
         }
     };
+
+    // 2026-09-15(사장님): 품절 표시 — 내지 컬러(옐로우/레드/오렌지/블랙) + 방염보드 2종 + 특수소재 보드.
+    var SOLD_OUT_CODES = ['34545354535','4566566','345345345','234343434','534534545','345453545','43535343545'];
+    // 2026-09-15(사장님): 팔렛트 카테고리는 가격 대신 '비규격 문의' 표시.
+    var INQUIRY_CATS = ['3454354534'];
 
     function ls(key) {
         var entry = LANG_STRINGS[key];
@@ -154,16 +169,25 @@
         const name = getProductName(product);
         const imgSrc = getThumb(product.img_url, 400);
         const sizeText = getSizeText(product);
-        const price = formatPrice(product.price);
+        const isSold = SOLD_OUT_CODES.indexOf(product.code) >= 0;
+        const isInquiry = INQUIRY_CATS.indexOf(product.category) >= 0;
+        // 비규격문의: 가격 대신 문구. 품절: 가격 위 품절 라벨.
+        const priceHtml = isInquiry
+            ? '<div class="product-price" style="color:#0f766e;">' + ls('inquiry') + '</div>'
+            : '<div class="product-price">' + LANG.fromPrice + ' ' + formatPrice(product.price) + '</div>';
+        if (isSold) card.classList.add('rb-soldout');
 
         card.innerHTML =
+            '<div style="position:relative;">' +
             '<img class="product-img" src="' + imgSrc + '" alt="' + name + '" loading="lazy" ' +
                 'onerror="this.src=\'https://placehold.co/400?text=No+Image\'">' +
+            (isSold ? '<div class="rb-soldout-badge">' + ls('soldOut') + '</div>' : '') +
+            '</div>' +
             '<div class="product-info">' +
                 '<div class="product-badge">' + ls('badge') + '</div>' +
                 '<div class="product-name">' + name + '</div>' +
                 '<div class="product-size"><i class="fa-solid fa-ruler" style="margin-right:4px;"></i>' + sizeText + '</div>' +
-                '<div class="product-price">' + LANG.fromPrice + ' ' + price + '</div>' +
+                priceHtml +
             '</div>';
 
         // 클릭 시 hexa-board.com 도메인에서 상세/주문 (화이트라벨 — 카멜레온 노출 안 함)
@@ -269,6 +293,8 @@
             var BEST_CODES = ['53453455435','675756756765','345535456','34553545'];   // 16올화이트·16표면화이트/크라프트·10표면화이트/크라프트·10화이트
             var CRAFT_FIRST = ['w23443243','3454353676'];                              // 16 올크라프트·10 올크라프트
             var HC_BOARD_CATS = ['Honeycomb Board','10mm34244'];                       // 16mm + 10mm 허니콤보드
+            // 2026-09-15(사장님): 허니콤보드 섹션 명시적 순서 — 올크라프트(상시재고) → 내지컬러(옐로우/레드/오렌지/블랙, 품절) → 그린 → 코어.
+            var HC_ORDER = ['w23443243','3454353676','34545354535','4566566','345345345','234343434','456464566','34534534535'];
             var byCode = {}; (products || []).forEach(function(p){ byCode[p.code] = p; });
             var _sortSo = function(a,b){ return (a.sort_order||999)-(b.sort_order||999); };
 
@@ -279,11 +305,10 @@
             var _bestT = (psLang==='ja')?'⭐ ベスト商品':(psLang==='en')?'⭐ Best Sellers':(psLang==='zh')?'⭐ 热销商品':'⭐ 베스트 상품';
             if (best.length){ hasAny = true; _renderSection(_bestT, best, { bg:'linear-gradient(135deg,#ede9fe,#ddd6fe)', bar:'#7c3aed', txt:'#5b21b6' }); }
 
-            // (2) 허니콤보드 (16·10mm 통합) — 베스트 제외, 올크라프트 2종 먼저
+            // (2) 허니콤보드 (16·10mm 통합) — 베스트 제외, HC_ORDER 명시 순서(모르는 코드는 sort_order 로 뒤에 append)
             var hcRest = (products || []).filter(function(p){ return HC_BOARD_CATS.indexOf(p.category) >= 0 && BEST_CODES.indexOf(p.code) < 0; });
-            var hcCraft = CRAFT_FIRST.map(function(c){ return byCode[c]; }).filter(function(p){ return p && hcRest.indexOf(p) >= 0; });
-            var hcOther = hcRest.filter(function(p){ return CRAFT_FIRST.indexOf(p.code) < 0; }).sort(_sortSo);
-            var hcMerged = hcCraft.concat(hcOther);
+            var _hcRank = function(p){ var i = HC_ORDER.indexOf(p.code); return i < 0 ? 900 + (p.sort_order||99) : i; };
+            var hcMerged = hcRest.slice().sort(function(a,b){ return _hcRank(a) - _hcRank(b); });
             var _hcT = (psLang==='ja')?'ハニカムボード (16·10mm)':(psLang==='en')?'Honeycomb Board (16·10mm)':(psLang==='zh')?'蜂窝板 (16·10mm)':'허니콤보드 (16·10mm)';
             if (hcMerged.length){ hasAny = true; _renderSection(_hcT, hcMerged); }
 

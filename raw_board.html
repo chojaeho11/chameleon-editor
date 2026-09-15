@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915234521';
+    var CV = '20260915235752';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -318,6 +318,10 @@ a { text-decoration: none; color: inherit; }
     transition: all 0.25s;
 }
 .product-card:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+/* 2026-09-15(사장님): 품절 표시 */
+.product-card.rb-soldout .product-img { filter: grayscale(0.85); opacity: 0.6; }
+.product-card.rb-soldout .product-price { color:#94a3b8; text-decoration: line-through; }
+.rb-soldout-badge { position:absolute; top:10px; left:10px; background:#64748b; color:#fff; font-size:12px; font-weight:600; padding:4px 12px; border-radius:6px; letter-spacing:0.02em; }
 .product-img {
     width: 100%; aspect-ratio: 1/1; object-fit: cover;
     background: #f1f5f9; display: block;
@@ -865,7 +869,9 @@ async function submitPdSample() {
 .rb-res-total b{color:#6366f1;font-size:20px;}
 .rb-res-note{font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.5;}
 .rb-order-info{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:760px;margin:0 auto;}
-.rb-order-info.rb-order-info-single{grid-template-columns:1fr;max-width:520px;}
+.rb-order-info.rb-order-info-single{grid-template-columns:1fr;max-width:760px;}
+.rb-stock-note{max-width:760px;margin:14px auto 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 20px;font-size:13px;color:#475569;line-height:1.75;text-align:center;}
+.rb-stock-note b{color:#0f766e;font-weight:600;}
 .rb-oi-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:0;overflow:hidden;}
 .rb-oi-flag{display:none;}
 /* v707: 카드 상단 보라 그라데이션 배지 */
@@ -959,6 +965,7 @@ async function submitPdSample() {
             <div class="rb-oi-desc" data-i18n-html="calc_ship_dist_d">소량은 아래 제품을 클릭해주세요.<br>수도권 무료배송 · 지방은 300매 이상 무료배송</div>
         </div>
     </div>
+    <div class="rb-stock-note" data-i18n-html="calc_stock_note"><b>올 백색(10·16mm)</b>과 <b>올 크라프트</b> 제품은 상시 재고 보유. 반반보드는 주문생산으로 약 10일 소요됩니다.</div>
 </section>
 
 <!-- ===== 장점 4가지 ===== -->
@@ -1504,6 +1511,8 @@ calc_ship_dist_t: { ko:'100매 이상 구매 시 가격입니다', ja:'100枚以
 calc_ship_dist_d: { ko:'소량은 아래 제품을 클릭해주세요.<br>수도권 무료배송 · 지방은 300매 이상 무료배송', ja:'少量は下の商品をクリックしてください。<br>首都圏 送料無料 · 地方は300枚以上で送料無料', en:'For small quantities, click the products below.<br>Free shipping in Seoul/Gyeonggi · other regions free from 300 sheets.', zh:'少量请点击下方商品。<br>首尔·京畿免运费 · 其他地区300张以上免运费。', ar:'للكميات الصغيرة، اضغط على المنتجات أدناه.<br>شحن مجاني في سيول/جيونجي · مناطق أخرى مجاني من 300 لوح.', es:'Para cantidades pequeñas, haga clic en los productos de abajo.<br>Envío gratis en Seúl/Gyeonggi · otras regiones gratis desde 300 hojas.', de:'Für Kleinmengen unten auf die Produkte klicken.<br>Kostenloser Versand in Seoul/Gyeonggi · andere Regionen ab 300 Blatt.', fr:'Pour de petites quantités, cliquez sur les produits ci-dessous.<br>Livraison gratuite à Séoul/Gyeonggi · autres régions dès 300 feuilles.' },
 // v707: 안내 변경 — 8월 15일부터 유통사판매 오픈 (강조)
 calc_ship_notice: { ko:'지금은 일반 구매만 가능합니다. <b class="rb-emph">유통사 판매</b>는 <b class="rb-emph-date">8월 15일</b>부터 가능합니다.', ja:'現在は一般購入のみ可能です。<b class="rb-emph">代理店販売</b>は <b class="rb-emph-date">8月15日</b>から開始いたします。', en:'Currently only retail purchases are available. <b class="rb-emph">Distributor sales</b> open on <b class="rb-emph-date">August 15</b>.', zh:'目前仅开放零售购买。<b class="rb-emph">经销商销售</b>将于 <b class="rb-emph-date">8月15日</b> 起开放。', ar:'حالياً متاح الشراء بالتجزئة فقط. <b class="rb-emph">مبيعات الموزعين</b> ستفتح في <b class="rb-emph-date">15 أغسطس</b>.', es:'Actualmente solo están disponibles las compras minoristas. <b class="rb-emph">Las ventas a distribuidores</b> se abren el <b class="rb-emph-date">15 de agosto</b>.', de:'Aktuell sind nur Einzelkäufe möglich. <b class="rb-emph">Der Vertrieb für Distributoren</b> startet am <b class="rb-emph-date">15. August</b>.', fr:'Seuls les achats au détail sont actuellement disponibles. <b class="rb-emph">Les ventes aux distributeurs</b> ouvrent le <b class="rb-emph-date">15 août</b>.' },
+// 2026-09-15(사장님): 재고 안내
+calc_stock_note: { ko:'<b>올 백색(10·16mm)</b>과 <b>올 크라프트</b> 제품은 상시 재고 보유. 반반보드는 주문생산으로 약 10일 소요됩니다.', ja:'<b>オール白色(10·16mm)</b>と<b>オールクラフト</b>製品は常時在庫あり。ハーフ&ハーフボードは受注生産で約10日かかります。', en:'<b>All-white (10·16mm)</b> and <b>all-kraft</b> boards are always in stock. Half-and-half boards are made to order, approx. 10 days.', zh:'<b>全白色(10·16mm)</b>与<b>全牛皮</b>产品常备库存。双拼板为订制生产，约需10天。', ar:'ألواح <b>الأبيض بالكامل (10·16مم)</b> و<b>الكرافت بالكامل</b> متوفرة دائماً. الألواح المزدوجة تُصنع حسب الطلب، حوالي 10 أيام.', es:'Los tableros <b>todo blanco (10·16mm)</b> y <b>todo kraft</b> están siempre en stock. Los tableros mixtos se fabrican bajo pedido, aprox. 10 días.', de:'<b>Ganz weiße (10·16mm)</b> und <b>ganz Kraft</b> Platten sind immer auf Lager. Halb-und-halb-Platten werden auf Bestellung gefertigt, ca. 10 Tage.', fr:'Les panneaux <b>tout blanc (10·16mm)</b> et <b>tout kraft</b> sont toujours en stock. Les panneaux mixtes sont fabriqués sur commande, environ 10 jours.' },
 // v704: 용지 선택 (premium 만 노출)
 calc_paper_surface: { ko:'표면지', ja:'表面紙', en:'Surface Paper', zh:'表面纸', ar:'الورق السطحي', es:'Papel de superficie', de:'Oberflächenpapier', fr:'Papier de surface' },
 calc_paper_core: { ko:'코어지', ja:'コア紙', en:'Core Paper', zh:'芯纸', ar:'ورق النواة', es:'Papel del núcleo', de:'Kernpapier', fr:'Papier de cœur' },
@@ -2159,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="raw_board.js?v=192"></script>
+<script src="raw_board.js?v=193"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
