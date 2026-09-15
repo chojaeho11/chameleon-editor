@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260916001352';
+    var CV = '20260916001631';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -926,8 +926,8 @@ async function submitPdSample() {
             <label class="rb-paper-pick" id="rbPaperSurfaceWrap">
                 <span data-i18n="calc_paper_surface" style="display:block; font-size:12px; color:#64748b; font-weight:600; margin-bottom:6px;">표면지</span>
                 <select id="rbPaperSurface" onchange="rbCalc()" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13.5px; background:#fff; font-family:inherit;">
-                    <option value="matte_canvas_420" data-i18n="calc_paper_surf_canvas">무광캔버스 백색 420g</option>
-                    <option value="eco_kraft_420" data-i18n="calc_paper_surf_kraft">에코크라프트 420g</option>
+                    <option value="matte_canvas_420" data-i18n="calc_paper_surf_canvas">무광캔버스 백색 450g</option>
+                    <option value="eco_kraft_420" data-i18n="calc_paper_surf_kraft">에코크라프트 450g</option>
                 </select>
             </label>
             <label class="rb-paper-pick" id="rbPaperCoreWrap">
@@ -1515,8 +1515,8 @@ calc_stock_note: { ko:'<b>올 백색(10·16mm)</b>과 <b>올 크라프트</b> �
 // v704: 용지 선택 (premium 만 노출)
 calc_paper_surface: { ko:'표면지', ja:'表面紙', en:'Surface Paper', zh:'表面纸', ar:'الورق السطحي', es:'Papel de superficie', de:'Oberflächenpapier', fr:'Papier de surface' },
 calc_paper_core: { ko:'코어지', ja:'コア紙', en:'Core Paper', zh:'芯纸', ar:'ورق النواة', es:'Papel del núcleo', de:'Kernpapier', fr:'Papier de cœur' },
-calc_paper_surf_canvas: { ko:'무광캔버스 백색 420g', ja:'マットキャンバス ホワイト 420g', en:'Matte Canvas White 420g', zh:'哑光帆布白 420g', ar:'كانفاس مطفي أبيض 420g', es:'Lienzo mate blanco 420g', de:'Matte Canvas Weiß 420g', fr:'Toile mate blanche 420g' },
-calc_paper_surf_kraft: { ko:'에코크라프트 420g', ja:'エコクラフト 420g', en:'Eco Kraft 420g', zh:'环保牛皮纸 420g', ar:'إيكو كرافت 420g', es:'Eco Kraft 420g', de:'Eco Kraft 420g', fr:'Eco Kraft 420g' },
+calc_paper_surf_canvas: { ko:'무광캔버스 백색 450g', ja:'マットキャンバス ホワイト 450g', en:'Matte Canvas White 450g', zh:'哑光帆布白 450g', ar:'كانفاس مطفي أبيض 450g', es:'Lienzo mate blanco 450g', de:'Matte Canvas Weiß 450g', fr:'Toile mate blanche 450g' },
+calc_paper_surf_kraft: { ko:'에코크라프트 450g', ja:'エコクラフト 450g', en:'Eco Kraft 450g', zh:'环保牛皮纸 450g', ar:'إيكو كرافت 450g', es:'Eco Kraft 450g', de:'Eco Kraft 450g', fr:'Eco Kraft 450g' },
 calc_paper_core_white: { ko:'화이트버진 180g', ja:'ホワイトバージン 180g', en:'White Virgin 180g', zh:'白色原浆 180g', ar:'فيرجن أبيض 180g', es:'Virgin blanco 180g', de:'Weiß Virgin 180g', fr:'Vierge blanc 180g' },
 calc_paper_core_kraft: { ko:'크라프트버진 180g', ja:'クラフトバージン 180g', en:'Kraft Virgin 180g', zh:'牛皮原浆 180g', ar:'فيرجن كرافت 180g', es:'Virgin Kraft 180g', de:'Kraft Virgin 180g', fr:'Vierge Kraft 180g' },
 calc_core_paper_fixed: { ko:'표면지 재생지갈색 180g · 코어지 재생지갈색 120g 으로 고정 제작됩니다.', ja:'表面紙 再生紙ブラウン 180g · コア紙 再生紙ブラウン 120g の固定仕様で製作されます。', en:'Built with a fixed spec: Recycled Brown 180g surface paper and Recycled Brown 120g core paper.', zh:'采用固定规格: 表面纸为再生纸棕 180g, 芯纸为再生纸棕 120g。', ar:'يتم تصنيعه بمواصفات ثابتة: ورق سطحي معاد بني 180g وورق نواة معاد بني 120g.', es:'Se fabrica con especificación fija: papel de superficie reciclado marrón 180g y papel de núcleo reciclado marrón 120g.', de:'Wird mit fester Spezifikation gefertigt: Oberflächenpapier Recycling Braun 180g und Kernpapier Recycling Braun 120g.', fr:'Fabriqué avec une spécification fixe : papier de surface recyclé brun 180g et papier de cœur recyclé brun 120g.' },
