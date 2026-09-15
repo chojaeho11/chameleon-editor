@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260915110240';
+    var CV = '20260915110534';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1001,9 +1001,8 @@ async function submitPdSample() {
     }
     function rbPerSqmKRW(){
         if (rbType === 'premium') return 5000;
-        var t = parseInt((document.getElementById('rbT')||{}).value,10) || 10;
-        var extra = Math.max(0, (t-10)/10) * 100;   // 20mm부터 10mm당 +100원
-        return 3000 + extra;
+        // 2026-09-15(사장님): 내장재용은 두께(mm) 상관없이 1제곱미터당 1,800원 정액.
+        return 1800;
     }
     function rbFillThick(){
         var sel = document.getElementById('rbT'); if(!sel) return;
