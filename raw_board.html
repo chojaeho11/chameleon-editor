@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260916000611';
+    var CV = '20260916001352';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -886,7 +886,7 @@ async function submitPdSample() {
 .rb-calc-intro{max-width:920px;margin:0 auto 24px;padding:22px 28px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 50%,#4f46e5 100%);border-radius:16px;box-shadow:0 8px 24px -8px rgba(99,102,241,0.45);}
 .rb-calc-intro p{margin:0;color:#fff;font-size:14px;line-height:1.85;font-weight:400;letter-spacing:-0.01em;text-align:center;}
 @media(max-width:680px){.rb-calc-intro{padding:18px 20px;margin-bottom:18px;}.rb-calc-intro p{font-size:13px;line-height:1.75;}}
-.rb-wholesale-note{max-width:760px;margin:0 auto 22px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 18px;font-size:13px;color:#92400e;font-weight:700;text-align:center;line-height:1.6;}
+.rb-wholesale-note{max-width:760px;margin:0 auto 22px;background:#7c3aed;border:none;border-radius:12px;padding:14px 20px;font-size:14px;color:#fff;font-weight:500;text-align:center;line-height:1.7;}
 @media(max-width:680px){.rb-calc-wrap{padding:16px;}.rb-input-grid{grid-template-columns:1fr 1fr;gap:10px;}.rb-order-info{grid-template-columns:1fr;}.rb-type-row{grid-template-columns:1fr;}.rb-ship-notice,.rb-wholesale-note{font-size:12px;}}
 .rb-feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1100px;margin:0 auto;}
 .rb-feat-card{background:#fafbfc;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;transition:all .3s;}
@@ -1055,7 +1055,7 @@ async function submitPdSample() {
 <section class="section" id="products" style="padding-top:32px;">
     <h2 class="section-title" data-i18n="section_products_title">허니콤보드 원판 상품</h2>
     <p class="section-desc" data-i18n="section_products_desc">10매 단위로 합배송됩니다. 한국 1300x2500 | 그 외 국가 1400x2200으로 배송됩니다.</p>
-    <div class="rb-wholesale-note" data-i18n-html="calc_wholesale_note">📦 1,000매 이상 도매·유통업체는 위 단가 계산기 금액을 참조하세요 (예: 장당 16,250원).<br>🛒 소량 주문은 아래 제품을 클릭하시면 구매 가능합니다.</div>
+    <div class="rb-wholesale-note" data-i18n-html="calc_wholesale_note">서울·경기 10장 이상 구매 시 무료배송 · 커팅 및 인쇄도 가능합니다 (라텍스).<br>10장 미만 소량은 용차 배송비가 부가됩니다.</div>
     <div id="productGrid" class="product-grid">
         <div class="loading-spinner"></div>
     </div>
@@ -1521,7 +1521,7 @@ calc_paper_core_white: { ko:'화이트버진 180g', ja:'ホワイトバージン
 calc_paper_core_kraft: { ko:'크라프트버진 180g', ja:'クラフトバージン 180g', en:'Kraft Virgin 180g', zh:'牛皮原浆 180g', ar:'فيرجن كرافت 180g', es:'Virgin Kraft 180g', de:'Kraft Virgin 180g', fr:'Vierge Kraft 180g' },
 calc_core_paper_fixed: { ko:'표면지 재생지갈색 180g · 코어지 재생지갈색 120g 으로 고정 제작됩니다.', ja:'表面紙 再生紙ブラウン 180g · コア紙 再生紙ブラウン 120g の固定仕様で製作されます。', en:'Built with a fixed spec: Recycled Brown 180g surface paper and Recycled Brown 120g core paper.', zh:'采用固定规格: 表面纸为再生纸棕 180g, 芯纸为再生纸棕 120g。', ar:'يتم تصنيعه بمواصفات ثابتة: ورق سطحي معاد بني 180g وورق نواة معاد بني 120g.', es:'Se fabrica con especificación fija: papel de superficie reciclado marrón 180g y papel de núcleo reciclado marrón 120g.', de:'Wird mit fester Spezifikation gefertigt: Oberflächenpapier Recycling Braun 180g und Kernpapier Recycling Braun 120g.', fr:'Fabriqué avec une spécification fixe : papier de surface recyclé brun 180g et papier de cœur recyclé brun 120g.' },
 calc_paper_other_consult: { ko:'그 외 사양은 개별 상담을 통해 견적 안내드립니다.', ja:'その他の仕様は個別のご相談にて見積もりをご案内いたします。', en:'For other specifications, please contact us individually for a quote.', zh:'其他规格请单独咨询获取报价。', ar:'لمواصفات أخرى، يرجى التواصل معنا فردياً للحصول على عرض سعر.', es:'Para otras especificaciones, por favor contáctenos individualmente para una cotización.', de:'Für andere Spezifikationen kontaktieren Sie uns bitte individuell für ein Angebot.', fr:'Pour d\'autres spécifications, veuillez nous contacter individuellement pour un devis.' },
-calc_wholesale_note: { ko:'📦 1,000매 이상 도매·유통업체는 위 단가 계산기 금액을 참조하세요 (예: 장당 16,250원).<br>🛒 소량 주문은 아래 제품을 클릭하시면 구매 가능합니다.', ja:'📦 1,000枚以上の卸·流通業者は上記の単価計算機の金額をご参照ください（例：1枚あたり ¥1,625）。<br>🛒 少量注文は下記の商品をクリックしてご購入いただけます。', en:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', zh:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', ar:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', es:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', de:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', fr:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.' },
+calc_wholesale_note: { ko:'서울·경기 10장 이상 구매 시 무료배송 · 커팅 및 인쇄도 가능합니다 (라텍스).<br>10장 미만 소량은 용차 배송비가 부가됩니다.', ja:'ソウル·京畿は10枚以上のご購入で送料無料 · カット·印刷も可能です（ラテックス）。<br>10枚未満の少量はチャーター便配送料が加算されます。', en:'Free shipping in Seoul/Gyeonggi on orders of 10+ sheets · cutting & printing also available (latex).<br>Orders under 10 sheets incur a dedicated-vehicle delivery fee.', zh:'首尔·京畿购买10张以上免运费 · 亦可裁切与印刷（乳胶）。<br>不足10张的少量订单需加收专车运费。', ar:'شحن مجاني في سيول/جيونجي عند شراء 10 ألواح فأكثر · التقطيع والطباعة متاحان أيضاً (لاتكس).<br>الطلبات أقل من 10 ألواح تُضاف إليها رسوم توصيل بمركبة مخصصة.', es:'Envío gratis en Seúl/Gyeonggi en pedidos de 10+ hojas · también corte e impresión (látex).<br>Los pedidos de menos de 10 hojas tienen un cargo de entrega en vehículo dedicado.', de:'Kostenloser Versand in Seoul/Gyeonggi ab 10 Blatt · Schneiden & Drucken ebenfalls möglich (Latex).<br>Bei Bestellungen unter 10 Blatt fällt eine Sonderfahrzeug-Liefergebühr an.', fr:'Livraison gratuite à Séoul/Gyeonggi dès 10 feuilles · découpe et impression aussi possibles (latex).<br>Les commandes de moins de 10 feuilles entraînent des frais de livraison par véhicule dédié.' },
 feat_title: { ko:'왜 혜림허니콤 원판인가요?', ja:'なぜHexaliteの原板なのか', en:'Why Hexalite Raw Board?', zh:'Why Hexalite Raw Board?', ar:'Why Hexalite Raw Board?', es:'Why Hexalite Raw Board?', de:'Why Hexalite Raw Board?', fr:'Why Hexalite Raw Board?' },
 brand_logo: { ko:'혜림허니콤', ja:'Hexalite', en:'Hexalite', zh:'Hexalite', ar:'Hexalite', es:'Hexalite', de:'Hexalite', fr:'Hexalite' },
 feat1_t: { ko:'인쇄 전문 보드 · 우수한 발색', ja:'印刷専門ボード · 優れた発色', en:'Print-grade board · superb color', zh:'Print-grade board · superb color', ar:'Print-grade board · superb color', es:'Print-grade board · superb color', de:'Print-grade board · superb color', fr:'Print-grade board · superb color' },
@@ -2167,7 +2167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="raw_board.js?v=195"></script>
+<script src="raw_board.js?v=196"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
