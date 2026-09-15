@@ -5606,6 +5606,8 @@ html, body { background: #ffffff !important; }
     // 2026-05-30: 원판 상품 상세 — 다른 원판 제품 (우측 컬럼: 이미지 + 수량 + 담기 버튼).
     //   이전 좌측 LP 식 링크 카드 → 우측 옵션 패널 식 cart-add 카드로 변경.
     var _soRbMoreCache = null;
+    // 2026-09-16(사장님): 원판 1300×3200 사이즈는 기본(1300×2500) 대비 +10,000원.
+    var _RB_SIZE3200_ADD = 10000;
     async function _soLoadRawBoardMore(currentCode) {
         var sec = document.getElementById('soRawBoardMoreRightSec');
         var grid = document.getElementById('soRawBoardMoreRight');
@@ -5653,20 +5655,29 @@ html, body { background: #ffffff !important; }
                 var img = p.img_url || 'https://placehold.co/200?text=Board';
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
-                var priceVal = p.price || 0;
+                // 2026-09-16(사장님): 원판 6종 모두 1300×2500 / 1300×3200 두 사이즈 선택. 3200 = +10,000원.
+                var price2500 = p.price || 0;
+                var price3200 = price2500 + _RB_SIZE3200_ADD;
+                function _rbSizeRow(sizeKey, dimLabel, priceKrw){
+                    return '<div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:6px; padding-top:6px; border-top:1px dashed #eceae7;">' +
+                        '<div style="display:flex; flex-direction:column; line-height:1.25;">' +
+                            '<span style="font-size:11px; font-weight:700; color:#334155;">' + dimLabel + '</span>' +
+                            '<span style="font-size:11px; font-weight:800; color:#dc2626;">' + fmtPrice(priceKrw) + '</span>' +
+                        '</div>' +
+                        '<div style="display:flex; align-items:center; gap:4px;">' +
+                            '<span style="font-size:11px; color:#64748b; font-weight:600;">' + tr('수량', '数量', 'Qty') + '</span>' +
+                            '<input type="number" min="0" value="0" data-rb-qty-code="' + safeCode + '" data-rb-size="' + sizeKey + '" id="soRbQ_' + p.code + '_' + sizeKey + '" style="width:56px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;" onclick="event.stopPropagation();" oninput="if(window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();">' +
+                        '</div>' +
+                    '</div>';
+                }
                 return '<div style="display:flex; flex-direction:column; border:1.5px solid #e7e5e4; border-radius:10px; overflow:hidden; background:#fff;">' +
                     '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
                         '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
                     '</div>' +
                     '<div style="padding:8px 10px;">' +
-                        '<div style="font-size:11.5px; font-weight:700; color:#1e293b; line-height:1.3; height:30px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
-                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:4px;">' + fmtPrice(priceVal) + '</div>' +
-                        // 2026-05-30: 카드별 즉시 담기 제거 — 수량만 입력하고 아래 일괄 "장바구니 담기" 로 한꺼번에 추가.
-                        //   기본값 0 (담을 의사 표시), >0 인 카드들만 일괄 담김.
-                        '<div style="display:flex; gap:4px; margin-top:6px; align-items:center; justify-content:flex-end;">' +
-                            '<span style="font-size:11px; color:#64748b; font-weight:600;">' + tr('수량', '数量', 'Qty') + '</span>' +
-                            '<input type="number" min="0" value="0" data-rb-qty-code="' + safeCode + '" id="soRbQ_' + p.code + '" style="width:60px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;" onclick="event.stopPropagation();" oninput="if(window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();">' +
-                        '</div>' +
+                        '<div style="font-size:11.5px; font-weight:700; color:#1e293b; line-height:1.3; min-height:30px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        _rbSizeRow('2500', '1300×2500', price2500) +
+                        _rbSizeRow('3200', '1300×3200', price3200) +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -7732,13 +7743,16 @@ html, body { background: #ffffff !important; }
                 var q = parseInt(inp.value, 10) || 0;
                 if (q <= 0) return;
                 var code = inp.getAttribute('data-rb-qty-code');
+                var size = inp.getAttribute('data-rb-size') || '2500';
                 var p = (_soRbMoreCache || []).find(function (x) { return x.code === code; });
                 if (!p) return;
                 var nm = p.name;
                 if (lang === 'ja' && p.name_jp) nm = p.name_jp;
                 else if (lang !== 'ko' && p.name_us) nm = p.name_us;
-                var priceKrw = p.price || 0;
-                picks.push({ name: nm, qty: q, lineKrw: priceKrw * q });
+                var isBig = (size === '3200');
+                var priceKrw = (p.price || 0) + (isBig ? _RB_SIZE3200_ADD : 0);
+                var dim = isBig ? ' (1300×3200)' : ' (1300×2500)';
+                picks.push({ name: nm + dim, qty: q, lineKrw: priceKrw * q });
                 totalQty += q;
                 subtotalKrw += priceKrw * q;
             });
@@ -8169,7 +8183,7 @@ html, body { background: #ffffff !important; }
             var picks = [];
             qtyInputs.forEach(function(inp){
                 var q = parseInt(inp.value, 10) || 0;
-                if (q > 0) picks.push({ code: inp.getAttribute('data-rb-qty-code'), qty: q });
+                if (q > 0) picks.push({ code: inp.getAttribute('data-rb-qty-code'), size: (inp.getAttribute('data-rb-size') || '2500'), qty: q });
             });
             if (!picks.length) {
                 showStatus(tr('수량을 입력해주세요 (1 이상).', '数量を入力してください (1以上)。', 'Please enter qty (≥1).'), 'warn');
@@ -8228,15 +8242,24 @@ html, body { background: #ffffff !important; }
             picks.forEach(function(pick, idx){
                 var p = _soRbMoreCache.find(function(x){ return x.code === pick.code; });
                 if (!p) return;
+                // 2026-09-16(사장님): 사이즈별 — 1300×3200 은 +10,000원, 규격 1300×3200 으로 담김.
+                var isBig = (pick.size === '3200');
+                var _dim = isBig ? ' (1300×3200)' : ' (1300×2500)';
+                var _wMm = isBig ? 1300 : (p.width_mm || p.w_mm);
+                var _hMm = isBig ? 3200 : (p.height_mm || p.h_mm);
+                var _pKr = (p.price || 0) + (isBig ? _RB_SIZE3200_ADD : 0);
+                var _pJp = (p.price_jp || 0) + (isBig ? Math.round(_RB_SIZE3200_ADD * 0.1) : 0);
+                var _pUs = (p.price_us || 0) + (isBig ? Math.round(_RB_SIZE3200_ADD * 0.001) : 0);
                 var pickedName = p.name; if (lang === 'ja' && p.name_jp) pickedName = p.name_jp; else if (lang !== 'ko' && p.name_us) pickedName = p.name_us;
+                pickedName = pickedName + _dim;
                 // 배송비는 FIRST item 에만 부여 (중복 방지).
                 var feeOnThisItem = (idx === 0) ? batchShipFee : 0;
                 cur.push({
                     uid: Date.now() + idx * 10 + Math.floor(Math.random() * 10),
                     product: {
-                        code: p.code, name: pickedName, name_kr: p.name, name_jp: p.name_jp, name_us: p.name_us,
-                        price: p.price, price_jp: p.price_jp, price_us: p.price_us,
-                        category: p.category, w_mm: p.width_mm || p.w_mm, h_mm: p.height_mm || p.h_mm, img: p.img_url
+                        code: p.code, name: pickedName, name_kr: p.name + _dim, name_jp: (p.name_jp || p.name) + _dim, name_us: (p.name_us || p.name) + _dim,
+                        price: _pKr, price_jp: _pJp, price_us: _pUs,
+                        category: p.category, w_mm: _wMm, h_mm: _hMm, img: p.img_url, _rbSize: pick.size
                     },
                     type: 'file_upload',
                     fileName: '(원판 발송 — 파일 없음)',
