@@ -662,6 +662,23 @@ export default {
                     return new Response(body, { status: rbResp.status, headers: rbHdrs });
                 }
             }
+            // 2026-09-17(사장님): hexa-board 상품 상세(?product=)는 index.html 을 서빙 → 검색 색인을 메인 랜딩으로 통합.
+            //   상세 URL 이 네이버 검색결과로 노출되어 "메인이 아닌 상세로 진입"하던 문제 해결: noindex + canonical→메인.
+            if (ct.includes('text/html') && _hbTarget === '/index.html') {
+                let body = await rbResp.text();
+                if (/<link[^>]+rel=["']canonical["'][^>]*>/i.test(body)) {
+                    body = body.replace(/<link[^>]+rel=["']canonical["'][^>]*>/i, '<link rel="canonical" href="https://www.hexa-board.com/">');
+                } else {
+                    body = body.replace(/<head([^>]*)>/i, '<head$1>\n<link rel="canonical" href="https://www.hexa-board.com/">');
+                }
+                if (/<meta[^>]+name=["']robots["'][^>]*>/i.test(body)) {
+                    body = body.replace(/<meta[^>]+name=["']robots["'][^>]*>/i, '<meta name="robots" content="noindex, follow">');
+                } else {
+                    body = body.replace(/<head([^>]*)>/i, '<head$1>\n<meta name="robots" content="noindex, follow">');
+                }
+                rbHdrs.delete('content-length');
+                return new Response(body, { status: rbResp.status, headers: rbHdrs });
+            }
             return new Response(rbResp.body, { status: rbResp.status, headers: rbHdrs });
         }
 
