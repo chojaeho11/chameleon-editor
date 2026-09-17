@@ -1005,6 +1005,10 @@ button, input, textarea, select { font-family: inherit; }
 
     .template-tabs { display: none !important; } /* 템플릿 버튼 숨김 (사이드바에 있음) */
     .topbar > div[style*="flex:1"] { display: none !important; }
+    /* 2026-09-18(사장님): 가맹모집 버튼 — 모바일에서 글자 안 깨지고(줄바꿈 방지) 자리 고정 */
+    #btnFranchiseTop { order: 0 !important; flex-shrink: 0 !important; white-space: nowrap !important; }
+    /* 우측 여백 — 가로스크롤 끝에서도 마지막 버튼이 화면 끝에 붙지 않도록 */
+    .topbar::after { content: ''; flex: 0 0 12px !important; }
 
     /* [2] 에디터 화면 (좌우 패널 정리) */
     .editor-wrap {

@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260918021702';
+    var CV = '20260918022455';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -666,7 +666,7 @@ if ('serviceWorker' in navigator) {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=460">
+<link rel="stylesheet" href="./style.css?v=461">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -1078,15 +1078,14 @@ if ('caches' in window) {
         </script>
         <!-- 2026-08-10: 상단 장바구니 버튼 (클릭 시 카트 드로어 → 주문하기) -->
         <!-- 2026-08-10: SNS 체험단 탑바 버튼 (귀엽게, KR/JP 노출) -->
+        <!-- 2026-09-18(사장님): 무료쿠폰 버튼 제거 → 그 자리에 가맹모집 버튼(/franchise). 모바일 글자 안 깨지게 nowrap. -->
         <style>
-            @keyframes snsTopPulse { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.06);} }
-            #btnSnsTop{ display:none; }
-            html[data-site="KR"] #btnSnsTop, html[data-site="JP"] #btnSnsTop{ display:inline-flex !important; align-items:center; }
+            #btnFranchiseTop{ display:inline-flex !important; align-items:center; white-space:nowrap; flex-shrink:0; }
         </style>
-        <button class="btn" id="btnSnsTop" onclick="window._tbRetry('openRewardHub')" title="무료쿠폰 이벤트" style="margin-right:6px; background:linear-gradient(135deg,#f472b6,#c084fc); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; animation:snsTopPulse 1.7s ease-in-out infinite;">
-            <span id="snsTopLabel">🎁 무료쿠폰</span>
-        </button>
-        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('snsTopLabel');if(el)el.textContent=(c==='JP')?'🎁 無料クーポン':'🎁 무료쿠폰';})();</script>
+        <a class="btn" id="btnFranchiseTop" href="/franchise" title="가맹점 모집" style="margin-right:6px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; text-decoration:none; white-space:nowrap;">
+            <span id="franchiseTopLabel">가맹모집</span>
+        </a>
+        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('franchiseTopLabel');if(el)el.textContent=(c==='JP')?'加盟店募集':(c==='US'||c==='CN'||c==='SA'||c==='ES'||c==='DE'||c==='FR')?'Franchise':'가맹모집';})();</script>
 
         <button class="btn" id="btnCartTop" onclick="window._tbRetry('_soToggleCart', true)" style="position:relative; margin-right:5px; background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
             <span id="cartTopLabel">장바구니</span>
@@ -2434,11 +2433,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-users"></i></span>
                     <span class="mgr-action-label" data-i18n="nav_camel_sns">카멜SNS</span>
                 </button>
-                <!-- 2026-09-18(사장님): 가맹점모집 버튼 → /franchise (가맹/리셀러 모집 랜딩). a 태그 = 크롤러 추적 가능 -->
-                <a class="mgr-action mgr-franchise" href="/franchise" style="text-decoration:none;">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-handshake"></i></span>
-                    <span class="mgr-action-label" data-i18n="nav_franchise">가맹점모집</span>
-                </a>
+                <!-- 2026-09-18(사장님): 가맹점모집 버튼은 상단 헤더(무료쿠폰 자리)로 이동 → 그리드에선 제거 -->
                 <!-- 2026-08-15: 탑바에서 홍보하기·끝말잇기 삭제 (사장님 요청). 리워드 허브(무료쿠폰)에서 이용 가능. -->
             </div>
             <!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 밖으로 이동됨. 아래 hotDealSection 직전 참고. -->
@@ -2929,8 +2924,6 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
         setI18n('[data-i18n="btn_designer_apply"]', t.btnDapply || '디자이너 신청');
         // 2026-06-19 v640: 6번째 단축 — 디자이너 모집 버튼
         setI18n('[data-i18n="btn_designer_recruit_btn"]', t.btnRecruitBtn || '블로그');
-        // 2026-09-18(사장님): 가맹점모집 버튼 라벨 다국어
-        setI18n('[data-i18n="nav_franchise"]', ({kr:'가맹점모집',ja:'加盟店募集',en:'Franchise',zh:'加盟招募',ar:'الامتياز',es:'Franquicias',de:'Franchise',fr:'Franchise'}[lang]||'가맹점모집'));
         // 2026-06-19 v635: 디자이너 모집 배너 다국어 (2026-07-08: 제목+설명 2줄 구조, 픽토그램 제거)
         setI18n('[data-i18n="btn_designer_recruit"]', t.drTitle || '디자이너 모집');
         // 2026-06-29: 추천인 이벤트 버튼 다국어
