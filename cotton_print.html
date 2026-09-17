@@ -11,7 +11,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260917231823';
+    var CV = '20260917233235';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -788,7 +788,7 @@ window._cottonSearch = function(){
                         <a class="cp-kr-phone" href="tel:01049945950" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">성희</span><b style="font-size:11px; white-space:nowrap;">010-4994-5950</b></a>
                         <a class="cp-kr-phone" href="tel:01034551946" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">지숙</span><b style="font-size:11px; white-space:nowrap;">010-3455-1946</b></a>
                         <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">연두</span><b style="font-size:11px; white-space:nowrap;">010-2525-9943</b></a>
-                        <a class="cp-kr-phone" href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(253,224,71,0.12); border:1px solid rgba(253,224,71,0.35); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600; grid-column:1/-1;"><span style="opacity:0.8; color:#fde047;">본사</span><b style="font-size:11px; white-space:nowrap;">031-366-1984</b></a>
+                        <!-- 2026-09-17(사장님): 본사(031-366-1984) 카드 제거 -->
                     </div>
                     <!-- JP 전용 ナナミ — QR + 연락처 -->
                     <div class="cp-jp-phone" style="display:none; align-items:center; gap:10px; padding:10px; background:rgba(6,199,85,0.12); border:1px solid rgba(6,199,85,0.45); border-radius:10px; color:#fff;">
@@ -1619,17 +1619,7 @@ async function submitRollFabricRequest() {
         <div style="display:flex; flex-direction:column; gap:10px;">
             <!-- 2026-06-12: KR 전용 — 본사 직통 + 매니저 4명 (위→아래). 다른 로케일에서는 숨김 -->
             <div id="cpPhoneKr" style="display:none; flex-direction:column; gap:10px;">
-                <!-- 본사 직통 (031-366-1984) -->
-                <a class="cpct-card" href="tel:0313661984" style="display:flex; flex-direction:column; gap:10px; padding:14px 14px; background:rgba(251,191,36,0.12); border:1.5px solid rgba(251,191,36,0.5); border-radius:12px; text-decoration:none; color:#fff;">
-                    <div class="cpct-head">
-                        <div class="cpct-avatar" style="background:linear-gradient(135deg,#fbbf24,#d97706);"><i class="fa-solid fa-building"></i></div>
-                        <div class="cpct-info">
-                            <div class="cpct-role" style="color:#fcd34d;">본사 (대한민국)</div>
-                            <div class="cpct-phone">031-366-1984</div>
-                            <div class="cpct-sub">평일 09:00 - 18:00 KST</div>
-                        </div>
-                    </div>
-                </a>
+                <!-- 2026-09-17(사장님): 본사 직통(031-366-1984) 카드 제거 — 매니저로 안내 -->
                 <!-- 매니저 4명 (DB chatbot_knowledge._managers 로드) -->
                 <div id="cpPhoneKrMgrs" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
                     <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; text-align:center; font-size:11px; color:rgba(255,255,255,0.5);">⌛ 로딩중...</div>
@@ -3896,7 +3886,7 @@ window.addEventListener('message', function(e){
             <div>
                 <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
                 <div style="font-size:12px; line-height:1.9;">
-                    <div class="cp-kr-only-phone"><i class="fa-solid fa-phone" style="color:#fb7185; width:16px;"></i> <a href="tel:0313661984" style="color:#cbd5e1; text-decoration:none;">031-366-1984</a></div>
+                    <!-- 2026-09-17(사장님): 본사 전화(031-366-1984) 제거 -->
                     <div><i class="fa-solid fa-envelope" style="color:#fb7185; width:16px;"></i> <a href="mailto:design@chameleon.design" style="color:#cbd5e1; text-decoration:none; word-break:break-all;">design@chameleon.design</a></div>
                     <div><i class="fa-solid fa-clock" style="color:#fb7185; width:16px;"></i> <span data-i18n="footer_hours">평일 09:00~18:00</span></div>
                 </div>
@@ -4774,7 +4764,7 @@ footer_contact_title: {
     ar:'اتصل بنا', es:'Contacto', de:'Kontakt', fr:'Contact'
 },
 footer_contact_info: {
-    ko:'📞 031-366-1984<br>📧 design@chameleon.design<br>🕐 평일 09:00~18:00',
+    ko:'📧 design@chameleon.design<br>🕐 평일 09:00~18:00',
     ja:'📞 047-712-1148<br>📧 design@chameleon.design<br>🕐 平日 09:00~18:00 (JST)',
     en:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Mon-Fri 09:00~18:00 (KST)',
     zh:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 周一至周五 09:00~18:00 (KST)',
