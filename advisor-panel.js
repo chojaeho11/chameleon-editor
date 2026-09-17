@@ -2548,8 +2548,42 @@ function buildAddonHtml(rec, i) {
     return html;
 }
 
-function addProductCards(products) {
+async function addProductCards(products) {
     if (!chatArea) return;
+    // 2026-09-18(사장님): AI(edge function)가 준 추천 카드의 가격/이미지/이름이 옛 데이터라 틀리는 문제
+    //   (예: 25,000원·엉뚱한 사진). code 로 admin_products 현재값을 조회해 덮어쓴다.
+    try {
+        const _sbLive = getSb();
+        const _codes = (products || []).map(p => p && p.code).filter(Boolean);
+        if (_sbLive && _codes.length) {
+            const { data: _live } = await _sbLive.from('admin_products')
+                .select('code, name, name_jp, name_us, price, img_url, width_mm, height_mm')
+                .in('code', _codes);
+            if (_live && _live.length) {
+                const _byCode = {}; _live.forEach(r => { _byCode[r.code] = r; });
+                const _country = (window.SITE_CONFIG && SITE_CONFIG.COUNTRY) || 'KR';
+                const _lang = getLang();
+                products = products.map(p => {
+                    const lv = _byCode[p && p.code];
+                    if (!lv) return p;
+                    let nm = lv.name;
+                    if (_lang === 'ja') nm = lv.name_jp || lv.name;
+                    else if (_lang !== 'kr') nm = lv.name_us || lv.name;
+                    let pr = Number(lv.price) || 0; let suf = '원';
+                    if (_country === 'JP') { pr = Math.round(pr * 0.2); suf = '円'; }
+                    else if (_country !== 'KR') { pr = Math.round(pr * 0.002); suf = '$'; }
+                    const pd = (_country === 'US' || _country === 'EN') ? '$' + pr.toLocaleString() : pr.toLocaleString() + suf;
+                    return Object.assign({}, p, {
+                        name: nm,
+                        img_url: lv.img_url || p.img_url || '',
+                        price_display: pd,
+                        recommended_width_mm: lv.width_mm || p.recommended_width_mm || 0,
+                        recommended_height_mm: lv.height_mm || p.recommended_height_mm || 0
+                    });
+                });
+            }
+        }
+    } catch (e) { console.warn('[adv] live product enrich failed', e); }
     const wrap = document.createElement('div');
     wrap.className = 'adv-cards-wrap';
 
