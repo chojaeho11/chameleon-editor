@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260917230042';
+    var CV = '20260917231823';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2441,10 +2441,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
             <!-- 전화번호 그리드: 모달 안으로 이동 (display:none 컨테이너) -->
             <div id="mgrPhoneListHidden" style="display:none;">
             <div id="mgrPhoneList">
-                <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:500; text-align:center; min-width:0;">
-                    <span>출고실</span>
-                    <span style="color:#ffffff; font-size:13px; white-space:nowrap; font-weight:500;">031-366-1984</span>
-                </a>
+                <!-- 2026-09-17(사장님): 출고실(본사) 전화번호 노출 제거 -->
                 <!-- 2026-05-28: JP 전용 ナナミ 직통 카드 — 일본 도메인(cafe0101.com)에서만 표시 -->
                 <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
                     <span style="font-size:22px;">🇯🇵</span>
@@ -2604,7 +2601,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     return res;
                 }
                 // 2026-05-30: sessionStorage 캐시 — 같은 세션에서 새로고침/페이지 이동 시 즉시 표시
-                var _MGR_CACHE_KEY = 'mgrPhones_html_v4';  // v697: 스타일 변경으로 캐시 무효화
+                var _MGR_CACHE_KEY = 'mgrPhones_html_v5';  // 2026-09-17: 매니저 목록/순서 변경으로 캐시 무효화
                 var _MGR_CACHE_TTL = 30 * 60 * 1000; // 30분
                 function _hydrateFromCache() {
                     try {
@@ -2642,10 +2639,20 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                         //   새 매니저는 DB row 만 추가하면 자동 노출 (휴가 row 도 회색으로 표시).
                         //   sort: 활성 우선 → 이름 가나다순
                         var rows = (data || []).slice();
+                        // 2026-09-17(사장님): 지정 순서(은미→지숙→연두→성희). 전화번호 없는 매니저(예: 정미선)는 제외.
+                        var _MGR_ORDER = ['은미','지숙','연두','성희'];
+                        function _mgrRank(q){ q = String(q||''); for (var i=0;i<_MGR_ORDER.length;i++){ if (q.indexOf(_MGR_ORDER[i])>=0) return i; } return 900; }
+                        rows = rows.filter(function(r){
+                            var ph = ''; try { ph = (JSON.parse(r.answer||'{}').phone||'').toString(); } catch(e){}
+                            if (!ph && r.keywords) ph = String(r.keywords).replace(/[^0-9]/g,'');
+                            return !!ph;
+                        });
                         rows.sort(function(a,b){
                             var aOff = (a.is_active === false) ? 1 : 0;
                             var bOff = (b.is_active === false) ? 1 : 0;
                             if (aOff !== bOff) return aOff - bOff;
+                            var ra = _mgrRank(a.question), rb = _mgrRank(b.question);
+                            if (ra !== rb) return ra - rb;
                             return String(a.question||'').localeCompare(String(b.question||''), 'ko');
                         });
                         // v697: 동명이인 dedupe (이름 같으면 활성 row 우선)
@@ -12254,10 +12261,10 @@ window.filterFxCards = function(cat, btn) {
         overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
         // 기본 폴백 (동적 로드 실패 시 옛 4명)
         const FALLBACK = [
-            { lastName:'지숙', phone:'010-3455-1946' },
             { lastName:'은미', phone:'010-7793-5393' },
-            { lastName:'성희', phone:'010-4994-5950' },
-            { lastName:'연두', phone:'010-2525-9943' }
+            { lastName:'지숙', phone:'010-3455-1946' },
+            { lastName:'연두', phone:'010-2525-9943' },
+            { lastName:'성희', phone:'010-4994-5950' }
         ];
         const renderMgrs = (list) => list.map(m =>
             '<a href="tel:' + m.phone + '" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
@@ -12266,11 +12273,6 @@ window.filterFxCards = function(cat, btn) {
         overlay.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 28px 20px;max-width:340px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2);">' +
             '<div style="text-align:center;margin-bottom:16px;"><span style="font-size:36px;">📞</span></div>' +
             '<div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">전화 문의 안내</div>' +
-            '<div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;margin-bottom:10px;">' +
-                '<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">🏭 출고문의</div>' +
-                '<a href="tel:031-366-1984" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:15px;font-weight:700;">' +
-                    '<i class="fa-solid fa-phone" style="color:#16a34a;"></i> 031-366-1984</a>' +
-            '</div>' +
             '<div style="background:#fef3c7;border-radius:12px;padding:14px 16px;margin-bottom:10px;">' +
                 '<div style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:6px;">🇯🇵 일본 사무실</div>' +
                 '<a href="tel:047-712-1148" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:15px;font-weight:700;">' +
