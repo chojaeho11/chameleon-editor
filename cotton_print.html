@@ -11,7 +11,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260918013333';
+    var CV = '20260918013900';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2426,29 +2426,16 @@ async function submitRollFabricRequest() {
     function loadGallery(){
         var sb = window.sb || (typeof supabase !== 'undefined' ? supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y') : null);
         if (!sb) { setTimeout(loadGallery, 800); return; }
-        // showcase/review 테이블에서 이미지 있는 항목 가져오기
-        sb.from('reviews').select('id, image_urls, product_id').not('image_urls','is',null).order('created_at',{ascending:false}).limit(16).then(function(res){
+        // 2026-09-18(사장님): 기존 reviews 테이블(없음)·products.image_url(컬럼 없음) 조회로 404/400 에러 나던 것 수정.
+        //   admin_products.img_url 에서 이미지 있는 상품 사진 로드.
+        sb.from('admin_products').select('id, img_url, name').not('img_url','is',null).limit(16).then(function(p){
             var grid = document.getElementById('nanamiGallery');
             if (!grid) return;
-            var items = [];
-            (res.data || []).forEach(function(r){
-                var urls = r.image_urls;
-                if (typeof urls === 'string') { try { urls = JSON.parse(urls); } catch(e){ urls = [urls]; } }
-                if (Array.isArray(urls)) urls.forEach(function(u){ if (u && items.length<16) items.push(u); });
-            });
-            if (items.length === 0) {
-                // fallback - products 테이블에서 제품 사진 가져오기
-                sb.from('products').select('id, image_url, name').not('image_url','is',null).eq('category','fabric').limit(16).then(function(p){
-                    if (p.data && p.data.length) {
-                        var html = p.data.map(function(it){ return '<div class="gal-item"><img src="'+it.image_url+'" loading="lazy" alt=""></div>'; }).join('');
-                        grid.innerHTML = html;
-                    } else {
-                        grid.style.display = 'none';
-                    }
-                });
-                return;
+            if (p.data && p.data.length) {
+                grid.innerHTML = p.data.map(function(it){ return '<div class="gal-item"><img src="'+it.img_url+'" loading="lazy" alt=""></div>'; }).join('');
+            } else {
+                grid.style.display = 'none';
             }
-            grid.innerHTML = items.map(function(u){ return '<div class="gal-item"><img src="'+u+'" loading="lazy" alt=""></div>'; }).join('');
         }).catch(function(){ var g=document.getElementById('nanamiGallery'); if(g) g.style.display='none'; });
     }
     if ((window.__PS_LANG || '') === 'ja') setTimeout(loadGallery, 1200);
