@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260918014529';
+    var CV = '20260918021702';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2434,6 +2434,11 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-users"></i></span>
                     <span class="mgr-action-label" data-i18n="nav_camel_sns">카멜SNS</span>
                 </button>
+                <!-- 2026-09-18(사장님): 가맹점모집 버튼 → /franchise (가맹/리셀러 모집 랜딩). a 태그 = 크롤러 추적 가능 -->
+                <a class="mgr-action mgr-franchise" href="/franchise" style="text-decoration:none;">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-handshake"></i></span>
+                    <span class="mgr-action-label" data-i18n="nav_franchise">가맹점모집</span>
+                </a>
                 <!-- 2026-08-15: 탑바에서 홍보하기·끝말잇기 삭제 (사장님 요청). 리워드 허브(무료쿠폰)에서 이용 가능. -->
             </div>
             <!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 밖으로 이동됨. 아래 hotDealSection 직전 참고. -->
@@ -2924,6 +2929,8 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
         setI18n('[data-i18n="btn_designer_apply"]', t.btnDapply || '디자이너 신청');
         // 2026-06-19 v640: 6번째 단축 — 디자이너 모집 버튼
         setI18n('[data-i18n="btn_designer_recruit_btn"]', t.btnRecruitBtn || '블로그');
+        // 2026-09-18(사장님): 가맹점모집 버튼 라벨 다국어
+        setI18n('[data-i18n="nav_franchise"]', ({kr:'가맹점모집',ja:'加盟店募集',en:'Franchise',zh:'加盟招募',ar:'الامتياز',es:'Franquicias',de:'Franchise',fr:'Franchise'}[lang]||'가맹점모집'));
         // 2026-06-19 v635: 디자이너 모집 배너 다국어 (2026-07-08: 제목+설명 2줄 구조, 픽토그램 제거)
         setI18n('[data-i18n="btn_designer_recruit"]', t.drTitle || '디자이너 모집');
         // 2026-06-29: 추천인 이벤트 버튼 다국어
