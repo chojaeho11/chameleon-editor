@@ -216,7 +216,14 @@
     }
 
     // 2026-09-17(사장님): 참여형 리워드 이벤트는 한국(KR) 전용 — 일본/기타 국가는 지급/노출 안 함.
-    function _rwKROnly() { return (window.__SITE_CODE || 'KR') === 'KR'; }
+    function _rwKROnly() {
+        // 2026-09-18(사장님): cotton-printer 등 __SITE_CODE 미설정 도메인에서 KR로 오판→일본 노출되던 버그.
+        //   SITE_CONFIG.COUNTRY 우선, 없으면 해외 단독도메인은 호스트명으로 제외.
+        var sc = window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY);
+        if (sc) return sc === 'KR';
+        var h = (location.hostname || '').toLowerCase();
+        return !(h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0 || h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0 || h.indexOf('hexa-board') >= 0 || h.indexOf('cotton-printer.com') >= 0);
+    }
     window._rwKROnly = _rwKROnly;
 
     // 자동(페이지 로드) 출석 — 지급될 때만 선물팝업, 아니면 조용히.
