@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260916004220';
+    var CV = '20260917230042';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1471,8 +1471,9 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
             var t = T[lang] || T.en || T.kr;
             document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
-            // 2026-08-14: 여름 무료 이벤트 리워드 허브 — 타이틀 클릭 시 rewards.js openRewardHub (5보상 인라인 + 누적포인트). KR/JP.
-            if (lang === 'kr' || lang === 'ko' || lang === 'ja') {
+            // 2026-08-14: 여름 무료 이벤트 리워드 허브 — 타이틀 클릭 시 rewards.js openRewardHub.
+            // 2026-09-17(사장님): 한국(KR) 전용 — 일본/기타 국가는 타이틀 클릭 이벤트 제거.
+            if (lang === 'kr' || lang === 'ko') {
                 var _hh = document.querySelector('#heroWorks .hw-head');
                 if (_hh) {
                     _hh.style.cursor = 'pointer';
@@ -6452,7 +6453,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script src="./mini-editor.js?v=558"></script>
-<script src="./rewards.js?v=33"></script>
+<script src="./rewards.js?v=34"></script>
 <script src="/biz-promo.js?v=9"></script>
 
 <!-- 2026-08-15: 「내가 만든 디자인」 모달 (히어로 + 마이페이지에서 진입) — 고른 디자인을 에디터에 올려 제품 주문으로 연결 -->

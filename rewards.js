@@ -215,8 +215,13 @@
         setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { try { t.remove(); } catch (e) {} }, 220); }, 2400);
     }
 
+    // 2026-09-17(사장님): 참여형 리워드 이벤트는 한국(KR) 전용 — 일본/기타 국가는 지급/노출 안 함.
+    function _rwKROnly() { return (window.__SITE_CODE || 'KR') === 'KR'; }
+    window._rwKROnly = _rwKROnly;
+
     // 자동(페이지 로드) 출석 — 지급될 때만 선물팝업, 아니면 조용히.
     window.rewardAttendance = async function () {
+        if (!_rwKROnly()) return;
         var sb = await sbReady(); if (!sb) return;
         var uid = await loggedInUid(sb); if (!uid) return;
         try {
@@ -227,6 +232,7 @@
 
     // 2026-08-14: 매월 첫 접속 무료 선물 3만원 (월 1회). 무료 이벤트 포인트라 매월 말일 소멸 대상.
     window.claimMonthlyGift = async function () {
+        if (!_rwKROnly()) return;
         var sb = await sbReady(); if (!sb) return;
         var uid = await loggedInUid(sb); if (!uid) return;
         try {
@@ -242,6 +248,7 @@
 
     // 2026-08-14: 리워드 허브 — 이벤트 팝업에서 5가지 보상을 그 자리에서. 상단 누적포인트 + 축하 빵빠레.
     window.openRewardHub = async function () {
+        if (!_rwKROnly()) return;   // 2026-09-17(사장님): 리워드 이벤트 한국 전용
         var sbc = await sbReady(); if (!sbc) return;
         var sc = (window.__SITE_CODE || 'KR');
         var jp = (sc === 'JP'), en = (sc !== 'KR' && sc !== 'JP');
@@ -598,4 +605,18 @@
         input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
         setTimeout(function () { try { input.focus(); } catch (e) {} }, 300);
     };
+
+    // 2026-09-17(사장님): 리워드 이벤트 한국(KR) 전용 — JP/기타 국가는 진입 버튼(무료쿠폰/이벤트) 숨김.
+    (function _rwHideEntryForNonKR() {
+        function hide() {
+            if (_rwKROnly()) return;
+            ['btnSnsTop', 'cpRewardTop', 'ctaRewardHub'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hide);
+        else hide();
+        setTimeout(hide, 1500);   // 늦게 렌더되는 버튼 대비
+    })();
 })();
