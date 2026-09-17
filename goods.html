@@ -1390,8 +1390,8 @@ a { text-decoration: none; color: inherit; }
     }
 
     function formatPrice(krw) {
-        if (LANG === 'ja') return '¥' + Math.round(krw * 0.1).toLocaleString();
-        if (LANG === 'en') return '$' + (Math.round(krw * 0.001 * 100) / 100).toFixed(2);
+        if (LANG === 'ja') return '¥' + Math.round(krw * 0.2).toLocaleString();
+        if (LANG === 'en') return '$' + (Math.round(krw * 0.002 * 100) / 100).toFixed(2);
         return krw.toLocaleString() + '원';
     }
 

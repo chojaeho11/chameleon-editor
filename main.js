@@ -1262,7 +1262,7 @@ window.submitArtworkUpload = async function() {
             name_fr: titleFR,
             category: genre,
             price: basePrice,
-            price_us: Math.round(basePrice * 0.001),
+            price_us: Math.round(basePrice * 0.002),
             img_url: thumbUrl,
             addons: fabricAddons,
             description: tags,

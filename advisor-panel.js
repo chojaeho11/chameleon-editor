@@ -171,8 +171,8 @@ async function _loadWelcomeProducts(lang) {
             else if (lang !== 'kr') displayName = r.name_us || r.name;
             let price = r.price;
             let priceSuffix = '원';
-            if (country === 'JP') { price = r.price_jp || Math.round(r.price * 0.1); priceSuffix = '円'; }
-            else if (country !== 'KR') { price = r.price_us || Math.round(r.price * 0.001); priceSuffix = '$'; }
+            if (country === 'JP') { price = Math.round(r.price * 0.2); priceSuffix = '円'; }
+            else if (country !== 'KR') { price = Math.round(r.price * 0.002); priceSuffix = '$'; }
             return {
                 code: r.code,
                 name: displayName,
@@ -241,8 +241,8 @@ function _renderSearchResults(rows, query, lang) {
         if (lang === 'ja') displayName = r.name_jp || r.name;
         else if (lang !== 'kr') displayName = r.name_us || r.name;
         let price = r.price; let priceSuffix = '원';
-        if (country === 'JP') { price = r.price_jp || Math.round(r.price * 0.1); priceSuffix = '円'; }
-        else if (country !== 'KR') { price = r.price_us || Math.round(r.price * 0.001); priceSuffix = '$'; }
+        if (country === 'JP') { price = Math.round(r.price * 0.2); priceSuffix = '円'; }
+        else if (country !== 'KR') { price = Math.round(r.price * 0.002); priceSuffix = '$'; }
         return {
             code: r.code, name: displayName, img_url: r.img_url || '', reason: '',
             price_display: (country === 'US' || country === 'EN') ? '$' + price.toLocaleString() : price.toLocaleString() + priceSuffix,
@@ -2745,12 +2745,12 @@ let _psHistory = [];            // 되돌리기 히스토리
 
 function _psFmtPrice(krw) {
     const cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    if (cc === 'JP') return '¥' + Math.floor(krw * 0.1).toLocaleString();
-    if (cc === 'US' || cc === 'EN') return '$' + Math.round(krw * 0.001).toLocaleString();
+    if (cc === 'JP') return '¥' + Math.floor(krw * 0.2).toLocaleString();
+    if (cc === 'US' || cc === 'EN') return '$' + Math.round(krw * 0.002).toLocaleString();
     if (cc === 'CN') return '¥' + Math.round(krw * 0.05).toLocaleString();
-    if (cc === 'ES' || cc === 'DE' || cc === 'FR') return '€' + (krw * 0.001).toFixed(0);
+    if (cc === 'ES' || cc === 'DE' || cc === 'FR') return '€' + (krw * 0.002).toFixed(0);
     if (cc === 'AR') return '$' + Math.round(krw * 0.001).toLocaleString();
-    if (cc !== 'KR') return '$' + Math.round(krw * 0.001).toLocaleString();
+    if (cc !== 'KR') return '$' + Math.round(krw * 0.002).toLocaleString();
     return krw.toLocaleString() + '원';
 }
 
@@ -4265,8 +4265,8 @@ async function _psGoToCart(w, h, productKey, basePrice) {
         name_us: nameObj.en,
         code: `ps_${productKey}_${Date.now()}`,
         price: basePrice,
-        price_jp: Math.round(basePrice * 0.1),
-        price_us: Math.round(basePrice * 0.001),
+        price_jp: Math.round(basePrice * 0.2),
+        price_us: Math.round(basePrice * 0.002),
         img: thumbUrl,
         w: w, h: h,
         w_mm: w, h_mm: h,
@@ -4364,7 +4364,7 @@ function _psShowSell() {
                     name_jp: `${title} - ${cn.name_jp}`,
                     category: cat,
                     price: price,
-                    price_us: Math.round(price * 0.001),
+                    price_us: Math.round(price * 0.002),
                     img_url: imgUrl,
                     addons: cat === 'ua_fabric' ? fabricAddons : '',
                     partner_id: window.currentUser.id,

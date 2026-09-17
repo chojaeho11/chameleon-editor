@@ -76,11 +76,11 @@ function showError(msg) {
         if (order.payment_status === '결제완료' || order.payment_status === 'paid') { showError('Already paid.'); return; }
 
         // KRW → 현지 통화 변환 (메인몰과 동일)
-        const rates = { KR:1, JP:0.1, US:0.001, CN:0.05, AR:0.001, ES:0.001, DE:0.001, FR:0.001 };
+        const rates = { KR:1, JP:0.2, US:0.002, CN:0.05, AR:0.001, ES:0.002, DE:0.002, FR:0.002 };
         const currMap = { ja:'jpy', en:'usd' };
         const currency = currMap[lang] || 'usd';
         const country = lang === 'ja' ? 'JP' : 'US';
-        const rate = rates[country] || 0.001;
+        const rate = rates[country] || 0.002;
         const zeroDec = ['jpy'];
         const krw = order.total_amount || 0;
         const localAmount = zeroDec.includes(currency) ? Math.round(krw * rate) : Math.round(krw * rate * 100) / 100;

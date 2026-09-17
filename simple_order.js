@@ -64,13 +64,13 @@
     function fmtPrice(amt) {
         const lang = getLang();
         const v = Math.max(0, Math.round(amt || 0));
-        if (lang === 'ja') return '¥' + Math.round(v * 0.1).toLocaleString();
+        if (lang === 'ja') return '¥' + Math.round(v * 0.2).toLocaleString();
         if (lang === 'en') {
-            const usd = v * 0.001;
+            const usd = v * 0.002;
             return usd >= 10 ? '$' + Math.round(usd).toLocaleString() : '$' + usd.toFixed(2);
         }
         if (lang === 'es' || lang === 'de' || lang === 'fr') {
-            const eur = v * 0.001;
+            const eur = v * 0.002;
             return eur >= 10 ? '€' + Math.round(eur).toLocaleString() : '€' + eur.toFixed(2);
         }
         if (lang === 'zh') return '¥' + Math.round(v * 0.005).toLocaleString();
@@ -6096,8 +6096,8 @@ html, body { background: #ffffff !important; }
                 var priceVal;
                 if (_ovKrw != null) {
                     // override 적용 — 통화 환산 (JP × 0.1, US × 0.001)
-                    if (lang === 'ja')                                       priceVal = Math.round(_ovKrw * 0.1);
-                    else if (lang === 'en' || window.__SITE_CODE === 'US')   priceVal = Math.round(_ovKrw * 0.001);
+                    if (lang === 'ja')                                       priceVal = Math.round(_ovKrw * 0.2);
+                    else if (lang === 'en' || window.__SITE_CODE === 'US')   priceVal = Math.round(_ovKrw * 0.002);
                     else                                                     priceVal = _ovKrw;
                 } else {
                     priceVal = p.price || 0;
@@ -16265,7 +16265,7 @@ html, body { background: #ffffff !important; }
               + '<div style="font-weight:900;font-size:15px;color:#0f172a;display:flex;align-items:center;gap:8px;">📤 단일 디자인 업로드</div>'
               + '<div style="font-size:12px;color:#64748b;line-height:1.55;">'
                 + '관리자 승인 시 자동 적립 — 벡터 <b>1,000원</b> · 이미지 <b>500원</b> · 로고 <b>200원</b> · 판매 시 <b>+3%</b><br>'
-                + '<span style="color:#94a3b8;">(JP 0.1×, US 0.001×)</span>'
+                + '<span style="color:#94a3b8;">(JP 0.2×, US 0.002×)</span>'
               + '</div>'
               + '<div>'
                 + '<label style="display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;">유형</label>'

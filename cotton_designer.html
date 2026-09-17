@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260918002755';
+    var CV = '20260918011456';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -71,7 +71,7 @@
       var _h = (location.hostname||'').toLowerCase();
       var _c = (_h.indexOf('cafe0101')>=0 || _h.indexOf('cotton-printer')>=0) ? 'JP'
              : (_h.indexOf('cafe3355')>=0 || _h.indexOf('chameleon.design')>=0) ? 'US' : 'KR';
-      var _rate = ({KR:1, JP:0.1, US:0.001})[_c] || 1;
+      var _rate = ({KR:1, JP:0.2, US:0.002})[_c] || 1;
       var _curr = currency || (_c==='JP'?'JPY':_c==='US'?'USD':'KRW');
       var _val  = currency ? (value||1.0) : Math.round((value||1.0)*_rate*100)/100;
       gtag('event','conversion',{ 'send_to':'AW-11349651713/P7AtCKeNgfYaEIHi96Mq', 'value': _val, 'currency': _curr });

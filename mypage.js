@@ -1022,7 +1022,7 @@ async function loadMySales() {
     const cfg = window.SITE_CONFIG || {};
     const country = cfg.COUNTRY || 'KR';
     const currUnit = { KR: '원', JP: '¥', US: '$', CN: '¥', AR: '$', ES: '€', DE: '€', FR: '€' }[country] || '$';
-    const rateMap = cfg.CURRENCY_RATE || { KR:1, JP:0.1, US:0.001 };
+    const rateMap = cfg.CURRENCY_RATE || { KR:1, JP:0.2, US:0.002 };
     const rate = (typeof rateMap === 'object') ? (rateMap[country] || 1) : (rateMap || 1);
 
     // 1. 내가 등록한 마켓플레이스 작품 조회 (partner_id = currentUser.id)

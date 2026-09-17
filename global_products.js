@@ -1558,7 +1558,7 @@ async function googleTranslate(text, targetLang) {
 window.autoFillPrices = (krwVal) => {
     const krw = parseFloat(krwVal) || 0;
     if (krw <= 0) return;
-    const rates = { JP: 0.1, US: 0.001, CN: 0.05, AR: 0.001, EUR: 0.001 };
+    const rates = { JP: 0.2, US: 0.002, CN: 0.05, AR: 0.001, EUR: 0.002 };
     const setVal = (id, val, dec) => {
         const el = document.getElementById(id);
         if (el) el.value = dec ? val.toFixed(dec) : Math.round(val);
@@ -1588,7 +1588,7 @@ window.autoTranslateInputs = async () => {
     btn.disabled = true;
 
     try {
-        const rateJPY = 0.1, rateUSD = 0.001, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.001;
+        const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.002;
 
         if (krPrice && krPrice > 0) {
             document.getElementById('newProdPriceJP').value = Math.round(krPrice * rateJPY);
@@ -1666,7 +1666,7 @@ window.autoTranslateCategoryInputs = async () => {
 window.autoFillAddonPrices = (krwVal) => {
     const krw = parseFloat(krwVal) || 0;
     if (krw <= 0) return;
-    const r = { JP: 0.1, US: 0.001, CN: 0.05, AR: 0.001, EUR: 0.001 };
+    const r = { JP: 0.2, US: 0.002, CN: 0.05, AR: 0.001, EUR: 0.002 };
     const s = (id, v, d) => { const el = document.getElementById(id); if (el) el.value = d ? v.toFixed(d) : Math.round(v); };
     s('prJP', krw * r.JP); s('prUS', krw * r.US, 2); s('prCN', krw * r.CN);
     s('prAR', krw * r.AR, 2); s('prES', krw * r.EUR, 2);
@@ -1678,7 +1678,7 @@ window.autoTranslateAddonInputs = async () => {
     const krName = document.getElementById('nmKR').value;
     const krPrice = document.getElementById('prKR').value;
     if (!krName) { showToast(_t('err_kr_name_input_required','Please enter a Korean name.'), "warn"); return; }
-    const rateJPY = 0.1, rateUSD = 0.001, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.001;
+    const rateJPY = 0.2, rateUSD = 0.002, rateCNY = 0.05, rateSAR = 0.001, rateEUR = 0.002;
     if (krPrice) {
         document.getElementById('prJP').value = Math.round(krPrice * rateJPY);
         document.getElementById('prUS').value = (krPrice * rateUSD).toFixed(2);
@@ -1941,7 +1941,7 @@ window.cloneProductMode = () => {
 };
 
 window.updateAllCurrency = async () => {
-    if (!confirm("전체 상품의 가격을 아래 환율로 일괄 변경하시겠습니까?\n\n🇯🇵 1,000원 → 100엔 (×0.1)\n🇺🇸 1,000원 → $1 (×0.001)\n🇨🇳 1,000원 → ¥50 (×0.05)\n🇸🇦 1,000원 → $1 (×0.001)\n🇪🇸 1,000원 → €1 (×0.001)\n🇩🇪 1,000원 → €1 (×0.001)\n🇫🇷 1,000원 → €1 (×0.001)\n\n(주의: 기존에 입력된 해외 가격이 모두 덮어씌워집니다.)")) return;
+    if (!confirm("전체 상품의 가격을 아래 환율로 일괄 변경하시겠습니까?\n\n🇯🇵 1,000원 → 200엔 (×0.2)\n🇺🇸 1,000원 → $2 (×0.002)\n🇨🇳 1,000원 → ¥50 (×0.05)\n🇸🇦 1,000원 → $1 (×0.001)\n🇪🇸 1,000원 → €2 (×0.002)\n🇩🇪 1,000원 → €2 (×0.002)\n🇫🇷 1,000원 → €2 (×0.002)\n\n(주의: 기존에 입력된 해외 가격이 모두 덮어씌워집니다.)")) return;
     const btn = document.getElementById('btnCurrencyUpdate');
     const oldText = btn.innerText;
     btn.innerText = "업데이트 중...";
@@ -1957,13 +1957,13 @@ window.updateAllCurrency = async () => {
         for (const p of products) {
             const krw = p.price || 0;
             const updates = {
-                price_jp: Math.round(krw * 0.1),
-                price_us: +(krw * 0.001).toFixed(2),
+                price_jp: Math.round(krw * 0.2),
+                price_us: +(krw * 0.002).toFixed(2),
                 price_cn: +(krw * 0.05).toFixed(2),
                 price_ar: +(krw * 0.001).toFixed(2),
-                price_es: +(krw * 0.001).toFixed(2),
-                price_de: +(krw * 0.001).toFixed(2),
-                price_fr: +(krw * 0.001).toFixed(2)
+                price_es: +(krw * 0.002).toFixed(2),
+                price_de: +(krw * 0.002).toFixed(2),
+                price_fr: +(krw * 0.002).toFixed(2)
             };
             const { error: updateErr } = await sb.from('admin_products').update(updates).eq('id', p.id);
             if (!updateErr) successCount++;
@@ -3986,8 +3986,8 @@ window.batchCrawlProducts = async () => {
                 price: price,
                 description: detailHtml.kr || product.description || '',
                 name_jp: '', name_us: '', name_cn: '', name_ar: '', name_es: '',
-                price_jp: Math.round(price * 0.1),
-                price_us: Math.round(price * 0.001),
+                price_jp: Math.round(price * 0.2),
+                price_us: Math.round(price * 0.002),
                 description_jp: detailHtml.jp || '',
                 description_us: detailHtml.us || '',
                 description_cn: detailHtml.cn || '',

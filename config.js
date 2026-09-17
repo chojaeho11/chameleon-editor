@@ -506,23 +506,23 @@ export function getLocalizedData(item) {
         formattedPrice = '$' + Math.round(arPrice).toLocaleString();
     } else if (country === 'ES') {
         name = item.name_es || item.name_us || item.name;
-        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.001;
+        const esRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.ES) || 0.002;
         const esPrice = price * esRate;
         formattedPrice = '€' + esPrice.toFixed(2);
     } else if (country === 'DE') {
         name = item.name_de || item.name_us || item.name;
-        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.001;
+        const deRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.DE) || 0.002;
         const dePrice = price * deRate;
         formattedPrice = '€' + dePrice.toFixed(2);
     } else if (country === 'FR') {
         name = item.name_fr || item.name_us || item.name;
-        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.001;
+        const frRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.FR) || 0.002;
         const frPrice = price * frRate;
         formattedPrice = '€' + frPrice.toFixed(2);
     } else if (country === 'KR' || !country) {
         formattedPrice = price.toLocaleString() + '원';
     } else {
-        const fallbackRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE[country]) || 0.001;
+        const fallbackRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE[country]) || 0.002;
         const fallbackPrice = price * fallbackRate;
         formattedPrice = '$' + (fallbackPrice < 1 ? fallbackPrice.toFixed(2) : Math.round(fallbackPrice).toLocaleString());
     }

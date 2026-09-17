@@ -61,8 +61,8 @@
     function fmtAmt(n){
         if (n == null) return '-';
         try {
-            if (lang() === 'ja') return '¥' + Math.round(n * 0.1).toLocaleString();
-            if (lang() === 'en') return '$' + (n * 0.001).toFixed(2);
+            if (lang() === 'ja') return '¥' + Math.round(n * 0.2).toLocaleString();
+            if (lang() === 'en') return '$' + (n * 0.002).toFixed(2);
             return Number(n).toLocaleString() + '원';
         } catch(e){ return n; }
     }

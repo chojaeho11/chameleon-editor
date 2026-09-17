@@ -12,13 +12,13 @@
     // 언어별 통화 설정
     var CURRENCY_MAP = {
         ko: { symbol: '원', rate: 1 },
-        ja: { symbol: '¥', rate: 0.1 },
-        en: { symbol: '$', rate: 0.001 },
+        ja: { symbol: '¥', rate: 0.2 },
+        en: { symbol: '$', rate: 0.002 },
         zh: { symbol: '¥', rate: 0.1 },
         ar: { symbol: '$', rate: 0.001 },
-        es: { symbol: '€', rate: 0.001 },
-        de: { symbol: '€', rate: 0.001 },
-        fr: { symbol: '€', rate: 0.001 }
+        es: { symbol: '€', rate: 0.002 },
+        de: { symbol: '€', rate: 0.002 },
+        fr: { symbol: '€', rate: 0.002 }
     };
 
     var langCurrency = CURRENCY_MAP[psLang] || CURRENCY_MAP['ko'];

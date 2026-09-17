@@ -1211,7 +1211,7 @@ setTxt('btnSubmit', T.btnSubmit);
         const nameFieldByLang = { ko:'name', ja:'name_jp', en:'name_us', zh:'name_cn', ar:'name_ar', es:'name_es', de:'name_de', fr:'name_fr' };
         const currencySymbol = { ko:'₩', ja:'¥', en:'$', zh:'¥', ar:'$', es:'€', de:'€', fr:'€' };
         // 2026-05-16: DB는 KRW 기준 — 언어별 환율 적용 (메인 사이트와 동일). 기존엔 € 기호만 붙어 KRW 값 그대로 노출되던 버그.
-        const rateByLang = { ko:1, ja:0.1, en:0.001, zh:0.05, ar:0.001, es:0.001, de:0.001, fr:0.001 };
+        const rateByLang = { ko:1, ja:0.2, en:0.002, zh:0.05, ar:0.001, es:0.002, de:0.002, fr:0.002 };
         // Main site origin for product detail deep-links (cross-site friendly)
         const mainOrigin = (function(){
             const h = location.hostname;
@@ -1224,10 +1224,10 @@ setTxt('btnSubmit', T.btnSubmit);
             const displayName = p[nameField] || p.name || '';
             let displayPrice = '';
             if (lang === 'ja') {
-                const v = (p.price_jp != null) ? Number(p.price_jp) : Number(p.price || 0) * 0.1;
+                const v = Number(p.price || 0) * 0.2;
                 displayPrice = '¥' + Math.round(v).toLocaleString();
             } else if (lang === 'en') {
-                const v = (p.price_us != null) ? Number(p.price_us) : Number(p.price || 0) * 0.001;
+                const v = Number(p.price || 0) * 0.002;
                 displayPrice = '$' + Math.round(v).toLocaleString();
             } else {
                 const v = Number(p.price || 0) * (rateByLang[lang] || 1);

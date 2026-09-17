@@ -369,7 +369,7 @@ const _SITE = (() => {
     return 'KR';
 })();
 const _LANG = _SITE === 'JP' ? 'ja' : _SITE === 'US' ? 'en' : 'ko';
-const _RATE = _SITE === 'JP' ? 0.1 : _SITE === 'US' ? 0.001 : 1;
+const _RATE = _SITE === 'JP' ? 0.2 : _SITE === 'US' ? 0.002 : 1;
 function _fmtKrw(krw) {
     const v = (krw || 0) * _RATE;
     if (_SITE === 'KR') return v.toLocaleString() + '원';

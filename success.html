@@ -189,8 +189,8 @@
         }
         function _fmtAmt(krw, lang) {
             if (krw == null) return '-';
-            if (lang === 'ja') return '¥' + Math.round(krw * 0.1).toLocaleString();
-            if (lang === 'en') return '$' + (krw * 0.001).toFixed(2);
+            if (lang === 'ja') return '¥' + Math.round(krw * 0.2).toLocaleString();
+            if (lang === 'en') return '$' + (krw * 0.002).toFixed(2);
             return Number(krw).toLocaleString() + '원';
         }
         async function showPaymentSuccessModal(dbId) {
@@ -719,7 +719,7 @@
               var _country = (_host.indexOf('cafe0101') >= 0 || _host.indexOf('cotton-printer') >= 0) ? 'JP'
                            : (_host.indexOf('cafe3355') >= 0 || _host.indexOf('chameleon.design') >= 0) ? 'US'
                            : 'KR';
-              var _rateMap = { KR:1, JP:0.1, US:0.001 };
+              var _rateMap = { KR:1, JP:0.2, US:0.002 };
               var _rate = _rateMap[_country] || 1;
               var _curr = _country === 'JP' ? 'JPY' : _country === 'US' ? 'USD' : 'KRW';
               var _value = 0;

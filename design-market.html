@@ -2036,13 +2036,13 @@ function catName(koreanVal) {
 //   1,000 KRW ≈ 100 JPY ≈ $1 USD ≈ €1 EUR ≈ ¥5 CNY ≈ 3 SAR
 const CURRENCY_CONFIG = {
     ko: { symbol: '',  suffix: '원', rate: 1,     prefix: false },
-    ja: { symbol: '¥', suffix: '',   rate: 0.1,   prefix: true  },
-    en: { symbol: '$', suffix: '',   rate: 0.001, prefix: true  },
+    ja: { symbol: '¥', suffix: '',   rate: 0.2,   prefix: true  },
+    en: { symbol: '$', suffix: '',   rate: 0.002, prefix: true  },
     zh: { symbol: '¥', suffix: '',   rate: 0.005, prefix: true  }, // 5 CNY per 1000 KRW
     ar: { symbol: '',  suffix: ' ر.س', rate: 0.003, prefix: false }, // 3 SAR per 1000 KRW
-    es: { symbol: '€', suffix: '',   rate: 0.001, prefix: true  },
-    de: { symbol: '€', suffix: '',   rate: 0.001, prefix: true  },
-    fr: { symbol: '€', suffix: '',   rate: 0.001, prefix: true  },
+    es: { symbol: '€', suffix: '',   rate: 0.002, prefix: true  },
+    de: { symbol: '€', suffix: '',   rate: 0.002, prefix: true  },
+    fr: { symbol: '€', suffix: '',   rate: 0.002, prefix: true  },
 };
 
 function formatPrice(krw) {
@@ -3141,8 +3141,8 @@ async function confirmGigPurchase(gigId, tier) {
                 name_jp: '[Gig] ' + (row.title || 'Service'),
                 name_us: '[Gig] ' + (row.title || 'Service'),
                 price: row.price,
-                price_jp: Math.round(row.price * 0.1),
-                price_us: Math.round(row.price * 0.001 * 100) / 100,
+                price_jp: Math.round(row.price * 0.2),
+                price_us: Math.round(row.price * 0.002 * 100) / 100,
                 img: '',
                 category: 'design_fee',
                 addons: [],

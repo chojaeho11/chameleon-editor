@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260918002755';
+    var CV = '20260918011456';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -901,10 +901,10 @@ if ('caches' in window) {
                                 var _frL = function(kr,ja,en){ return _frSC==='JP'?ja:(_frSC==='KR'?kr:en); };
                                 var _frFmt = function(krw){
                                     krw = Number(krw)||0;
-                                    if (_frSC==='JP') return '¥'+Math.floor(krw*0.1).toLocaleString();
-                                    if (_frSC==='US'||_frSC==='SA') return '$'+Math.round(krw*0.001).toLocaleString();
+                                    if (_frSC==='JP') return '¥'+Math.floor(krw*0.2).toLocaleString();
+                                    if (_frSC==='US') return '$'+Math.round(krw*0.002).toLocaleString(); if (_frSC==='SA') return '$'+Math.round(krw*0.001).toLocaleString();
                                     if (_frSC==='CN') return '¥'+Math.round(krw*0.05).toLocaleString();
-                                    if (_frSC==='ES'||_frSC==='DE'||_frSC==='FR') return '€'+(krw*0.001).toFixed(2);
+                                    if (_frSC==='ES'||_frSC==='DE'||_frSC==='FR') return '€'+(krw*0.002).toFixed(2);
                                     return krw.toLocaleString()+'원';
                                 };
                                 (function insertCP(){
@@ -973,7 +973,7 @@ if ('caches' in window) {
                                         product: {
                                             code: 'frcp_' + (f.slug||'') + '_' + (p.id||''),
                                             name: p.name, name_kr: p.name, name_jp: p.name, name_us: p.name,
-                                            price: unit, price_jp: Math.round(unit*0.1), price_us: Math.round(unit*0.001*100)/100,
+                                            price: unit, price_jp: Math.round(unit*0.2), price_us: Math.round(unit*0.002*100)/100,
                                             category: 'Franchise Custom', img: img
                                         },
                                         type: 'file_upload', fileName: '(가맹점 상품)',
@@ -6854,7 +6854,7 @@ function _esc(s) { var d = document.createElement('div'); d.textContent = s || '
     function cc(){ return window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR'; }
     function fmtSub(krw){
         var c = cc();
-        var rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || { KR:1, JP:0.1, US:0.001, CN:0.05, AR:0.001, ES:0.001, DE:0.001, FR:0.001 };
+        var rates = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || { KR:1, JP:0.2, US:0.002, CN:0.05, AR:0.001, ES:0.002, DE:0.002, FR:0.002 };
         var rate = rates[c] || 1;
         var sym = (c==='JP'||c==='CN') ? '¥' : (c==='US'||c==='AR') ? '$' : (c==='ES'||c==='DE'||c==='FR') ? '€' : '₩';
         return sym + Math.round(krw * rate).toLocaleString();
@@ -10025,8 +10025,8 @@ async function handleSubReturn() {
                             if(fn) fn.textContent=freeNote[l]||freeNote['kr'];
                             var _r=(window.SITE_CONFIG&&window.SITE_CONFIG.CURRENCY_RATE)||{};
                             var _fmt=function(krw){
-                                if(l==='ja') return '¥'+Math.round(krw*(_r.JP||0.1)).toLocaleString();
-                                if(l==='en'||l==='ar') return '$'+Math.round(krw*(_r.US||0.001));
+                                if(l==='ja') return '¥'+Math.round(krw*(_r.JP||0.2)).toLocaleString();
+                                if(l==='en'||l==='ar') return '$'+Math.round(krw*(_r.US||0.002));
                                 if(l==='zh') return '¥'+Math.round(krw*(_r.CN||0.05));
                                 if(l==='es'||l==='de'||l==='fr') return '€'+Math.round(krw*(_r.ES||0.001));
                                 return Math.round(krw/10000)+'만원';
@@ -14863,8 +14863,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                 var pName = product.name || '';
                 var pPrice = product.price || 0;
                 var currency = 'KRW';
-                if (cc === 'JP') { pName = product.name_jp || pName; pPrice = product.price_jp || Math.round(pPrice * 0.1); currency = 'JPY'; }
-                if (cc === 'US') { pName = product.name_us || pName; pPrice = product.price_us || Math.round(pPrice * 0.001); currency = 'USD'; }
+                if (cc === 'JP') { pName = product.name_jp || pName; pPrice = Math.round(pPrice * 0.2); currency = 'JPY'; }
+                if (cc === 'US') { pName = product.name_us || pName; pPrice = Math.round(pPrice * 0.002); currency = 'USD'; }
                 var _scr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
                 if (cc === 'CN') { pName = product.name_cn || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.CN || 0.05)); currency = 'CNY'; }
                 if (cc === 'AR') { pName = product.name_ar || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.AR || 0.001)); currency = 'SAR'; }
@@ -15209,7 +15209,7 @@ window.showChoiceModal = async function(key) {
         //   description_jp 없으면 dDesc 비움 (description 한국어 fallback 방지)
         else dDesc = "";
         // 2026-06-25: price_jp 없으면 KRW×0.1 환산 (구: 원화 그대로 ¥ 표시 버그)
-        dPrice = product.price_jp || Math.round((product.price || 0) * 0.1);
+        dPrice = Math.round((product.price || 0) * 0.2);
     } else if (lang === 'en') {
         if (product.name_us) dName = _stripSz(product.name_us);
         if (product.description_us) dDesc = product.description_us;
@@ -16625,7 +16625,7 @@ window.updateModalTotal = function() {
         // 일반: (국가별 단가) * (상품 수량)
         let unitPrice = product.price; // KRW 기본
         // 2026-06-25: ja 표시 단가 = price_jp(엔) 또는 KRW×0.1 (구: price_jp 없으면 원화 그대로 버그)
-        if (lang === 'ja') unitPrice = product.price_jp || Math.round((product.price || 0) * 0.1);
+        if (lang === 'ja') unitPrice = Math.round((product.price || 0) * 0.2);
 
         productTotal = unitPrice * prodQty;
     }
@@ -20157,7 +20157,7 @@ if (w >= 20 && h >= 20) {
       var _h = (location.hostname||'').toLowerCase();
       var _c = (_h.indexOf('cafe0101')>=0 || _h.indexOf('cotton-printer')>=0) ? 'JP'
              : (_h.indexOf('cafe3355')>=0 || _h.indexOf('chameleon.design')>=0) ? 'US' : 'KR';
-      var _rate = ({KR:1, JP:0.1, US:0.001})[_c] || 1;
+      var _rate = ({KR:1, JP:0.2, US:0.002})[_c] || 1;
       var _curr = currency || (_c==='JP'?'JPY':_c==='US'?'USD':'KRW');
       var _val  = currency ? (value||1.0) : Math.round((value||1.0)*_rate*100)/100;
       gtag('event', 'conversion', {
@@ -21069,8 +21069,8 @@ if (w >= 20 && h >= 20) {
     }
     function _dreqCurrency(v) {
         var lang = _dreqLang();
-        if (lang === 'ja') return '¥' + Math.round((v||0) * 0.1).toLocaleString();
-        if (lang === 'en') return '$' + Math.round((v||0) * 0.001).toLocaleString();
+        if (lang === 'ja') return '¥' + Math.round((v||0) * 0.2).toLocaleString();
+        if (lang === 'en') return '$' + Math.round((v||0) * 0.002).toLocaleString();
         return (v||0).toLocaleString() + '원';
     }
     var I18N = {
@@ -22689,8 +22689,8 @@ window.filterModalItems = function(keyword) {
         };
         const _fmtR = (p) => {
             const price = Number(p.price) || 0;
-            if (_c==='JP') { const jp = Number(p.price_jp) || Math.round(price * 0.1); return '¥' + Math.floor(jp).toLocaleString(); }
-            if (_c==='US') { const us = Number(p.price_us) || Math.round(price * 0.001); return '$' + Math.round(us).toLocaleString(); }
+            if (_c==='JP') { const jp = Math.round(price * 0.2); return '¥' + Math.floor(jp).toLocaleString(); }
+            if (_c==='US') { const us = Math.round(price * 0.002); return '$' + Math.round(us).toLocaleString(); }
             const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
             if (_c==='CN') { const r = rates.CN||0.05; return '¥' + Math.round(price*r).toLocaleString(); }
             if (_c==='AR') { const r = rates.AR||0.001; return '$' + Math.round(price*r).toLocaleString(); }
@@ -22850,8 +22850,8 @@ window.filterModalItems = function(keyword) {
     };
     const _localPrice = (it) => {
         const price = Number(it.price) || 0;
-        if (_cc==='JP') { return '¥' + Math.floor(Number(it.price_jp)||Math.round(price*0.1)).toLocaleString(); }
-        if (_cc==='US') { return '$' + Math.round(Number(it.price_us)||Math.round(price*0.001)).toLocaleString(); }
+        if (_cc==='JP') { return '¥' + Math.floor(Math.round(price*0.2)).toLocaleString(); }
+        if (_cc==='US') { return '$' + Math.round(Math.round(price*0.002)).toLocaleString(); }
         const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
         if (_cc==='CN') return '¥' + Math.round(price*(rates.CN||0.01)).toLocaleString();
         if (_cc==='AR') return '$' + Math.round(price*(rates.AR||0.001)).toLocaleString();

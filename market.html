@@ -287,7 +287,7 @@ function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const _MKT_CCY = LANG==='ja' ? 'JP' : LANG==='en' ? 'US' : 'KR';
 function fmtPrice(v){
     const krw=Number(v)||0;
-    const rate=({KR:1,JP:0.1,US:0.001})[_MKT_CCY]||1;
+    const rate=({KR:1,JP:0.2,US:0.002})[_MKT_CCY]||1;
     const c=Math.round(krw*rate);
     if(_MKT_CCY==='JP')return '¥'+c.toLocaleString();
     if(_MKT_CCY==='US')return '$'+c.toLocaleString();
@@ -559,7 +559,7 @@ const PG_KEYS={
     JP:{provider:'stripe',publishableKey:'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'},
     US:{provider:'stripe',publishableKey:'pk_live_51SfcQ79Uc8Z1bGiuqdFz7CmDXn7Ga7HAkf7XUxsyyvsMWbXTNSS3AMRRoXFS8U1EhTFeBsqX4Axb79Nwig8Lohzs00PIMNcGtG'}
 };
-const CURRENCY_RATE={KR:1,JP:0.1,US:0.001};
+const CURRENCY_RATE={KR:1,JP:0.2,US:0.002};
 
 async function startSafeTx(itemId,amount){
     if(!currentUser){toast(t('loginFirst'));return;}

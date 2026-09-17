@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260918002755';
+    var CV = '20260918011456';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -303,8 +303,8 @@ window.addEventListener('DOMContentLoaded', applyMpI18n);
 function fmtMoney(n) {
     var v = Math.round(n||0);
     var lang = window.__MP_LANG || 'ko';
-    if (lang === 'ja') return '¥' + Math.round(v*0.1).toLocaleString();
-    if (lang === 'en') return '$' + (Math.round(v*0.001*100)/100).toFixed(2);
+    if (lang === 'ja') return '¥' + Math.round(v*0.2).toLocaleString();
+    if (lang === 'en') return '$' + (Math.round(v*0.002*100)/100).toFixed(2);
     return v.toLocaleString('ko-KR');
 }
 const CAT_LABELS = new Proxy({}, {

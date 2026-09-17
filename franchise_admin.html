@@ -1792,8 +1792,8 @@ select option{background:#1d1640;}
   }
 
   // 가맹점 국가 기준 — 통화/이름 현지화
-  var FR_CUR = { KR:{s:'₩',r:1}, JP:{s:'¥',r:0.1}, US:{s:'$',r:0.001}, CN:{s:'¥',r:0.05},
-                 SA:{s:'$',r:0.001}, ES:{s:'€',r:0.001}, DE:{s:'€',r:0.001}, FR:{s:'€',r:0.001} };
+  var FR_CUR = { KR:{s:'₩',r:1}, JP:{s:'¥',r:0.2}, US:{s:'$',r:0.002}, CN:{s:'¥',r:0.05},
+                 SA:{s:'$',r:0.001}, ES:{s:'€',r:0.002}, DE:{s:'€',r:0.002}, FR:{s:'€',r:0.002} };
   function frCountry(){ return ($('fCountry') && $('fCountry').value) || (state.franchise && state.franchise.country) || 'KR'; }
   function frCur(){ return FR_CUR[frCountry()] || FR_CUR.KR; }
   function frLocName(p){

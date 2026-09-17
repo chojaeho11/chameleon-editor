@@ -91,11 +91,11 @@ function cdFmtPrice(krw) {
     var n = Math.round(krw || 0);
     var lang = window.__CD_LANG || 'ko';
     if (lang === 'ja') {
-        var jpy = Math.round(n * 0.1);
+        var jpy = Math.round(n * 0.2);
         return '¥' + jpy.toLocaleString();
     }
     if (lang === 'en') {
-        var usd = Math.round(n * 0.001 * 100) / 100;
+        var usd = Math.round(n * 0.002 * 100) / 100;
         return '$' + usd.toFixed(2);
     }
     return n.toLocaleString() + '원';
@@ -2712,7 +2712,7 @@ window._cpDownloadQuote = async function (btnEl) {
         // cotton_designer.html 은 site-config.js 를 안 불러와 SITE_CONFIG 가 없을 수 있음.
         // export.js 가 _cr.JP/_cr.US 로 KRW→현지통화 환산하므로 환율표만 보장.
         if (!window.SITE_CONFIG) window.SITE_CONFIG = {};
-        if (!window.SITE_CONFIG.CURRENCY_RATE) window.SITE_CONFIG.CURRENCY_RATE = { KR: 1, JP: 0.1, US: 0.001 };
+        if (!window.SITE_CONFIG.CURRENCY_RATE) window.SITE_CONFIG.CURRENCY_RATE = { KR: 1, JP: 0.2, US: 0.002 };
 
         // 이 페이지엔 window.loadEditorLibraries 가 없어 export.js 내부 jsPDF 로더가 동작 안 함 →
         // generateQuotationPDF 가 undefined 반환. jsPDF UMD 를 직접 보장 로드.

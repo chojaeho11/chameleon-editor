@@ -18,7 +18,7 @@
     };
     function money(n) {
         var v = Number(n) || 0;
-        if (JP) return '¥' + Math.floor(v * 0.1).toLocaleString();
+        if (JP) return '¥' + Math.floor(v * 0.2).toLocaleString();
         return v.toLocaleString() + '원';
     }
     function esc(s) { return String(s == null ? '' : s).replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); }

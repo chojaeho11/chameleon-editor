@@ -409,8 +409,8 @@ function tr(kr, jp, en) {
     return kr;
 }
 function trCurrency(krVal) {
-    if (DB_SITE === 'JP') return '¥' + Math.round(krVal * 0.1).toLocaleString();
-    if (DB_SITE === 'US') return '$' + (krVal * 0.001).toFixed(2);
+    if (DB_SITE === 'JP') return '¥' + Math.round(krVal * 0.2).toLocaleString();
+    if (DB_SITE === 'US') return '$' + (krVal * 0.002).toFixed(2);
     return krVal.toLocaleString() + '원';
 }
 
@@ -1030,7 +1030,7 @@ window.openTemplateMyPage = async function() {
         } catch(_we) { /* 권한/RLS 차단 시 0 */ }
         const available = Math.max(0, approvedSum - withdrawnSum);
         window._myTplAvailable = available;
-        document.getElementById('myDepositAmount').textContent = (DB_SITE === 'JP' ? '¥' + Math.round(available * 0.1).toLocaleString() : DB_SITE === 'US' ? '$' + (available * 0.001).toFixed(2) : available.toLocaleString() + '원');
+        document.getElementById('myDepositAmount').textContent = (DB_SITE === 'JP' ? '¥' + Math.round(available * 0.2).toLocaleString() : DB_SITE === 'US' ? '$' + (available * 0.002).toFixed(2) : available.toLocaleString() + '원');
         // 상세 라벨 — earned/withdrawn 표시
         const detailEl = document.getElementById('myDepositDetail');
         if (detailEl) {
@@ -1078,7 +1078,7 @@ function renderMyTplTab(tab) {
         const bd = tab === 'pending' ? '#fde68a' : tab === 'approved' ? '#bbf7d0' : '#fecaca';
         let extra = '';
         if (tab === 'approved' && t.payment_amount) {
-            extra = '<div style="font-size:11.5px; color:#15803d; margin-top:6px; font-weight:700;">💰 ' + ML.earned + ': ' + (DB_SITE === 'JP' ? '¥' + Math.round(t.payment_amount * 0.1).toLocaleString() : DB_SITE === 'US' ? '$' + (t.payment_amount * 0.001).toFixed(2) : t.payment_amount.toLocaleString() + '원') + '</div>';
+            extra = '<div style="font-size:11.5px; color:#15803d; margin-top:6px; font-weight:700;">💰 ' + ML.earned + ': ' + (DB_SITE === 'JP' ? '¥' + Math.round(t.payment_amount * 0.2).toLocaleString() : DB_SITE === 'US' ? '$' + (t.payment_amount * 0.002).toFixed(2) : t.payment_amount.toLocaleString() + '원') + '</div>';
         }
         if (tab === 'rejected' && t.review_note) {
             extra = '<div style="font-size:11px; color:#7f1d1d; margin-top:6px; background:#fee2e2; padding:6px 9px; border-radius:6px; line-height:1.5;"><b>' + ML.reasonHead + ':</b> ' + esc(t.review_note) + '</div>';
