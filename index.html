@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260918011456';
+    var CV = '20260918012652';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1436,9 +1436,9 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                       sub:'여름 무료 이벤트 · 눌러서 받기',
                       ph:'어떤 디자인을 하고싶어?', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'<span class="hw-t-rest">最大</span> <span class="hw-t-brand">3.9万円分 無料クーポン</span>',
-                      // 2026-08-15: 夏の無料イベント（カメレオンからのプレゼント）
-                      sub:'カメレオンからの夏のプレゼント · タップで受取',
+                ja: { title:'<span class="hw-t-rest">企業のための印刷プラットフォーム</span> <span class="hw-t-brand">カメレオンプリンティング</span>',
+                      // 2026-09-18(사장님): 무료쿠폰 히어로 → 기업 인쇄 플랫폼 소개로 변경
+                      sub:'展示ブース・紙製スタンド・グッズなど、企業のプロモーションを専門としています。',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
                 en: { title:'<span class="hw-t-brand">Chameleon Printing</span>',
@@ -16999,8 +16999,8 @@ window.updateModalTotal = function() {
 
         // 일본어면 price_jp 사용 (작품 제품타입/프로모 규격 선택 시 제외)
         if (!product._artworkTypePrice && !window.__promoFormatPriceKRW && lang === 'ja') {
-            // 2026-06-25: price_jp(엔) 또는 KRW×0.1 (구: price_jp 없으면 원화 그대로 ¥ 버그)
-            unitPrice = (product.price_jp && product.price_jp > 0) ? product.price_jp : Math.round((unitPrice || 0) * 0.1);
+            // 2026-09-18(사장님): 해외가 2배 — price_jp 컬럼(구환율) 무시, KRW×0.2(엔).
+            unitPrice = Math.round((unitPrice || 0) * 0.2);
         }
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
@@ -17690,9 +17690,8 @@ if (w >= 20 && h >= 20) {
 
         if (product._artworkTypePrice) {
             unitPrice = product._artworkTypePrice;
-        } else if (lang === 'ja' && product.price_jp && _cRate && _cRate.JP) {
-            unitPrice = product.price_jp / _cRate.JP;
         }
+        // 2026-09-18(사장님): JP price_jp 역환산 제거 — unitPrice는 KRW 유지, formatCurrency가 KRW×0.2로 표시.
 
         // 4. 최종 가격 및 사이즈 계산
         let finalW = 0, finalH = 0;

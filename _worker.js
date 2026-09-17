@@ -383,7 +383,7 @@ function generateProductHtml(product, cc) {
     const rawDesc = cc === 'JP' ? (product.description_jp || '') : cc === 'US' ? (product.description_us || '') : (product.description || '');
     const desc = rawDesc.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
     const shortDesc = desc.length > 150 ? desc.substring(0, 150) + '...' : desc;
-    const price = cc === 'JP' ? (product.price_jp || product.price || 0) : cc === 'US' ? (product.price_us || product.price || 0) : (product.price || 0);
+    const price = cc === 'JP' ? Math.round((product.price || 0) * 0.2) : cc === 'US' ? Math.round((product.price || 0) * 0.002) : (product.price || 0);
     const currency = cc === 'JP' ? 'JPY' : cc === 'US' ? 'USD' : 'KRW';
 
     const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "Product", "name": name, "description": desc || name,

@@ -269,27 +269,21 @@ async function loadSystemData() {
             addons.forEach(item => {
                 let dName = item.name;
                 let dbPrice = item.price; // KRW 기본
+                // 2026-09-18(사장님): 해외가 2배 — 애드온도 KRW 기준 유지(dbPrice=item.price), 표시 시 KRW×환율(2배). price_jp/us 역환산 제거.
                 if (country === 'JP') {
                     dName = item.name_jp || item.name;
-                    if (item.price_jp) dbPrice = Math.round(item.price_jp / rate);
                 } else if (country === 'US') {
                     dName = item.name_us || item.name;
-                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 } else if (country === 'CN') {
                     dName = item.name_cn || item.name_us || item.name;
-                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 } else if (country === 'AR') {
                     dName = item.name_ar || item.name_us || item.name;
-                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 } else if (country === 'ES') {
                     dName = item.name_es || item.name_us || item.name;
-                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 } else if (country === 'DE') {
                     dName = item.name_de || item.name_us || item.name;
-                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 } else if (country === 'FR') {
                     dName = item.name_fr || item.name_us || item.name;
-                    if (item.price_us) dbPrice = Math.round(item.price_us / rate);
                 }
                 ADDON_DB[item.code] = { ...item, display_name: dName, price: dbPrice };
             });
@@ -488,11 +482,15 @@ export function getLocalizedData(item) {
 
     if (country === 'JP') {
         name = _stripSize(item.name_jp || item.name_us || item.name);
-        price = item.price_jp ? Number(item.price_jp) * _frM : price;
+        // 2026-09-18(사장님): 해외가 2배 — price_jp 컬럼(구환율) 대신 KRW×환율(JP 0.2) 사용.
+        const jpRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.JP) || 0.2;
+        price = price * jpRate;
         formattedPrice = '¥' + Math.floor(price).toLocaleString();
     } else if (country === 'US') {
         name = _stripSize(item.name_us || item.name);
-        price = item.price_us ? Number(item.price_us) * _frM : price;
+        // 2026-09-18(사장님): 해외가 2배 — price_us 컬럼(구환율) 대신 KRW×환율(US 0.002) 사용.
+        const usRate = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.002;
+        price = price * usRate;
         formattedPrice = '$' + Math.round(price).toLocaleString();
     } else if (country === 'CN') {
         name = item.name_cn || item.name_us || item.name;
