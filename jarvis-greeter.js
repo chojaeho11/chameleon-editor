@@ -137,7 +137,7 @@
     var sendBtn = _root.querySelector('.jvg-send'); if (sendBtn) sendBtn.disabled = true;
     if (image && image.dataUrl) addImageMsg(image.dataUrl);
     if (text) addMsg(text, 'me');
-    var typing = addMsg(tr('카푸가 입력 중…', 'カプが入力中…', 'Kapu is typing…'), 'ai');
+    var typing = addMsg(image ? tr('잠깐만, 이미지 확인할게…', 'ちょっと写真を確認するね…', 'Let me check the image…') : tr('카푸가 입력 중…', 'カプが入力中…', 'Kapu is typing…'), 'ai');
     typing.classList.add('jvg-typing');
     try {
       var payload = { message: text || (image ? tr('이 사진 보고 안내해줘', 'この写真を見て案内して', 'Guide me based on this photo') : ''), lang: _lang, conversation_history: _hist.slice(-30) };
