@@ -56,6 +56,9 @@
       '#jvgCard .jvg-rec img{width:42px;height:42px;border-radius:9px;object-fit:cover;background:#f1f5f9;flex-shrink:0;}' +
       '#jvgCard .jvg-rec .jvg-rn{font-size:13px;font-weight:700;line-height:1.25;}' +
       '#jvgCard .jvg-rec .jvg-go{margin-left:auto;font-size:12px;font-weight:800;color:#6366f1;white-space:nowrap;}' +
+      '#jvgCard .jvg-quick{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 6px;}' +
+      '#jvgCard .jvg-q{background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;}' +
+      '#jvgCard .jvg-q:hover{background:#e0e7ff;}' +
       '#jvgCard .jvg-foot{display:flex;gap:8px;padding:11px 12px;border-top:1px solid #eef2f7;background:#fff;}' +
       '#jvgCard .jvg-in-txt{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;}' +
       '#jvgCard .jvg-in-txt:focus{border-color:#6366f1;}' +
@@ -86,6 +89,25 @@
       var img = p.img_url ? '<img src="' + esc(p.img_url) + '" loading="lazy" alt="" onerror="this.style.display=\'none\'">' : '';
       a.innerHTML = img + '<span class="jvg-rn">' + esc(p.name || p.code) + '</span><span class="jvg-go">' + tr('보러가기 ›', '見る ›', 'View ›') + '</span>';
       wrap.appendChild(a);
+    });
+    b.appendChild(wrap); b.scrollTop = b.scrollHeight;
+  }
+
+  function openRewards() {
+    try { if (window.openRewardHub) window.openRewardHub(); else if (window._tbRetry) window._tbRetry('openRewardHub'); } catch (e) {}
+    close();
+  }
+  function addQuickActions() {
+    var b = _root.querySelector('.jvg-body');
+    var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
+    var acts = [{ label: tr('🛒 바로 주문·상담', '🛒 注文・相談', '🛒 Order / Ask'), fn: function () { var i = _root.querySelector('.jvg-in-txt'); if (i) i.focus(); } }];
+    if (_lang === 'kr') {  // 리워드 허브(출석·끝말잇기)는 한국 전용
+      acts.unshift({ label: '🎮 끝말잇기', fn: openRewards });
+      acts.unshift({ label: '🎯 오늘의 출석', fn: openRewards });
+    }
+    acts.forEach(function (a) {
+      var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label;
+      btn.addEventListener('click', a.fn); wrap.appendChild(btn);
     });
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
   }
@@ -124,9 +146,11 @@
       '<div class="jvg-body"></div>' +
       '<div class="jvg-foot"><input class="jvg-in-txt" type="text" placeholder="' + tr('예: 가벽 3미터, 키링 굿즈, 현수막…', '例: パーティション3m、キーホルダー…', 'e.g. 3m wall, keyring goods…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
-    // 첫 인사 (사이트가 먼저 말 건다)
-    addMsg(tr('안녕하세요! 카멜레온 카푸예요 😊 오늘 어떤 걸 만들어 드릴까요? 제품·사이즈·예산 편하게 말씀해 주시면 딱 맞게 안내해 드릴게요!',
-              'こんにちは！カメレオンのカプです😊 今日はどんなものをお作りしますか？', 'Hi! I\'m Kapu 😊 What would you like to make today?'), 'ai');
+    // 첫 인사 (사이트가 먼저 말 건다 — 반말로 친근하게)
+    addMsg(tr('안녕~ 방가워! 😊 바로 주문할 수도 있고, 오늘의 출석이나 끝말잇기 하면 적립금도 줘. 뭐부터 할래?',
+              'こんにちは！ご注文もできますし、出席チェックやしりとりでポイントも貯まりますよ😊 何からにしますか？',
+              'Hey! 😊 You can order right away, or earn points with today\'s check-in or word-chain. What first?'), 'ai');
+    addQuickActions();
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); });
     try { sessionStorage.setItem('jarvisGreeted', '1'); } catch (e) {}
 
