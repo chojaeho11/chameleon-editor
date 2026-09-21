@@ -2163,6 +2163,8 @@ html, body { background: #ffffff !important; }
             <button class="so-qty-btn" onclick="window._soQtyChg(1)">+</button>
             <span class="so-qty-unit">${tr('개', '個', 'pcs')}</span>
           </div>
+          <!-- 2026-09-21(사장님): 키링 5종 최소 주문수량 100개 안내 (로드 시 표시 토글) -->
+          <div id="soKeyringMoqNote" style="display:none; margin-top:8px; padding:9px 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:9px; font-size:12.5px; color:#4338ca; line-height:1.5;">${tr('키링 제품은 최소 주문수량이 100개입니다.', 'キーホルダーは最小注文数量が100個です。', 'Keyrings have a minimum order quantity of 100 pcs.')}</div>
           <!-- 2026-07-15: 종이매대 전용 수량 프리셋 (1/10/100/500/1000) — 300 제거, 10개(2배 단가) 추가 -->
           <div id="soPdQtyPresets" style="display:none; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:6px;">
             <button type="button" class="so-pd-qty-btn" data-pd-qty="1" onclick="window._soPdQtyPick(1)">
@@ -8893,6 +8895,17 @@ html, body { background: #ffffff !important; }
         return false;
     }
 
+    // 2026-09-21(사장님): 키링 5종(category acr_key_ring) 최소 주문수량 100개.
+    var KEYRING_MIN_QTY = 100;
+    function _soIsKeyringProduct(p) {
+        if (!p) return false;
+        var cat = (p.category || '').toLowerCase();
+        if (cat === 'acr_key_ring') return true;   // 5종 정확히 커버 (앞으로 추가될 키링도)
+        var name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        return /키링|키체인|keyring|key\s*ring|key\s*chain/i.test(name);
+    }
+    window._soIsKeyringProduct = _soIsKeyringProduct;
+
     // 2026-05-13: 포맥스/폼보드 감지 (대형택배 3만원)
     function _soIsForexFoamProduct(p) {
         if (!p) return false;
@@ -13263,7 +13276,7 @@ html, body { background: #ffffff !important; }
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
         // 2026-06-30: 종이매대 낱개 주문 허용 (샘플 1 / 낱개 2~99 / 대량 100+) → MOQ 1
         // 2026-07-04: 낱장 A3 초과(A2 등) → 최소 1,000장
-        const _qtyMin = (state.isLeaflet && _soLeafletNeedsBulk()) ? LEAFLET_MIN_BULK_QTY : 1;
+        const _qtyMin = (state.isLeaflet && _soLeafletNeedsBulk()) ? LEAFLET_MIN_BULK_QTY : (state.isKeyring ? KEYRING_MIN_QTY : 1);
         const next = Math.max(_qtyMin, Math.min(_qtyMax, cur + delta));
         input.value = next;
         state.qty = next;
@@ -14743,6 +14756,8 @@ html, body { background: #ffffff !important; }
         if (state.isSticker) state.isCustomSize = false;
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
         state.isAcrylicGoods = _soIsAcrylicGoodsProduct(p);
+        // 2026-09-21(사장님): 키링 5종 — 최소 주문수량 100개
+        state.isKeyring = _soIsKeyringProduct(p);
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
         state.isAdPrint = !!p.is_popular;
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
@@ -14856,6 +14871,19 @@ html, body { background: #ffffff !important; }
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
             state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
         }
+        // 2026-09-21(사장님): 키링 5종 — 초기 수량 100개 + 하한 100 + 안내 문구 표시. 비키링은 원복(min 1, 안내 숨김).
+        try {
+            var _krNote = document.getElementById('soKeyringMoqNote');
+            var _krQi = document.getElementById('soQty');
+            if (state.isKeyring) {
+                state.qty = KEYRING_MIN_QTY;
+                if (_krQi) { _krQi.value = KEYRING_MIN_QTY; _krQi.setAttribute('min', String(KEYRING_MIN_QTY)); }
+                if (_krNote) _krNote.style.display = 'block';
+            } else {
+                if (_krNote) _krNote.style.display = 'none';
+                if (_krQi && _krQi.getAttribute('min') === String(KEYRING_MIN_QTY)) _krQi.setAttribute('min', '1');
+            }
+        } catch (e) {}
         // 2026-06-04: 등신대 V2 기본 사이즈 — DB 의 width_mm 가 작은 값으로 잘못 저장된 경우 fallback.
         if (state.isStandeeV2 && (state.customW < 30 || state.customH < 30)) {
             state.customW = 100;  // 100cm = 1000mm
@@ -17661,6 +17689,16 @@ html, body { background: #ffffff !important; }
         // 2026-06-08: 실사출력 family — 최소 1미터 주문 (qty < 1 인 경우 자동 보정).
         if (state.isRealPrint) {
             if (!state.qty || state.qty < 1) state.qty = 1;
+        }
+        // 2026-09-21(사장님): 키링 5종 — 최소 주문수량 100개. 미달 시 100으로 보정 + 안내 후 담기 보류(재확인).
+        if (state.isKeyring && (parseInt(state.qty, 10) || 0) < KEYRING_MIN_QTY) {
+            state.qty = KEYRING_MIN_QTY;
+            var _kqAtc = document.getElementById('soQty');
+            if (_kqAtc) _kqAtc.value = KEYRING_MIN_QTY;
+            if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
+            if (typeof recalc === 'function') recalc();
+            try { alert(tr('키링 제품은 최소 주문수량이 100개입니다. 수량을 100개로 맞췄어요.', 'キーホルダーは最小注文数量が100個です。数量を100個に設定しました。', 'Keyrings require a minimum of 100 pcs. Quantity has been set to 100.')); } catch (e) {}
+            return false;
         }
         // 2026-07-04: 현수막(placard) 9종 — 가로·세로 10cm 단위만 주문 가능. 아니면 경고 + 담기 차단.
         //   state.customW/H 는 _soOnCustomDimsChange 에서 cm 로 정규화됨 (placard 는 cm 입력).
