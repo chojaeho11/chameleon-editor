@@ -1027,7 +1027,7 @@ function _attachTooltip(el, type) {
     const lang = getLang();
     let content = '';
     if (type === 'phone') {
-        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">제품·주문 문의는 담당 매니저</div><div>👤 지숙: 010-3455-1946</div><div>👤 은미: 010-7793-5393</div><div>👤 성희: 010-4994-5950</div><div>👤 연두: 010-2525-9943</div><div style="margin-top:6px;">🏭 출고문의: 031-366-1984</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
+        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">제품·주문 문의는 담당 매니저</div><div>👤 지숙: 010-3455-1946</div><div>👤 성희: 010-4994-5950</div><div>👤 연두: 010-2525-9943</div><div style="margin-top:6px;">🏭 출고문의: 031-366-1984</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
         else if (lang === 'ja') content = '<div style="font-weight:800;margin-bottom:6px;">📞 お電話</div><div>🇯🇵 047-712-1148</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 平日 09:00〜18:00</div>';
         else content = '<div style="font-weight:800;margin-bottom:6px;">📞 Contact</div><div>✉️ design@chameleon.design</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ Weekdays 09:00-18:00 KST</div>';
     } else {
@@ -1062,8 +1062,6 @@ function _showPhonePopup() {
                 <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">👤 제품문의 담당 매니저</div>
                 <a href="tel:010-3455-1946" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
                     <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>
-                <a href="tel:010-7793-5393" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
-                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 은미 매니저 010-7793-5393</a>
                 <a href="tel:010-4994-5950" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
                     <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-4994-5950</a>
                 <a href="tel:010-2525-9943" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">
@@ -1824,7 +1822,7 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
    시스템이 자동으로 주소 카드를 띄워준다. 너는 짧게 "본사 주소 안내드릴게요" 정도만 말하면 된다.
 
 ▶ 고객이 전화/연락처/매니저 연락처/상담사 연결을 요청하면:
-   ※ 제품 문의·주문 관련은 담당 매니저(지숙·은미·성희·연두)로 안내한다. 본사(출고실) 031-366-1984 번호는 "출고/배송 문의"일 때만 알려준다.
+   ※ 제품 문의·주문 관련은 담당 매니저(지숙·성희·연두)로 안내한다. 본사(출고실) 031-366-1984 번호는 "출고/배송 문의"일 때만 알려준다.
    ※ 시스템이 자동으로 매니저 전화번호 카드를 띄워주므로 너는 짧게 "매니저 전화번호 안내드릴게요" 정도만 말하면 된다.
 
 ▶ 고객이 출고/배송 상태·출고일·택배 등 "출고 문의"를 하면: 출고실(본사) 031-366-1984 (평일 09:00~18:00) 를 안내한다.
@@ -2096,7 +2094,7 @@ async function showPhoneCard() {
                 const { data } = await sb.from('chatbot_knowledge')
                     .select('question,answer,is_active')
                     .eq('category', '_managers');
-                const FIELD_MGR_NAMES = ['은미','성희','지숙','연두'];
+                const FIELD_MGR_NAMES = ['성희','지숙','연두'];
                 const rows = (data || []).filter(r => FIELD_MGR_NAMES.some(n => (r.question||'').includes(n)));
                 rows.sort((a,b) => {
                     const ai = FIELD_MGR_NAMES.findIndex(n => (a.question||'').includes(n));
