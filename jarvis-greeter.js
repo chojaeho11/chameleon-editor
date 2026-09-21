@@ -47,7 +47,7 @@
     st.textContent =
       '#jvgBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:2147482999;opacity:0;transition:opacity .35s;}' +
       '#jvgBackdrop.jvg-in{opacity:1;}' +
-      '#jvgCard{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:min(480px,96vw);height:min(90vh,920px);display:flex;flex-direction:column;background:#fff;border-radius:22px 22px 0 0;z-index:2147483000;font-family:inherit;overflow:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1);box-shadow:0 -8px 40px rgba(15,23,42,.25);}' +
+      '#jvgCard{position:fixed;left:50%;bottom:12px;transform:translateX(-50%) translateY(115%);width:min(480px,96vw);height:min(84vh,860px);max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#fff;border-radius:22px;z-index:2147483000;font-family:inherit;overflow:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1);box-shadow:0 12px 44px rgba(15,23,42,.3);}' +
       '#jvgCard.jvg-in{transform:translateX(-50%) translateY(0);}' +
       '#jvgCard .jvg-head{display:flex;align-items:center;gap:12px;padding:16px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;flex-shrink:0;}' +
       '#jvgCard .jvg-ava{width:52px;height:52px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.7);}' +
@@ -171,14 +171,12 @@
       '<div class="jvg-body"></div>' +
       '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
-    // 첫 인사 (반말·친근, 단락으로 끊어서 보기 편하게. 고객 90%가 허니콤보드. 이모지 지양)
+    // 첫 인사 (반말·친근, 간결하게. 이모지 지양)
     addMsg(tr(
-      '안녕~ 방가워!\n우리 고객 대부분이 허니콤보드를 만들어.\n\n혹시 만들고 싶은 제품 사진 있어?\n없으면 인터넷에서 비슷한 거 찾아서 아래 사진 버튼으로 올려줘.\n사진 보고 딱 맞게 안내해줄게.\n(아니면 \'배너\', \'글씨스카시\'처럼 말해줘도 돼.)',
-      'こんにちは！\nうちのお客さんの多くはハニカムボードを作ってるよ。\n\n作りたい製品の写真ある？\nなければネットで似たのを探して、下の写真ボタンで送ってね。\n写真を見てぴったり案内するよ。\n（「バナー」「文字スカシ」みたいに言ってもOK。）',
-      'Hey! Most of our customers make honeycomb boards.\n\nGot a photo of what you want?\nIf not, find a similar one online and send it with the photo button below.\nI\'ll guide you from there.\n(You can also just say \'banner\' or \'lettering\'.)'
+      '안녕~ 방가워!\n행사 준비해? 만들고 싶은 제품의 사진을 올려줘.\n내가 보고 안내해줄게.',
+      'こんにちは！\nイベントの準備かな？作りたい製品の写真を送ってね。\n見て案内するよ。',
+      'Hey!\nPlanning an event? Send a photo of what you want to make.\nI\'ll take a look and guide you.'
     ), 'ai');
-    if (_lang === 'kr') addMsg('그리고 주문 전에 게임 한 판 할까?\n출석하고 게임하면 무료쿠폰도 줄게.', 'ai');
-    addQuickActions();
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
 
     var inp = _root.querySelector('.jvg-in-txt'), btn = _root.querySelector('.jvg-send');
