@@ -14919,14 +14919,15 @@ html, body { background: #ffffff !important; }
         var custSec = document.getElementById('soCustomSizeSection');
         // 2026-05-30: custSec display 결정은 프리셋 감지 이후로 미룸 — 손수건은 isCustomSize=false 로 시작해도 프리셋이면 강제 표시
         // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 (cm × cm → 고정가)
+        // 2026-09-21(사장님): 투명 3mm 키링 단가 인하 — 시작가 4×4 = 1,000원 (기존 1,500), 나머지 비례 인하
         var _PRESET_KEYRING = [
-            { w:4,  h:4,  label:'4×4',  price:1500 },
-            { w:5,  h:5,  label:'5×5',  price:1800 },
-            { w:5,  h:7,  label:'5×7',  price:2000 },
-            { w:6,  h:4,  label:'6×4',  price:1800 },
-            { w:7,  h:7,  label:'7×7',  price:2000 },
-            { w:8,  h:6,  label:'8×6',  price:2200 },
-            { w:10, h:10, label:'10×10',price:2500 }
+            { w:4,  h:4,  label:'4×4',  price:1000 },
+            { w:5,  h:5,  label:'5×5',  price:1200 },
+            { w:5,  h:7,  label:'5×7',  price:1300 },
+            { w:6,  h:4,  label:'6×4',  price:1200 },
+            { w:7,  h:7,  label:'7×7',  price:1300 },
+            { w:8,  h:6,  label:'8×6',  price:1500 },
+            { w:10, h:10, label:'10×10',price:1700 }
         ];
         // 2026-05-30: 자개 키링 — 일반 키링의 2배 (홀로그램 자개 자재 단가 상승분 반영)
         var _PRESET_KEYRING_PEARL = [
