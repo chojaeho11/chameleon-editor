@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260921173844';
+    var CV = '20260921174043';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1037,6 +1037,16 @@ if ('caches' in window) {
                         if (!cn && !cp){ if (trf++ < 30) setTimeout(ap, 300); return; }
                         if (cn && f.company_name){ cn.textContent = f.company_name; cn.removeAttribute('data-i18n'); }
                         if (cp && f.company_name){ cp.innerHTML = 'Copyright © <strong>' + f.company_name + '</strong>. all rights reserved.'; }
+                        // 2026-09-21(사장님): 가맹점 매장엔 본사 사업자정보(대표/주소/사업자번호/통신판매/개인정보관리자)를 표시하지 않는다.
+                        //   (가맹점 각자의 별도 사업체이므로 본사 등록정보 노출은 부적절. 가맹점 정보 미수집 → 숨김.)
+                        try {
+                            ['footer_ceo_label','footer_ceo_value'].forEach(function(k){ var e=document.querySelector('[data-i18n="'+k+'"]'); if(e) e.style.display='none'; });
+                            var _hideDl = function(sel){ var e=document.querySelector(sel); var d=(e&&e.closest)?e.closest('dl'):null; if(d) d.style.display='none'; };
+                            _hideDl('[data-i18n="footer_addr_value"]');
+                            _hideDl('[data-i18n="footer_biz_num_value"]');
+                            var _mo=document.getElementById('footerMailOrder'); if(_mo) _mo.style.display='none';
+                            var _pv=document.getElementById('footerPrivacy'); if(_pv) _pv.style.display='none';
+                        } catch(_fe){}
                     })();
                 })();
             }).catch(function(){});
