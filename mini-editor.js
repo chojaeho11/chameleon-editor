@@ -6466,7 +6466,7 @@
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
               '</div>' +  // /#meAiInputArea
               // (#meAiResult 는 2026-07-22 부터 왼쪽 무대(#meAiStage)로 이동)
-              '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas') + '</button>' +
+              '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이대로 인쇄', 'このまま印刷', 'Print as is') + '</button>' +
               // 2026-07-18: 스카시 전용 결과 버튼 — 수정해서 다시만들기 / 이대로 제작
               '<div id="meAiScarciBtns" style="display:none; margin-top:10px; gap:8px;">' +
                 '<button type="button" id="meAiScRemake" style="width:100%; padding:12px; border:1.5px solid #c7d2fe; border-radius:11px; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:8px;">' + _meAiTr('✏️ 수정해서 다시 만들기', '✏️ 修正して作り直す', '✏️ Edit & remake') + '</button>' +
@@ -6828,7 +6828,7 @@
         //   에디터 안에서 쓸 때는 실제로 대지에 넣으므로 기존 문구 유지.
         if (ins) ins.textContent = _meHeroMode
             ? _meAiTr('재질 골라서 인쇄하기', '素材を選んで印刷する', 'Choose a material & print')
-            : _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas');
+            : _meAiTr('이대로 인쇄', 'このまま印刷', 'Print as is');
         // 2026-07-20: 이미 만들어 둔 디자인이 있으면(예: 홈에서 생성 후 제품으로 들어온 경우)
         //   빈 화면 대신 그 결과를 그대로 보여준다 — 튜토리얼에서 또 만들 필요 없이 바로 넣을 수 있게.
         if (_meAiPendingUrl) {
