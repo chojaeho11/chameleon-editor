@@ -172,7 +172,6 @@
               'Hey! 😊 Most of our customers make honeycomb boards. Do you have a photo of what you want? If not, find a similar one online and upload it with 📷 below — I\'ll guide you from the photo!'), 'ai');
     addQuickActions();
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
-    try { sessionStorage.setItem('jarvisGreeted', '1'); } catch (e) {}
 
     var inp = _root.querySelector('.jvg-in-txt'), btn = _root.querySelector('.jvg-send');
     function doSend() { var v = (inp.value || '').trim(); if (!v) return; inp.value = ''; send(v); }
@@ -185,6 +184,7 @@
   }
 
   function close() {
+    try { sessionStorage.setItem('jarvisClosed', '1'); } catch (e) {}   // 사용자가 닫으면 이 세션 자동 재오픈 안 함
     if (_backdrop) { _backdrop.classList.remove('jvg-in'); var bd = _backdrop; _backdrop = null; setTimeout(function () { try { bd.remove(); } catch (e) {} }, 400); }
     if (_root) { _root.classList.remove('jvg-in'); var rt = _root; _root = null; setTimeout(function () { try { rt.remove(); } catch (e) {} }, 400); }
   }
@@ -202,9 +202,10 @@
   function boot() {
     if (!_isHome()) return;
     makeFab();   // 재열기용 캐릭터 버튼은 항상 (세션 무관)
-    var greeted = false; try { greeted = sessionStorage.getItem('jarvisGreeted') === '1'; } catch (e) {}
-    if (greeted) return;   // 자동 인사는 세션 1회
+    var closed = false; try { closed = sessionStorage.getItem('jarvisClosed') === '1'; } catch (e) {}
+    if (closed) return;   // 사용자가 닫았으면 이 세션엔 자동으로 다시 열지 않음 (좌측 캐릭터 버튼으로 재열기)
     setTimeout(function () {
+      if (_root) return;
       if (document.querySelector('#advPanel.open, .adv-panel.open')) return;
       open();
     }, 2200);
