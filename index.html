@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260921235329';
+    var CV = '20260922000014';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -13131,7 +13131,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./ai-design-hero.js?v=29').catch(e => console.warn('AI design hero init skipped:', e));
 
         // 2026-09-21(사장님): 홈 "자비스 응대" 프로토타입 — 홈 진입 시 사이트가 먼저 인사하고 대화로 안내 (카푸 두뇌 재사용)
-        (function(){ try { var s=document.createElement('script'); s.src='/jarvis-greeter.js?v=3'; s.async=true; document.head.appendChild(s); } catch(e){} })();
+        (function(){ try { var s=document.createElement('script'); s.src='/jarvis-greeter.js?v=4'; s.async=true; document.head.appendChild(s); } catch(e){} })();
 
         // Photo Studio는 advisor-panel.js에 통합됨
 

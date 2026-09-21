@@ -12,7 +12,7 @@
   var API = SUPA_URL + '/functions/v1/product-advisor';
 
   // ── 노출 조건: 홈에서만, 세션 1회, 상세/가맹/에디터/카트 진입은 제외 ──
-  function _shouldShow() {
+  function _isHome() {
     try {
       var q = new URLSearchParams(location.search);
       if (q.get('product') || q.get('fr') || q.get('cart') || q.get('editor') || q.get('search') || q.get('signup_event')) return false;
@@ -20,7 +20,6 @@
       // 단독 랜딩 도메인(종이매대/원판 등)은 제외 — 메인 카페 도메인에서만
       var h = location.hostname;
       if (h.indexOf('hexa-board') >= 0 || h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return false;
-      if (sessionStorage.getItem('jarvisGreeted') === '1') return false;
     } catch (e) {}
     return true;
   }
@@ -32,7 +31,7 @@
   })();
   function tr(kr, ja, en) { return _lang === 'ja' ? ja : (_lang === 'kr' ? kr : en); }
 
-  var _room = null, _hist = [], _busy = false, _root = null;
+  var _room = null, _hist = [], _busy = false, _root = null, _backdrop = null;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
 
@@ -40,14 +39,18 @@
     if (document.getElementById('jvgStyle')) return;
     var st = document.createElement('style'); st.id = 'jvgStyle';
     st.textContent =
-      '#jvgCard{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(140%);width:min(440px,calc(100vw - 24px));background:#fff;border:1px solid #e5e7eb;border-radius:18px;z-index:2147483000;font-family:inherit;overflow:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1);}' +
+      '#jvgBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:2147482999;opacity:0;transition:opacity .35s;}' +
+      '#jvgBackdrop.jvg-in{opacity:1;}' +
+      '#jvgCard{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:min(480px,96vw);height:min(90vh,920px);display:flex;flex-direction:column;background:#fff;border-radius:22px 22px 0 0;z-index:2147483000;font-family:inherit;overflow:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1);box-shadow:0 -8px 40px rgba(15,23,42,.25);}' +
       '#jvgCard.jvg-in{transform:translateX(-50%) translateY(0);}' +
-      '#jvgCard .jvg-head{display:flex;align-items:center;gap:10px;padding:13px 15px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;}' +
-      '#jvgCard .jvg-ava{width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}' +
-      '#jvgCard .jvg-name{font-weight:800;font-size:15px;line-height:1.2;}' +
-      '#jvgCard .jvg-sub{font-size:11px;opacity:.85;}' +
+      '#jvgCard .jvg-head{display:flex;align-items:center;gap:12px;padding:16px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;flex-shrink:0;}' +
+      '#jvgCard .jvg-ava{width:52px;height:52px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.7);}' +
+      '#jvgCard .jvg-name{font-weight:800;font-size:17px;line-height:1.2;}' +
+      '#jvgCard .jvg-sub{font-size:12px;opacity:.9;}' +
+      '#jvgFab{position:fixed;left:16px;bottom:18px;width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #a5b4fc;box-shadow:0 6px 20px rgba(99,102,241,.35);cursor:pointer;z-index:2147482998;overflow:hidden;padding:0;animation:jvgSpark 1.8s ease-in-out infinite;}' +
+      '#jvgFab img{width:100%;height:100%;object-fit:cover;}' +
       '#jvgCard .jvg-x{margin-left:auto;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
-      '#jvgCard .jvg-body{max-height:min(46vh,340px);overflow-y:auto;padding:14px 15px;background:#fafafa;}' +
+      '#jvgCard .jvg-body{flex:1;overflow-y:auto;padding:16px;background:#fafafa;}' +
       '#jvgCard .jvg-msg{font-size:14px;line-height:1.55;color:#1e293b;white-space:pre-wrap;margin-bottom:10px;}' +
       '#jvgCard .jvg-msg.me{text-align:right;color:#4338ca;font-weight:600;}' +
       '#jvgCard .jvg-recs{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px;}' +
@@ -152,10 +155,14 @@
   }
 
   function open() {
+    if (_root) return;   // 이미 열려 있으면 무시
     ensureStyles();
+    _backdrop = document.createElement('div'); _backdrop.id = 'jvgBackdrop';
+    _backdrop.addEventListener('click', close);
+    document.body.appendChild(_backdrop);
     _root = document.createElement('div'); _root.id = 'jvgCard';
     _root.innerHTML =
-      '<div class="jvg-head"><span class="jvg-ava">🦎</span><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('무엇이든 편하게 말씀하세요', 'お気軽にどうぞ', 'Ask me anything') + '</div></div><button class="jvg-x" aria-label="close">×</button></div>' +
+      '<div class="jvg-head"><img class="jvg-ava" src="/jarvis-character.jpg?v=1" alt="카푸" onerror="this.src=\'/mascot-character.webp\'"><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('편하게 말 걸어~', 'お気軽にどうぞ', 'Talk to me anytime') + '</div></div><button class="jvg-x" aria-label="close">×</button></div>' +
       '<div class="jvg-body"></div>' +
       '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
@@ -164,7 +171,7 @@
               'こんにちは！😊 お客様の多くはハニカムボードを作られます。作りたい製品の写真はありますか？なければネットで似たものを探して下の📷でアップしてください〜写真を見てご案内します！',
               'Hey! 😊 Most of our customers make honeycomb boards. Do you have a photo of what you want? If not, find a similar one online and upload it with 📷 below — I\'ll guide you from the photo!'), 'ai');
     addQuickActions();
-    requestAnimationFrame(function () { _root.classList.add('jvg-in'); });
+    requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
     try { sessionStorage.setItem('jarvisGreeted', '1'); } catch (e) {}
 
     var inp = _root.querySelector('.jvg-in-txt'), btn = _root.querySelector('.jvg-send');
@@ -177,14 +184,27 @@
     _root.querySelector('.jvg-x').addEventListener('click', close);
   }
 
-  function close() { if (_root) { _root.classList.remove('jvg-in'); setTimeout(function () { try { _root.remove(); } catch (e) {} }, 400); } }
+  function close() {
+    if (_backdrop) { _backdrop.classList.remove('jvg-in'); var bd = _backdrop; _backdrop = null; setTimeout(function () { try { bd.remove(); } catch (e) {} }, 400); }
+    if (_root) { _root.classList.remove('jvg-in'); var rt = _root; _root = null; setTimeout(function () { try { rt.remove(); } catch (e) {} }, 400); }
+  }
 
   window.openJarvisGreeter = open;   // 수동 오픈용 (버튼 등에서 호출 가능)
 
+  function makeFab() {
+    if (document.getElementById('jvgFab')) return;
+    ensureStyles();
+    var fab = document.createElement('button'); fab.id = 'jvgFab'; fab.title = tr('카푸에게 물어보기', 'カプに聞く', 'Ask Kapu');
+    fab.innerHTML = '<img src="/jarvis-character.jpg?v=1" alt="카푸" onerror="this.src=\'/mascot-character.webp\'">';
+    fab.addEventListener('click', open);
+    document.body.appendChild(fab);
+  }
   function boot() {
-    if (!_shouldShow()) return;
+    if (!_isHome()) return;
+    makeFab();   // 재열기용 캐릭터 버튼은 항상 (세션 무관)
+    var greeted = false; try { greeted = sessionStorage.getItem('jarvisGreeted') === '1'; } catch (e) {}
+    if (greeted) return;   // 자동 인사는 세션 1회
     setTimeout(function () {
-      // 이미 챗봇을 열었거나 다른 모달이 떠 있으면 인사 보류
       if (document.querySelector('#advPanel.open, .adv-panel.open')) return;
       open();
     }, 2200);
