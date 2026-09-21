@@ -1966,34 +1966,15 @@
   //  전 제품 공유 GENERIC_STEPS[0] 은 건드리지 않고 인스타만 이 스텝을 쓴다(회귀 방지).
   // ════════════════════════════════════════════════════════════════════
   var INSTA_DESIGN_STEP = {
-    onEnter: function () { return !_tutEditorHasDesign(); },
-    msg: { kr: '먼저 <b>디자인 방법</b>을 골라봐. 인스타판넬은 <b>에디터로 직접 디자인</b>이 제일 잘 어울려!',
-      ja: 'まず <b>デザイン方法</b> を選んでね。インスタパネルは <b>エディタで直接デザイン</b> が一番おすすめ!',
-      en: 'First, pick <b>how to design</b>. For an Insta panel, <b>designing in the editor</b> works best!' },
-    branch: [
-      // 추천: 에디터로 직접 디자인 (맨 위)
-      { key: 'editor', target: ['.me-intro-edit'],
-        label: { kr: '에디터로 직접 디자인', ja: 'エディタで直接デザイン', en: 'Design in the editor' },
-        sub: { kr: '에디터에서 프레임을 고르고 글씨만 넣으면 돼 (추천)', ja: 'エディタでフレームを選んで文字を入れるだけ(おすすめ)', en: 'Pick a frame and just add text (recommended)' },
-        msg: { kr: '인스타판넬은 이게 제일 쉬워! 아래 <b>디자인 수정도구</b>를 눌러 에디터를 열고, 마음에 드는 <b>프레임을 고른 다음 글씨만</b> 넣으면 끝이야. 다 하면 <b>다음</b>을 눌러줘~',
-          ja: 'インスタパネルはこれが一番簡単! 下の <b>デザイン編集ツール</b> を押してエディタを開き、好きな <b>フレームを選んで文字を入れる</b> だけ。終わったら <b>次へ</b> を押してね~',
-          en: "This is the easiest for an Insta panel! Tap <b>Design tools</b> below to open the editor, pick a <b>frame</b> you like and just <b>add your text</b>. When done, hit <b>Next</b>~" }
-      },
-      { key: 'ai', mode: 'jump', target: ['.me-intro-ai'],
-        label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
-        sub: { kr: '쉽게 만들지만 큰 작업물은 해상도가 낮아 이미지가 깨질 수 있어', ja: '手軽だけど大きい作品は解像度が低く画像が粗くなることがあるよ', en: 'Easy, but large pieces can come out low-res / pixelated' },
-        run: function () {
-          try { _chosenBranch = 'ai'; enterStep(((_cur && _cur.i != null) ? _cur.i : 0) + 1); } catch (_) {}
-        }
-      },
-      { key: 'request', mode: 'request', target: '#soDesignReqBanner',
-        label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
-        sub: { kr: '돈이 들지만 제일 편해', ja: '費用はかかるけど一番ラク', en: 'Costs money, but the easiest' },
-        msg: { kr: '전문가한테 맡기는 거야! <b>디자인 의뢰</b>를 작성해서 등록하면 이어서 안내해줄게. 돈은 들지만 제일 편해 ✏️',
-          ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けてご案内します。費用はかかるけど一番ラクだよ ✏️',
-          en: "Leave it to a pro! Fill out the <b>design request</b> and I'll continue from there. It costs money, but it's the easiest ✏️" }
-      }
-    ]
+    // 2026-09-22: 사장님 지시 — 인스타판넬은 선택지(AI/의뢰) 없이 바로 템플릿(에디터)으로 연결.
+    onEnter: function () {
+      if (_tutEditorHasDesign()) return false;              // 이미 디자인 있으면 스킵
+      try { _chosenBranch = 'editor'; if (typeof window._meShowToolbar === 'function') window._meShowToolbar(); } catch (_) {}
+    },
+    target: null, mode: 'next',
+    msg: { kr: '인스타판넬은 <b>템플릿</b>으로 만들면 제일 쉬워! 아래 에디터에서 마음에 드는 <b>프레임 템플릿</b>을 고르고 <b>글씨만</b> 바꾸면 돼~ 다 됐으면 <b>다음</b>을 눌러줘.',
+      ja: 'インスタパネルは <b>テンプレート</b> で作るのが一番簡単! 下のエディタで好きな <b>フレームテンプレート</b> を選んで <b>文字だけ</b> 変えればOK~ 終わったら <b>次へ</b> を押してね。',
+      en: "For an Insta panel, using a <b>template</b> is easiest! In the editor below, pick a <b>frame template</b> you like and just <b>change the text</b>~ When done, hit <b>Next</b>." }
   };
 
   var SCENARIOS = [

@@ -2249,12 +2249,8 @@ html, body { background: #ffffff !important; }
             <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개 샘플 15만원(기본 디자인+제작비), 2개부터 개당 +5만원 (2개 20만·3개 25만…). 10~99개는 정가의 2배 단가, 100개부터 정상 단가입니다.', '1個サンプル15万ウォン(基本デザイン+制作費)、2個目から1個ごとに+5万ウォン(2個20万・3個25万…)。10~99個は定価の2倍単価、100個から通常単価です。', '1 sample = ₩150,000 (base design + fee); +₩50,000 per extra piece (2 pcs ₩200k, 3 pcs ₩250k…). 10–99 pcs: 2× unit price. 100+ at regular unit price.')}
           </div>
           <!-- 2026-06-04: 금액 자동할인 제거 → PRO 구독 안내 + 가입 링크만 노출 (사용자 요청) -->
-          <div class="so-tier-table" id="soTierTable" style="grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;">
-            <a href="/#subscriptionSection" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:2px solid #7c3aed; border-radius:10px; text-decoration:none; color:#5b21b6; font-weight:800; font-size:13px; box-shadow:0 4px 12px -4px rgba(124,58,237,0.35); transition:transform .15s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
-              <span><span style="font-size:15px;">👑</span> ${tr('PRO 구독자 가입 시 전제품 10% 할인', 'PRO会員ご加入で全商品10%割引', 'Subscribe to PRO — 10% off all products')}</span>
-              <span style="background:#fff; color:#7c3aed; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:900; flex-shrink:0;">${tr('가입하기 →', '加入する →', 'Subscribe →')}</span>
-            </a>
-          </div>
+          <!-- 2026-09-22: PRO 구독 폐지(구독자 없음) → 가입 유도 배너 삭제(사장님 지시). 컨테이너만 유지(display 토글 코드 안전용). -->
+          <div class="so-tier-table" id="soTierTable" style="display:none; grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;"></div>
           <!-- 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) 전용 — 100개 이상 50% 할인 -->
           <div class="so-tier-table" id="soPresetTierTable" style="display:none;">
             <div data-qty-tier="50" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;">${tr('100개 이상', '100個以上', '100+ pcs')} <b style="color:#dc2626;">50%</b></div>
@@ -12627,7 +12623,16 @@ html, body { background: #ffffff !important; }
             //   유료 의뢰 배너 대신 '무료 디자인 안내'로 표시 (사장님 지시). 가벽·배너·나무조형물 포토존은 유료 유지.
             var _drIsScasi = ((p && p.category || '').toLowerCase() === 'hb_skashi')
                 || /스카시|스카쉬|글씨\s*포토존/i.test(_drNm);
-            var _drDesignIncluded = _isInstaForDR || _drIsScasi;
+            // 2026-09-22: 인스타판넬은 에디터 템플릿으로 직접 디자인 → 디자인 의뢰/무료디자인 배너 자체를 숨김(사장님 지시).
+            if (_isInstaForDR) {
+                state._soFreeDesignProduct = false;
+                state._drReqProduct = null;
+                state._drReqPrice = 0;
+                var _ipDrBan = document.getElementById('soDesignReqBanner');
+                if (_ipDrBan) _ipDrBan.style.display = 'none';
+                return;
+            }
+            var _drDesignIncluded = _drIsScasi;
             // 2026-08-21: 게이트는 유료 디자인의뢰 배너 유지(사장님 정정) — 상단 초록 배너의 '무료 디자인' 문구만 삭제.
             if (_siteIsKR && _drDesignIncluded) {
                 state._soFreeDesignProduct = true;
