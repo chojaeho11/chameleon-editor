@@ -20466,8 +20466,8 @@ html, body { background: #ffffff !important; }
                 // 2026-05-30: 개별포장 (3종) 표시
                 if (it._isPresetGoods && (it._presetWrapType === 'insert' || it._presetWrapType === 'top')) {
                     opts += ' · ' + (it._presetWrapType === 'insert'
-                        ? tr('내지인쇄 포장','内側印刷','Insert print')
-                        : tr('상단인쇄 포장','上部印刷','Top print'));
+                        ? tr('조립 및 개별포장','組立・個別包装','Assembled + individual wrap')
+                        : tr('라벨인쇄포장','ラベル印刷包装','Label print wrap'));
                 }
                 // 2026-05-30: 티셔츠 — 사이즈별/인쇄 방식/위치
                 if (it._presetType === 'tshirt') {
@@ -20653,7 +20653,7 @@ html, body { background: #ffffff !important; }
             if (!cart || cart.length === 0) { alert(tr('장바구니가 비어있습니다.','カートが空です。','Your cart is empty.')); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=444');
+            var mod = await import('./export.js?v=445');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
@@ -21444,17 +21444,16 @@ html, body { background: #ffffff !important; }
                         lines.push('   ➕ ' + aLabel);
                     });
                 }
-                // 2026-05-30: 프리셋 굿즈 개별포장 (3종 — 인쇄 포장은 5만원 정액)
+                // 2026-09-21(사장님): 포장 옵션 재편 반영 — 비조립 무포장(무료)/조립 및 개별포장(1,000/개)/라벨인쇄포장(2,000/개)
                 if (it._isPresetGoods) {
                     var _wt2 = it._presetWrapType;
-                    if (_wt2 === 'insert' || _wt2 === 'top') {
-                        var _wrapName = _wt2 === 'insert' ? '내지인쇄 포장' : '상단인쇄 포장';
-                        lines.push('   개별포장: ' + _wrapName + ' (정액 50,000원, 수량 무관)');
-                    } else if (_wt2 === 'bulk') {
-                        lines.push('   포장: 벌크포장 (개별포장 없음, 무료)');   // 2026-07-28
-                    } else if (it._presetWrap && !_wt2) {
-                        var _wrapQ = it.qty || 1;
-                        lines.push('   개별포장 × ' + _wrapQ + ' = ' + ((200 * _wrapQ).toLocaleString()) + '원');
+                    var _wrapQ = it.qty || 1;
+                    if (_wt2 === 'insert') {
+                        lines.push('   포장: 조립 및 개별포장 × ' + _wrapQ + ' = ' + ((1000 * _wrapQ).toLocaleString()) + '원');
+                    } else if (_wt2 === 'top') {
+                        lines.push('   포장: 라벨인쇄포장 × ' + _wrapQ + ' = ' + ((2000 * _wrapQ).toLocaleString()) + '원');
+                    } else {
+                        lines.push('   포장: 비조립 무포장 (무료)');
                     }
                 }
                 if (Array.isArray(it.baseStands)) {

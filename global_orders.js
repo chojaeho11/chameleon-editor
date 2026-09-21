@@ -3621,8 +3621,8 @@ async function generateRecoveryOrderSheet(order, addonDB) {
             const _kc = item._keyringCut;
             if (_kc && (_kc.label || _kc.label_jp)) _optLines.push(`• 모양/칼선: ${_kc.label || _kc.label_jp}`);
             if (item._keyringSide) _optLines.push(`• 인쇄면: ${item._keyringSide === 'double' ? '양면' : '단면'}`);
-            const _KWRAP = { plain: '개별포장(인쇄없음)', insert: '내지인쇄 포장', top: '상단인쇄 포장', bulk: '벌크포장(개별포장없음)', none: '포장없음' };
-            if (item._presetWrapType && item._presetWrapType !== 'none') _optLines.push(`• 포장: ${_KWRAP[item._presetWrapType] || item._presetWrapType}`);
+            const _KWRAP = { plain: '비조립 무포장', insert: '조립 및 개별포장', top: '라벨인쇄포장', bulk: '비조립 무포장', none: '비조립 무포장' };
+            _optLines.push(`• 포장: ${_KWRAP[item._presetWrapType] || item._presetWrapType || '비조립 무포장'}`);
         }
         if (_optLines.length === 0) _optLines.push('• 기본 사양');
         _optLines.forEach(function (ln) { _dt(doc, ln, 25, optY); optY += 6; });

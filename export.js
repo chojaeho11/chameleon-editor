@@ -3,7 +3,7 @@ import { ADDON_DB as _IMPORTED_ADDON_DB, currentUser, sb } from "./config.js?v=4
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=435"; // 페이지 인덱스 가져오기
 import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=294";
 
-// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=444 / index.html?v=439 등).
+// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=445 / index.html?v=439 등).
 //   index.html 만 initConfig() 를 실행해 ADDON_DB 를 채우고 window.ADDON_DB 에 노출.
 //   export.js 가 import 한 ADDON_DB 는 빈 객체로 남아 견적서에서 b0001 등 addon 가격 누락.
 //   getter 로 항상 window.ADDON_DB 를 우선 사용.
@@ -2162,16 +2162,11 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             var _wrapQty = 1;
             var _wrapTotal = 0;
             var _wrapNameKo = '';
-            if (_wt3 === 'insert' || _wt3 === 'top') {
-                _wrapUnit = 50000;
-                _wrapQty = 1;
-                _wrapTotal = 50000;
-                _wrapNameKo = _wt3 === 'insert' ? '내지인쇄 포장' : '상단인쇄 포장';
-            } else if (item._presetWrap && !_wt3) {
-                _wrapUnit = 200;
-                _wrapQty = item.qty || 1;
-                _wrapTotal = _wrapUnit * _wrapQty;
-                _wrapNameKo = '개별포장';
+            // 2026-09-21(사장님): 조립 및 개별포장 1,000/개 · 라벨인쇄포장 2,000/개 · 비조립 무포장 무료
+            if (_wt3 === 'insert') {
+                _wrapUnit = 1000; _wrapQty = item.qty || 1; _wrapTotal = _wrapUnit * _wrapQty; _wrapNameKo = '조립 및 개별포장';
+            } else if (_wt3 === 'top') {
+                _wrapUnit = 2000; _wrapQty = item.qty || 1; _wrapTotal = _wrapUnit * _wrapQty; _wrapNameKo = '라벨인쇄포장';
             }
             if (_wrapTotal > 0) {
                 if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) {
@@ -2183,9 +2178,9 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 }
                 totalAmt += _wrapTotal;
                 var _wrapNameLocalized = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')
-                    ? (_wt3 === 'insert' ? '内側印刷ラッピング' : _wt3 === 'top' ? '上部印刷ラッピング' : '個別包装')
+                    ? (_wt3 === 'insert' ? '組立・個別包装' : _wt3 === 'top' ? 'ラベル印刷包装' : '非組立・無包装')
                     : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en')
-                        ? (_wt3 === 'insert' ? 'Insert-print wrap' : _wt3 === 'top' ? 'Top-print wrap' : 'Individual wrap')
+                        ? (_wt3 === 'insert' ? 'Assembled + individual wrap' : _wt3 === 'top' ? 'Label print wrap' : 'No assembly / no wrap')
                         : _wrapNameKo;
                 var _wrapName = '└ ' + _wrapNameLocalized;
                 var _wrapSplit = doc.splitTextToSize(_wrapName, nameColWidth - 4);
