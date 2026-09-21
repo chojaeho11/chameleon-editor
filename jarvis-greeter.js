@@ -53,7 +53,7 @@
       '#jvgCard .jvg-ava{width:52px;height:52px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.7);}' +
       '#jvgCard .jvg-name{font-weight:800;font-size:17px;line-height:1.2;}' +
       '#jvgCard .jvg-sub{font-size:12px;opacity:.9;}' +
-      '#jvgFab{position:fixed;right:16px;bottom:18px;width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #a5b4fc;box-shadow:0 6px 20px rgba(99,102,241,.4);cursor:pointer;z-index:2147482998;overflow:hidden;padding:0;animation:jvgSpark 1.8s ease-in-out infinite;}' +
+      '#jvgFab{position:fixed;right:16px;bottom:18px;width:60px;height:60px;border-radius:50%;background:#fff;border:none;box-shadow:0 6px 20px rgba(15,23,42,.22);cursor:pointer;z-index:2147482998;overflow:hidden;padding:0;}' +
       '#jvgFab img{width:100%;height:100%;object-fit:cover;}' +
       '#advFloatingFab,#kapuFab,#btnAiAdvisor,#floatingChatBtn{display:none!important;}' +
       '#jvgCard .jvg-x{margin-left:auto;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
@@ -115,7 +115,7 @@
     var b = _root.querySelector('.jvg-body');
     var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
     var acts = [];
-    if (_lang === 'kr') acts.push({ label: '게임하기', fn: openRewards });  // 리워드 허브(출석·게임)는 한국 전용
+    if (_lang === 'kr') acts.push({ label: '쿠폰받기', fn: openRewards });  // 리워드 허브(출석·게임 → 무료쿠폰), 한국 전용
     acts.push({ label: tr('아니, 바로 주문·상담', '注文・相談', 'Order / Ask'), fn: function () { var i = _root.querySelector('.jvg-in-txt'); if (i) i.focus(); } });
     acts.forEach(function (a) {
       var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label;
