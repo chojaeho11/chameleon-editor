@@ -1967,14 +1967,20 @@
   // ════════════════════════════════════════════════════════════════════
   var INSTA_DESIGN_STEP = {
     // 2026-09-22: 사장님 지시 — 인스타판넬은 선택지(AI/의뢰) 없이 바로 템플릿(에디터)으로 연결.
+    //   기본 탭을 '템플릿'(design_tpl)으로 열고, 진행 버튼도 '템플릿으로 만들기'.
     onEnter: function () {
       if (_tutEditorHasDesign()) return false;              // 이미 디자인 있으면 스킵
-      try { _chosenBranch = 'editor'; if (typeof window._meShowToolbar === 'function') window._meShowToolbar(); } catch (_) {}
+      try {
+        _chosenBranch = 'editor';
+        if (typeof window._meShowToolbar === 'function') window._meShowToolbar();
+        if (typeof window._soQdRailSwitch === 'function') window._soQdRailSwitch('design_tpl');
+      } catch (_) {}
     },
     target: null, mode: 'next',
-    msg: { kr: '인스타판넬은 <b>템플릿</b>으로 만들면 제일 쉬워! 아래 에디터에서 마음에 드는 <b>프레임 템플릿</b>을 고르고 <b>글씨만</b> 바꾸면 돼~ 다 됐으면 <b>다음</b>을 눌러줘.',
-      ja: 'インスタパネルは <b>テンプレート</b> で作るのが一番簡単! 下のエディタで好きな <b>フレームテンプレート</b> を選んで <b>文字だけ</b> 変えればOK~ 終わったら <b>次へ</b> を押してね。',
-      en: "For an Insta panel, using a <b>template</b> is easiest! In the editor below, pick a <b>frame template</b> you like and just <b>change the text</b>~ When done, hit <b>Next</b>." }
+    nextLabel: { kr: '템플릿으로 만들기', ja: 'テンプレートで作る', en: 'Make with a template' },
+    msg: { kr: '인스타판넬은 <b>템플릿</b>으로 만들면 제일 쉬워! 아래 <b>템플릿</b>에서 마음에 드는 <b>프레임</b>을 고르고 <b>글씨만</b> 바꾸면 돼~',
+      ja: 'インスタパネルは <b>テンプレート</b> で作るのが一番簡単! 下の <b>テンプレート</b> から好きな <b>フレーム</b> を選んで <b>文字だけ</b> 変えればOK~',
+      en: "For an Insta panel, using a <b>template</b> is easiest! Below, pick a <b>frame</b> from the <b>templates</b> and just <b>change the text</b>~" }
   };
 
   var SCENARIOS = [

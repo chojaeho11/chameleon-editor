@@ -452,8 +452,20 @@
         }
         // 모달 열릴 때 초기 로드 — _soQdSetup 같은 곳에서 호출되도록 노출.
         window._soQdRailInit = function() {
-            // 2026-06-15: 진입 시 _libActiveTab 도 rail 초기 탭 ('template') 으로 동기화 → fillCanvas 분기 일관.
+            // 2026-09-22: 인스타판넬은 기본 탭을 '템플릿'(design_tpl) 으로 (사장님 지시). 그 외는 기존 기본(벡터) 유지.
+            //   인스타에서 다른 제품으로 나갈 때만 벡터로 복귀(사용자가 직접 바꾼 탭은 보존).
+            try {
+                if (window._soCurrentIsInsta === true) _railTab = 'design_tpl';
+                else if (_railTab === 'design_tpl') _railTab = 'vector';
+            } catch (_) {}
+            // 2026-06-15: 진입 시 _libActiveTab 도 rail 초기 탭 으로 동기화 → fillCanvas 분기 일관.
             _libActiveTab = _railTab;
+            // 활성 탭 버튼 하이라이트 동기화 (정적 마크업의 vector active 를 실제 탭으로 교정)
+            try {
+                document.querySelectorAll((_cfg.scope + ' .qd-rail-tab')).forEach(function(b){
+                    b.classList.toggle('active', b.getAttribute('data-rail-tab') === _railTab);
+                });
+            } catch (_) {}
             _soQdRailLoad();
         };
 
