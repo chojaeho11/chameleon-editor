@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260921231252';
+        var CV = '20260921231635';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -385,7 +385,8 @@
                     #sec-vip table { background:transparent; color:#e2e8f0; }
                     #sec-vip thead th { background:#1e1b4b !important; color:#fbbf24 !important; border-bottom:2px solid #312e81 !important; }
                     #sec-vip tbody tr { background:#0f172a; border-bottom:1px solid #1e293b; }
-                    #sec-vip tbody tr:hover { background:#312e81 !important; }
+                    /* 2026-09-21(사장님): 마우스 오버 흰색(전역 tr:hover td #f8fafc) 방지 — 살짝 밝은 다크블루. td 직접 겨냥해 전역 규칙 override */
+                    #sec-vip tbody tr:hover, #sec-vip tbody tr:hover td { background:#1e2a4a !important; }
                     #sec-vip tbody td { color:#e2e8f0; border-color:#1e293b; }
                     #sec-vip .badge { filter: brightness(1.05); }
                 </style>
