@@ -418,13 +418,13 @@
     _blocker.style.display = _targets.length ? 'none' : 'block';
 
     var foot;
-    var _defHint = { kr: '반짝이는 곳을 눌러주세요', ja: '光っている所をタップ', en: 'Tap the highlighted spot' };
+    var _defHint = { kr: '반짝이는 곳을 눌러줘', ja: '光っている所をタップ', en: 'Tap the highlighted spot' };
     if (step.mode === 'wait') {
       foot = '<div class="tut-hint">👆 ' + T(step.hint || _defHint) + '</div>'
         + '<div class="tut-foot">' + backLink()
         + '<button class="tut-link" data-act="next">' + T(step.skipLabel || { kr: '건너뛰기', ja: 'スキップ', en: 'Skip' }) + '</button></div>';
     } else {
-      // 2026-06-25: next 모드도 step.hint 있으면 안내 라인 표시 (예: 후가공 — 설명 보고 골라주세요)
+      // 2026-06-25: next 모드도 step.hint 있으면 안내 라인 표시 (예: 후가공 — 설명 보고 골라주해)
       foot = (step.hint ? '<div class="tut-hint" style="margin-bottom:9px;">👆 ' + T(step.hint) + '</div>' : '')
         + '<div class="tut-actions">'
         + ((_hist.length && !step.hideBack) ? '<button class="tut-btn tut-btn-ghost" data-act="back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>' : '')
@@ -630,7 +630,7 @@
     setTimeout(function () {
       try { if (typeof window._soOpenDesignRequest === 'function') window._soOpenDesignRequest(); } catch (_) {}
     }, 150);
-    toast(opt.msg || { kr: '디자인 의뢰를 작성해 주세요. 다 하시면 이어서 안내할게요.', ja: 'デザイン依頼を作成してください。完了後、続けてご案内します。', en: 'Fill out the design request. I\'ll continue guiding you after.' });
+    toast(opt.msg || { kr: '디자인 의뢰를 작성해줘. 다 하시면 이어서 안내할게요.', ja: 'デザイン依頼を作成してください。完了後、続けてご案内します。', en: 'Fill out the design request. I\'ll continue guiding you after.' });
     // 의뢰 팝업이 열렸다가 닫히면 재개
     var wasOpen = false, ticks = 0;
     var mon = setInterval(function () {
@@ -665,7 +665,7 @@
     _pop.innerHTML = '<button class="tut-x" data-act="quit">✕</button>'
       + '<div class="tut-head">' + T({ kr: '완료!', ja: '完了!', en: 'Done!' }) + '</div>'
       + '<div class="tut-msg">' + T({
-        kr: '멋지게 잘했어요! ✨ 제 안내는 여기까지예요.<br>다음은 <b>장바구니 요정</b>이 안내해 드릴 거예요.',
+        kr: '멋지게 잘했어! ✨ 제 안내는 여기까지야.<br>다음은 <b>장바구니 요정</b>이 안내해 드릴 거야.',
         ja: '見事にできました! ✨ 私のご案内はここまで。<br>次は<b>カートの妖精</b>がご案内します。',
         en: 'Beautifully done! ✨ My part ends here.<br>The <b>cart fairy</b> guides you next.'
       }) + '</div>'
@@ -710,16 +710,16 @@
     _choice.className = 'tut-choice';
     _choice.innerHTML =
       '<button class="tut-x" data-act="close" aria-label="' + T({ kr: '닫기', ja: '閉じる', en: 'Close' }) + '">✕</button>'
-      + '<h3>' + T({ kr: '주문이 처음이신가요?', ja: '初めてのご注文ですか?', en: 'First time ordering?' }) + '</h3>'
-      + '<p>' + T({ kr: '처음이라면 제가 옆에서 안내할게요.<br>안내대로 클릭만 하면 끝! 이리오세요.',
+      + '<h3>' + T({ kr: '어서와! 여긴 제품 주문 화면이야', ja: '初めてのご注文ですか?', en: 'First time ordering?' }) + '</h3>'
+      + '<p>' + T({ kr: '튜토리얼 따라와~ 안내대로 클릭만 하면 돼.<br>주문이 익숙하면 아래 「바로 주문」 누르면 창이 닫히고 직접 주문할 수 있어.',
         ja: '初めてなら私がご案内します。<br>クリックするだけで完了!こちらへどうぞ。',
         en: "First time? I'll guide you step by step.<br>Just click along — that's it!" }) + '</p>'
       + '<button class="tut-opt accent" data-act="tut"><div class="o1">'
       + T({ kr: '🎮 튜토리얼 모드', ja: '🎮 チュートリアル', en: '🎮 Tutorial mode' }) + '</div><div class="o2">'
       + T({ kr: '안내대로 클릭만 하면 끝', ja: '案内通りクリックするだけ', en: 'Just follow the clicks' }) + '</div></button>'
       + '<button class="tut-opt" data-act="norm"><div class="o1">'
-      + T({ kr: '⚡ 바로 주문 (일반)', ja: '⚡ そのまま注文', en: '⚡ Order directly' }) + '</div><div class="o2">'
-      + T({ kr: '주문에 익숙해요', ja: '注文に慣れています', en: "I'm familiar with ordering" }) + '</div></button>';
+      + T({ kr: '⚡ 바로 주문', ja: '⚡ そのまま注文', en: '⚡ Order directly' }) + '</div><div class="o2">'
+      + T({ kr: '주문 익숙해', ja: '注文に慣れています', en: "I'm familiar with ordering" }) + '</div></button>';
     _root.appendChild(_choice);
     _choice.querySelector('[data-act="tut"]').addEventListener('click', function () { run(scn.steps); });
     _choice.querySelector('[data-act="norm"]').addEventListener('click', closeChooser);
@@ -781,7 +781,7 @@
       return _tutEditorHasDesign() && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview') || _secVisible('#soQuickDesignSec'));
     },
     nextLabel: { kr: '이 디자인으로 인쇄 ▶', ja: 'このデザインで印刷 ▶', en: 'Print this design ▶' },
-    msg: { kr: '왼쪽이 <b>실제로 인쇄될 디자인</b>이에요. <b>[디자인 수정도구]</b>를 누르면 글자를 넣거나 그림·요소를 추가할 수 있고, 마우스로 끌어 <b>위치와 크기</b>도 맞출 수 있어요.<br><span style="color:#94a3b8;">고칠 게 없으면 아래 <b>[이 디자인으로 인쇄]</b>를 눌러 다음으로 넘어가세요.</span>',
+    msg: { kr: '왼쪽이 <b>실제로 인쇄될 디자인</b>이야. <b>[디자인 수정도구]</b>를 누르면 글자를 넣거나 그림·요소를 추가할 수 있고, 마우스로 끌어 <b>위치와 크기</b>도 맞출 수 있어.<br><span style="color:#94a3b8;">고칠 게 없으면 아래 <b>[이 디자인으로 인쇄]</b>를 눌러 다음으로 넘어가.</span>',
       ja: '左が <b>実際に印刷されるデザイン</b> です。<b>[デザイン編集ツール]</b> から文字や画像·素材を追加でき、ドラッグで <b>位置やサイズ</b> も調整できます。<br><span style="color:#94a3b8;">直すところがなければ下の <b>[このデザインで印刷]</b> を押して次へ進んでください。</span>',
       en: 'On the left is <b>the design that will actually be printed</b>. Open <b>[Design tools]</b> to add text, images or elements, and drag to adjust <b>position and size</b>.<br><span style="color:#94a3b8;">Happy with it? Tap <b>[Print this design]</b> below to continue.</span>' },
     cheer: { kr: '디자인 확정! 🖨', ja: 'デザイン確定! 🖨', en: 'Design locked in! 🖨' }
@@ -796,7 +796,7 @@
     target: ['#embeddedEditorPreview', '#meStage'], mode: 'next',
     onEnter: function () { return _secVisible('#meStage') || _secVisible('#embeddedEditorPreview'); },
     hint: { kr: '여기서 디자인을 확인하고, 다운로드로 PDF도 확인!', ja: 'ここでデザイン確認、ダウンロードでPDFも!', en: 'Review here, then Download the PDF!' },
-    msg: { kr: '담기 전에 <b>시안을 최종 확인</b>해요. 이 <b>에디터 화면</b>에서 디자인을 한 번 더 보고, 아래 <b>다운로드</b>로 <b>PDF 시안</b>도 꼭 확인해 주세요.<br><span style="color:#94a3b8;">에디터 화면과 실제 인쇄 PDF는 약간 다를 수 있어요.</span>',
+    msg: { kr: '담기 전에 <b>시안을 최종 확인</b>해. 이 <b>에디터 화면</b>에서 디자인을 한 번 더 보고, 아래 <b>다운로드</b>로 <b>PDF 시안</b>도 꼭 확인해줘.<br><span style="color:#94a3b8;">에디터 화면과 실제 인쇄 PDF는 약간 다를 수 있어.</span>',
       ja: 'カートに入れる前に <b>デザインを最終確認</b>。この <b>エディター画面</b> でもう一度見て、下の <b>ダウンロード</b> で <b>PDF</b> も必ずご確認ください。<br><span style="color:#94a3b8;">エディター画面と実際の印刷PDFは多少異なる場合があります。</span>',
       en: 'Do a <b>final check</b> before adding to cart. Review your design in this <b>editor</b>, then tap <b>Download</b> below to check the <b>PDF proof</b>.<br><span style="color:#94a3b8;">The editor may differ slightly from the printed PDF.</span>' },
     cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
@@ -807,13 +807,13 @@
   //   ① 실행 — 나머지는 어둡게, [AI디자인 실행] 만 밝게. '다음' 버튼을 두지 않는다.
   //      (버튼이 있으면 습관적으로 눌러 디자인을 건너뛰게 된다는 피드백)
   //      캔버스에 시안을 넣으면(me-ai-inserted) 자동으로 ② 로 넘어간다.
-  //   ② 확인 — "시안이 마음에 드시나요?" → [다시 생성] / [다음 진행]
+  //   ② 확인 — "시안이 마음에 들어?" → [다시 생성] / [다음 진행]
   // ════════════════════════════════════════════════════════════════════
   var GENERIC_AI_RUN_STEP = {
     target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-ai-inserted',
     onEnter: function () { return _chosenBranch === 'ai' && _secVisible('.me-intro-ai'); },
-    hint: { kr: 'AI디자인 실행을 눌러주세요', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
-    msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 만들어진 시안을 <b>캔버스에 넣으면</b> 다음으로 넘어가요.',
+    hint: { kr: 'AI디자인 실행을 눌러줘', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
+    msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러줘! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 돼. 만들어진 시안을 <b>캔버스에 넣으면</b> 다음으로 넘어가.',
       ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。できた案を <b>キャンバスに追加</b> すると次へ進みます。',
       en: 'Tap the highlighted <b>[Run AI Design]</b>! Describe the design you want and hit create. Add the result to the canvas to continue.' },
     cheer: { kr: '시안 완성! 🎨', ja: '案が完成! 🎨', en: 'Concept ready! 🎨' }
@@ -824,10 +824,10 @@
     onEnter: function () { return _chosenBranch === 'ai' && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview')); },
     buttons: [{ action: '_tutAiRegenerate', label: { kr: '다시 생성', ja: '作り直す', en: 'Regenerate' } }],
     nextLabel: { kr: '다음 진행 ▶', ja: '次へ進む ▶', en: 'Continue ▶' },
-    msg: { kr: '<b>시안이 마음에 드시나요?</b><br>다른 느낌으로 보고 싶으면 <b>다시 생성</b>을 눌러주세요. 글씨·요소·사진을 더해 꾸며도 좋아요. 이대로 좋으시면 <b>다음 진행</b>을 눌러주세요.',
+    msg: { kr: '<b>시안이 마음에 들어?</b><br>다른 느낌으로 보고 싶으면 <b>다시 생성</b>을 눌러줘. 글씨·요소·사진을 더해 꾸며도 좋아. 이대로 좋으면 <b>다음 진행</b>을 눌러줘.',
       ja: '<b>この案でよろしいですか?</b><br>別の雰囲気で見たい場合は <b>作り直す</b> を押してください。文字·要素·写真を加えて飾ってもOK。このままで良ければ <b>次へ進む</b> を押してください。',
       en: '<b>Happy with this concept?</b><br>Want a different feel? Tap <b>Regenerate</b>. You can also add text, elements and photos. If it looks good, tap <b>Continue</b>.' },
-    cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
+    cheer: { kr: '좋아! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
   };
 
   // [다시 생성] — AI 생성창을 다시 연다. 넣고 나면 이 단계에 그대로 머물러 또 확인할 수 있다.
@@ -840,14 +840,14 @@
     { // 1) 디자인 방법 — 3갈래 (양면: 앞/뒤 모두)
       // 2026-07-23: 대지에 이미 디자인이 있으면 건너뛴다 (홈에서 AI로 만들고 들어온 경우).
       onEnter: function () { return !_tutEditorHasDesign(); },
-      msg: { kr: '디자인은 <b>3가지 방법</b>이 있어요. 마음에 드는 걸 골라보세요!',
+      msg: { kr: '디자인은 <b>3가지 방법</b>이 있어. 마음에 드는 걸 골라봐!',
         ja: 'デザイン方法は <b>3つ</b>。お好きなものを選んでください!',
         en: 'There are <b>3 ways</b> to design. Pick the one you like!' },
       branch: [
         { key: 'upload', always: true, target: ['#soBizUploadBtn', '#soBizUploadBtnBack'],
           label: { kr: '파일 올리기 (앞·뒤)', ja: 'ファイルをアップロード (表裏)', en: 'Upload files (front/back)' },
-          sub: { kr: '완성된 앞/뒤 파일이 있어요', ja: '完成した表裏ファイルがある', en: 'I have front & back files' },
-          msg: { kr: '명함은 <b>양면</b>이에요! <b>앞면</b>과 <b>뒷면</b> 파일을 각각 올려주세요.<br>작업은 <b>92 × 52mm</b>, 재단은 <b>90 × 50mm</b> 📎 (한 면만 있으면 한쪽만 올려도 돼요)',
+          sub: { kr: '완성된 앞/뒤 파일이 있어', ja: '完成した表裏ファイルがある', en: 'I have front & back files' },
+          msg: { kr: '명함은 <b>양면</b>이야! <b>앞면</b>과 <b>뒷면</b> 파일을 각각 올려줘.<br>작업은 <b>92 × 52mm</b>, 재단은 <b>90 × 50mm</b> 📎 (한 면만 있으면 한쪽만 올려도 돼)',
             ja: '名刺は <b>両面</b> です! <b>表面</b>と<b>裏面</b>のファイルをそれぞれアップロードしてください。<br>作業 <b>92 × 52mm</b>、仕上がり <b>90 × 50mm</b> 📎 (片面だけでもOK)',
             en: 'Cards are <b>double-sided</b>! Upload the <b>front</b> and <b>back</b> files separately.<br>Work <b>92 × 52mm</b>, trim <b>90 × 50mm</b> 📎 (one side is fine too)' },
           hook: function (advance) {
@@ -855,7 +855,7 @@
             var b = document.getElementById('soBizUploadBtnBack');
             var bf = document.getElementById('soBackFile');
             var done = false;
-            var on = function () { if (done) return; done = true; advance({ kr: '와우! 잘했어요 🎉', ja: 'ワオ!上手にできました 🎉', en: 'Wow! Nicely done 🎉' }); };
+            var on = function () { if (done) return; done = true; advance({ kr: '와우! 잘했어 🎉', ja: 'ワオ!上手にできました 🎉', en: 'Wow! Nicely done 🎉' }); };
             if (f) f.addEventListener('change', on, { once: true });
             if (bf) bf.addEventListener('change', on, { once: true });
             return function () { if (f) f.removeEventListener('change', on); if (bf) bf.removeEventListener('change', on); };
@@ -873,7 +873,7 @@
         { key: 'request', target: '#soDesignReqBanner',
           label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
           sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
-          msg: { kr: '디자인이 어렵다면 전문가에게 맡기세요! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 <b>앞·뒤 모두</b> 멋지게 만들어 드려요. 영업일 <b>2~3일</b>이면 완성! ✏️',
+          msg: { kr: '디자인이 어렵다면 전문가에게 맡겨! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 <b>앞·뒤 모두</b> 멋지게 만들어줄게. 영업일 <b>2~3일</b>이면 완성! ✏️',
             ja: 'デザインが難しければプロに! 下の <b>デザイン依頼</b> バナーを押すとデザイナーが <b>表裏とも</b> 仕上げます。<b>営業日2~3日</b>で完成! ✏️',
             en: 'If designing is hard, leave it to a pro! Tap the <b>Request a design</b> banner below — a designer crafts <b>both sides</b>. Ready in <b>2–3 business days</b>! ✏️' }
         }
@@ -883,8 +883,8 @@
     EDITOR_TWEAK_STEP,   // 2026-07-23: 디자인이 이미 있으면 시안 확인 후 «이 디자인으로 인쇄»
     { // 3) 용지
       target: '#soBizPaperGrid', mode: 'wait', awaitPick: 'paper',
-      hint: { kr: '설명을 보고 맘에 드는 용지를 골라주세요', ja: '説明を見てお好みの用紙をお選びください', en: 'Read the notes and pick the paper you like' },
-      msg: { kr: '잘했어요! 🎉 다음은 <b>용지</b>예요.<br>제일 무난한 건 <b>누브지</b>나 <b>랑데뷰 네추럴</b>. 펄 느낌 <b>컨셉</b>이나 <b>팝셋</b>도 멋져요 ✨',
+      hint: { kr: '설명을 보고 맘에 드는 용지를 골라주해', ja: '説明を見てお好みの用紙をお選びください', en: 'Read the notes and pick the paper you like' },
+      msg: { kr: '잘했어! 🎉 다음은 <b>용지</b>야.<br>제일 무난한 건 <b>누브지</b>나 <b>랑데뷰 네추럴</b>. 펄 느낌 <b>컨셉</b>이나 <b>팝셋</b>도 멋져 ✨',
         ja: '上手! 🎉 次は <b>用紙</b>。<br>無難なのは <b>ヌーブ紙</b> や <b>ランデブーナチュラル</b>。パール感の <b>コンセプト</b> や <b>ポップセット</b> も素敵 ✨',
         en: 'Great! 🎉 Next, the <b>paper</b>.<br>Safest picks: <b>Nuvegi</b> or <b>Rendezvous Natural</b>. Pearly <b>Concept</b> or <b>Popset</b> are lovely too ✨' },
       cheer: { kr: '탁월한 선택! 😍', ja: '素晴らしい選択! 😍', en: 'Excellent choice! 😍' }
@@ -905,31 +905,31 @@
       ],
       msg: function () {
         if (_chosenBranch === 'editor') {
-          return { kr: '에디터로 디자인 중이시죠? 박·후가공은 위치를 직접 잡기 어려워요.<br>그래서 <b>박 추가</b>나 <b>후가공</b>을 선택하면 <b>로고 부분</b>에 맞춰 처리해 드려요. 필요 없으면 패스~ 😉',
+          return { kr: '에디터로 디자인 중이시죠? 박·후가공은 위치를 직접 잡기 어려워요.<br>그래서 <b>박 추가</b>나 <b>후가공</b>을 선택하면 <b>로고 부분</b>에 맞춰 처리해 줄게. 필요 없으면 패스~ 😉',
             ja: 'エディタでデザイン中ですね? 箔押し·後加工は位置指定が難しいので、<b>箔押し追加</b>や<b>後加工</b>を選ぶと <b>ロゴ部分</b> に合わせて処理します。不要ならパス~ 😉',
             en: "Designing in the editor? Foil & finishing are hard to position precisely.<br>So if you add <b>foil</b> or <b>finishing</b>, we'll apply it to the <b>logo area</b>. Don't need it? Skip 😉" };
         }
-        return { kr: '잘했어요! 이제 얼마 안 남았어요, 힘내요! 💪<br><b>박</b>·<b>후가공</b>은 꼭 해야 하는 게 아니에요. 더 멋진 작품을 위한 <b>선택 옵션</b>! 단순한 명함이면 패스~ 😉',
+        return { kr: '잘했어! 이제 얼마 안 남았어요, 힘내요! 💪<br><b>박</b>·<b>후가공</b>은 꼭 해야 하는 게 아니에요. 더 멋진 작품을 위한 <b>선택 옵션</b>! 단순한 명함이면 패스~ 😉',
           ja: 'いい調子!あと少し、ファイト! 💪<br><b>箔押し</b>・<b>後加工</b>は必須ではありません。より素敵に仕上げる <b>オプション</b> です。シンプルな名刺ならパスでOK 😉',
           en: 'Great! Almost there, hang in! 💪<br><b>Foil</b> & <b>finishing</b> are optional — for an extra-special card. Simple card? Skip it 😉' };
       }
     },
     { // 5) 수량
       target: ['#soBizQtyPresets', '#soQtySection'], mode: 'next',
-      msg: { kr: '<b>수량</b>을 정해요! 명함은 <b>100장(1각) 단위</b>로 주문돼요.<br><b>500장</b>부터는 <b>50% 할인</b> (박·후가공까지!) 💰 많이 필요하면 미리 넉넉히 만들어 두면 이득이에요 😊',
+      msg: { kr: '<b>수량</b>을 정해! 명함은 <b>100장(1각) 단위</b>로 주문돼.<br><b>500장</b>부터는 <b>50% 할인</b> (박·후가공까지!) 💰 많이 필요하면 미리 넉넉히 만들어 두면 이득이야 😊',
         ja: '<b>数量</b>を決めましょう!名刺は <b>100枚(1ロット)単位</b>。<br><b>500枚</b>から <b>50%割引</b> (箔・後加工も!) 💰 多めに作るとお得です 😊',
         en: "Pick the <b>quantity</b>! Cards come in <b>sets of 100</b>.<br>From <b>500 pcs</b>, get <b>50% off</b> (incl. foil/finishing!) 💰 Make extra to save 😊" }
     },
     { // 6) 별색 C100 안내 — 직접 파일 업로드 + 박/후가공 선택 시에만 (에디터/의뢰는 자동/디자이너 처리)
       target: ['#soBizFoilToggle', '#soBizFinishToggle'], mode: 'next',
       onEnter: function () { return bizHasSpecial() && _chosenBranch === 'upload'; },
-      msg: { kr: '박·미싱·오시·형압을 고르셨네요! 일러스트에서 <b>별도 레이어</b>에 <b>C100 (시안 100%) 별색</b>으로 작업하거나 <b>금박</b>으로 지정해 주시면 돼요 🎨',
+      msg: { kr: '박·미싱·오시·형압을 고르셨네! 일러스트에서 <b>별도 레이어</b>에 <b>C100 (시안 100%) 별색</b>으로 작업하거나 <b>금박</b>으로 지정해 주시면 돼 🎨',
         ja: '箔押し・ミシン目・スジ・型押しを選びましたね!イラストで <b>別レイヤー</b> に <b>C100 (シアン100%) 特色</b> または <b>金箔</b> 指定で作成してください 🎨',
         en: 'You picked foil/perforation/crease/emboss! In Illustrator, mark them on a <b>separate layer</b> using <b>C100 (cyan 100%) spot</b> or specify <b>gold foil</b> 🎨' }
     },
     { // 8) 장바구니
       target: '#soBtnCart', mode: 'wait',
-      hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
+      hint: { kr: '장바구니를 눌러줘', ja: 'カートを押してください', en: 'Tap the cart button' },
       msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
         ja: 'さあ、<b>カートに入れて</b>みましょう 🛒',
         en: "Now, let's <b>add it to the cart</b> 🛒" }
@@ -948,7 +948,7 @@
     { // 1) 디자인 방법 — AI 생성 / 템플릿 / 파일 / 의뢰 (없는 분기는 자동 제외)
       // 2026-07-23: 대지에 이미 디자인이 있으면 이 질문 자체를 건너뛴다(홈에서 AI로 만들고 들어온 경우).
       onEnter: function () { return !_tutEditorHasDesign(); },
-      msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
+      msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주해.',
         ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
         en: "I'll help you order! First, choose <b>how to design</b>." },
       branch: [
@@ -975,10 +975,10 @@
           sub: function () {
             // 등신대·자유인쇄커팅(칼선 버튼 보임) — 이미지=누끼·칼선 대행 / PDF=칼선 완료본
             return _secVisible('#meCutlineBtn')
-              ? { kr: '이미지(JPG·PNG)면 배경제거·칼선을 우리가 따드려요. 칼선 완성 PDF면 그대로 올려요', ja: '画像(JPG·PNG)なら背景除去·カットライン代行。カットライン済PDFはそのまま', en: 'Image (JPG/PNG): we do bg-removal & cutline. Cutline-ready PDF: upload as-is' }
-              : { kr: '완성된 인쇄용 파일이 있어요', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' };
+              ? { kr: '이미지(JPG·PNG)면 배경제거·칼선을 우리가 따줄게. 칼선 완성 PDF면 그대로 올려요', ja: '画像(JPG·PNG)なら背景除去·カットライン代行。カットライン済PDFはそのまま', en: 'Image (JPG/PNG): we do bg-removal & cutline. Cutline-ready PDF: upload as-is' }
+              : { kr: '완성된 인쇄용 파일이 있어', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' };
           },
-          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올리면 다음으로 넘어가요.<br><span style="color:#94a3b8;">이미 올린 파일을 바꾸려면 반짝이는 <b>파일 변경</b> 버튼을 눌러 다시 올려주세요.</span>',
+          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려줘. 올리면 다음으로 넘어가.<br><span style="color:#94a3b8;">이미 올린 파일을 바꾸려면 반짝이는 <b>파일 변경</b> 버튼을 눌러 다시 올려줘.</span>',
             ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップすると次へ進みます。<br><span style="color:#94a3b8;">既にアップ済のファイルを変えるには光る <b>ファイル変更</b> ボタンから。</span>',
             en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. It advances once uploaded.<br><span style="color:#94a3b8;">To replace an already-uploaded file, tap the glowing <b>Change file</b> button.</span>' },
           // 2026-07-10: 파일 업로드 감지 시 자동으로 다음 단계로 (하드코딩된 "다음" 클릭 불필요 — 막힘 방지)
@@ -994,7 +994,7 @@
         { key: 'request', mode: 'request', target: '#soDesignReqBanner',
           label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
           sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
-          msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해 드릴게요 ✏️',
+          msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해줄게 ✏️',
             ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けて次のステップをご案内します ✏️',
             en: 'Leave it to a pro! Fill out and submit the <b>design request</b>, and I\'ll continue to the next step ✏️' }
         }
@@ -1005,14 +1005,14 @@
       //   튜토리얼이 넘어가버려 입력 불가. next 는 자유롭게 입력 후 '다음'으로 진행.
       target: '#soQtySection', mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력하거나 버튼으로 선택 후 다음)</span>',
+      msg: { kr: '<b>수량</b>을 정해! 많이 만들수록 낱장 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력하거나 버튼으로 선택 후 다음)</span>',
         ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰 <span style="color:#94a3b8;">(直接入力またはボタンで選択して次へ)</span>',
         en: 'Choose the <b>quantity</b>! The more you print, the lower the unit price 💰 <span style="color:#94a3b8;">(type it in or pick, then Next)</span>' },
-      cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
+      cheer: { kr: '좋아! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
     },
     { // 3) 장바구니
       target: '#soBtnCart', mode: 'wait',
-      hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
+      hint: { kr: '장바구니를 눌러줘', ja: 'カートを押してください', en: 'Tap the cart button' },
       msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
         ja: 'さあ、<b>カートに入れて</b>みましょう 🛒',
         en: "Now, let's <b>add it to the cart</b> 🛒" }
@@ -1037,7 +1037,7 @@
     { // 1) 사이즈
       target: ['#soStickerSizeWrap', '#soCustomSizeSection', '#soRealPrintSection'], mode: 'next',
       onEnter: function () { return _secVisible('#soStickerSizeWrap') || _secVisible('#soCustomSizeSection') || _secVisible('#soRealPrintSection'); },
-      msg: { kr: '먼저 <b>사이즈</b>를 정해요. 가격은 <b>사이즈(면적)에 따라 자동 계산</b>돼요.',
+      msg: { kr: '먼저 <b>사이즈</b>를 정해. 가격은 <b>사이즈(면적)에 따라 자동 계산</b>돼.',
         ja: 'まず <b>サイズ</b> を決めます。価格は <b>サイズ(面積)で自動計算</b> されます。',
         en: 'First set the <b>size</b> — the price is <b>calculated automatically</b> from it.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
@@ -1046,14 +1046,14 @@
     { // 2) 종류(용지)
       target: '#soStickerTypeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerTypeWrap'); },
-      msg: { kr: '<b>종류</b>를 골라요. 아트지·무광·유광·강접은 기본가, 스파클링·홀로그램·투명 등 특수용지는 3배가예요.',
+      msg: { kr: '<b>종류</b>를 골라. 아트지·무광·유광·강접은 기본가, 스파클링·홀로그램·투명 등 특수용지는 3배가야.',
         ja: '<b>種類</b> を選びます。上質紙·マット·グロス·強粘着は標準価格、スパークリング·ホログラム·透明などの特殊用紙は3倍です。',
         en: 'Choose the <b>type</b>. Art/matte/gloss/strong-adhesive are base price; special papers (sparkle, holo, clear…) are ×3.' }
     },
     { // 4) 수량
       target: ['#soStickerQtyWrap', '#soQtySection'], mode: 'next',
       onEnter: function () { return _secVisible('#soStickerQtyWrap') || _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰',
+      msg: { kr: '<b>수량</b>을 정해! 많이 만들수록 낱장 단가가 내려가요 💰',
         ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰',
         en: 'Choose the <b>quantity</b> — more pieces, lower unit price 💰' }
     },
@@ -1062,7 +1062,7 @@
     { // 6) 모양(재단) 선택 (스티커만) — 사각(기본)/간단도형(+10,000)/복잡모양(+30,000). 없는 제품은 자동 스킵.
       target: '#soStickerShapeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerShapeWrap'); },
-      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>모양스티커</b> — 그림 외곽 그대로 따기 <b>(+10,000원)</b>. 다음 단계에서 자동으로 누끼+칼선을 따드려요.',
+      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>모양스티커</b> — 그림 외곽 그대로 따기 <b>(+10,000원)</b>. 다음 단계에서 자동으로 누끼+칼선을 따줄게.',
         ja: 'ステッカーを <b>どの形</b> にカットしますか?<br>• <b>四角</b> — 四角形のまま <b>(標準)</b><br>• <b>型抜きステッカー</b> — 絵の輪郭通りにカット <b>(+¥1,000)</b>。次のステップで自動で切り抜き+カットライン。',
         en: 'What <b>cut shape</b> for your sticker?<br>• <b>Square</b> — plain rectangle <b>(default)</b><br>• <b>Die-cut</b> — cut to the artwork outline <b>(+₩10,000)</b>; auto cut-out + cutline next.' },
       cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
@@ -1073,7 +1073,7 @@
       buttons: [
         { action: '_meStickerAutoCutout', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>모양스티커</b>예요! ① 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요. ② 그 다음 <b>이미지의 크기와 위치를 조정해서 빨강 점선(칼선)에 맞춰</b> 주세요. 이미지와 칼선은 <b>각각 드래그·모서리 핸들</b>로 따로 조정돼요.',
+      msg: { kr: '<b>모양스티커</b>야! ① 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요. ② 그 다음 <b>이미지의 크기와 위치를 조정해서 빨강 점선(칼선)에 맞춰</b> 주해. 이미지와 칼선은 <b>각각 드래그·모서리 핸들</b>로 따로 조정돼.',
         ja: '<b>型抜きステッカー</b> です! ① 下の <b>[自動 背景除去+カットライン]</b> を押します。② 次に <b>画像のサイズと位置を調整して赤い点線(カットライン)に合わせて</b> ください。画像とカットラインは <b>それぞれドラッグ·角ハンドル</b> で別々に調整できます。',
         en: 'It\'s <b>Die-cut</b>! ① Tap <b>[Auto bg-removal + cutline]</b> below. ② Then <b>adjust the image size & position to match the red dashed cutline</b>. The image and cutline move <b>independently</b> — drag or use the corner handles.' },
       hint: { kr: '이미지·칼선을 각각 맞춘 뒤 다음을 눌러요', ja: '画像·カットラインを合わせてから次へ', en: 'Align image & cutline, then Next' },
@@ -1096,7 +1096,7 @@
     //   대지 비율이 사이즈에 따라 정해지므로, 디자인을 먼저 하면 비율이 바뀌어 시안이 어긋난다.
     { // 1) 가벽 사이즈
       target: '#soWallSizeSection', mode: 'next',
-      msg: { kr: '📐 이제 <b>가벽 사이즈</b>를 골라요. 설치할 공간에 맞춰 <b>가로(m)</b>와 <b>세로(m)</b>를 선택하면 가격이 자동으로 계산돼요.',
+      msg: { kr: '📐 이제 <b>가벽 사이즈</b>를 골라. 설치할 공간에 맞춰 <b>가로(m)</b>와 <b>세로(m)</b>를 선택하면 가격이 자동으로 계산돼.',
         ja: '📐 次は <b>壁面サイズ</b>。設置スペースに合わせて <b>横(m)</b> と <b>縦(m)</b> を選ぶと価格が自動計算されます。',
         en: '📐 Now pick the <b>wall size</b>. Choose <b>width (m)</b> and <b>height (m)</b> to fit your space — the price updates automatically.' }
     },
@@ -1104,14 +1104,14 @@
       //   (target 폴백에 #soWallSizeSection 이 있어 onEnter 없이는 항상 떴다)
       target: ['#soWallSideRow'], mode: 'next',
       onEnter: function () { return _secVisible('#soWallSideRow'); },
-      msg: { kr: '<b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요. 뒤쪽도 사람들에게 보이는 자리라면 <b>양면</b>을 추천해요.',
+      msg: { kr: '<b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해. 뒤쪽도 사람들에게 보이는 자리라면 <b>양면</b>을 추천해.',
         ja: '<b>片面</b>は表のみ、<b>両面</b>は表裏とも印刷。裏側も見える場所なら <b>両面</b> がおすすめ。',
         en: '<b>Single</b> prints the front only; <b>double</b> prints both sides. If the back is also visible, we recommend <b>double</b>.' }
     },
     { // 3) 공간 모양 (일자/꺾임) — 2026-07-19: 강화 골판지 가벽은 ㄱ자·ㄷ자가 없어 섹션이 숨겨진다 → 스킵.
       target: '#soWallShapeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soWallShapeSection'); },
-      msg: { kr: '위에서 봤을 때 <b>가벽 모양</b>을 골라요. <b>一자</b>(일자) · <b>ㄱ자</b>(한 번 꺾임) · <b>ㄷ자</b>(양쪽 꺾임) 중 공간에 맞는 걸 선택하세요.',
+      msg: { kr: '위에서 봤을 때 <b>가벽 모양</b>을 골라. <b>一자</b>(일자) · <b>ㄱ자</b>(한 번 꺾임) · <b>ㄷ자</b>(양쪽 꺾임) 중 공간에 맞는 걸 선택해.',
         ja: '上から見た <b>壁の形</b> を選びます。<b>一字</b>(まっすぐ) · <b>L字</b>(1回曲げ) · <b>コ字</b>(両側曲げ) から空間に合うものを。',
         en: 'Pick the <b>floor-plan shape</b> (seen from above): <b>Straight</b> · <b>L-shape</b> (one bend) · <b>U-shape</b> (both sides) — choose what fits your space.' }
     },
@@ -1121,7 +1121,7 @@
     { // 5) 추가 옵션 (설명 포함) — 2026-07-19: 보조받침대·조명이 없는 제품(강화 골판지)에서는 스킵.
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
-      msg: { kr: '필요한 <b>추가 옵션</b>만 체크하세요.<br>• 야외나 아이들이 많은 곳이라면 <b>보조받침대</b>를 선택해 주세요.<br>• 특별한 연출을 원한다면 <b>비싸지 않은 비용으로 조명</b>을 설치할 수 있어요. 조명은 <b>콘센트형</b>이라 끼우면 설치 끝!',
+      msg: { kr: '필요한 <b>추가 옵션</b>만 체크해.<br>• 야외나 아이들이 많은 곳이라면 <b>보조받침대</b>를 선택해줘.<br>• 특별한 연출을 원한다면 <b>비싸지 않은 비용으로 조명</b>을 설치할 수 있어. 조명은 <b>콘센트형</b>이라 끼우면 설치 끝!',
         ja: '必要な <b>追加オプション</b> だけチェックしてください。<br>• 屋外や子供が多い場所なら <b>補助スタンド</b> を選んでください。<br>• 特別な演出をご希望なら <b>手頃な価格で照明</b> を設置できます。照明は <b>コンセント式</b> なので差し込むだけで設置完了!',
         en: 'Check only the <b>add-ons</b> you need.<br>• For outdoor spots or places crowded with kids, pick the <b>support base</b>.<br>• Want a special touch? Add <b>affordable lighting</b> — it\'s <b>plug-in type</b>, just plug it in and it\'s done!' }
     },
@@ -1130,18 +1130,18 @@
       // 2026-07-19: 강화 골판지 가벽은 시공 서비스가 없다(박스처럼 펼쳐 고객이 직접 설치) → 문구를 따로.
       msg: function () {
         if (_tutIsReinforcedWall()) {
-          return { kr: '<b>배송</b>을 골라요. 이 제품은 <b>박스처럼 펼쳐서 직접 설치</b>하는 셀프 제품이라 시공 서비스는 없어요.<br><b>수도권(서울·경기)</b>은 <b>무료배송</b>, <b>지방</b>은 <b>용차배송</b> 중에서 선택하시면 됩니다.',
+          return { kr: '<b>배송</b>을 골라. 이 제품은 <b>박스처럼 펼쳐서 직접 설치</b>하는 셀프 제품이라 시공 서비스는 없어.<br><b>수도권(서울·경기)</b>은 <b>무료배송</b>, <b>지방</b>은 <b>용차배송</b> 중에서 선택하시면 돼.',
             ja: '<b>配送</b> を選びます。この商品は <b>箱のように広げてご自身で設置</b> するセルフ商品のため、施工サービスはありません。<br><b>首都圏</b>は <b>送料無料</b>、<b>地方</b>は <b>トラック配送</b> からお選びください。',
             en: 'Choose <b>delivery</b>. This is a <b>self-assembly</b> product — it unfolds like a box, so there is no installation service.<br>Pick <b>free metro delivery</b> or <b>regional truck delivery</b>.' };
         }
-        return { kr: '<b>시공/배송</b>을 골라요. <b>수도권(서울·경기)</b>은 <b>무료 배송·무료 설치</b>! <b>지방</b>은 용차배송 또는 설치배송 중에 고르면 되고, 설치까지 원하면 <b>설치배송</b>을 선택하세요.',
+        return { kr: '<b>시공/배송</b>을 골라. <b>수도권(서울·경기)</b>은 <b>무료 배송·무료 설치</b>! <b>지방</b>은 용차배송 또는 설치배송 중에 고르면 되고, 설치까지 원하면 <b>설치배송</b>을 선택해.',
           ja: '<b>施工/配送</b> を選びます。<b>首都圏</b>は <b>送料・設置 無料</b>!<b>地方</b>はトラック配送か設置配送から選び、設置も希望なら <b>設置配送</b> を。',
           en: 'Choose <b>install/delivery</b>. <b>Metro area</b> = <b>free delivery & install</b>! For <b>regional</b>, pick truck delivery or install delivery — choose <b>install delivery</b> if you want it set up.' };
       }
     },
     { // 7) 배송 희망일 (설명)
       target: ['#soScheduleDateWrap', '#soScheduleSection'], mode: 'next',
-      msg: { kr: '마지막으로 <b>배송 희망일</b>을 정해요 (영업일 기준 <b>최소 3일 이후</b>). <b>100만원 이상</b> 주문은 <b>시간까지</b> 지정할 수 있고, 그 이하는 <b>날짜만</b> 선택돼요.',
+      msg: { kr: '마지막으로 <b>배송 희망일</b>을 정해 (영업일 기준 <b>최소 3일 이후</b>). <b>100만원 이상</b> 주문은 <b>시간까지</b> 지정할 수 있고, 그 이하는 <b>날짜만</b> 선택돼.',
         ja: '最後に <b>配送希望日</b> を決めます(営業日基準で <b>最短3日後</b>)。<b>100万ウォン以上</b> の注文は <b>時間指定</b> も可能、それ以下は <b>日付のみ</b>。',
         en: 'Finally, set your <b>preferred delivery date</b> (from <b>3 business days</b>). Orders <b>over ₩1,000,000</b> can also pick a <b>time</b>; below that, <b>date only</b>.' }
     },
@@ -1157,7 +1157,7 @@
     { // 1) 배너 종류 선택 — 먼저 종류를 고른 뒤 디자인. (resumeNext: 카드로 다른 종류 선택 시 처음이 아니라 다음 챕터로 이어감)
       target: '#soBannerVariantsHostSec', mode: 'next', resumeNext: true,
       onEnter: function () { return _secVisible('#soBannerVariantsHostSec'); },
-      msg: { kr: '먼저 <b>배너 종류</b>를 골라요. <b>허니콤배너·연결형·선반형·거치대 세트</b> 등 카드를 눌러 원하는 종류를 고르면 이어서 디자인해요.',
+      msg: { kr: '먼저 <b>배너 종류</b>를 골라. <b>허니콤배너·연결형·선반형·거치대 세트</b> 등 카드를 눌러 원하는 종류를 고르면 이어서 디자인해.',
         ja: 'まず <b>バナーの種類</b> を選びます。<b>ハニカムバナー·連結型·棚型·スタンドセット</b> などカードを押して選ぶと、続けてデザインへ。',
         en: 'First pick the <b>banner type</b> — tap a card (<b>honeycomb / linked / shelf / stand set</b>). Then we\'ll continue to the design.' }
     },
@@ -1167,14 +1167,14 @@
     { // 3) 단면/양면 — 허니콤배너·연결형만 (섹션 안 보이면 자동 스킵)
       target: '#soBannerSideSec', mode: 'next',
       onEnter: function () { return _secVisible('#soBannerSideSec'); },
-      msg: { kr: '<b>인쇄면</b>을 골라요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요. (허니콤배너·연결형 배너에서만 선택할 수 있어요)',
+      msg: { kr: '<b>인쇄면</b>을 골라. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해. (허니콤배너·연결형 배너에서만 선택할 수 있어)',
         ja: '<b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも。(ハニカムバナー·連結型のみ選択可)',
         en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>double</b> = both sides. (Only for honeycomb / linked banners)' }
     },
     { // 4) 수량 — 있으면 (없으면 자동 스킵)
       target: '#soQtySection', mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요. 여러 장이면 한 파일에 담아 올리고 수량을 입력하면 돼요.',
+      msg: { kr: '<b>수량</b>을 정해. 여러 장이면 한 파일에 담아 올리고 수량을 입력하면 돼.',
         ja: '<b>数量</b>を決めます。複数枚は1ファイルにまとめて数量を入力してください。',
         en: 'Set the <b>quantity</b>. For multiple banners, put them in one file and enter the count.' }
     },
@@ -1190,14 +1190,14 @@
     { // 1) 인쇄면 (단면/양면)
       target: '#soCutPrintSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soCutPrintSizeSection'); },
-      msg: { kr: '먼저 <b>인쇄면</b>을 골라요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요 (양면은 ×2).',
+      msg: { kr: '먼저 <b>인쇄면</b>을 골라. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해 (양면은 ×2).',
         ja: 'まず <b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも (両面は×2)。',
         en: 'First choose the <b>print side</b>. <b>Single</b> = front only, <b>double</b> = both sides (double is ×2).' }
     },
     { // 2) 보드 종류 선택
       target: '#soCutBoardMaterialSection', mode: 'next',
       onEnter: function () { return _secVisible('#soCutBoardMaterialSection'); },
-      msg: { kr: '<b>보드 종류</b>를 골라요. 허니콤보드·포맥스·폼보드 등 — 가격은 동일하니 원하는 재질로 선택하세요.',
+      msg: { kr: '<b>보드 종류</b>를 골라. 허니콤보드·포맥스·폼보드 등 — 가격은 동일하니 원하는 재질로 선택해.',
         ja: '<b>ボードの種類</b>を選びます。ハニカム·フォーメックス·フォームボード等 — 価格は同じなのでお好みで。',
         en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
     },
@@ -1211,13 +1211,13 @@
         { action: '_meAutoBgAndCutline', label: { kr: '① 자동 배경제거 및 칼선작업', ja: '① 自動 背景除去＋カットライン', en: '① Auto bg-removal & cutline' } },
         { action: '_meStandeeSkipCutline', label: { kr: '② 네모 이미지 그대로 제작', ja: '② 四角い画像のまま製作', en: '② Keep the rectangular image' } }
       ],
-      msg: { kr: '업로드 잘 하셨어요! 🎉 어떻게 만들지 골라주세요.',
+      msg: { kr: '업로드 잘 하셨어요! 🎉 어떻게 만들지 골라주해.',
         ja: 'アップロードOK! 🎉 作り方を選んでください。',
         en: 'Nicely uploaded! 🎉 Choose how to make it.' },
-      note: { kr: '※ 일러스트로 작업한 <b>PDF</b>는 <b>별도의 레이어에 칼선</b>을 작업해 주세요. <b>이미지</b>는 자동으로 칼선을 만듭니다.',
+      note: { kr: '※ 일러스트로 작업한 <b>PDF</b>는 <b>별도의 레이어에 칼선</b>을 작업해 주해. <b>이미지</b>는 자동으로 칼선을 만듭니다.',
         ja: '※ イラストで作った <b>PDF</b> は <b>別レイヤーにカットライン</b> をご用意ください。<b>画像</b> は自動でカットラインを作成します。',
         en: '※ For an illustrator <b>PDF</b>, put the <b>cutline on a separate layer</b>. <b>Images</b> get an automatic cutline.' },
-      hint: { kr: '자동은 몇 초 걸려요 — 끝나면 자동으로 넘어가요', ja: '自動は数秒かかります — 完了で次へ', en: 'Auto takes a few seconds — it advances when done' },
+      hint: { kr: '자동은 몇 초 걸려요 — 끝나면 자동으로 넘어가', ja: '自動は数秒かかります — 完了で次へ', en: 'Auto takes a few seconds — it advances when done' },
       skipLabel: { kr: '건너뛰기', ja: 'スキップ', en: 'Skip' },
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットライン完成! ✂️', en: 'Cutline done! ✂️' }
     },
@@ -1225,14 +1225,14 @@
       //  target 은 떠있는 창만 (여러 selector union 시 상단 빈 #meProps 까지 감싸 하이라이트가 위로 커짐)
       target: '#meCutlineFloat', mode: 'next',
       hint: { kr: '이미지를 선택하면 옆에 조절창이 나와요', ja: '画像を選択すると横に調整パネルが出ます', en: 'Select the image to see the panel beside it' },
-      msg: { kr: '이제 <b>외곽선 두께</b>와 <b>받침(꽂이) 위치</b>를 다듬어요. 이미지를 선택하면 <b>옆에 조절창</b>이 나와요.<br>• <b>외곽선 두께</b> — 재단선을 이미지에서 얼마나 띄울지 조절해요.<br>• <b>받침 위치</b> — 등신대 아래 <b>꽂이(받침)</b>를 위·아래로 늘려 스탠드에 안정적으로 꽂히게 해요.',
+      msg: { kr: '이제 <b>외곽선 두께</b>와 <b>받침(꽂이) 위치</b>를 다듬어요. 이미지를 선택하면 <b>옆에 조절창</b>이 나와요.<br>• <b>외곽선 두께</b> — 재단선을 이미지에서 얼마나 띄울지 조절해.<br>• <b>받침 위치</b> — 등신대 아래 <b>꽂이(받침)</b>를 위·아래로 늘려 스탠드에 안정적으로 꽂히게 해.',
         ja: '<b>フチの太さ</b>と<b>差し込み(スタンド)位置</b>を調整します。画像を選択すると <b>横に調整パネル</b> が表示されます。<br>• <b>フチの太さ</b> — 裁断線を画像からどれだけ離すか。<br>• <b>差し込み位置</b> — 等身大の下の <b>差し込み</b> を上下に伸ばして安定して差し込めるように。',
         en: 'Fine-tune the <b>outline thickness</b> and <b>base tab position</b>. Select the image to reveal the <b>panel beside it</b>.<br>• <b>Outline thickness</b> — how far the die-cut line sits from the image.<br>• <b>Base position</b> — stretch the bottom <b>insert tab</b> up/down so it sits firmly in the stand.' }
     },
     { // 6) 크기 입력 — 등신대(조각)의 실제 크기(mm). 비율 고정 + 가격 자동.
       target: '#meCutlineFloat', mode: 'next',
       hint: { kr: '옆 조절창의 크기(mm) 칸에 입력', ja: '横パネルのサイズ(mm)欄に入力', en: 'Type in the Size (mm) fields in the panel' },
-      msg: { kr: '잘하셨습니다! 🎉 이제 <b>등신대의 크기</b>를 정하면 <b>가격이 자동으로</b> 만들어집니다.<br>옆 조절창의 <b>크기(mm)</b> 칸에 <b>가로·세로</b>를 입력하세요 — <b>비율이 고정</b>돼 한쪽만 바꿔도 반대쪽이 같이 맞춰져요. (모서리를 드래그해 키워도 돼요.)',
+      msg: { kr: '잘하셨습니다! 🎉 이제 <b>등신대의 크기</b>를 정하면 <b>가격이 자동으로</b> 만들어집니다.<br>옆 조절창의 <b>크기(mm)</b> 칸에 <b>가로·세로</b>를 입력하해 — <b>비율이 고정</b>돼 한쪽만 바꿔도 반대쪽이 같이 맞춰져요. (모서리를 드래그해 키워도 돼.)',
         ja: 'お見事です! 🎉 あとは <b>等身大のサイズ</b> を決めると <b>価格が自動</b> で計算されます。<br>横パネルの <b>サイズ(mm)</b> 欄に <b>横·縦</b> を入力してください — <b>比率が固定</b> され、片方を変えるともう片方も合わせて変わります。(角をドラッグして拡大してもOK。)',
         en: 'Well done! 🎉 Now just set the <b>standee size</b> and the <b>price is calculated automatically</b>.<br>Type <b>width/height</b> in the <b>Size (mm)</b> fields in the side panel — the <b>ratio is locked</b>, so changing one adjusts the other. (You can also drag a corner to resize.)' },
       cheer: { kr: '크기·가격 완성! 💰', ja: 'サイズ·価格OK! 💰', en: 'Size & price set! 💰' }
@@ -1240,14 +1240,14 @@
     { // 7) 받침대 선택
       target: '#soBaseStandSection', mode: 'next',
       onEnter: function () { return _secVisible('#soBaseStandSection'); },
-      msg: { kr: '<b>받침대</b>를 골라요. 크기에 맞는 받침대를 선택해야 등신대가 안정적으로 서 있어요 (여러 종류·수량 선택 가능).',
+      msg: { kr: '<b>받침대</b>를 골라. 크기에 맞는 받침대를 선택해야 등신대가 안정적으로 서 있어 (여러 종류·수량 선택 가능).',
         ja: '<b>スタンド</b>を選びます。サイズに合うスタンドを選ぶと安定して自立します (複数種類·数量可)。',
         en: 'Choose a <b>stand</b>. Pick one that fits the size so the standee stays upright (multiple types & quantities possible).' }
     },
     { // 7) 배송 옵션
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
-      msg: { kr: '<b>배송 방법</b>을 골라요. 등신대는 택배 배송이 가능하고, 지역·크기에 따라 옵션이 달라져요.',
+      msg: { kr: '<b>배송 방법</b>을 골라. 등신대는 택배 배송이 가능하고, 지역·크기에 따라 옵션이 달라져요.',
         ja: '<b>配送方法</b>を選びます。等身大は宅配可能で、地域·サイズにより選択肢が変わります。',
         en: 'Choose the <b>delivery method</b>. Standees can ship by parcel; options vary by region and size.' }
     },
@@ -1262,7 +1262,7 @@
     { // 1) 종류(용지)
       target: '#soStickerTypeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerTypeWrap'); },
-      msg: { kr: '먼저 <b>종류</b>를 골라요. 아트지·무광·유광·강접은 기본가, 스파클링·홀로그램·투명 등 특수용지는 3배가예요.',
+      msg: { kr: '먼저 <b>종류</b>를 골라. 아트지·무광·유광·강접은 기본가, 스파클링·홀로그램·투명 등 특수용지는 3배가야.',
         ja: 'まず <b>種類</b> を選びます。上質紙·マット·グロス·強粘着は標準価格、特殊用紙は3倍です。',
         en: 'First pick the <b>type</b>. Art/matte/gloss/strong = base price; special papers ×3.' },
       cheer: { kr: '종류 선택! 🏷️', ja: '種類OK! 🏷️', en: 'Type set! 🏷️' }
@@ -1270,10 +1270,10 @@
     { // 2) 이미지 한 장씩 올리기 → 자동 누끼+칼선+배치
       target: '#soFancyMultiWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soFancyMultiWrap'); },
-      msg: { kr: '이제 <b>이미지를 한 장씩</b> 올려요! <span style="color:#94a3b8;">(최대 8개)</span><br>한 장 올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 놓아드려요. 결과를 보고 <b>다음 장을 더 올리거나</b> 사진을 <b>교체</b>할 수 있어요. 🪄',
+      msg: { kr: '이제 <b>이미지를 한 장씩</b> 올려요! <span style="color:#94a3b8;">(최대 8개)</span><br>한 장 올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 놓아줄게. 결과를 보고 <b>다음 장을 더 올리거나</b> 사진을 <b>교체</b>할 수 있어. 🪄',
         ja: '<b>画像を1枚ずつ</b> アップロード! <span style="color:#94a3b8;">(最大8個)</span><br>1枚ごとに <b>自動で背景除去とカットライン</b> を作成して配置します。結果を見て <b>追加</b> や <b>差し替え</b> ができます。🪄',
         en: 'Add images <b>one at a time</b>! <span style="color:#94a3b8;">(up to 8)</span><br>Each is <b>auto background-removed & cut-lined</b> and placed. Then <b>add more</b> or <b>replace</b> a photo. 🪄' },
-      hint: { kr: '한 장씩 올려서 결과를 확인하고 조정할 수 있어요', ja: '1枚ずつ確認しながら追加', en: 'Add one at a time, check, adjust' },
+      hint: { kr: '한 장씩 올려서 결과를 확인하고 조정할 수 있어', ja: '1枚ずつ確認しながら追加', en: 'Add one at a time, check, adjust' },
       cheer: { kr: '자동 배치 완료! 🎉', ja: '自動配置OK! 🎉', en: 'Auto-arranged! 🎉' }
     },
     { // 3) 배치·크기 조정 (+ 이미지 더 올리기)
@@ -1281,7 +1281,7 @@
       buttons: [
         { action: '_soFancyAddMore', label: { kr: '＋ 이미지 더 올리기', ja: '＋ 画像を追加', en: '＋ Add another image' } }
       ],
-      msg: { kr: '시트에 배치된 스티커들의 <b>위치와 크기</b>를 조정해요. 각 이미지를 <b>드래그</b>하거나 <b>모서리 핸들</b>로 크기를 바꾸면 칼선도 같이 따라와요.<br>더 넣고 싶으면 아래 <b>＋ 이미지 더 올리기</b>!',
+      msg: { kr: '시트에 배치된 스티커들의 <b>위치와 크기</b>를 조정해. 각 이미지를 <b>드래그</b>하거나 <b>모서리 핸들</b>로 크기를 바꾸면 칼선도 같이 따라와요.<br>더 넣고 싶으면 아래 <b>＋ 이미지 더 올리기</b>!',
         ja: 'シート上のステッカーの <b>位置とサイズ</b> を調整。<b>ドラッグ</b> や <b>角ハンドル</b> でサイズ変更するとカットラインも追従。<br>追加したい場合は下の <b>＋ 画像を追加</b>！',
         en: 'Adjust each sticker’s <b>position & size</b> — <b>drag</b> or use the <b>corner handles</b> (the cut line follows).<br>Want more? Tap <b>＋ Add another image</b> below!' },
       cheer: { kr: '배치 완성! ✨', ja: '配置完了! ✨', en: 'Layout done! ✨' }
@@ -1289,7 +1289,7 @@
     { // 4) 수량
       target: ['#soStickerQtyWrap', '#soQtySection'], mode: 'next',
       onEnter: function () { return _secVisible('#soStickerQtyWrap') || _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량(세트)</b>을 정해요. 팬시 스티커는 <b>4매 단위</b>로 주문돼요.',
+      msg: { kr: '<b>수량(세트)</b>을 정해. 팬시 스티커는 <b>4매 단위</b>로 주문돼.',
         ja: '<b>数量(セット)</b>を決めます。ファンシーは <b>4枚単位</b> です。',
         en: 'Choose the <b>quantity (sets)</b>. Fancy stickers are ordered in <b>units of 4</b>.' }
     },
@@ -1315,7 +1315,7 @@
           setTimeout(function () { run(FANCY_STICKER_STEPS, 0); }, 140);
         } }
     ],
-    msg: { kr: '어떤 <b>스티커</b>를 만들까요? 종류를 먼저 골라주세요.',
+    msg: { kr: '어떤 <b>스티커</b>를 만들까요? 종류를 먼저 골라주해.',
       ja: 'どの <b>ステッカー</b> にしますか? まず種類をお選びください。',
       en: 'Which <b>sticker</b> would you like? Pick a type to start.' }
   };
@@ -1329,7 +1329,7 @@
     { // 1) 사이즈 (규격 A4/A3/A2 · 비규격) — 규격 그리드 + 비규격 토글만 하이라이트 (섹션 전체 X)
       target: ['#soLeafletSizeGrid', '#soLfCustToggle'], mode: 'next',
       onEnter: function () { return _secVisible('#soLeafletPresetSec'); },
-      msg: { kr: '먼저 <b>사이즈</b>를 골라요. A4·A3·A2 규격 중 선택하거나, 아래 <b>비규격 사이즈</b>를 눌러 원하는 크기(mm)를 직접 넣을 수 있어요. 가격은 사이즈·수량에 따라 자동 계산돼요.',
+      msg: { kr: '먼저 <b>사이즈</b>를 골라. A4·A3·A2 규격 중 선택하거나, 아래 <b>비규격 사이즈</b>를 눌러 원하는 크기(mm)를 직접 넣을 수 있어. 가격은 사이즈·수량에 따라 자동 계산돼.',
         ja: 'まず <b>サイズ</b> を選びます。A4·A3·A2 の規格、または下の <b>非規格サイズ</b> で好きな寸法(mm)を入力できます。価格はサイズ·数量で自動計算。',
         en: 'First pick the <b>size</b>. Choose A4/A3/A2, or tap <b>Custom size</b> to enter your own (mm). Price updates by size & quantity.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
@@ -1337,14 +1337,14 @@
     { // 2) 인쇄면 (단면/양면)
       target: ['#soLfSideSingle', '#soLfSideDouble'], mode: 'next',
       onEnter: function () { return _secVisible('#soLfSideSingle'); },
-      msg: { kr: '<b>인쇄면</b>을 정해요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요.',
+      msg: { kr: '<b>인쇄면</b>을 정해. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해.',
         ja: '<b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも印刷します。',
         en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>Double</b> = both sides.' }
     },
     { // 3) 수량
       target: ['#soQtySection', '#soLfQtySlot'], mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection') || _secVisible('#soLfQtySlot'); },
-      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+      msg: { kr: '<b>수량</b>을 정해! 많이 만들수록 낱장 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
         ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰 <span style="color:#94a3b8;">(直接入力OK)</span>',
         en: 'Choose the <b>quantity</b>! More prints = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' }
     },
@@ -1355,21 +1355,21 @@
         try { var w = document.getElementById('soLfPaperWrap'); if (w && w.style.display === 'none' && typeof window._soLeafletToggleSection === 'function') window._soLeafletToggleSection('paper'); } catch (_) {}
         return true;
       },
-      msg: { kr: '<b>용지</b>를 골라요 <span style="color:#94a3b8;">(필수)</span>. 기본은 전단에 많이 쓰는 스노우지 180g이에요. 아래 목록에서 원하는 용지를 고르세요. <span style="color:#94a3b8;">(모든 용지 같은 가격 이벤트)</span>',
+      msg: { kr: '<b>용지</b>를 골라 <span style="color:#94a3b8;">(필수)</span>. 기본은 전단에 많이 쓰는 스노우지 180g이야. 아래 목록에서 원하는 용지를 골라. <span style="color:#94a3b8;">(모든 용지 같은 가격 이벤트)</span>',
         ja: '<b>用紙</b>を選びます <span style="color:#94a3b8;">(必須)</span>。基本はチラシによく使うスノー紙180g。下の一覧からお好みの用紙をお選びください。<span style="color:#94a3b8;">(全用紙同価格イベント)</span>',
         en: 'Choose the <b>paper</b> <span style="color:#94a3b8;">(required)</span>. Default is Snow 180g (popular for flyers). Pick from the list below. <span style="color:#94a3b8;">(all papers same price event)</span>' }
     },
     { // 5) 박 추가 (선택)
       target: '#soLfFoilToggle', mode: 'next',
       onEnter: function () { return _secVisible('#soLfFoilToggle'); },
-      msg: { kr: '금·은·홀로그램 등 <b>박</b> 마감이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항 — 필요 없으면 다음)</span>.',
+      msg: { kr: '금·은·홀로그램 등 <b>박</b> 마감이 필요하면 눌러서 추가해 <span style="color:#94a3b8;">(선택 사항 — 필요 없으면 다음)</span>.',
         ja: '金·銀·ホログラムなどの <b>箔</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
         en: 'Add <b>foil</b> (gold/silver/holographic) if you like <span style="color:#94a3b8;">(optional — or Next)</span>.' }
     },
     { // 6) 후가공 추가 (선택)
       target: '#soLfFinishToggle', mode: 'next',
       onEnter: function () { return _secVisible('#soLfFinishToggle'); },
-      msg: { kr: '형압·미싱·오시·타공·귀도리 등 <b>특수 후가공</b>이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항 — 없으면 다음)</span>.',
+      msg: { kr: '형압·미싱·오시·타공·귀도리 등 <b>특수 후가공</b>이 필요하면 눌러서 추가해 <span style="color:#94a3b8;">(선택 사항 — 없으면 다음)</span>.',
         ja: 'エンボス·ミシン·スジ·穴あけ·角丸などの <b>特殊加工</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
         en: 'Add <b>special finishing</b> (emboss, perforation, scoring, hole, round-corner) if needed <span style="color:#94a3b8;">(optional — or Next)</span>.' }
     },
@@ -1391,7 +1391,7 @@
     { // 1) 현수막 종류 선택 (카드) — 클릭 시 리로드 → 다음 챕터로 이어감
       target: ['#soPlacardVariants', '#soPlacardVariantsSec'], mode: 'next', resumeNext: true,
       onEnter: function () { return window._soCurrentIsPlacard === true; },
-      msg: { kr: '먼저 <b>현수막 종류</b>를 골라요. 초저가·UV대폭·친환경·라텍스·깃발·족자 등 카드를 눌러 종류를 바꿀 수 있어요. 종류마다 <b>㎡당 단가</b>가 달라요.',
+      msg: { kr: '먼저 <b>현수막 종류</b>를 골라. 초저가·UV대폭·친환경·라텍스·깃발·족자 등 카드를 눌러 종류를 바꿀 수 있어. 종류마다 <b>㎡당 단가</b>가 달라요.',
         ja: 'まず <b>横断幕の種類</b> を選びます。激安·UV大幅·エコ·ラテックス·フラッグなど、カードをタップで切替。種類ごとに <b>㎡単価</b> が異なります。',
         en: 'First pick the <b>banner type</b>. Tap a card to switch (low-cost, UV wide, eco, latex, flag…). Each has its own <b>price per ㎡</b>.' },
       cheer: { kr: '종류 선택! 🎌', ja: '種類OK! 🎌', en: 'Type set! 🎌' }
@@ -1400,7 +1400,7 @@
       target: '#soCustomSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection'); },
       blockNext: function () { return window._soPlacardOversized === true; },
-      msg: { kr: '<b>사이즈</b>를 정해요. 원하시는 <b>가로·세로</b>를 직접 입력하면 돼요 (예: 300×60). 가격은 면적(㎡)에 따라 자동 계산돼요.',
+      msg: { kr: '<b>사이즈</b>를 정해. 원하시는 <b>가로·세로</b>를 직접 입력하면 돼 (예: 300×60). 가격은 면적(㎡)에 따라 자동 계산돼.',
         ja: '<b>サイズ</b>を決めます。ご希望の <b>横·縦</b> をそのまま入力してください（例: 300×60）。価格は面積(㎡)で自動計算。',
         en: 'Set the <b>size</b> — just type the <b>width and height</b> you need (e.g. 300×60). Price is auto-calculated by area (㎡).' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
@@ -1409,7 +1409,7 @@
     { // 3) 마감 (고리·로프·코팅 등 추가옵션)
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
-      msg: { kr: '<b>마감</b>을 골라요. 고리(하도메)·로프·코팅 등 필요한 마감을 선택하면 조립·발송돼요 <span style="color:#94a3b8;">(필요 없으면 다음)</span>.',
+      msg: { kr: '<b>마감</b>을 골라. 고리(하도메)·로프·코팅 등 필요한 마감을 선택하면 조립·발송돼 <span style="color:#94a3b8;">(필요 없으면 다음)</span>.',
         ja: '<b>仕上げ</b>を選びます。ハトメ·ロープ·コーティングなど、必要な仕上げを選ぶと組立·発送されます <span style="color:#94a3b8;">(不要なら次へ)</span>。',
         en: 'Choose <b>finishing</b> — eyelets, rope, coating, etc. Selected items are assembled & shipped <span style="color:#94a3b8;">(or Next)</span>.' }
     },
@@ -1418,7 +1418,7 @@
     { // 6) 수량
       target: ['#soQtySection', '#soLfQtySlot'], mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요! 같은 현수막을 여러 장 주문할 수 있어요 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>.',
+      msg: { kr: '<b>수량</b>을 정해! 같은 현수막을 여러 장 주문할 수 있어 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>.',
         ja: '<b>数量</b>を決めます!同じ横断幕を複数枚注文できます <span style="color:#94a3b8;">(直接入力OK)</span>。',
         en: 'Choose the <b>quantity</b>! Order multiple copies of the same banner <span style="color:#94a3b8;">(type it in)</span>.' }
     },
@@ -1434,7 +1434,7 @@
     { // 1) 모양 선택 (모양따기/사각배경/원형배경/모양배경/사각투명/원형투명)
       target: ['#soPresetCutGrid', '#soPresetCutSection'], mode: 'next',
       onEnter: function () { return _secVisible('#soPresetCutSection'); },
-      msg: { kr: '먼저 <b>모양</b>을 골라요! <b>모양따기</b>(그림 외곽 그대로)·사각/원형 배경·투명 등 6가지 중 선택할 수 있어요.',
+      msg: { kr: '먼저 <b>모양</b>을 골라! <b>모양따기</b>(그림 외곽 그대로)·사각/원형 배경·투명 등 6가지 중 선택할 수 있어.',
         ja: 'まず <b>形</b> を選びます!<b>型抜き</b>(絵の輪郭通り)・四角/円形の背景・透明など6種類から。',
         en: 'First pick the <b>shape</b>! Choose from 6: <b>die-cut</b> (to the artwork outline), square/round background, transparent, etc.' },
       cheer: { kr: '모양 선택! 🔑', ja: '形OK! 🔑', en: 'Shape set! 🔑' }
@@ -1442,7 +1442,7 @@
     { // 2) 단면 / 양면
       target: '#soKeyringSideRow', mode: 'next',
       onEnter: function () { return _secVisible('#soKeyringSideRow'); },
-      msg: { kr: '<b>인쇄 면</b>을 정해요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요 <span style="color:#94a3b8;">(양면 = 기본가 ×2)</span>.',
+      msg: { kr: '<b>인쇄 면</b>을 정해. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해 <span style="color:#94a3b8;">(양면 = 기본가 ×2)</span>.',
         ja: '<b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも <span style="color:#94a3b8;">(両面=基本価格×2)</span>。',
         en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>Double</b> = both sides <span style="color:#94a3b8;">(double = base ×2)</span>.' }
     },
@@ -1451,7 +1451,7 @@
       //   둘 다 잡으면 인쇄면·고리안내까지 통째로 밝아져 어디를 고르는지 알 수 없었다.
       target: ['#soPresetSizePills', '#soCustomSizeSection'], mode: 'next', firstTargetOnly: true,
       onEnter: function () { return _secVisible('#soPresetSizePills') || _secVisible('#soCustomSizeSection'); },
-      msg: { kr: '<b>사이즈</b>를 골라요 (4×4 ~ 10×10cm). 큰 사이즈일수록 단가가 올라가요.',
+      msg: { kr: '<b>사이즈</b>를 골라 (4×4 ~ 10×10cm). 큰 사이즈일수록 단가가 올라가요.',
         ja: '<b>サイズ</b>を選びます (4×4〜10×10cm)。大きいほど単価UP。',
         en: 'Choose the <b>size</b> (4×4 to 10×10cm). Bigger = higher unit price.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
@@ -1459,14 +1459,14 @@
     { // 4) 개별포장
       target: '#soPresetWrapWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soPresetWrapWrap'); },
-      msg: { kr: '<b>개별포장</b>을 골라요. 포장없음 / 내지인쇄 / 상단인쇄 중 선택할 수 있어요 <span style="color:#94a3b8;">(필요 없으면 다음)</span>.',
+      msg: { kr: '<b>개별포장</b>을 골라. 포장없음 / 내지인쇄 / 상단인쇄 중 선택할 수 있어 <span style="color:#94a3b8;">(필요 없으면 다음)</span>.',
         ja: '<b>個別包装</b>を選びます。包装なし / 台紙印刷 / 上部印刷から <span style="color:#94a3b8;">(不要なら次へ)</span>。',
         en: 'Choose <b>individual packaging</b> — none / insert-print / header-print <span style="color:#94a3b8;">(or Next)</span>.' }
     },
     { // 5) 고리 선택 (addon)
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
-      msg: { kr: '<b>고리(체인)</b>를 골라요! 고리를 선택하면 <b>조립되어 배송</b>돼요. 원하는 고리 종류를 눌러주세요.',
+      msg: { kr: '<b>고리(체인)</b>를 골라! 고리를 선택하면 <b>조립되어 배송</b>돼. 원하는 고리 종류를 눌러줘.',
         ja: '<b>リング(金具)</b>を選びます!選ぶと <b>組み立てて発送</b> されます。お好みのリングをタップ。',
         en: 'Choose the <b>ring/chain</b>! Selected rings are <b>assembled & shipped</b>. Tap the ring you want.' },
       cheer: { kr: '고리 선택! 🔗', ja: 'リングOK! 🔗', en: 'Ring set! 🔗' }
@@ -1479,7 +1479,7 @@
       buttons: [
         { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>모양따기</b>라면 아래 버튼으로 <b>배경을 지우고(누끼) 외곽 칼선</b>을 자동으로 따드려요. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하세요. <span style="color:#94a3b8;">(사각/원형 배경은 건너뛰어도 돼요)</span>',
+      msg: { kr: '<b>모양따기</b>라면 아래 버튼으로 <b>배경을 지우고(누끼) 외곽 칼선</b>을 자동으로 따줄게. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하해. <span style="color:#94a3b8;">(사각/원형 배경은 건너뛰어도 돼)</span>',
         ja: '<b>型抜き</b>なら下のボタンで <b>背景除去+輪郭カットライン</b> を自動作成。<b>ドラッグ·ハンドル</b> で調整。<span style="color:#94a3b8;">(四角/円形背景はスキップ可)</span>',
         en: 'For <b>die-cut</b>, tap below for <b>auto bg-removal + outline cutline</b>, then <b>drag/handles</b> to adjust. <span style="color:#94a3b8;">(skip for square/round background)</span>' },
       hint: { kr: '모양따기가 아니면 그냥 다음을 눌러요', ja: '型抜きでなければ次へ', en: 'Not die-cut? Just tap Next' },
@@ -1488,7 +1488,7 @@
     { // 8) 수량
       target: '#soQtySection', mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 개당 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+      msg: { kr: '<b>수량</b>을 정해! 많이 만들수록 개당 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
         ja: '<b>数量</b>を決めます!たくさん作るほど1個あたりお得 💰 <span style="color:#94a3b8;">(直接入力OK)</span>',
         en: 'Choose the <b>quantity</b>! More = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
@@ -1509,7 +1509,7 @@
     { // 1) 스카시 종류(스타일) 선택 (카드) — 클릭 시 variant 리로드 → 다음 챕터로 이어감
       target: ['#soScarciVariants', '#soScarciVariantsSec'], mode: 'next', resumeNext: true,
       onEnter: function () { return window._soCurrentIsScarci === true; },
-      msg: { kr: '먼저 <b>스카시 종류</b>를 골라요. 1장짜리·하단박스·묵직한 스타일·아크릴 허니콤 글씨 등 카드를 눌러 종류(가격)를 바꿀 수 있어요.',
+      msg: { kr: '먼저 <b>스카시 종류</b>를 골라. 1장짜리·하단박스·묵직한 스타일·아크릴 허니콤 글씨 등 카드를 눌러 종류(가격)를 바꿀 수 있어.',
         ja: 'まず <b>スカシの種類</b> を選びます。1枚·下段ボックス·重厚スタイル·アクリルハニカム文字など、カードをタップで切替できます。',
         en: 'First pick the <b>scarci type</b>. Tap a card to switch (single, base-box, heavy style, acrylic honeycomb lettering…).' },
       cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
@@ -1517,7 +1517,7 @@
     { // 2) 디자인 문구 입력 (오른쪽) — 타이틀/서브 + 요청사항. 오른쪽을 하이라이트해 바로 입력 가능.
       target: '#soScarciRequest', mode: 'next',
       onEnter: function () { try { if (window._soScarciRevealRequest) window._soScarciRevealRequest(); } catch (_) {} return true; },
-      msg: { kr: '먼저 오른쪽 <b>[디자인 문구]</b>에 포토존에 넣을 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주세요. 원하시는 점(색·글씨체 등)이 있으면 <b>요청사항</b>에도 적을 수 있어요. 다 적었으면 <b>다음</b>!',
+      msg: { kr: '먼저 오른쪽 <b>[디자인 문구]</b>에 포토존에 넣을 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주해. 원하시는 점(색·글씨체 등)이 있으면 <b>요청사항</b>에도 적을 수 있어. 다 적었으면 <b>다음</b>!',
         ja: 'まず右の <b>[デザイン文字]</b> にフォトゾーンの <b>タイトル文</b> と <b>サブ文</b> をご記入ください。ご希望(色·書体など)があれば <b>ご要望</b> にも記入OK。記入したら <b>次へ</b>!',
         en: 'First, enter the <b>title</b> and <b>subtitle</b> for your photo zone in <b>[Design text]</b> on the right. You can also note wishes (colors, fonts…) in <b>Requests</b>. Then tap <b>Next</b>!' },
       cheer: { kr: '문구 입력! 📝', ja: '文言OK! 📝', en: 'Text set! 📝' }
@@ -1525,16 +1525,16 @@
     { // 3) 원클릭 AI디자인 (왼쪽 버튼) — 눌러 생성. '이대로 제작' 완료(me-scarci-accepted) 시에만 다음으로.
       target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-scarci-accepted',
       onEnter: function () { return _secVisible('#aiNbAi'); },
-      msg: { kr: '이제 왼쪽 <b>[AI디자인 실행]</b>을 눌러주세요! 화면 <b>가운데에 생성 창</b>이 떠서, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어드려요</b>. 결과에서 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가요. <span style="color:#94a3b8;">(고치고 싶으면 [수정해서 다시 만들기])</span>',
+      msg: { kr: '이제 왼쪽 <b>[AI디자인 실행]</b>을 눌러줘! 화면 <b>가운데에 생성 창</b>이 떠서, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어줄게</b>. 결과에서 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가. <span style="color:#94a3b8;">(고치고 싶으면 [수정해서 다시 만들기])</span>',
         ja: '左の <b>[AIデザイン実行]</b> を押してください!画面 <b>中央に生成ウィンドウ</b> が開き、入力した文言で立体文字フォトゾーンを <b>すぐに作成</b>。気に入ったら <b>[このまま製作]</b> を押すと次へ進みます。<span style="color:#94a3b8;">(直すなら [修正して作り直す])</span>',
         en: 'Tap <b>[Run AI Design]</b> on the left! A <b>window opens in the center</b> and <b>instantly builds</b> a 3D-letter photo zone from your text. If you like it, tap <b>[Make it like this]</b> to continue. <span style="color:#94a3b8;">(to change it, [Edit & remake])</span>' },
-      hint: { kr: 'AI디자인 실행을 눌러 만들어주세요', ja: 'AIデザイン実行を押して作成', en: 'Tap Run AI Design to create' },
+      hint: { kr: 'AI디자인 실행을 눌러 만들어주해', ja: 'AIデザイン実行を押して作成', en: 'Tap Run AI Design to create' },
       cheer: { kr: '디자인 완성! 🎨', ja: 'デザイン完成! 🎨', en: 'Design done! 🎨' }
     },
     { // 4) 배송 (수도권 무료 / 지방)
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
-      msg: { kr: '<b>배송 방법</b>을 골라요. <b>수도권 무료배송</b> 또는 <b>지방배송</b> 중에서 선택할 수 있어요.',
+      msg: { kr: '<b>배송 방법</b>을 골라. <b>수도권 무료배송</b> 또는 <b>지방배송</b> 중에서 선택할 수 있어.',
         ja: '<b>配送方法</b>を選びます。<b>首都圏 送料無料</b> または <b>地方配送</b> から選べます。',
         en: 'Choose the <b>delivery method</b> — <b>free metro delivery</b> or <b>regional delivery</b>.' },
       cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
@@ -1553,7 +1553,7 @@
     { // 1) 시트지 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 단계로 이어감
       target: ['#soVinylVariants', '#soVinylVariantsSec'], mode: 'next', resumeNext: true,
       onEnter: function () { return window._soCurrentIsVinyl === true; },
-      msg: { kr: '먼저 <b>어떤 시트지</b>를 만들지 골라요. 떼었다 붙이는·안개·차량 랩핑·글씨 커팅·투명 시트 등 카드를 눌러 종류를 바꿀 수 있어요.',
+      msg: { kr: '먼저 <b>어떤 시트지</b>를 만들지 골라. 떼었다 붙이는·안개·차량 랩핑·글씨 커팅·투명 시트 등 카드를 눌러 종류를 바꿀 수 있어.',
         ja: 'まず <b>どのシート</b> を作るか選びます。貼って剥がせる·すりガラス·車両ラッピング·文字カット·透明シートなど、カードをタップで切替。',
         en: 'First choose <b>which sheet</b> to make. Tap a card to switch — repositionable, frosted, vehicle wrap, letter-cut, clear vinyl…' },
       cheer: { kr: '종류 선택! 🎞️', ja: '種類OK! 🎞️', en: 'Type set! 🎞️' }
@@ -1561,7 +1561,7 @@
     { // 2) 커팅 방식 (추가옵션: 모양커팅 / 사각커팅)
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
-      msg: { kr: '<b>커팅 방식</b>을 골라요.<br>• <b>사각커팅</b> — 네모로 재단 <b>(+1,000원)</b><br>• <b>모양커팅</b> — 그림 외곽 그대로 따기 <b>(+3,000원)</b>. 모양커팅이면 뒤에서 자동으로 누끼+칼선을 따드려요.',
+      msg: { kr: '<b>커팅 방식</b>을 골라.<br>• <b>사각커팅</b> — 네모로 재단 <b>(+1,000원)</b><br>• <b>모양커팅</b> — 그림 외곽 그대로 따기 <b>(+3,000원)</b>. 모양커팅이면 뒤에서 자동으로 누끼+칼선을 따줄게.',
         ja: '<b>カット方式</b>を選びます。<br>• <b>四角カット</b> — 四角に裁断 <b>(+1,000ウォン)</b><br>• <b>型抜きカット</b> — 絵の輪郭通りにカット <b>(+3,000ウォン)</b>。型抜きなら後で自動で背景除去+カットライン。',
         en: 'Choose the <b>cut type</b>.<br>• <b>Square cut</b> — rectangular <b>(+₩1,000)</b><br>• <b>Shape cut</b> — to the artwork outline <b>(+₩3,000)</b>; auto bg-removal + cutline later.' },
       cheer: { kr: '커팅 방식 결정! ✂️', ja: 'カット方式OK! ✂️', en: 'Cut type set! ✂️' }
@@ -1569,7 +1569,7 @@
     { // 3) 사이즈 (있는 제품만 — 없으면 자동 스킵)
       target: ['#soCustomSizeSection', '#soStickerSizeWrap'], mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection') || _secVisible('#soStickerSizeWrap'); },
-      msg: { kr: '<b>사이즈</b>를 정해요. 가격은 사이즈에 따라 자동 계산돼요.',
+      msg: { kr: '<b>사이즈</b>를 정해. 가격은 사이즈에 따라 자동 계산돼.',
         ja: '<b>サイズ</b>を決めます。価格はサイズで自動計算されます。',
         en: 'Set the <b>size</b> — the price updates automatically.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
@@ -1583,7 +1583,7 @@
       buttons: [
         { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>모양커팅</b>을 고르셨다면 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요 — 그림 외곽을 따라 칼선을 자동으로 따드려요. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하세요. <span style="color:#94a3b8;">(사각커팅이면 그냥 다음)</span>',
+      msg: { kr: '<b>모양커팅</b>을 고르셨다면 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요 — 그림 외곽을 따라 칼선을 자동으로 따줄게. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하해. <span style="color:#94a3b8;">(사각커팅이면 그냥 다음)</span>',
         ja: '<b>型抜きカット</b>を選んだ場合は下の <b>[自動 背景除去+カットライン]</b> を押します — 絵の輪郭に沿ってカットラインを自動作成。<b>ドラッグ·ハンドル</b> で位置·サイズを調整。<span style="color:#94a3b8;">(四角カットならそのまま次へ)</span>',
         en: 'If you chose <b>shape cut</b>, tap <b>[Auto bg-removal + cutline]</b> below — it traces the cutline along your artwork. Then <b>drag/handles</b> to adjust. <span style="color:#94a3b8;">(Square cut? Just tap Next)</span>' },
       hint: { kr: '사각커팅이면 그냥 다음을 눌러요', ja: '四角カットなら次へ', en: 'Square cut? Just tap Next' },
@@ -1592,7 +1592,7 @@
     { // 6) 수량 (있으면)
       target: '#soQtySection', mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요! <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+      msg: { kr: '<b>수량</b>을 정해! <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
         ja: '<b>数量</b>を決めます! <span style="color:#94a3b8;">(直接入力OK)</span>',
         en: 'Choose the <b>quantity</b>! <span style="color:#94a3b8;">(type it in)</span>' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
@@ -1610,7 +1610,7 @@
     { // 1) 아크릴 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 단계로 이어감
       target: ['#soAcrylicVariants', '#soAcrylicVariantsSec'], mode: 'next', resumeNext: true,
       onEnter: function () { return window._soCurrentIsAcrylicPrint === true; },
-      msg: { kr: '먼저 <b>어떤 아크릴</b>을 만들지 골라요. 3T·5T·8T 두께, 금경·은경, 반투명 등 카드를 눌러 종류를 바꿀 수 있어요.',
+      msg: { kr: '먼저 <b>어떤 아크릴</b>을 만들지 골라. 3T·5T·8T 두께, 금경·은경, 반투명 등 카드를 눌러 종류를 바꿀 수 있어.',
         ja: 'まず <b>どのアクリル</b> を作るか選びます。3T·5T·8Tの厚み、金鏡·銀鏡、半透明など、カードをタップで切替。',
         en: 'First choose <b>which acrylic</b> to make. Tap a card to switch — 3T/5T/8T thickness, gold/silver mirror, translucent…' },
       cheer: { kr: '종류 선택! 🪟', ja: '種類OK! 🪟', en: 'Type set! 🪟' }
@@ -1618,7 +1618,7 @@
     { // 2) 커팅·인쇄 방식 (추가옵션: 모양커팅/사각커팅, 전면/뒷면 인쇄)
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
-      msg: { kr: '<b>커팅·인쇄 방식</b>을 골라요.<br>• <b>사각커팅 / 모양커팅</b> — 네모로 재단할지, 그림 외곽 그대로 딸지<br>• <b>전면 인쇄 / 뒷면 인쇄</b> — 인쇄 면을 선택해요. 모양커팅이면 뒤에서 자동으로 누끼+칼선을 따드려요.',
+      msg: { kr: '<b>커팅·인쇄 방식</b>을 골라.<br>• <b>사각커팅 / 모양커팅</b> — 네모로 재단할지, 그림 외곽 그대로 딸지<br>• <b>전면 인쇄 / 뒷면 인쇄</b> — 인쇄 면을 선택해. 모양커팅이면 뒤에서 자동으로 누끼+칼선을 따줄게.',
         ja: '<b>カット·印刷方式</b>を選びます。<br>• <b>四角カット / 型抜きカット</b> — 四角に裁断か、絵の輪郭通りか<br>• <b>前面印刷 / 裏面印刷</b> — 印刷面を選択。型抜きなら後で自動で背景除去+カットライン。',
         en: 'Choose the <b>cut & print method</b>.<br>• <b>Square / shape cut</b> — rectangular vs. to the artwork outline<br>• <b>Front / back print</b> — pick the print side. Shape cut auto bg-removal + cutline later.' },
       cheer: { kr: '방식 결정! ✂️', ja: '方式OK! ✂️', en: 'Method set! ✂️' }
@@ -1626,7 +1626,7 @@
     { // 3) 컬러칩 색상 선택 (반투명아크릴 등 — 있으면. 없으면 자동 스킵)
       target: ['#soAcrylicColorGrid', '#soAcrylicColorSection'], mode: 'next',
       onEnter: function () { return _secVisible('#soAcrylicColorSection'); },
-      msg: { kr: '<b>컬러칩 색상</b>을 골라요. 원하시는 아크릴 색상을 눌러 선택해 주세요 (블랙·클리어·아이보리 등).',
+      msg: { kr: '<b>컬러칩 색상</b>을 골라. 원하시는 아크릴 색상을 눌러 선택해줘 (블랙·클리어·아이보리 등).',
         ja: '<b>カラーチップの色</b>を選びます。ご希望のアクリル色をタップしてください（ブラック·クリア·アイボリーなど）。',
         en: 'Choose the <b>color chip</b>. Tap the acrylic color you want (black, clear, ivory, etc.).' },
       cheer: { kr: '색상 선택! 🎨', ja: '色OK! 🎨', en: 'Color set! 🎨' }
@@ -1634,7 +1634,7 @@
     { // 4) 사이즈 (객체 크기 — 있으면)
       target: ['#soCustomSizeSection', '#soStickerSizeWrap'], mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection') || _secVisible('#soStickerSizeWrap'); },
-      msg: { kr: '<b>사이즈</b>를 정해요. 가격은 사이즈(면적)에 따라 자동 계산돼요.',
+      msg: { kr: '<b>사이즈</b>를 정해. 가격은 사이즈(면적)에 따라 자동 계산돼.',
         ja: '<b>サイズ</b>を決めます。価格はサイズ(面積)で自動計算されます。',
         en: 'Set the <b>size</b> — the price is calculated automatically from it.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
@@ -1648,7 +1648,7 @@
       buttons: [
         { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>모양커팅</b>을 고르셨다면 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요 — 그림 외곽을 따라 칼선을 자동으로 따드려요. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하세요. <span style="color:#94a3b8;">(사각커팅이면 그냥 다음)</span>',
+      msg: { kr: '<b>모양커팅</b>을 고르셨다면 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요 — 그림 외곽을 따라 칼선을 자동으로 따줄게. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하해. <span style="color:#94a3b8;">(사각커팅이면 그냥 다음)</span>',
         ja: '<b>型抜きカット</b>を選んだ場合は下の <b>[自動 背景除去+カットライン]</b> を押します — 絵の輪郭に沿ってカットラインを自動作成。<b>ドラッグ·ハンドル</b> で調整。<span style="color:#94a3b8;">(四角カットならそのまま次へ)</span>',
         en: 'If you chose <b>shape cut</b>, tap <b>[Auto bg-removal + cutline]</b> below — it traces the cutline along your artwork. Then <b>drag/handles</b> to adjust. <span style="color:#94a3b8;">(Square cut? Just tap Next)</span>' },
       hint: { kr: '사각커팅이면 그냥 다음을 눌러요', ja: '四角カットなら次へ', en: 'Square cut? Just tap Next' },
@@ -1657,7 +1657,7 @@
     { // 6) 수량
       target: '#soQtySection', mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>수량</b>을 정해요! <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+      msg: { kr: '<b>수량</b>을 정해! <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
         ja: '<b>数量</b>を決めます! <span style="color:#94a3b8;">(直接入力OK)</span>',
         en: 'Choose the <b>quantity</b>! <span style="color:#94a3b8;">(type it in)</span>' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
@@ -1678,7 +1678,7 @@
     { // 1) 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 단계로 이어감
       target: ['#soPhotozoneVariants', '#soPhotozoneVariantsSec'], mode: 'next', resumeNext: true,
       onEnter: function () { return window._soCurrentIsPhotozone === true; },
-      msg: { kr: '먼저 <b>어떤 조형물/포토존</b>을 만들지 골라요. 나무조형물·동화책 포토존·회전 큐브·룰렛 등 카드를 눌러 종류를 바꿀 수 있어요.',
+      msg: { kr: '먼저 <b>어떤 조형물/포토존</b>을 만들지 골라. 나무조형물·동화책 포토존·회전 큐브·룰렛 등 카드를 눌러 종류를 바꿀 수 있어.',
         ja: 'まず <b>どの造形物/フォトゾーン</b> を作るか選びます。ツリー造形·絵本フォトゾーン·回転キューブ·ルーレットなど、カードをタップで切替。',
         en: 'First choose <b>which sculpture/photo-zone</b> to make. Tap a card to switch — tree sculpture, storybook photo-zone, spinning cube, roulette…' },
       cheer: { kr: '종류 선택! 🌳', ja: '種類OK! 🌳', en: 'Type set! 🌳' }
@@ -1686,21 +1686,21 @@
     { // 2) 칼선 다운받기 (기성품 나무조형물이면 스킵)
       target: ['#soCutlineDownloadBtn', '#soCutlineDownload'], mode: 'next',
       onEnter: function () { return _pzNotReadyMade() && _secVisible('#soCutlineDownload'); },
-      msg: { kr: '먼저 <b>칼선 도안을 다운받아</b> 주세요. 이 도안(칼선 규격)에 <b>맞춰 디자인</b>한 뒤, 다음 단계에서 완성 파일을 올리거나 의뢰하면 돼요.',
+      msg: { kr: '먼저 <b>칼선 도안을 다운받아</b> 주해. 이 도안(칼선 규격)에 <b>맞춰 디자인</b>한 뒤, 다음 단계에서 완성 파일을 올리거나 의뢰하면 돼.',
         ja: 'まず <b>型抜きテンプレートをダウンロード</b> してください。この規格に <b>合わせてデザイン</b> し、次のステップで完成ファイルをアップまたは依頼します。',
         en: 'First <b>download the die-cut template</b>. Design <b>to fit this template</b>, then upload the finished file or request a design in the next step.' },
       cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
     },
     Object.assign({}, GENERIC_STEPS[0], { // 3) 디자인 방법 (업로드/의뢰 중심) — 기성품이면 스킵
       onEnter: function () { return _pzNotReadyMade(); },
-      msg: { kr: '받은 <b>칼선 도안에 맞춰 디자인</b>한 뒤 <b>파일 업로드</b>로 올리거나, 직접 하기 어려우면 <b>디자인 의뢰</b>를 맡겨주세요.',
+      msg: { kr: '받은 <b>칼선 도안에 맞춰 디자인</b>한 뒤 <b>파일 업로드</b>로 올리거나, 직접 하기 어려우면 <b>디자인 의뢰</b>를 맡겨주해.',
         ja: '<b>型抜きテンプレートに合わせてデザイン</b> し <b>ファイルアップロード</b>、または <b>デザイン依頼</b> をお任せください。',
         en: 'Design <b>to fit the die-cut template</b>, then <b>upload the file</b> — or <b>request a design</b> if it\'s tricky to do yourself.' }
     }),
     { // 4) 시공/배송 옵션 (배송 위치·날짜)
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
-      msg: { kr: '<b>배송·설치</b>를 골라요. 수도권 무료배송/설치 또는 지방배송 등 위치를 정하고, 아래에서 <b>배송 희망일</b>도 선택할 수 있어요.',
+      msg: { kr: '<b>배송·설치</b>를 골라. 수도권 무료배송/설치 또는 지방배송 등 위치를 정하고, 아래에서 <b>배송 희망일</b>도 선택할 수 있어.',
         ja: '<b>配送·設置</b>を選びます。首都圏 送料·設置無料 または 地方配送 など場所を決め、下で <b>配送希望日</b> も選べます。',
         en: 'Choose <b>delivery/installation</b> — metro free delivery/install or regional, and pick your <b>preferred date</b> below.' },
       cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
@@ -1723,7 +1723,7 @@
   var MOCKUP_DESIGN_CHOOSE_STEP = {
     // 2026-07-23: 대지에 이미 디자인이 있으면 건너뛴다 (홈에서 AI로 만들고 들어온 경우).
     onEnter: function () { return !_tutEditorHasDesign(); },
-    msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
+    msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주해.',
       ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
       en: "I'll help you order! First, choose <b>how to design</b>." },
     branch: [
@@ -1732,7 +1732,7 @@
       { key: 'ai', target: ['#soPaperDisplayRequest'],
         label: { kr: '인공지능 무료디자인', ja: 'AI無料デザイン', en: 'Free AI design' },
         sub: { kr: '이벤트 기간 무료 · 브랜드만 적으면 끝', ja: 'イベント期間中は無料 · ブランドを書くだけ', en: 'Free during the event — just enter your brand' },
-        msg: { kr: '밝게 보이는 칸에 내용을 적어주세요! <b>브랜드명·타이틀</b>은 필수, 제품·컨셉은 선택이에요. 적을수록 원하는 느낌에 가깝게 나와요. 다 적으셨으면 <b>다음</b>을 눌러주세요.',
+        msg: { kr: '밝게 보이는 칸에 내용을 적어주해! <b>브랜드명·타이틀</b>은 필수, 제품·컨셉은 선택이야. 적을수록 원하는 느낌에 가깝게 나와요. 다 적으셨으면 <b>다음</b>을 눌러줘.',
           ja: '明るく表示されている欄にご記入ください!<b>ブランド名·タイトル</b> は必須、製品·コンセプトは任意です。詳しく書くほどイメージに近づきます。書けたら <b>次へ</b> を押してください。',
           en: 'Fill in the highlighted box! <b>Brand / title</b> is required; products and concept are optional — the more you write, the closer the result. Then tap <b>Next</b>.' },
         // 커서를 브랜드 칸에 바로 놓아준다 (advance 는 호출하지 않음 — '다음' 으로만 진행)
@@ -1748,7 +1748,7 @@
       { key: 'cutline', target: ['#soCutlineDownloadBtn', '#soCutlineDownload'],
         label: { kr: '칼선 다운로드', ja: 'カットラインDL', en: 'Download cutline' },
         sub: { kr: '직접 인쇄용 파일을 만들래요', ja: '自分で印刷用ファイルを作る', en: "I'll make the print file myself" },
-        msg: { kr: '가장 많이 쓰는 <b>기본 규격 칼선</b>을 다운받아 그 규격에 맞춰 작업할 수 있어요. 만약 <b>별도 규격이나 선반 갯수</b>가 필요하다면 본사담당자 <b>031-366-1984</b>로 전화해 칼선을 요청하신 뒤 작업해 주세요. 완성한 파일은 <b>파일 업로드</b>로 올려주시면 됩니다.',
+        msg: { kr: '가장 많이 쓰는 <b>기본 규격 칼선</b>을 다운받아 그 규격에 맞춰 작업할 수 있어. 만약 <b>별도 규격이나 선반 갯수</b>가 필요하다면 본사담당자 <b>031-366-1984</b>로 전화해 칼선을 요청하신 뒤 작업해 주해. 완성한 파일은 <b>파일 업로드</b>로 올려주시면 돼.',
           ja: '最もよく使う <b>基本規格のカットライン</b> をダウンロードして、その規格に合わせて作業できます。<b>別途の規格や棚の数</b> が必要な場合は、担当のナナミ <b>090-5397-0420</b> へお電話でカットラインをご依頼のうえ作業してください。完成したファイルは <b>ファイルアップロード</b> から。',
           en: 'Download the <b>most-used standard-size cutline</b> and design to fit it. If you need a <b>custom size or a different number of shelves</b>, please call our HQ manager at <b>+82 31-366-1984</b> to request one first. Upload your finished file with <b>Upload file</b>.' },
         cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
@@ -1756,7 +1756,7 @@
       { key: 'request', mode: 'request', target: '#soDesignReqBanner',
         label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
         sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
-        msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해 드릴게요 ✏️',
+        msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해줄게 ✏️',
           ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けて次のステップをご案内します ✏️',
           en: 'Leave it to a pro! Fill out and submit the <b>design request</b>, and I\'ll continue to the next step ✏️' }
       }
@@ -1766,7 +1766,7 @@
   // 2026-07-18: 장바구니 직전 안내 — 이 제품군은 목업이 최종 인쇄물이 아니라는 점을 분명히 알린다.
   var MOCKUP_HANDOFF_STEP = {
     target: '#soBtnCart', mode: 'next',
-    msg: { kr: '잠깐만요! 이런 <b>목업 작업 후 디자인을 별개로 해야 하는 경우</b>, 디자이너가 <b>해당 이미지를 참고하여 새롭게 디자인</b>해서 고객님과 소통합니다. <b>결제 후 기다려 주시면 고객님께 연락</b>을 드립니다.<br>현재 <b style="color:#16a34a;">인공지능 컨셉의 리디자인은 이벤트 기간으로 무료</b>로 이용이 가능합니다 🎁',
+    msg: { kr: '잠깐만요! 이런 <b>목업 작업 후 디자인을 별개로 해야 하는 경우</b>, 디자이너가 <b>해당 이미지를 참고하여 새롭게 디자인</b>해서 고객님과 소통합니다. <b>결제 후 기다려 주시면 고객님께 연락</b>을 줄게.<br>현재 <b style="color:#16a34a;">인공지능 컨셉의 리디자인은 이벤트 기간으로 무료</b>로 이용이 가능합니다 🎁',
       ja: 'ちょっとだけ! このように <b>モックアップの後にデザインを別途行う場合</b>、デザイナーが <b>その画像を参考に新しくデザイン</b> し、お客様とやり取りします。<b>お支払い後お待ちいただければ、こちらからご連絡</b> いたします。<br>現在 <b style="color:#16a34a;">AIコンセプトのリデザインはイベント期間につき無料</b> でご利用いただけます 🎁',
       en: 'One moment! When a <b>mockup like this needs a separate print design</b>, our designer <b>creates a new design referring to your image</b> and works with you directly. <b>After payment, just sit tight — we\'ll contact you.</b><br>Right now the <b style="color:#16a34a;">AI-concept redesign is free during our event period</b> 🎁' },
     cheer: { kr: '확인! 🤝', ja: '確認! 🤝', en: 'Got it! 🤝' }
@@ -1777,7 +1777,7 @@
   var BOX_SIZE_STEP = {
     target: '#soBoxSizeSection', mode: 'next', resumeNext: true,
     onEnter: function () { return _secVisible('#soBoxSizeSection'); },
-    msg: { kr: '먼저 <b>박스 사이즈</b>부터 정해요! <b>가로(W) · 높이(H) · 깊이(D)</b> 를 mm 로 입력해주세요. 이 치수로 단가가 계산되고, <b>인공지능도 이 비율 그대로</b> 목업을 그려줘요. 다 넣었으면 <b>다음</b>을 눌러주세요.',
+    msg: { kr: '먼저 <b>박스 사이즈</b>부터 정해! <b>가로(W) · 높이(H) · 깊이(D)</b> 를 mm 로 입력해주해. 이 치수로 단가가 계산되고, <b>인공지능도 이 비율 그대로</b> 목업을 그려줘요. 다 넣었으면 <b>다음</b>을 눌러줘.',
       ja: 'まず <b>ボックスサイズ</b> から!<b>幅(W)·高さ(H)·奥行(D)</b> を mm で入力してください。この寸法で単価が決まり、<b>AIもこの比率のまま</b> モックアップを描きます。入力できたら <b>次へ</b> を押してください。',
       en: 'Start with the <b>box size</b>! Enter <b>width, height and depth</b> in mm. Pricing is based on these, and <b>the AI draws the mockup at exactly these proportions</b>. Then tap <b>Next</b>.' },
     cheer: { kr: '사이즈 확정! 📦', ja: 'サイズOK! 📦', en: 'Size set! 📦' }
@@ -1791,8 +1791,8 @@
   var MOCKUP_AI_RUN_STEP = {
     target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-pd-accepted',
     onEnter: function () { return _chosenBranch === 'ai' && _secVisible('.me-intro-ai'); },
-    hint: { kr: 'AI디자인 실행을 눌러주세요', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
-    msg: { kr: '이제 밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 적어주신 내용으로 <b>이 제품 모양 그대로</b> 목업을 만들어드려요 (<b>1분쯤</b> 걸려요 ☕). 마음에 안 들면 <b>[수정해서 다시 만들기]</b>로 몇 번이든 새로, 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가요!',
+    hint: { kr: 'AI디자인 실행을 눌러줘', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
+    msg: { kr: '이제 밝게 보이는 <b>[AI디자인 실행]</b>을 눌러줘! 적어주신 내용으로 <b>이 제품 모양 그대로</b> 목업을 만들어줄게 (<b>1분쯤</b> 걸려요 ☕). 마음에 안 들면 <b>[수정해서 다시 만들기]</b>로 몇 번이든 새로, 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가!',
       ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ご記入いただいた内容で <b>この製品の形のまま</b> モックアップを作成します(<b>1分ほど</b> ☕)。気に入らなければ <b>[修正して作り直す]</b> で何度でも、気に入ったら <b>[このまま製作]</b> を押すと次へ進みます!',
       en: 'Now tap the highlighted <b>[Run AI Design]</b>! We\'ll build a mockup in this product\'s exact shape from what you entered (about <b>a minute</b> ☕). Not quite right? Use <b>[Edit & remake]</b> as often as you like; when you\'re happy, tap <b>[Make it like this]</b> to continue!' },
     cheer: { kr: '디자인 완성! 🎨', ja: 'デザイン完成! 🎨', en: 'Design done! 🎨' }
@@ -1805,8 +1805,8 @@
     target: ['#embeddedEditorPreview', '#meStage'], mode: 'next', hideBack: true,
     onEnter: function () { return _secVisible('#meStage') || _secVisible('#embeddedEditorPreview'); },
     buttons: [{ action: '_tutRemakeMockup', label: { kr: '다시 만들기', ja: '作り直す', en: 'Make it again' } }],
-    hint: { kr: '이 화면의 시안을 확인해 주세요', ja: 'この画面の案をご確認ください', en: 'Check the concept on screen' },
-    msg: { kr: '<b>최종 시안 확인</b>! 마음에 드시나요?<br>수정이 필요하면 <b>다시 만들기</b>를 눌러주세요 — 문구를 고쳐 새로 만들 수 있어요. 이대로 좋으시면 <b>다음</b>을 눌러주세요.',
+    hint: { kr: '이 화면의 시안을 확인해줘', ja: 'この画面の案をご確認ください', en: 'Check the concept on screen' },
+    msg: { kr: '<b>최종 시안 확인</b>! 마음에 들어?<br>수정이 필요하면 <b>다시 만들기</b>를 눌러줘 — 문구를 고쳐 새로 만들 수 있어. 이대로 좋으면 <b>다음</b>을 눌러줘.',
       ja: '<b>最終案の確認</b>!気に入りましたか?<br>修正が必要なら <b>作り直す</b> を押してください — 文言を直して作り直せます。このままで良ければ <b>次へ</b> を押してください。',
       en: '<b>Final check</b> — happy with it?<br>Need changes? Tap <b>Make it again</b> to edit your text and regenerate. If it looks good, tap <b>Next</b>.' },
     cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
@@ -1847,7 +1847,7 @@
     { // 3) 시공/배송 옵션
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
-      msg: { kr: '<b>배송 방식</b>을 골라요. 1개씩/2개씩 택배포장 또는 <b>100개 이상 벌크포장 무료</b> 등에서 선택할 수 있어요.',
+      msg: { kr: '<b>배송 방식</b>을 골라. 1개씩/2개씩 택배포장 또는 <b>100개 이상 벌크포장 무료</b> 등에서 선택할 수 있어.',
         ja: '<b>配送方式</b>を選びます。1個ずつ/2個ずつ宅配、または <b>100個以上バルク梱包 無料</b> などから。',
         en: 'Choose the <b>delivery method</b> — parcel (1 or 2 per box) or <b>free bulk packing over 100 pcs</b>.' },
       cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
@@ -1855,7 +1855,7 @@
     { // 4) 주문 수량 (100개 최소수량 등)
       target: '#soQtySection', mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
-      msg: { kr: '<b>주문 수량</b>을 정해요. 샘플 1개, 100개(최소수량), 300·500·1,000개 또는 직접 입력(2~99)도 가능해요. 많이 만들수록 개당 단가가 내려가요 💰',
+      msg: { kr: '<b>주문 수량</b>을 정해. 샘플 1개, 100개(최소수량), 300·500·1,000개 또는 직접 입력(2~99)도 가능해. 많이 만들수록 개당 단가가 내려가요 💰',
         ja: '<b>注文数量</b>を決めます。サンプル1個、100個(最小)、300·500·1,000個、または直接入力(2〜99)も可。たくさん作るほどお得 💰',
         en: 'Set the <b>quantity</b> — sample 1, 100 (min), 300/500/1,000, or type 2–99. More = lower unit price 💰' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
@@ -1881,7 +1881,7 @@
   var CHOOSE_VARIANT_STEP = {
     target: _ALL_VARIANT_SELS, mode: 'next', resumeNext: true,
     onEnter: function () { return _tutAnyVariantVisible(); },
-    msg: { kr: '먼저 <b>어떤 종류</b>를 만들지 골라요. 위 카드를 눌러 종류를 바꿀 수 있어요. 정했으면 <b>다음</b>을 눌러 위에서부터 하나씩 옵션을 골라봐요.',
+    msg: { kr: '먼저 <b>어떤 종류</b>를 만들지 골라. 위 카드를 눌러 종류를 바꿀 수 있어. 정했으면 <b>다음</b>을 눌러 위에서부터 하나씩 옵션을 골라봐요.',
       ja: 'まず <b>どの種類</b> を作るか選びます。上のカードをタップで切替。決まったら <b>次へ</b> を押して、上から順にオプションを選びましょう。',
       en: 'First choose <b>which type</b> to make — tap a card above to switch. Then tap <b>Next</b> and pick the options top to bottom.' },
     cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
@@ -1899,14 +1899,14 @@
     { // 1) 인쇄 방식
       target: '#soTshirtPrintMethodSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtPrintMethodSection'); },
-      msg: { kr: '먼저 <b>인쇄 방식</b>을 골라요. <b>DTG</b>는 옷에 직접 인쇄해 부드럽고, <b>DTF</b>는 전사 필름이라 색이 선명해요. <b>홀로그램</b>은 반짝이는 특수 전사예요.',
+      msg: { kr: '먼저 <b>인쇄 방식</b>을 골라. <b>DTG</b>는 옷에 직접 인쇄해 부드럽고, <b>DTF</b>는 전사 필름이라 색이 선명해. <b>홀로그램</b>은 반짝이는 특수 전사야.',
         ja: 'まず <b>印刷方式</b> を選びます。<b>DTG</b> は生地に直接印刷でやわらかい仕上がり、<b>DTF</b> は転写フィルムで発色が鮮やか。<b>ホログラム</b> はきらめく特殊転写です。',
         en: 'First pick the <b>print method</b>. <b>DTG</b> prints straight onto the fabric (soft finish), <b>DTF</b> is transfer film (vivid colour), <b>Hologram</b> is a sparkling special transfer.' }
     },
     { // 2) 인쇄 위치 (복수 선택)
       target: '#soTshirtPrintAreaSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtPrintAreaSection'); },
-      msg: { kr: '<b>어디에 인쇄</b>할지 골라요. <b>앞면 로고</b>(가슴 부분 작게) · <b>앞면 전체</b> · <b>뒷면 전체</b> 중에서 고르고, 앞뒤 모두 인쇄하려면 <b>여러 개</b>를 눌러 함께 선택할 수 있어요.',
+      msg: { kr: '<b>어디에 인쇄</b>할지 골라. <b>앞면 로고</b>(가슴 부분 작게) · <b>앞면 전체</b> · <b>뒷면 전체</b> 중에서 고르고, 앞뒤 모두 인쇄하려면 <b>여러 개</b>를 눌러 함께 선택할 수 있어.',
         ja: '<b>どこに印刷</b> するか選びます。<b>前面ロゴ</b>(胸元に小さく) · <b>前面全体</b> · <b>背面全体</b> から選択。前後とも印刷したい場合は <b>複数</b> タップで同時選択できます。',
         en: 'Choose <b>where to print</b>: <b>front logo</b> (small, chest), <b>full front</b>, or <b>full back</b>. Tap <b>more than one</b> if you want front and back together.' },
       cheer: { kr: '위치 선택! 👕', ja: '位置OK! 👕', en: 'Area set! 👕' }
@@ -1915,8 +1915,8 @@
       // 2026-07-21: 업로드 즉시 넘어가면 위치를 옮기거나 다시 올릴 틈이 없다 → '다음'을 눌러야 진행.
       target: '#soTshirtUploadSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtUploadSection'); },
-      hint: { kr: '이미지를 올리고 위치·크기까지 맞춘 뒤 다음을 눌러주세요', ja: '画像をアップし、位置とサイズを調整してから次へ', en: 'Upload, adjust position and size, then tap Next' },
-      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 그림은 두 가지 방법 중에 고르시면 됩니다 — 갖고 계신 파일이 있으면 <b>[파일 올리기]</b>, 없으면 <b>[AI 이미지 생성]</b>으로 만들어드려요. <span style="color:#94a3b8;">앞면 로고 자리는 로고로, 앞면·뒷면 전체 자리는 배경 없는 그림으로 만들어 티셔츠에 바로 얹어드립니다.</span><br>올린 뒤에는 <b>박스를 끌어 인쇄할 위치</b>를 옮기고, <b>오른쪽아래 ↘ 를 끌어 크기</b>를 줄일 수 있어요.',
+      hint: { kr: '이미지를 올리고 위치·크기까지 맞춘 뒤 다음을 눌러줘', ja: '画像をアップし、位置とサイズを調整してから次へ', en: 'Upload, adjust position and size, then tap Next' },
+      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 그림은 두 가지 방법 중에 고르시면 돼 — 갖고 계신 파일이 있으면 <b>[파일 올리기]</b>, 없으면 <b>[AI 이미지 생성]</b>으로 만들어줄게. <span style="color:#94a3b8;">앞면 로고 자리는 로고로, 앞면·뒷면 전체 자리는 배경 없는 그림으로 만들어 티셔츠에 바로 얹어줄게.</span><br>올린 뒤에는 <b>박스를 끌어 인쇄할 위치</b>를 옮기고, <b>오른쪽아래 ↘ 를 끌어 크기</b>를 줄일 수 있어.',
         ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。絵は2つの方法から選べます — お手持ちのファイルがあれば <b>[ファイルを選ぶ]</b>、なければ <b>[AI画像を作る]</b> でお作りします。<span style="color:#94a3b8;">前面ロゴの枠はロゴとして、前面・背面全体の枠は背景なしのイラストとして作成し、そのままTシャツに載せます。</span><br>アップ後は <b>枠をドラッグして印刷位置</b> を動かし、<b>右下の ↘ をドラッグしてサイズ</b> を小さくできます。',
         en: 'A <b>slot appeared for each area</b> you picked. There are two ways to add art — <b>[Upload file]</b> if you already have one, or <b>[Generate with AI]</b> if you don\'t. <span style="color:#94a3b8;">The front-logo slot is made as a logo, the full front/back slots as background-free artwork, ready to sit on the shirt.</span><br>Then <b>drag the box to place the print</b> and <b>drag the ↘ corner to shrink it</b>.' },
       cheer: { kr: '이미지 등록! 🖼', ja: '画像OK! 🖼', en: 'Image added! 🖼' }
@@ -1924,7 +1924,7 @@
     { // 4) 컬러
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
-      msg: { kr: '<b>티셔츠 색상</b>을 골라요. 인쇄할 그림이 잘 보이는 색으로 고르면 더 예뻐요. <span style="color:#94a3b8;">(어두운 옷에 밝은 그림, 밝은 옷에 진한 그림)</span>',
+      msg: { kr: '<b>티셔츠 색상</b>을 골라. 인쇄할 그림이 잘 보이는 색으로 고르면 더 예뻐요. <span style="color:#94a3b8;">(어두운 옷에 밝은 그림, 밝은 옷에 진한 그림)</span>',
         ja: '<b>Tシャツの色</b> を選びます。プリントが映える色にすると仕上がりがきれいです。<span style="color:#94a3b8;">(濃い色には明るい柄、淡い色には濃い柄)</span>',
         en: 'Pick the <b>shirt colour</b>. It looks best when the artwork contrasts with the fabric. <span style="color:#94a3b8;">(light art on dark shirts, dark art on light shirts)</span>' },
       cheer: { kr: '색상 선택! 🎨', ja: '色OK! 🎨', en: 'Colour set! 🎨' }
@@ -1934,8 +1934,8 @@
       //   여러 칸에 나눠 넣는 단계라 '다음'을 눌러 직접 마치게 한다.
       target: '#soTshirtSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtSizeSection'); },
-      hint: { kr: '필요한 사이즈에 수량을 모두 적고 다음을 눌러주세요', ja: '必要なサイズの数量をすべて入力して次へ', en: 'Fill in every size you need, then tap Next' },
-      msg: { kr: '이제 <b>사이즈별로 수량</b>을 적어주세요. <b>S · M · L</b> 칸에 각각 필요한 장수를 넣으면 돼요. 필요 없는 사이즈는 <b>0</b>으로 두면 됩니다. <span style="color:#94a3b8;">(전체 주문 수량 = S+M+L 합계)</span>',
+      hint: { kr: '필요한 사이즈에 수량을 모두 적고 다음을 눌러줘', ja: '必要なサイズの数量をすべて入力して次へ', en: 'Fill in every size you need, then tap Next' },
+      msg: { kr: '이제 <b>사이즈별로 수량</b>을 적어주해. <b>S · M · L</b> 칸에 각각 필요한 장수를 넣으면 돼. 필요 없는 사이즈는 <b>0</b>으로 두면 돼. <span style="color:#94a3b8;">(전체 주문 수량 = S+M+L 합계)</span>',
         ja: '次に <b>サイズ別の数量</b> を入力します。<b>S · M · L</b> の欄に必要な枚数を入れてください。不要なサイズは <b>0</b> のままでOK。<span style="color:#94a3b8;">(注文数量 = S+M+L の合計)</span>',
         en: 'Now enter the <b>quantity per size</b> — fill in <b>S, M and L</b> with how many you need, leaving unwanted sizes at <b>0</b>. <span style="color:#94a3b8;">(total order = S+M+L)</span>' },
       cheer: { kr: '수량 입력! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
@@ -1943,13 +1943,13 @@
     { // 6) 합계 확인
       target: '#soPriceBox', mode: 'next',
       onEnter: function () { return _secVisible('#soPriceBox'); },
-      msg: { kr: '<b>합계</b>를 확인해요. 사이즈별로 넣은 <b>총 장수</b>와 <b>금액</b>이 맞는지 한 번 봐주세요. 고칠 게 있으면 <b>이전</b>으로 돌아가 수정할 수 있어요.',
+      msg: { kr: '<b>합계</b>를 확인해. 사이즈별로 넣은 <b>총 장수</b>와 <b>금액</b>이 맞는지 한 번 봐주해. 고칠 게 있으면 <b>이전</b>으로 돌아가 수정할 수 있어.',
         ja: '<b>合計</b> を確認します。サイズ別に入力した <b>合計枚数</b> と <b>金額</b> が合っているかご確認ください。直したい場合は <b>戻る</b> で修正できます。',
         en: 'Check the <b>total</b> — make sure the <b>piece count</b> and the <b>price</b> match what you entered. Tap <b>Back</b> if you need to change anything.' }
     },
     { // 7) 장바구니
       target: '#soBtnCart', mode: 'wait',
-      hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
+      hint: { kr: '장바구니를 눌러줘', ja: 'カートを押してください', en: 'Tap the cart button' },
       msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
         ja: 'さあ、<b>カートに入れて</b>みましょう 🛒',
         en: "Now, let's <b>add it to the cart</b> 🛒" }
