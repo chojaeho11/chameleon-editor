@@ -1674,6 +1674,8 @@
   // ════════════════════════════════════════════════════════════════════
   function _tutIsPhotozone() { try { return window._soCurrentIsPhotozone === true; } catch (_) { return false; } }
   function _pzNotReadyMade() { try { return window._soPzReadyMade !== true; } catch (_) { return true; } }
+  // 2026-09-22: 인스타판넬(포토존 프레임, 코드 lll0/0ll/ppp/lllllp) — 디자인 방법 안내를 '에디터로 직접 디자인' 추천으로.
+  function _tutIsInsta() { try { return window._soCurrentIsInsta === true; } catch (_) { return false; } }
   var PHOTOZONE_STEPS = [
     { // 1) 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 단계로 이어감
       target: ['#soPhotozoneVariants', '#soPhotozoneVariantsSec'], mode: 'next', resumeNext: true,
@@ -1956,6 +1958,44 @@
     }
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  인스타판넬(포토존 프레임) 전용 디자인방법 스텝 — 2026-09-22
+  //  사장님 요청: 인스타판넬 추천은 '에디터로 직접 디자인'(프레임 고르고 글씨만).
+  //  · 에디터로 직접 디자인 = .me-intro-edit (디자인 수정도구 → _meShowToolbar)
+  //  · 인공지능 = .me-intro-ai / 의뢰 = #soDesignReqBanner
+  //  전 제품 공유 GENERIC_STEPS[0] 은 건드리지 않고 인스타만 이 스텝을 쓴다(회귀 방지).
+  // ════════════════════════════════════════════════════════════════════
+  var INSTA_DESIGN_STEP = {
+    onEnter: function () { return !_tutEditorHasDesign(); },
+    msg: { kr: '먼저 <b>디자인 방법</b>을 골라봐. 인스타판넬은 <b>에디터로 직접 디자인</b>이 제일 잘 어울려!',
+      ja: 'まず <b>デザイン方法</b> を選んでね。インスタパネルは <b>エディタで直接デザイン</b> が一番おすすめ!',
+      en: 'First, pick <b>how to design</b>. For an Insta panel, <b>designing in the editor</b> works best!' },
+    branch: [
+      // 추천: 에디터로 직접 디자인 (맨 위)
+      { key: 'editor', target: ['.me-intro-edit'],
+        label: { kr: '에디터로 직접 디자인', ja: 'エディタで直接デザイン', en: 'Design in the editor' },
+        sub: { kr: '에디터에서 프레임을 고르고 글씨만 넣으면 돼 (추천)', ja: 'エディタでフレームを選んで文字を入れるだけ(おすすめ)', en: 'Pick a frame and just add text (recommended)' },
+        msg: { kr: '인스타판넬은 이게 제일 쉬워! 아래 <b>디자인 수정도구</b>를 눌러 에디터를 열고, 마음에 드는 <b>프레임을 고른 다음 글씨만</b> 넣으면 끝이야. 다 하면 <b>다음</b>을 눌러줘~',
+          ja: 'インスタパネルはこれが一番簡単! 下の <b>デザイン編集ツール</b> を押してエディタを開き、好きな <b>フレームを選んで文字を入れる</b> だけ。終わったら <b>次へ</b> を押してね~',
+          en: "This is the easiest for an Insta panel! Tap <b>Design tools</b> below to open the editor, pick a <b>frame</b> you like and just <b>add your text</b>. When done, hit <b>Next</b>~" }
+      },
+      { key: 'ai', mode: 'jump', target: ['.me-intro-ai'],
+        label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
+        sub: { kr: '쉽게 만들지만 큰 작업물은 해상도가 낮아 이미지가 깨질 수 있어', ja: '手軽だけど大きい作品は解像度が低く画像が粗くなることがあるよ', en: 'Easy, but large pieces can come out low-res / pixelated' },
+        run: function () {
+          try { _chosenBranch = 'ai'; enterStep(((_cur && _cur.i != null) ? _cur.i : 0) + 1); } catch (_) {}
+        }
+      },
+      { key: 'request', mode: 'request', target: '#soDesignReqBanner',
+        label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
+        sub: { kr: '돈이 들지만 제일 편해', ja: '費用はかかるけど一番ラク', en: 'Costs money, but the easiest' },
+        msg: { kr: '전문가한테 맡기는 거야! <b>디자인 의뢰</b>를 작성해서 등록하면 이어서 안내해줄게. 돈은 들지만 제일 편해 ✏️',
+          ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けてご案内します。費用はかかるけど一番ラクだよ ✏️',
+          en: "Leave it to a pro! Fill out the <b>design request</b> and I'll continue from there. It costs money, but it's the easiest ✏️" }
+      }
+    ]
+  };
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
     // 2026-07-21: 의류(티셔츠) — 인쇄방식·위치·위치별 업로드·컬러·사이즈별 수량. generic 보다 앞.
@@ -1992,6 +2032,8 @@
     // 2026-07-14: 사이즈 지정 제품(스티커/실사출력/현수막/광고인쇄 등) — 우측 사이즈·옵션 먼저, 그다음 디자인 방법.
     //   match 는 코드 대신 우측 사이즈 섹션 노출 여부로 판정(그 외엔 generic). 반드시 generic 앞.
     //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 — 종류 카드 있는 제품(봉투/실사출력/탁상 등)은 제품부터, 없으면 자동 스킵.
+    // 2026-09-22: 인스타판넬(포토존 프레임) — 디자인방법 안내를 '에디터로 직접 디자인' 추천으로. generic/size-product 보다 앞.
+    { id: 'insta', match: { test: function () { return _tutIsInsta(); } }, steps: [CHOOSE_VARIANT_STEP, INSTA_DESIGN_STEP, GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP, EDITOR_TWEAK_STEP, GENERIC_STEPS[1], GENERIC_STEPS[2]] },
     { id: 'size-product', match: { test: function () { return _tutIsSizeProduct(); } }, steps: [CHOOSE_VARIANT_STEP].concat(SIZE_PRODUCT_STEPS) },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 (종류 카드 없으면 자동 스킵).

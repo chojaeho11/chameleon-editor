@@ -14289,6 +14289,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-05: 인스타판넬 포토존 family (hb_insta + 코드 4종) — 우측 상단에 변형 카드 그리드 표시
         var _isInsta = _soIsInstaPanelProduct(p);
         state.isInstaPanel = _isInsta;
+        window._soCurrentIsInsta = !!_isInsta;  // 튜토리얼 인스타판넬 전용 시나리오 매칭용
         if (_isInsta) {
             try { window._soLoadInstaVariants(p.code); } catch(e){}
             // 2026-06-05: 가격 조정 — A2 60-90cm: 50K → 80K, 스텐딩 60-180cm: 80K → 100K
