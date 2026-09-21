@@ -114,11 +114,9 @@
   function addQuickActions() {
     var b = _root.querySelector('.jvg-body');
     var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
-    var acts = [{ label: tr('🛒 바로 주문·상담', '🛒 注文・相談', '🛒 Order / Ask'), fn: function () { var i = _root.querySelector('.jvg-in-txt'); if (i) i.focus(); } }];
-    if (_lang === 'kr') {  // 리워드 허브(출석·끝말잇기)는 한국 전용
-      acts.unshift({ label: '🎮 끝말잇기', fn: openRewards });
-      acts.unshift({ label: '🎯 오늘의 출석', fn: openRewards });
-    }
+    var acts = [];
+    if (_lang === 'kr') acts.push({ label: '게임하기', fn: openRewards });  // 리워드 허브(출석·게임)는 한국 전용
+    acts.push({ label: tr('아니, 바로 주문·상담', '注文・相談', 'Order / Ask'), fn: function () { var i = _root.querySelector('.jvg-in-txt'); if (i) i.focus(); } });
     acts.forEach(function (a) {
       var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label;
       btn.addEventListener('click', a.fn); wrap.appendChild(btn);
@@ -173,10 +171,13 @@
       '<div class="jvg-body"></div>' +
       '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
-    // 첫 인사 (반말·친근 — 사진부터 물어봄. 고객 90%가 허니콤보드)
-    addMsg(tr('안녕~ 방가워! 😊 우리 고객 대부분이 허니콤보드를 만들어. 혹시 만들고 싶은 제품 사진 있어? 없으면 인터넷에서 비슷한 걸 찾아서 아래 📷로 올려줘 — 사진 보고 딱 맞게 안내해줄게! (아니면 \'배너\', \'글씨스카시\'처럼 말해줘도 돼)',
-              'こんにちは！😊 お客様の多くはハニカムボードを作られます。作りたい製品の写真はありますか？なければネットで似たものを探して下の📷でアップしてください〜写真を見てご案内します！',
-              'Hey! 😊 Most of our customers make honeycomb boards. Do you have a photo of what you want? If not, find a similar one online and upload it with 📷 below — I\'ll guide you from the photo!'), 'ai');
+    // 첫 인사 (반말·친근, 단락으로 끊어서 보기 편하게. 고객 90%가 허니콤보드. 이모지 지양)
+    addMsg(tr(
+      '안녕~ 방가워!\n우리 고객 대부분이 허니콤보드를 만들어.\n\n혹시 만들고 싶은 제품 사진 있어?\n없으면 인터넷에서 비슷한 거 찾아서 아래 사진 버튼으로 올려줘.\n사진 보고 딱 맞게 안내해줄게.\n(아니면 \'배너\', \'글씨스카시\'처럼 말해줘도 돼.)',
+      'こんにちは！\nうちのお客さんの多くはハニカムボードを作ってるよ。\n\n作りたい製品の写真ある？\nなければネットで似たのを探して、下の写真ボタンで送ってね。\n写真を見てぴったり案内するよ。\n（「バナー」「文字スカシ」みたいに言ってもOK。）',
+      'Hey! Most of our customers make honeycomb boards.\n\nGot a photo of what you want?\nIf not, find a similar one online and send it with the photo button below.\nI\'ll guide you from there.\n(You can also just say \'banner\' or \'lettering\'.)'
+    ), 'ai');
+    if (_lang === 'kr') addMsg('그리고 주문 전에 게임 한 판 할까?\n출석하고 게임하면 무료쿠폰도 줄게.', 'ai');
     addQuickActions();
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
 
