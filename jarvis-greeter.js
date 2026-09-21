@@ -59,6 +59,10 @@
       '#jvgCard .jvg-quick{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 6px;}' +
       '#jvgCard .jvg-q{background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;}' +
       '#jvgCard .jvg-q:hover{background:#e0e7ff;}' +
+      '#jvgCard .jvg-img{background:#fff;border:2px solid #a5b4fc;color:#6366f1;border-radius:12px;padding:0 12px;font-size:18px;cursor:pointer;flex-shrink:0;animation:jvgSpark 1.5s ease-in-out infinite;}' +
+      '#jvgCard .jvg-img:hover{background:#eef2ff;}' +
+      '@keyframes jvgSpark{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.55);border-color:#818cf8;}50%{box-shadow:0 0 0 7px rgba(99,102,241,0);border-color:#6366f1;}}' +
+      '#jvgCard .jvg-msg.me img{max-width:150px;border-radius:10px;display:inline-block;}' +
       '#jvgCard .jvg-foot{display:flex;gap:8px;padding:11px 12px;border-top:1px solid #eef2f7;background:#fff;}' +
       '#jvgCard .jvg-in-txt{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;}' +
       '#jvgCard .jvg-in-txt:focus{border-color:#6366f1;}' +
@@ -112,22 +116,31 @@
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
   }
 
-  async function send(text) {
-    if (_busy || !text) return;
+  function readImage(file, cb) {
+    try { var r = new FileReader(); r.onload = function () { var du = String(r.result); cb((du.split(',')[1] || ''), file.type || 'image/jpeg', du); }; r.readAsDataURL(file); } catch (e) {}
+  }
+  function addImageMsg(dataUrl) {
+    var b = _root.querySelector('.jvg-body'); var d = document.createElement('div'); d.className = 'jvg-msg me';
+    d.innerHTML = '<img src="' + dataUrl + '" alt="">'; b.appendChild(d); b.scrollTop = b.scrollHeight;
+  }
+  async function send(text, image) {
+    if (_busy || (!text && !image)) return;
     _busy = true;
     var sendBtn = _root.querySelector('.jvg-send'); if (sendBtn) sendBtn.disabled = true;
-    addMsg(text, 'me');
+    if (image && image.dataUrl) addImageMsg(image.dataUrl);
+    if (text) addMsg(text, 'me');
     var typing = addMsg(tr('카푸가 입력 중…', 'カプが入力中…', 'Kapu is typing…'), 'ai');
     typing.classList.add('jvg-typing');
     try {
-      var payload = { message: text, lang: _lang, conversation_history: _hist.slice(-30) };
+      var payload = { message: text || (image ? tr('이 사진 보고 안내해줘', 'この写真を見て案内して', 'Guide me based on this photo') : ''), lang: _lang, conversation_history: _hist.slice(-30) };
       if (_room) payload.room_id = _room;
+      if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
       if (data.room_id) _room = data.room_id;
       var msg = data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?');
       typing.classList.remove('jvg-typing'); typing.textContent = msg;
-      _hist.push({ role: 'user', content: text });
+      _hist.push({ role: 'user', content: text || '[사진 업로드]' });
       _hist.push({ role: 'assistant', content: msg });
       addRecs(data.products);
     } catch (e) {
@@ -144,12 +157,12 @@
     _root.innerHTML =
       '<div class="jvg-head"><span class="jvg-ava">🦎</span><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('무엇이든 편하게 말씀하세요', 'お気軽にどうぞ', 'Ask me anything') + '</div></div><button class="jvg-x" aria-label="close">×</button></div>' +
       '<div class="jvg-body"></div>' +
-      '<div class="jvg-foot"><input class="jvg-in-txt" type="text" placeholder="' + tr('예: 가벽 3미터, 키링 굿즈, 현수막…', '例: パーティション3m、キーホルダー…', 'e.g. 3m wall, keyring goods…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
+      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
-    // 첫 인사 (사이트가 먼저 말 건다 — 반말로 친근하게)
-    addMsg(tr('안녕~ 방가워! 😊 바로 주문할 수도 있고, 오늘의 출석이나 끝말잇기 하면 적립금도 줘. 뭐부터 할래?',
-              'こんにちは！ご注文もできますし、出席チェックやしりとりでポイントも貯まりますよ😊 何からにしますか？',
-              'Hey! 😊 You can order right away, or earn points with today\'s check-in or word-chain. What first?'), 'ai');
+    // 첫 인사 (반말·친근 — 사진부터 물어봄. 고객 90%가 허니콤보드)
+    addMsg(tr('안녕~ 방가워! 😊 우리 고객 대부분이 허니콤보드를 만들어. 혹시 만들고 싶은 제품 사진 있어? 없으면 인터넷에서 비슷한 걸 찾아서 아래 📷로 올려줘 — 사진 보고 딱 맞게 안내해줄게! (아니면 \'배너\', \'글씨스카시\'처럼 말해줘도 돼)',
+              'こんにちは！😊 お客様の多くはハニカムボードを作られます。作りたい製品の写真はありますか？なければネットで似たものを探して下の📷でアップしてください〜写真を見てご案内します！',
+              'Hey! 😊 Most of our customers make honeycomb boards. Do you have a photo of what you want? If not, find a similar one online and upload it with 📷 below — I\'ll guide you from the photo!'), 'ai');
     addQuickActions();
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); });
     try { sessionStorage.setItem('jarvisGreeted', '1'); } catch (e) {}
@@ -158,6 +171,9 @@
     function doSend() { var v = (inp.value || '').trim(); if (!v) return; inp.value = ''; send(v); }
     btn.addEventListener('click', doSend);
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
+    var imgBtn = _root.querySelector('.jvg-img'), fileInp = _root.querySelector('.jvg-file');
+    imgBtn.addEventListener('click', function () { fileInp.click(); });
+    fileInp.addEventListener('change', function () { var f = fileInp.files && fileInp.files[0]; if (f) readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); fileInp.value = ''; });
     _root.querySelector('.jvg-x').addEventListener('click', close);
   }
 
