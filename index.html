@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260921230941';
+    var CV = '20260921231252';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -22015,13 +22015,9 @@ if (w >= 20 && h >= 20) {
 
         <div style="margin-bottom: 15px;">
             <label class="form-label" style="font-weight:bold; font-size:13px; margin-bottom:5px; display:block;" data-i18n="label_select_manager">담당 매니저 선택 (Optional)</label>
-            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px;">
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px;">
                 <label class="manager-select">
-                    <input type="radio" name="vipManager" value="은미 매니저" checked>
-                    <div class="mgr-box" data-i18n="vip_form_mgr1">은미 매니저</div>
-                </label>
-                <label class="manager-select">
-                    <input type="radio" name="vipManager" value="지숙 매니저">
+                    <input type="radio" name="vipManager" value="지숙 매니저" checked>
                     <div class="mgr-box" data-i18n="vip_form_mgr2">지숙 매니저</div>
                 </label>
                 <label class="manager-select">
