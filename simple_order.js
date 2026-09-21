@@ -4955,9 +4955,9 @@ html, body { background: #ffffff !important; }
         let presetWrapFee = 0;
         if (state.isPresetGoods) {
             if (state.presetWrapType === 'insert') {
-                presetWrapFee = Math.round(500 * _frMulR) * qty;   // 조립 및 개별포장
+                presetWrapFee = Math.round(1000 * _frMulR) * qty;  // 조립 및 개별포장
             } else if (state.presetWrapType === 'top') {
-                presetWrapFee = Math.round(1000 * _frMulR) * qty;  // 상단라벨포장
+                presetWrapFee = Math.round(2000 * _frMulR) * qty;  // 라벨인쇄포장
             } else {
                 // 'plain'(비조립 무포장) · 'bulk'(레거시) · 미설정 → 무료
                 presetWrapFee = 0;
@@ -5083,7 +5083,7 @@ html, body { background: #ffffff !important; }
         if (presetWrapFee > 0) {
             var _wrapTypeLabel = '';
             if (state.presetWrapType === 'insert') _wrapTypeLabel = tr('조립 및 개별포장', '組立・個別包装', 'Assembled + individual wrap');
-            else if (state.presetWrapType === 'top') _wrapTypeLabel = tr('상단라벨포장', '上部ラベル包装', 'Top label wrap');
+            else if (state.presetWrapType === 'top') _wrapTypeLabel = tr('라벨인쇄포장', 'ラベル印刷包装', 'Label print wrap');
             else _wrapTypeLabel = tr('비조립 무포장', '非組立・無包装', 'No assembly / no wrap');
             var _wrapQtyLabel = ' × ' + qty;
             bdHtml += '<div class="so-price-row"><span>· ' + _wrapTypeLabel + _wrapQtyLabel + '</span><span>+' + fmtPrice(presetWrapFee) + '</span></div>';
@@ -15322,8 +15322,8 @@ html, body { background: #ffffff !important; }
                 //   기존 '벌크포장(무료)' 는 '비조립 무포장' 으로 통합해 삭제.
                 var WRAP_OPTS = [
                     { type:'plain',  img:'/keyringcut/pac3.jpg', label_ko:'비조립 무포장', label_jp:'非組立・無包装', label_en:'No assembly / no wrap', fee:0 },
-                    { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'조립 및 개별포장', label_jp:'組立・個別包装', label_en:'Assembled + individual wrap', fee:500 },
-                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단라벨포장', label_jp:'上部ラベル包装', label_en:'Top label wrap', fee:1000 }
+                    { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'조립 및 개별포장', label_jp:'組立・個別包装', label_en:'Assembled + individual wrap', fee:1000 },
+                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'라벨인쇄포장', label_jp:'ラベル印刷包装', label_en:'Label print wrap', fee:2000 }
                 ];
                 var _frMulW = (state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;   // 가맹점 마진(본사 ×1)
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
