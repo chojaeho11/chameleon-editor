@@ -35,9 +35,11 @@ window.loadFranchiseManagement = async () => {
     } catch (e) { wrap.innerHTML = '<div style="color:#ef4444;padding:16px;">가맹점 로드 실패: ' + _fmEsc(e.message || e) + '</div>'; return; }
 
     const slugs = frs.map((f) => f.slug);
+    // 2026-09-21(사장님): 주문·요청은 대기 신청자 것도 함께 조회 (관리 패널에서 보이도록).
+    const allSlugs = [...frs, ...pendingFrs].map((f) => f.slug);
     const ownerIds = frs.map((f) => f.owner_id).filter(Boolean);
-    try { const { data } = await sb.from('orders').select('id,order_date,total_amount,franchise_slug,status').in('franchise_slug', slugs).order('order_date', { ascending: false }).limit(3000); orders = data || []; } catch (e) {}
-    try { const { data } = await sb.from('franchise_messages').select('*').in('franchise_slug', slugs).order('created_at', { ascending: true }).limit(3000); msgs = data || []; } catch (e) {}
+    try { const { data } = await sb.from('orders').select('id,order_date,total_amount,franchise_slug,status').in('franchise_slug', allSlugs).order('order_date', { ascending: false }).limit(3000); orders = data || []; } catch (e) {}
+    try { const { data } = await sb.from('franchise_messages').select('*').in('franchise_slug', allSlugs).order('created_at', { ascending: true }).limit(3000); msgs = data || []; } catch (e) {}
     try { const { data } = await sb.from('franchise_settlements').select('*').in('franchise_slug', slugs).order('created_at', { ascending: false }).limit(3000); setts = data || []; } catch (e) {}
     if (ownerIds.length) { try { const { data } = await sb.from('profiles').select('id,role').in('id', ownerIds); (data || []).forEach((p) => { roles[p.id] = p.role; }); } catch (e) {} }
 
@@ -73,8 +75,38 @@ window.loadFranchiseManagement = async () => {
             + '</div>';
     }
 
-    // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — 이 화면에서 바로 승인/반려.
-    //   신청 유형(가맹점/리셀러)은 테마 JSON applicantType 로 판별해 배지 + 신청한 쪽 버튼 강조.
+    // 2026-09-21(사장님): [관리] 패널 — 사업자·연락 정보 + 주문 내역 + 요청(본사↔가맹). 버튼 토글로 펼침.
+    const _fmMgmtContent = (f) => {
+        const ords = (ordByFr[f.slug] || []);
+        const ms = (msgByFr[f.slug] || []);
+        let sales = 0; ords.forEach((o) => { sales += Number(o.total_amount || 0); });
+        const orderRows = ords.slice(0, 50).map((o) => {
+            const d = o.order_date ? new Date(o.order_date).toLocaleDateString() : '-';
+            return '<tr><td style="padding:4px 8px;">' + d + '</td><td style="padding:4px 8px;">#' + o.id + '</td><td style="padding:4px 8px;text-align:right;">' + _fmWon(o.total_amount) + '</td><td style="padding:4px 8px;">' + (_FM_DONE.indexOf(o.status) >= 0 ? '✅ 완료' : _fmEsc(o.status || '진행중')) + '</td></tr>';
+        }).join('');
+        const thread = ms.length ? ms.map((m) => {
+            const hq = m.sender === 'hq';
+            const t = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+            return '<div style="margin:5px 0;padding:8px 11px;border-radius:9px;background:' + (hq ? '#eef2ff' : '#f1f5f9') + ';max-width:78%;' + (hq ? 'margin-left:auto;' : '') + '"><div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">' + _fmEsc(m.body) + '</div><div style="font-size:10px;color:#94a3b8;margin-top:3px;">' + (hq ? '본사' : '🏪 ' + _fmEsc(f.company_name || '')) + ' · ' + t + '</div></div>';
+        }).join('') : '<div style="color:#94a3b8;font-size:13px;padding:10px;">아직 요청·메시지가 없습니다. 먼저 요청을 보내보세요.</div>';
+        return '<div class="fm-mgmt" style="display:none;margin-top:12px;border-top:1px dashed #cbd5e1;padding-top:12px;">'
+            + '<div style="font-size:12px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 12px;margin-bottom:10px;">'
+              + '📇 <b>연락 정보</b> · ' + _fmEsc(f.company_name || f.slug) + ' · ' + _fmEsc(f.phone || '-') + ' · ' + _fmEsc(f.email || '-') + ' · ' + _fmEsc(f.country || '-')
+              + ' · <a href="/store/' + _fmEsc(f.slug) + '" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;">🔗 매장 보기</a>'
+            + '</div>'
+            + '<div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">🧾 주문 내역 (' + ords.length + '건 · 매출 ' + _fmWon(sales) + ')</div>'
+            + '<div style="overflow-x:auto;margin-bottom:14px;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="padding:5px 8px;text-align:left;">주문일</th><th style="padding:5px 8px;text-align:left;">번호</th><th style="padding:5px 8px;text-align:right;">금액</th><th style="padding:5px 8px;text-align:left;">상태</th></tr></thead><tbody>' + (orderRows || '<tr><td colspan="4" style="padding:10px;color:#94a3b8;">주문 없음</td></tr>') + '</tbody></table></div>'
+            + '<div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">📨 요청 (본사 → ' + _fmEsc(f.company_name || '가맹점') + ')</div>'
+            + '<div style="max-height:240px;overflow-y:auto;padding:6px 8px;background:#fafafa;border-radius:8px;">' + thread + '</div>'
+            + '<div style="display:flex;gap:6px;margin-top:8px;">'
+              + '<textarea id="fmMsg-' + _fmEsc(f.slug) + '" rows="2" placeholder="요청·전달할 내용을 입력하세요…" style="flex:1;border:1px solid #d1d5db;border-radius:8px;padding:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>'
+              + '<button class="btn btn-sm" style="background:#6366f1;color:#fff;align-self:stretch;" onclick="fmSendMsg(\'' + _fmEsc(f.slug) + '\',this)">요청 보내기</button>'
+            + '</div>'
+          + '</div>';
+    };
+    const _fmMgmtBtn = '<button class="btn btn-sm" style="background:#e0e7ff;color:#3730a3;font-weight:700;" onclick="var p=this.closest(&quot;.fm-card&quot;).querySelector(&quot;.fm-mgmt&quot;);if(p){p.style.display=p.style.display===&quot;none&quot;?&quot;block&quot;:&quot;none&quot;;}">🛠 관리</button>';
+
+    // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — [승인](신청 유형으로) + [반려] + [관리].
     const pendTypes = pendingFrs.length ? await Promise.all(pendingFrs.map((f) => _fmApplicantType(f.slug))) : [];
     const _fmTypeBadge = (t) => (t === 'franchise')
         ? '<span style="background:#ffedd5;color:#c2410c;border:1px solid #fdba74;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🏭 가맹점 신청</span>'
@@ -87,21 +119,21 @@ window.loadFranchiseManagement = async () => {
             const sl = _fmEsc(f.slug);
             const oid = _fmEsc(f.owner_id || '');
             const at = pendTypes[i];                 // 'franchise' | 'reseller'
-            const wantFr = (at === 'franchise');     // 신청한 유형
-            // 신청한 쪽 버튼은 진하게(강조), 반대쪽은 옅게.
-            const rBg = wantFr ? '#c7d2fe' : '#6366f1', rFg = wantFr ? '#3730a3' : '#fff', rW = wantFr ? '600' : '800';
-            const fBg = wantFr ? '#c2410c' : '#fed7aa', fFg = wantFr ? '#fff' : '#9a3412', fW = wantFr ? '800' : '600';
-            return '<div style="border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;">'
-                + '<div style="font-size:13px;color:#334155;min-width:240px;">'
-                  + '<b style="font-size:14px;">' + _fmEsc(f.company_name || f.slug) + '</b> ' + _fmTypeBadge(at) + ' <span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">대기</span><br>'
-                  + '<a href="/store/' + sl + '" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px;text-decoration:underline;">🔗 /store/' + sl + '</a> '
-                  + '<span style="color:#94a3b8;font-size:12px;">· ' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + ' · ' + _fmEsc(f.country || '') + ' · 신청 ' + d + '</span>'
+            const apprLabel = (at === 'franchise') ? '✅ 가맹점 승인(20%)' : '✅ 리셀러 승인(10%)';
+            const apprBg = (at === 'franchise') ? '#c2410c' : '#6366f1';
+            return '<div class="fm-card" style="border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#fff;">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">'
+                  + '<div style="font-size:13px;color:#334155;min-width:240px;">'
+                    + '<b style="font-size:14px;">' + _fmEsc(f.company_name || f.slug) + '</b> ' + _fmTypeBadge(at) + ' <span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">대기</span><br>'
+                    + '<span style="color:#94a3b8;font-size:12px;">' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + ' · ' + _fmEsc(f.country || '') + ' · 신청 ' + d + '</span>'
+                  + '</div>'
+                  + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+                    + '<button class="btn btn-sm" style="background:' + apprBg + ';color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'' + at + '\',this)">' + apprLabel + '</button>'
+                    + '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="fmRejectApplicant(\'' + sl + '\',this)">❌ 반려</button>'
+                    + _fmMgmtBtn
+                  + '</div>'
                 + '</div>'
-                + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-                  + '<button class="btn btn-sm" style="background:' + rBg + ';color:' + rFg + ';font-weight:' + rW + ';" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'reseller\',this)">✅ 리셀러 승인(10%)</button>'
-                  + '<button class="btn btn-sm" style="background:' + fBg + ';color:' + fFg + ';font-weight:' + fW + ';" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'franchise\',this)">🏭 가맹점 승인(20%)</button>'
-                  + '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="fmRejectApplicant(\'' + sl + '\',this)">❌ 반려</button>'
-                + '</div>'
+                + _fmMgmtContent(f)
               + '</div>';
         }).join('')
         + '</div>'
@@ -127,11 +159,11 @@ window.loadFranchiseManagement = async () => {
             return '<div style="margin:5px 0;padding:8px 11px;border-radius:9px;background:' + (hq ? '#eef2ff' : '#f1f5f9') + ';max-width:78%;' + (hq ? 'margin-left:auto;' : '') + '"><div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">' + _fmEsc(m.body) + '</div><div style="font-size:10px;color:#94a3b8;margin-top:3px;">' + (hq ? '본사' : '🏪 ' + _fmEsc(f.company_name || '가맹점')) + ' · ' + t + '</div></div>';
         }).join('') : '<div style="color:#94a3b8;font-size:13px;padding:10px;">아직 메시지가 없습니다. 먼저 인사를 보내보세요.</div>';
 
-        return '<div class="card" style="margin-bottom:14px;">'
+        return '<div class="card fm-card" style="margin-bottom:14px;">'
             + '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">'
-              + '<div><b style="font-size:16px;">' + _fmEsc(f.company_name || f.slug) + '</b> ' + tier + (unread ? ' <span style="color:#ef4444;font-weight:800;font-size:12px;">🔴 새 메시지</span>' : '') + '<br>'
+              + '<div><b style="font-size:16px;">' + _fmEsc(f.company_name || f.slug) + '</b> ' + tier + (unread ? ' <span style="color:#ef4444;font-weight:800;font-size:12px;">🔴 새 요청</span>' : '') + '<br>'
                 + '<a href="/store/' + _fmEsc(f.slug) + '" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px;text-decoration:underline;">🔗 /store/' + _fmEsc(f.slug) + '</a> <span style="color:#94a3b8;font-size:12px;">· ' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + '</span></div>'
-              + '<div style="text-align:right;"><div style="font-size:12px;color:#64748b;">매출 / 완료주문</div><div style="font-size:17px;font-weight:800;color:#16a34a;">' + _fmWon(sales) + ' <span style="font-size:12px;color:#64748b;">/ ' + doneN + '건</span></div></div>'
+              + '<div style="text-align:right;"><div style="font-size:12px;color:#64748b;">매출 / 완료주문</div><div style="font-size:17px;font-weight:800;color:#16a34a;">' + _fmWon(sales) + ' <span style="font-size:12px;color:#64748b;">/ ' + doneN + '건</span></div><div style="margin-top:6px;">' + _fmMgmtBtn + '</div></div>'
             + '</div>'
             + (function () {
                 const ss = _setSums(f.slug);
@@ -143,18 +175,7 @@ window.loadFranchiseManagement = async () => {
                     + '<div>' + payBtn + '</div>'
                   + '</div>';
               })()
-            + '<div style="margin-top:10px;">'
-              + '<div onclick="var b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'block\':\'none\';" style="cursor:pointer;font-size:13px;color:#6366f1;font-weight:700;user-select:none;">▸ 주문 내역 보기 (' + ords.length + '건)</div>'
-              + '<div style="display:none;margin-top:6px;overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="padding:5px 8px;text-align:left;">주문일</th><th style="padding:5px 8px;text-align:left;">번호</th><th style="padding:5px 8px;text-align:right;">금액</th><th style="padding:5px 8px;text-align:left;">상태</th></tr></thead><tbody>' + (orderRows || '<tr><td colspan="4" style="padding:10px;color:#94a3b8;">주문 없음</td></tr>') + '</tbody></table></div>'
-            + '</div>'
-            + '<div style="margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;">'
-              + '<div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">💬 채팅 (본사 ↔ 가맹점)</div>'
-              + '<div style="max-height:260px;overflow-y:auto;padding:6px 8px;background:#fafafa;border-radius:8px;">' + thread + '</div>'
-              + '<div style="display:flex;gap:6px;margin-top:8px;">'
-                + '<textarea id="fmMsg-' + _fmEsc(f.slug) + '" rows="2" placeholder="가맹점에 보낼 메시지…" style="flex:1;border:1px solid #d1d5db;border-radius:8px;padding:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>'
-                + '<button class="btn btn-sm" style="background:#6366f1;color:#fff;align-self:stretch;" onclick="fmSendMsg(\'' + _fmEsc(f.slug) + '\',this)">전송</button>'
-              + '</div>'
-            + '</div>'
+            + _fmMgmtContent(f)
           + '</div>';
     }).join('');
     wrap.innerHTML = pendHtml + apprHtml;
