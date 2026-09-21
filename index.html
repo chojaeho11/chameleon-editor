@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260922003459';
+    var CV = '20260922004555';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -11113,7 +11113,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
-<script src="/simple_order.js?v=914"></script>
+<script src="/simple_order.js?v=915"></script>
 <script src="/sns-ranking.js?v=11"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>
@@ -13131,7 +13131,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./ai-design-hero.js?v=29').catch(e => console.warn('AI design hero init skipped:', e));
 
         // 2026-09-21(사장님): 홈 "자비스 응대" 프로토타입 — 홈 진입 시 사이트가 먼저 인사하고 대화로 안내 (카푸 두뇌 재사용)
-        (function(){ try { var s=document.createElement('script'); s.src='/jarvis-greeter.js?v=9'; s.async=true; document.head.appendChild(s); } catch(e){} })();
+        (function(){ try { var s=document.createElement('script'); s.src='/jarvis-greeter.js?v=10'; s.async=true; document.head.appendChild(s); } catch(e){} })();
 
         // Photo Studio는 advisor-panel.js에 통합됨
 

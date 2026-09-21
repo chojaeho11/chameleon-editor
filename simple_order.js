@@ -18291,7 +18291,12 @@ html, body { background: #ffffff !important; }
         const ok = await doAddToCart();
         if (ok) {
             renderSoCart();
-            setTimeout(() => window._soToggleCart(true), 200);
+            // 2026-09-22(사장님): 담은 뒤 자비스(카푸)가 "같이 살 거 있어?"로 이어감. 없으면 기존처럼 카트 드로어.
+            if (typeof window.openJarvisAfterCart === 'function') {
+                try { window.openJarvisAfterCart(); } catch (e) { setTimeout(() => window._soToggleCart(true), 200); }
+            } else {
+                setTimeout(() => window._soToggleCart(true), 200);
+            }
             // 다음 라인을 위한 상태 초기화
             state.cutlineWork = false;
             var cb2 = document.getElementById('soCutlineCheckbox');

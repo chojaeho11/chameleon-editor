@@ -159,7 +159,23 @@
     }
   }
 
-  function open() {
+  function _cartCount() { try { return (JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || []).length; } catch (e) { return 0; } }
+  function _addCartActions() {
+    var b = _root.querySelector('.jvg-body');
+    var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
+    var n = _cartCount();
+    var acts = [{ label: '아니, 주문할게', fn: function () { close(); location.href = '/?cart=checkout'; } }];
+    if (n >= 2) acts.push({ label: '견적서 받기 (' + n + '개)', fn: function () { try { if (window._soDownloadQuotePreview) window._soDownloadQuotePreview(); else location.href = '/?cart=open'; } catch (e) { location.href = '/?cart=open'; } } });
+    acts.forEach(function (a) { var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label; btn.addEventListener('click', a.fn); wrap.appendChild(btn); });
+    b.appendChild(wrap); b.scrollTop = b.scrollHeight;
+  }
+  window.openJarvisAfterCart = function () {   // 2026-09-22(사장님): 장바구니 담은 뒤 "같이 살 거 있어?"
+    var msg = '장바구니에 담았어!\n같이 살 다른 제품 있어? 있으면 사진 올리거나 제품을 말해줘.';
+    if (_root) { addMsg(msg, 'ai'); _addCartActions(); }
+    else { open('aftercart'); }
+  };
+
+  function open(mode) {
     if (_root) return;   // 이미 열려 있으면 무시
     ensureStyles();
     _backdrop = document.createElement('div'); _backdrop.id = 'jvgBackdrop';
@@ -171,12 +187,17 @@
       '<div class="jvg-body"></div>' +
       '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
-    // 첫 인사 (반말·친근, 간결하게. 이모지 지양)
-    addMsg(tr(
-      '안녕~ 방가워!\n행사 준비해? 만들고 싶은 제품의 사진을 올려줘.\n내가 보고 안내해줄게.',
-      'こんにちは！\nイベントの準備かな？作りたい製品の写真を送ってね。\n見て案内するよ。',
-      'Hey!\nPlanning an event? Send a photo of what you want to make.\nI\'ll take a look and guide you.'
-    ), 'ai');
+    if (mode === 'aftercart') {
+      addMsg('장바구니에 담았어!\n같이 살 다른 제품 있어? 있으면 사진 올리거나 제품을 말해줘.', 'ai');
+      _addCartActions();
+    } else {
+      // 첫 인사 (반말·친근, 간결하게. 이모지 지양)
+      addMsg(tr(
+        '안녕~ 방가워!\n행사 준비해? 만들고 싶은 제품의 사진을 올려줘.\n내가 보고 안내해줄게.',
+        'こんにちは！\nイベントの準備かな？作りたい製品の写真を送ってね。\n見て案内するよ。',
+        'Hey!\nPlanning an event? Send a photo of what you want to make.\nI\'ll take a look and guide you.'
+      ), 'ai');
+    }
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
 
     var inp = _root.querySelector('.jvg-in-txt'), btn = _root.querySelector('.jvg-send');
