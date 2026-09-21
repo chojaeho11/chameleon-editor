@@ -6,6 +6,16 @@ const _fmEsc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&
 const _fmWon = (n) => '₩' + Number(n || 0).toLocaleString();
 const _FM_DONE = ['완료됨', '완료', '구매확정', '배송완료', '발송완료'];
 const _fmToast = (m, k) => { try { if (window.showToast) return window.showToast(m, k); } catch (e) {} alert(m); };
+// 2026-09-21(사장님): 신청 유형(가맹점/리셀러)은 franchise 테마 JSON 의 applicantType 에 저장됨.
+const _FM_THEME_BASE = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/';
+async function _fmApplicantType(slug) {
+    try {
+        const r = await fetch(_FM_THEME_BASE + encodeURIComponent(slug) + '.json?_t=' + Date.now());
+        if (!r.ok) return 'reseller';
+        const t = await r.json();
+        return (t && t.applicantType === 'franchise') ? 'franchise' : 'reseller';
+    } catch (e) { return 'reseller'; }
+}
 
 window.loadFranchiseManagement = async () => {
     const wrap = document.getElementById('fmList');
@@ -64,22 +74,32 @@ window.loadFranchiseManagement = async () => {
     }
 
     // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — 이 화면에서 바로 승인/반려.
+    //   신청 유형(가맹점/리셀러)은 테마 JSON applicantType 로 판별해 배지 + 신청한 쪽 버튼 강조.
+    const pendTypes = pendingFrs.length ? await Promise.all(pendingFrs.map((f) => _fmApplicantType(f.slug))) : [];
+    const _fmTypeBadge = (t) => (t === 'franchise')
+        ? '<span style="background:#ffedd5;color:#c2410c;border:1px solid #fdba74;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🏭 가맹점 신청</span>'
+        : '<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🚀 리셀러 신청</span>';
     const pendHtml = pendingFrs.length ? (
         '<div class="card" style="margin-bottom:16px;border:1.5px solid #fecaca;background:#fff7f7;">'
         + '<div style="font-size:15px;font-weight:800;color:#b91c1c;margin-bottom:10px;">🕒 대기 중인 신청 (' + pendingFrs.length + ')</div>'
-        + pendingFrs.map((f) => {
+        + pendingFrs.map((f, i) => {
             const d = f.created_at ? new Date(f.created_at).toLocaleDateString() : '-';
             const sl = _fmEsc(f.slug);
             const oid = _fmEsc(f.owner_id || '');
+            const at = pendTypes[i];                 // 'franchise' | 'reseller'
+            const wantFr = (at === 'franchise');     // 신청한 유형
+            // 신청한 쪽 버튼은 진하게(강조), 반대쪽은 옅게.
+            const rBg = wantFr ? '#c7d2fe' : '#6366f1', rFg = wantFr ? '#3730a3' : '#fff', rW = wantFr ? '600' : '800';
+            const fBg = wantFr ? '#c2410c' : '#fed7aa', fFg = wantFr ? '#fff' : '#9a3412', fW = wantFr ? '800' : '600';
             return '<div style="border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;">'
                 + '<div style="font-size:13px;color:#334155;min-width:240px;">'
-                  + '<b style="font-size:14px;">' + _fmEsc(f.company_name || f.slug) + '</b> <span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">대기</span><br>'
+                  + '<b style="font-size:14px;">' + _fmEsc(f.company_name || f.slug) + '</b> ' + _fmTypeBadge(at) + ' <span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">대기</span><br>'
                   + '<a href="/store/' + sl + '" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px;text-decoration:underline;">🔗 /store/' + sl + '</a> '
                   + '<span style="color:#94a3b8;font-size:12px;">· ' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + ' · ' + _fmEsc(f.country || '') + ' · 신청 ' + d + '</span>'
                 + '</div>'
                 + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-                  + '<button class="btn btn-sm" style="background:#6366f1;color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'reseller\',this)">✅ 리셀러 승인(10%)</button>'
-                  + '<button class="btn btn-sm" style="background:#c2410c;color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'franchise\',this)">🏭 가맹점 승인(20%)</button>'
+                  + '<button class="btn btn-sm" style="background:' + rBg + ';color:' + rFg + ';font-weight:' + rW + ';" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'reseller\',this)">✅ 리셀러 승인(10%)</button>'
+                  + '<button class="btn btn-sm" style="background:' + fBg + ';color:' + fFg + ';font-weight:' + fW + ';" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'franchise\',this)">🏭 가맹점 승인(20%)</button>'
                   + '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="fmRejectApplicant(\'' + sl + '\',this)">❌ 반려</button>'
                 + '</div>'
               + '</div>';
