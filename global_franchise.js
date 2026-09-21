@@ -13,19 +13,16 @@ window.loadFranchiseManagement = async () => {
     if (!wrap) return;
     wrap.innerHTML = '<div style="padding:20px;color:#64748b;"><span class="spinner"></span> 불러오는 중…</div>';
 
-    let frs = [], orders = [], msgs = [], roles = {}, setts = [];
+    let frs = [], pendingFrs = [], orders = [], msgs = [], roles = {}, setts = [];
     try {
+        // 2026-09-21(사장님): 승인 전 신청자도 여기서 보이게 — 전체 조회 후 pending/approved 분리.
         const { data } = await sb.from('franchises')
-            .select('id,owner_id,slug,company_name,phone,email,status,created_at')
-            .eq('status', 'approved').order('created_at', { ascending: false });
-        frs = data || [];
+            .select('id,owner_id,slug,company_name,phone,email,country,status,created_at')
+            .order('created_at', { ascending: false });
+        const _all = data || [];
+        pendingFrs = _all.filter((f) => (f.status || 'pending') === 'pending');
+        frs = _all.filter((f) => f.status === 'approved');
     } catch (e) { wrap.innerHTML = '<div style="color:#ef4444;padding:16px;">가맹점 로드 실패: ' + _fmEsc(e.message || e) + '</div>'; return; }
-
-    if (!frs.length) {
-        if (sum) sum.innerHTML = '';
-        wrap.innerHTML = '<div style="padding:20px;color:#64748b;">승인된 가맹점·리셀러가 없습니다.<br><span style="font-size:12px;">신청 승인은 <b>고객관리 상단 "가맹/리셀러 신청·승인"</b> 패널에서 하세요.</span></div>';
-        return;
-    }
 
     const slugs = frs.map((f) => f.slug);
     const ownerIds = frs.map((f) => f.owner_id).filter(Boolean);
@@ -57,6 +54,7 @@ window.loadFranchiseManagement = async () => {
     });
     if (sum) {
         sum.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">'
+            + (pendingFrs.length ? '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#b91c1c;">🕒 대기 신청</div><div style="font-size:22px;font-weight:800;color:#dc2626;">' + pendingFrs.length + '</div></div>' : '')
             + '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#9a3412;">🏭 가맹점</div><div style="font-size:22px;font-weight:800;color:#c2410c;">' + nFr + '</div></div>'
             + '<div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#6d28d9;">🚀 리셀러</div><div style="font-size:22px;font-weight:800;color:#6d28d9;">' + nRe + '</div></div>'
             + '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 18px;"><div style="font-size:12px;color:#166534;">총 매출</div><div style="font-size:22px;font-weight:800;color:#16a34a;">' + _fmWon(gSales) + '</div></div>'
@@ -65,7 +63,31 @@ window.loadFranchiseManagement = async () => {
             + '</div>';
     }
 
-    wrap.innerHTML = frs.map((f) => {
+    // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — 이 화면에서 바로 승인/반려.
+    const pendHtml = pendingFrs.length ? (
+        '<div class="card" style="margin-bottom:16px;border:1.5px solid #fecaca;background:#fff7f7;">'
+        + '<div style="font-size:15px;font-weight:800;color:#b91c1c;margin-bottom:10px;">🕒 대기 중인 신청 (' + pendingFrs.length + ')</div>'
+        + pendingFrs.map((f) => {
+            const d = f.created_at ? new Date(f.created_at).toLocaleDateString() : '-';
+            const sl = _fmEsc(f.slug);
+            const oid = _fmEsc(f.owner_id || '');
+            return '<div style="border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;">'
+                + '<div style="font-size:13px;color:#334155;min-width:240px;">'
+                  + '<b style="font-size:14px;">' + _fmEsc(f.company_name || f.slug) + '</b> <span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b66;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">대기</span><br>'
+                  + '<a href="/store/' + sl + '" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px;text-decoration:underline;">🔗 /store/' + sl + '</a> '
+                  + '<span style="color:#94a3b8;font-size:12px;">· ' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + ' · ' + _fmEsc(f.country || '') + ' · 신청 ' + d + '</span>'
+                + '</div>'
+                + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+                  + '<button class="btn btn-sm" style="background:#6366f1;color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'reseller\',this)">✅ 리셀러 승인(10%)</button>'
+                  + '<button class="btn btn-sm" style="background:#c2410c;color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'franchise\',this)">🏭 가맹점 승인(20%)</button>'
+                  + '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="fmRejectApplicant(\'' + sl + '\',this)">❌ 반려</button>'
+                + '</div>'
+              + '</div>';
+        }).join('')
+        + '</div>'
+    ) : '';
+
+    const apprHtml = (!frs.length) ? '<div style="padding:16px;color:#64748b;font-size:13px;">승인된 가맹점·리셀러가 없습니다.</div>' : frs.map((f) => {
         const ords = ordByFr[f.slug] || [];
         let sales = 0, doneN = 0;
         ords.forEach((o) => { sales += Number(o.total_amount || 0); if (_FM_DONE.indexOf(o.status) >= 0) doneN++; });
@@ -115,6 +137,52 @@ window.loadFranchiseManagement = async () => {
             + '</div>'
           + '</div>';
     }).join('');
+    wrap.innerHTML = pendHtml + apprHtml;
+};
+
+// 2026-09-21(사장님): 가맹관리 화면에서 신청 승인/반려 — 처리 후 이 화면을 새로고침.
+//   RLS 로 UPDATE 0행(조용한 실패) 대비 .select() 로 반영 확인.
+const _FM_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_admin_rls.sql 을 Supabase SQL Editor 에서 먼저 실행하세요.';
+window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
+    role = (role === 'franchise') ? 'franchise' : 'reseller';
+    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 10%';
+    if (!confirm('[' + slug + '] 을(를) ' + pctTxt + ' 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 ' + (role === 'franchise' ? '20' : '10') + '% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
+    const orig = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug).select('id');
+        if (r1.error) throw r1.error;
+        if (!r1.data || !r1.data.length) throw new Error(_FM_RLS_MSG);
+        let roleSkipped = false;
+        if (ownerId) {
+            // 관리자/매니저 계정은 등급 변경 안 함 (본인 계정 승인 시 관리자 권한 상실 방지).
+            let cur = null;
+            try { const { data: p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); cur = p && p.role; } catch (e) {}
+            if (['admin', 'superadmin', 'manager'].indexOf(cur) >= 0) {
+                roleSkipped = true;
+            } else {
+                const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId).select('id');
+                if (r2.error) throw r2.error;
+                if (!r2.data || !r2.data.length) throw new Error('상태는 승인됐지만 등급 부여가 RLS 로 막혔습니다. ' + _FM_RLS_MSG);
+            }
+        }
+        _fmToast(roleSkipped ? '승인 완료 — 관리자/매니저 계정이라 등급은 변경하지 않았습니다.' : ('승인 완료 — ' + pctTxt), 'success');
+        loadFranchiseManagement();
+        if (window.loadFranchiseApplications) { try { window.loadFranchiseApplications(); } catch (e) {} }
+    } catch (e) { _fmToast('승인 실패: ' + (e.message || e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
+};
+window.fmRejectApplicant = async (slug, btn) => {
+    if (!confirm('[' + slug + '] 신청을 반려합니다.\n\n반려해도 신청자가 다시 저장하면 재신청됩니다. 계속할까요?')) return;
+    const orig = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+    try {
+        const r = await sb.from('franchises').update({ status: 'rejected' }).eq('slug', slug).select('id');
+        if (r.error) throw r.error;
+        if (!r.data || !r.data.length) throw new Error(_FM_RLS_MSG);
+        _fmToast('반려 처리됨', 'success');
+        loadFranchiseManagement();
+        if (window.loadFranchiseApplications) { try { window.loadFranchiseApplications(); } catch (e) {} }
+    } catch (e) { _fmToast('반려 실패: ' + (e.message || e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
 };
 
 window.fmSendMsg = async (slug, btn) => {
