@@ -12,16 +12,22 @@
   var API = SUPA_URL + '/functions/v1/product-advisor';
 
   // ── 노출 조건: 홈에서만, 세션 1회, 상세/가맹/에디터/카트 진입은 제외 ──
-  function _isHome() {
+  function _fabAllowed() {   // 우측 카멜레온 버튼(재열기)은 편집기/카트/단독도메인만 제외하고 어디서나
     try {
       var q = new URLSearchParams(location.search);
-      if (q.get('product') || q.get('fr') || q.get('cart') || q.get('editor') || q.get('search') || q.get('signup_event')) return false;
+      if (q.get('editor') || q.get('cart')) return false;
       if (document.body && document.body.classList.contains('editor-designonly')) return false;
-      // 단독 랜딩 도메인(종이매대/원판 등)은 제외 — 메인 카페 도메인에서만
       var h = location.hostname;
       if (h.indexOf('hexa-board') >= 0 || h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return false;
     } catch (e) {}
     return true;
+  }
+  function _isHomeView() {   // 자동 인사는 메인 홈에서만 (상세/가맹/검색 등 제외)
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get('product') || q.get('fr') || q.get('search') || q.get('signup_event')) return false;
+    } catch (e) {}
+    return _fabAllowed();
   }
 
   var _lang = (function () {
@@ -47,8 +53,9 @@
       '#jvgCard .jvg-ava{width:52px;height:52px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.7);}' +
       '#jvgCard .jvg-name{font-weight:800;font-size:17px;line-height:1.2;}' +
       '#jvgCard .jvg-sub{font-size:12px;opacity:.9;}' +
-      '#jvgFab{position:fixed;left:16px;bottom:18px;width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #a5b4fc;box-shadow:0 6px 20px rgba(99,102,241,.35);cursor:pointer;z-index:2147482998;overflow:hidden;padding:0;animation:jvgSpark 1.8s ease-in-out infinite;}' +
+      '#jvgFab{position:fixed;right:16px;bottom:18px;width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #a5b4fc;box-shadow:0 6px 20px rgba(99,102,241,.4);cursor:pointer;z-index:2147482998;overflow:hidden;padding:0;animation:jvgSpark 1.8s ease-in-out infinite;}' +
       '#jvgFab img{width:100%;height:100%;object-fit:cover;}' +
+      '#advFloatingFab,#kapuFab,#btnAiAdvisor,#floatingChatBtn{display:none!important;}' +
       '#jvgCard .jvg-x{margin-left:auto;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
       '#jvgCard .jvg-body{flex:1;overflow-y:auto;padding:16px;background:#fafafa;}' +
       '#jvgCard .jvg-msg{font-size:14px;line-height:1.55;color:#1e293b;white-space:pre-wrap;margin-bottom:10px;}' +
@@ -184,7 +191,6 @@
   }
 
   function close() {
-    try { sessionStorage.setItem('jarvisClosed', '1'); } catch (e) {}   // 사용자가 닫으면 이 세션 자동 재오픈 안 함
     if (_backdrop) { _backdrop.classList.remove('jvg-in'); var bd = _backdrop; _backdrop = null; setTimeout(function () { try { bd.remove(); } catch (e) {} }, 400); }
     if (_root) { _root.classList.remove('jvg-in'); var rt = _root; _root = null; setTimeout(function () { try { rt.remove(); } catch (e) {} }, 400); }
   }
@@ -200,11 +206,10 @@
     document.body.appendChild(fab);
   }
   function boot() {
-    if (!_isHome()) return;
-    makeFab();   // 재열기용 캐릭터 버튼은 항상 (세션 무관)
-    var closed = false; try { closed = sessionStorage.getItem('jarvisClosed') === '1'; } catch (e) {}
-    if (closed) return;   // 사용자가 닫았으면 이 세션엔 자동으로 다시 열지 않음 (좌측 캐릭터 버튼으로 재열기)
-    setTimeout(function () {
+    if (!_fabAllowed()) return;
+    makeFab();                  // 우측 카멜레온 버튼 — 홈/상세 어디서나 (재열기, 기존 💬 대체)
+    if (!_isHomeView()) return; // 자동 인사는 홈에서만
+    setTimeout(function () {     // 2026-09-22(사장님): 매번(재진입·새로고침) 자동으로 열기
       if (_root) return;
       if (document.querySelector('#advPanel.open, .adv-panel.open')) return;
       open();
