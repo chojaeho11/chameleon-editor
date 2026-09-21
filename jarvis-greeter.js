@@ -40,6 +40,17 @@
   var _room = null, _hist = [], _busy = false, _root = null, _backdrop = null;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+  // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
+  function stripMd(s) {
+    return String(s == null ? '' : s)
+      .replace(/\*\*([\s\S]*?)\*\*/g, '$1')
+      .replace(/(^|[^*])\*(?!\*)([^*\n]+?)\*(?!\*)/g, '$1$2')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+      .replace(/^\s*[-*]\s+/gm, '· ')
+      .replace(/__([\s\S]*?)__/g, '$1')
+      .trim();
+  }
 
   function ensureStyles() {
     if (document.getElementById('jvgStyle')) return;
@@ -146,7 +157,7 @@
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
       if (data.room_id) _room = data.room_id;
-      var msg = data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?');
+      var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
       typing.classList.remove('jvg-typing'); typing.textContent = msg;
       _hist.push({ role: 'user', content: text || '[사진 업로드]' });
       _hist.push({ role: 'assistant', content: msg });
