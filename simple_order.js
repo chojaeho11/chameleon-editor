@@ -16072,6 +16072,18 @@ html, body { background: #ffffff !important; }
         // 상품 추가 옵션 로드 (admin_addons 매칭)
         await _soPopulateAddons(p);
 
+        // 2026-09-21(사장님): 키링 — 고리 미선택 방지. 기본으로 실버 고리(kr_r_sv, 컬러자물쇠 실버) 선택.
+        //   신규 로드(selectedAddons 비어있음)에만 적용 → 카트 편집 재진입 시 저장된 고리 유지.
+        try {
+            if (state.isKeyring && (!state.selectedAddons || !Object.keys(state.selectedAddons).length)) {
+                var _defRing = document.querySelector('#soAddonList input[type=checkbox][data-addon-code="kr_r_sv"]');
+                if (_defRing && !_defRing.checked) {
+                    _defRing.checked = true;
+                    _defRing.dispatchEvent(new Event('change', { bubbles: true }));   // onchange → _soToggleAddon + 카드 하이라이트
+                }
+            }
+        } catch (e) {}
+
         recalc();
         // 2026-05-15: 원판 / 종이매대는 모달 열리자마자 배송 안내 박스 표시
         if ((state.isRawBoard || state.isPaperDisplay) && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
