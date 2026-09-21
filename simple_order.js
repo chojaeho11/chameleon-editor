@@ -4951,17 +4951,16 @@ html, body { background: #ffffff !important; }
             // 2026-06-25: 3장+ 인쇄비 50% 할인 폐지 (사용자 요청) — 정가.
             tshirtPrintFee = Math.round(_basePrint * _frMulR * qty);
         }
-        // 2026-06-29: 베스트굿즈 프리셋 — 개별포장 3종 모두 개당(×수량) 과금
-        //   개별포장(인쇄없음) plain = 200원/개 / 내지인쇄·상단인쇄 = 500원/개 (JP 20엔 / 50엔)
+        // 2026-09-21(사장님): 포장 개당 과금 — 비조립 무포장(plain)=무료 / 조립+개별포장(insert)=500 / 상단라벨포장(top)=1000
         let presetWrapFee = 0;
         if (state.isPresetGoods) {
-            if (state.presetWrapType === 'bulk') {
-                presetWrapFee = 0;   // 2026-07-28: 벌크포장 무료
-            } else if (state.presetWrapType === 'insert' || state.presetWrapType === 'top') {
-                presetWrapFee = Math.round(500 * _frMulR) * qty;
+            if (state.presetWrapType === 'insert') {
+                presetWrapFee = Math.round(500 * _frMulR) * qty;   // 조립 및 개별포장
+            } else if (state.presetWrapType === 'top') {
+                presetWrapFee = Math.round(1000 * _frMulR) * qty;  // 상단라벨포장
             } else {
-                // 'plain' (인쇄없음) 또는 미설정/legacy → 200원/개
-                presetWrapFee = Math.round(200 * _frMulR) * qty;
+                // 'plain'(비조립 무포장) · 'bulk'(레거시) · 미설정 → 무료
+                presetWrapFee = 0;
             }
         }
 
@@ -5083,9 +5082,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-29: 베스트굿즈 프리셋 — 개별포장 라인 (3종 모두 개당 ×수량)
         if (presetWrapFee > 0) {
             var _wrapTypeLabel = '';
-            if (state.presetWrapType === 'insert') _wrapTypeLabel = tr('내지인쇄 포장', '内側印刷ラッピング', 'Insert print wrap');
-            else if (state.presetWrapType === 'top') _wrapTypeLabel = tr('상단인쇄 포장', '上部印刷ラッピング', 'Top print wrap');
-            else _wrapTypeLabel = tr('개별포장 (인쇄없음)', '個別包装（印刷なし）', 'Individual (no print)');
+            if (state.presetWrapType === 'insert') _wrapTypeLabel = tr('조립 및 개별포장', '組立・個別包装', 'Assembled + individual wrap');
+            else if (state.presetWrapType === 'top') _wrapTypeLabel = tr('상단라벨포장', '上部ラベル包装', 'Top label wrap');
+            else _wrapTypeLabel = tr('비조립 무포장', '非組立・無包装', 'No assembly / no wrap');
             var _wrapQtyLabel = ' × ' + qty;
             bdHtml += '<div class="so-price-row"><span>· ' + _wrapTypeLabel + _wrapQtyLabel + '</span><span>+' + fmtPrice(presetWrapFee) + '</span></div>';
         }
@@ -15319,12 +15318,12 @@ html, body { background: #ffffff !important; }
                 // 2026-06-04: 쿠션은 자체 솜포함/개별포장 옵션을 사용하므로 기존 3종 박스 숨김
                 _wrapWrap.style.display = (state.presetType === 'cushion') ? 'none' : '';
                 // 2026-06-29: 3종 모두 개당(×수량) 과금 — 개별포장(인쇄없음) 200원 / 내지·상단인쇄 500원 (JP 20·50·50엔)
+                // 2026-09-21(사장님): 포장 옵션 재편 — 비조립 무포장(무료) / 조립+개별포장(500) / 상단라벨포장(1000).
+                //   기존 '벌크포장(무료)' 는 '비조립 무포장' 으로 통합해 삭제.
                 var WRAP_OPTS = [
-                    { type:'plain',  img:'/keyringcut/pac3.jpg', label_ko:'개별포장 (인쇄없음)', label_jp:'個別包装（印刷なし）', label_en:'Individual (no print)', fee:200 },
-                    { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'내지인쇄 포장', label_jp:'内側印刷ラッピング', label_en:'Insert print',    fee:500 },
-                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단인쇄 포장', label_jp:'上部印刷ラッピング', label_en:'Top print',       fee:500 },
-                    // 2026-07-28: 벌크포장(개별포장 없음) — 무료 (사장님 지시)
-                    { type:'bulk',   img:'', label_ko:'벌크포장 (개별포장 없음)', label_jp:'バルク梱包（個別なし）', label_en:'Bulk (no wrap)', fee:0 }
+                    { type:'plain',  img:'/keyringcut/pac3.jpg', label_ko:'비조립 무포장', label_jp:'非組立・無包装', label_en:'No assembly / no wrap', fee:0 },
+                    { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'조립 및 개별포장', label_jp:'組立・個別包装', label_en:'Assembled + individual wrap', fee:500 },
+                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단라벨포장', label_jp:'上部ラベル包装', label_en:'Top label wrap', fee:1000 }
                 ];
                 var _frMulW = (state.frMargin > 0) ? (1 + state.frMargin / 100) : 1;   // 가맹점 마진(본사 ×1)
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
