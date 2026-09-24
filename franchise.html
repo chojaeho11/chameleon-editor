@@ -198,7 +198,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
             <!-- 2026-09-14: 히어로 간소화 — 안내문 + 원클릭 홈페이지 구축 버튼 1개 (신청/통화 버튼 제거) -->
             <p id="txtHeroPara" style="color:rgba(255,255,255,0.9);font-size:15px;line-height:1.75;max-width:600px;margin:0 auto 22px;">클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.</p>
             <div class="fr-hero-ctas">
-                <a href="/franchise-admin" class="btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="txtBuildBtn">원클릭 홈페이지 구축</span></a>
+                <a href="/franchise-admin" class="btn-primary" onclick="frOpenTerms(event); return false;"><i class="fa-solid fa-wand-magic-sparkles"></i> <span id="txtBuildBtn">약관 동의 및 가입</span></a>
             </div>
         </div>
     </div>
@@ -452,7 +452,7 @@ const L = {
     ko:{
         langLabel:'한국어',
         heroPara:'클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.',
-        buildBtn:'원클릭 홈페이지 구축',
+        buildBtn:'약관 동의 및 가입',
         badge:'⚡ 무자본 창업 가능 · 홈페이지 복제 · 결제·정산·생산 지원',
         heroH1:['친환경 인쇄사업이 <span class="hl">대세</span>입니다.','카멜레온이 가이드할게요.'],
         heroSub:'자본이 없어도 괜찮아요. 열정만 있으면 됩니다. 친환경 인쇄·전시 사업은 전 세계적으로 <b>매년 50% 이상 성장</b>하고 있습니다. 카멜레온프린팅은 <b>독보적 기술력</b>으로 세계 시장의 중심에 있습니다. 함께해 주세요 — 멋진 미래를 꿈꾸어도 좋습니다.',
@@ -523,7 +523,7 @@ const L = {
     ja:{
         langLabel:'日本語',
         heroPara:'クリック数回で自分だけのホームページを構築できます。<b>すべて無料</b>です。マージンを自由に調整し、あなただけの商品も追加できます。',
-        buildBtn:'ワンクリックでHP構築',
+        buildBtn:'規約に同意して加入',
         badge:'⚡ 完全無料 · 強力なエディタ搭載 · 印刷専門ショップ',
         heroH1:['印刷専門の<span class="hl">ショップ</span>を','無料で作りましょう'],
         heroSub:'クリック数回で、強力なエディタを搭載したショップが構築されます。カメレオンプリンティングの全製品をドロップシッピングで販売しましょう。マージン率を設定するだけで構築完了、仲介手数料もありません。さらに販売したい自社製品があれば登録して、あなただけの特別なショップを構成できます。',
@@ -591,7 +591,7 @@ const L = {
     en:{
         langLabel:'English',
         heroPara:'Build your own homepage in a few clicks. <b>It is all free.</b> Set your own margin freely and add your own products too.',
-        buildBtn:'One-Click Homepage',
+        buildBtn:'Agree to Terms & Join',
         badge:'⚡ 100% free · Powerful editor built in · Print-specialist online store',
         heroH1:['Build your print-specialist','<span class="hl">online store</span> for free'],
         heroSub:'In just a few clicks you get an online store with a powerful editor built in. Sell Chameleon Printing\'s entire product range by dropshipping — just set your margin rate and your store is ready, with no brokerage commission. Want to sell your own products too? Register them and build a store that is uniquely yours.',
@@ -659,7 +659,7 @@ const L = {
     zh:{
         langLabel:'中文',
         heroPara:'只需点击几下即可搭建您自己的官网。<b>全部免费</b>。可自由设置利润率，还能添加您自己的产品。',
-        buildBtn:'一键搭建官网',
+        buildBtn:'同意条款并加入',
         badge:'⚡ 完全免费 · 内置强大编辑器 · 印刷专属商城',
         heroH1:['免费创建您的','印刷专属<span class="hl">商城</span>'],
         heroSub:'只需点击几下，即可构建一个内置强大编辑器的商城。以代发货方式销售卡米利翁印刷的全线产品——只需设置利润率，构建即告完成，且无中介手续费。若还有想销售的自有产品，登记后即可打造专属于您的特别商城。',
@@ -727,7 +727,7 @@ const L = {
     ar:{
         langLabel:'العربية',
         heroPara:'أنشئ موقعك الخاص ببضع نقرات. <b>كل ذلك مجاني.</b> حدّد هامش ربحك بحرية وأضف منتجاتك الخاصة أيضًا.',
-        buildBtn:'موقع بنقرة واحدة',
+        buildBtn:'الموافقة على الشروط والانضمام',
         badge:'⚡ مجاني تمامًا · محرر قوي مدمج · متجر متخصص بالطباعة',
         heroH1:['أنشئ متجرك المتخصص بالطباعة','<span class="hl">مجانًا</span>'],
         heroSub:'بنقرات قليلة تحصل على متجر مزوّد بمحرر قوي مدمج. بِع كامل تشكيلة منتجات كاميليون للطباعة عبر الدروبشيبينغ — فقط حدّد نسبة هامشك ويكتمل البناء، دون أي عمولة وساطة. وإذا كان لديك منتجات خاصة تريد بيعها، سجّلها لتبني متجرًا فريدًا خاصًا بك.',
@@ -795,7 +795,7 @@ const L = {
     es:{
         langLabel:'Español',
         heroPara:'Cree su propia página web en unos clics. <b>Todo es gratis.</b> Ajuste su margen libremente y añada también sus propios productos.',
-        buildBtn:'Web en un clic',
+        buildBtn:'Aceptar términos y unirse',
         badge:'⚡ Totalmente gratis · Editor potente integrado · Tienda especializada en impresión',
         heroH1:['Cree su tienda especializada','en impresión <span class="hl">gratis</span>'],
         heroSub:'Con unos pocos clics obtiene una tienda con un potente editor integrado. Venda toda la gama de Chameleon Printing por dropshipping — solo fije su margen y la tienda queda lista, sin comisión de intermediación. ¿Quiere vender también sus propios productos? Regístrelos y cree una tienda única.',
@@ -863,7 +863,7 @@ const L = {
     de:{
         langLabel:'Deutsch',
         heroPara:'Erstellen Sie Ihre eigene Website mit wenigen Klicks. <b>Alles kostenlos.</b> Legen Sie Ihre Marge frei fest und fügen Sie auch eigene Produkte hinzu.',
-        buildBtn:'Website per Klick',
+        buildBtn:'Bedingungen zustimmen & beitreten',
         badge:'⚡ Komplett kostenlos · Mächtiger Editor integriert · Druck-Fachshop',
         heroH1:['Erstellen Sie Ihren Druck-Fachshop','<span class="hl">kostenlos</span>'],
         heroSub:'Mit wenigen Klicks erhalten Sie einen Online-Shop mit integriertem, leistungsstarkem Editor. Verkaufen Sie das gesamte Sortiment von Chameleon Printing per Dropshipping — legen Sie nur Ihre Marge fest, und der Shop ist fertig, ohne Vermittlungsprovision. Sie möchten auch eigene Produkte verkaufen? Registrieren Sie sie und bauen Sie einen ganz individuellen Shop.',
@@ -931,7 +931,7 @@ const L = {
     fr:{
         langLabel:'Français',
         heroPara:'Créez votre propre site en quelques clics. <b>Tout est gratuit.</b> Ajustez librement votre marge et ajoutez aussi vos propres produits.',
-        buildBtn:'Site en un clic',
+        buildBtn:'Accepter les conditions & rejoindre',
         badge:'⚡ Entièrement gratuit · Éditeur puissant intégré · Boutique spécialisée impression',
         heroH1:['Créez votre boutique spécialisée','en impression <span class="hl">gratuitement</span>'],
         heroSub:'En quelques clics, vous obtenez une boutique dotée d\'un éditeur puissant intégré. Vendez toute la gamme de Chameleon Printing en dropshipping — il suffit de fixer votre marge et la boutique est prête, sans commission d\'intermédiation. Vous voulez aussi vendre vos propres produits ? Enregistrez-les et créez une boutique unique.',
@@ -1115,7 +1115,7 @@ setTxt('txtBadge', T.badge);
 setTxt('txtHeroH1', T.heroH1[0] + '<br>' + T.heroH1[1]);
 setTxt('txtHeroSub', T.heroSub);
 setTxt('txtHeroPara', T.heroPara || '클릭 몇 번으로 나만의 홈페이지를 구축하세요. <b>모든 게 무료</b>입니다. 마진을 자유롭게 조정하고, 당신만의 제품도 추가할 수 있습니다.');
-setTxt('txtBuildBtn', T.buildBtn || '원클릭 홈페이지 구축');
+setTxt('txtBuildBtn', T.buildBtn || '약관 동의 및 가입');
 setTxt('txtCtaInquiry', T.ctaInquiry);
 setTxt('txtCtaCall', T.ctaCall);
 setTxt('txtPitchHl', T.pitchHl);
@@ -1440,6 +1440,62 @@ function showToast(msg, type){
 })();
 </script>
 
+    <!-- 2026-09-25(사장님): 가맹점·리셀러 이용약관 동의 모달 — '약관 동의 및 가입' 버튼 → 약관 먼저 → 동의 시 /franchise-admin -->
+    <div id="frTermsOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(17,12,40,0.72); align-items:center; justify-content:center; padding:16px;">
+      <div style="background:#fff; color:#241b45; width:100%; max-width:720px; max-height:88vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="padding:20px 24px; border-bottom:1px solid #ece7f7; display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-size:18px; color:#4c1d95;">가맹점 · 리셀러 이용약관</div>
+            <div style="font-size:12px; color:#8b83b0; margin-top:3px;">가입 전 아래 내용을 확인하고 동의해 주세요.</div>
+          </div>
+          <button type="button" onclick="frCloseTerms()" style="background:none; border:none; font-size:22px; color:#9b94c4; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+        <div style="padding:22px 24px; overflow-y:auto; font-size:13.5px; line-height:1.85; color:#3b3560;">
+          <p style="margin:0 0 14px; color:#8b83b0; font-size:12.5px;">본 약관은 카멜레온 프린팅(이하 "본사")과 가맹점·리셀러(이하 "회원") 간의 권리·의무를 정합니다.</p>
+
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제1조 (제품 하자·A/S)</span><br>가맹점이 제작·납품한 제품의 하자·불량에 대한 A/S는 해당 제작 가맹점이 책임지고 처리합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제2조 (책임 분담)</span><br>제품의 하자·불량은 제작 가맹점이 해결하며, 고객과의 판매·계약·법적 분쟁은 해당 주문을 받아 판매한 자(리셀러가 판매한 경우 리셀러, 가맹점이 직접 판매한 경우 가맹점)가 책임지고 해결합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제3조 (제품 사진의 홍보 사용)</span><br>본사에 제품을 주문할 때 제출·제작된 제품 사진은 본사 및 네트워크의 홍보에 사용될 수 있으며, 회원은 이를 자사 고객에게 구매약관으로 고지합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제4조 (로열티·정산)</span><br>회원은 판매 금액(현금입금 포함)의 1%를 로열티로 납부합니다. 카드결제는 본사 카멜레온 프린팅 PG로 수취하며, 전체 매출의 1% 로열티와 카드수수료(3.5%)·송금수수료를 제외하고 매월 말일 정산 입금합니다. 카드 결제액만으로 로열티가 충족되지 않는 경우(계좌이체 매출 비중이 큰 경우 등) 부족분은 말일 정산 시 회원이 본사에 입금합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제5조 (자재 구매·운송비)</span><br>자재는 선금으로 구매합니다. 해외 배송 시 한국 내 운송비를 포함한 모든 운송비용은 각 국가 가맹점이 부담합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제6조 (설계 비용)</span><br>종이매대 및 허니콤보드 설계 비용은 건당 5만원(한화 기준)이며, 이 비용은 월말 결산에서 제외됩니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제7조 (제작 원칙)</span><br>가맹점은 허니콤보드 등 자재를 구입해 직접 제작하는 것을 기본으로 하며, 필요 시 완제품을 구매할 수도 있습니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제8조 (설치·철거)</span><br>설치와 철거는 가맹점이 담당하며, 설치는 무료, 철거는 유료입니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제9조 (저작권·사고 책임)</span><br>해당 국가에서의 저작권 및 설치·시공 중 발생하는 사고에 대한 책임은 설치를 진행한 가맹점에게 있습니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제10조 (방염·화재)</span><br>현재 방염 제품이 완성되지 않았으므로 방염에 대한 책임을 본사는 지지 않습니다. 방염 및 화재 관련 사항은 회원이 발주처와 명확하게 계약해야 합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제11조 (세금·부가세)</span><br>부가가치세 등 각종 세금은 각 회원이 자국 세법에 따라 신고·납부할 책임이 있습니다. 국가 간 공급(본사→해외 가맹점 자재 공급 등)은 한국에서의 수출로 처리되며, 수입 관세·부가세 등 수입국에서 발생하는 세금은 해당 국가 가맹점이 부담합니다. 세부 사항은 본사와 협의합니다.</div>
+          <div style="margin-bottom:13px;"><span style="color:#4c1d95;">제12조 (계약 해지·권한 박탈)</span><br>본사는 회원의 권한을 언제든 박탈하고 일방적으로 계약을 해지할 수 있습니다. 특히 매출액 대비 자재 사용량이 현저하게 차이나는 경우 가맹계약이 해지될 수 있습니다.</div>
+          <div style="margin-bottom:4px;"><span style="color:#4c1d95;">제13조 (수수료 요약)</span><br>로열티 1% · 카드수수료 3.5% · 송금수수료는 각 국가의 송금 수수료 정책에 따릅니다.</div>
+        </div>
+        <div style="padding:16px 24px; border-top:1px solid #ece7f7;">
+          <label style="display:flex; align-items:flex-start; gap:9px; font-size:13.5px; color:#241b45; cursor:pointer; margin-bottom:14px;">
+            <input type="checkbox" id="frTermsAgree" onchange="frTermsToggle()" style="margin-top:3px; width:17px; height:17px; cursor:pointer;">
+            <span>위 <b style="color:#4c1d95;">가맹점·리셀러 이용약관</b>의 모든 내용을 확인하였으며 이에 동의합니다.</span>
+          </label>
+          <div style="display:flex; gap:10px;">
+            <button type="button" onclick="frCloseTerms()" style="flex:0 0 auto; padding:14px 20px; border-radius:11px; border:1px solid #d9d2ee; background:#fff; color:#6b5f96; font-size:14px; cursor:pointer;">취소</button>
+            <button type="button" id="frTermsContinue" disabled onclick="frAgreeContinue()" style="flex:1; padding:14px 20px; border-radius:11px; border:none; background:#c9c2e4; color:#fff; font-size:15px; font-weight:800; cursor:not-allowed;">동의하고 홈페이지 만들기 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    function frOpenTerms(e){ if(e){ e.preventDefault(); } var o=document.getElementById('frTermsOverlay'); if(o){ o.style.display='flex'; } return false; }
+    function frCloseTerms(){ var o=document.getElementById('frTermsOverlay'); if(o){ o.style.display='none'; } }
+    function frTermsToggle(){
+      var c=document.getElementById('frTermsAgree'), b=document.getElementById('frTermsContinue');
+      if(!c||!b) return;
+      if(c.checked){ b.disabled=false; b.style.background='linear-gradient(135deg,#7c3aed,#a855f7)'; b.style.cursor='pointer'; }
+      else { b.disabled=true; b.style.background='#c9c2e4'; b.style.cursor='not-allowed'; }
+    }
+    function frAgreeContinue(){
+      var c=document.getElementById('frTermsAgree'); if(!c||!c.checked) return;
+      try { localStorage.setItem('fr_terms_agreed', new Date().toISOString()); } catch(_){}
+      location.href='/franchise-admin';
+    }
+    // 오버레이 바깥 클릭 시 닫기
+    document.addEventListener('click', function(ev){ var o=document.getElementById('frTermsOverlay'); if(o && ev.target===o) frCloseTerms(); });
+    </script>
     <script src="/jp-nanami-fab.js?v=2" defer></script>
 </body>
 </html>
