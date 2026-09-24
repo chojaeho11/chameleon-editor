@@ -204,6 +204,77 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
+<!-- 2026-09-25(사장님): 승인된 가맹점·리셀러 로그인 시 회원 대시보드 (고객주문/매출집계/고객문의/자재주문) -->
+<style>
+  body.fr-member-mode .fr-hero, body.fr-member-mode .fr-cats, body.fr-member-mode .fr-globe { display:none !important; }
+  .fr-mtab{ padding:16px 10px; border:1px solid #e5e0f5; border-radius:12px; background:#faf9ff; color:#4c1d95; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .12s,border-color .12s; }
+  .fr-mtab:hover{ background:#f3f0ff; }
+  .fr-mtab.active{ background:#4c1d95; border-color:#4c1d95; color:#fff; }
+  .fr-dash-card{ border:1px solid #e5e0f5; border-radius:14px; padding:24px; background:#fff; }
+  .fr-otbl{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  .fr-otbl th{ text-align:left; color:#8b83b0; font-weight:600; padding:8px 10px; border-bottom:1px solid #ece7f7; font-size:12.5px; }
+  .fr-otbl td{ padding:10px; border-bottom:1px solid #f4f1fb; color:#3b3560; }
+  .fr-stat{ border:1px solid #e5e0f5; border-radius:12px; padding:20px; background:#faf9ff; }
+  .fr-stat .n{ font-size:26px; color:#4c1d95; }
+  .fr-stat .l{ font-size:13px; color:#8b83b0; margin-top:4px; }
+  .fr-empty{ text-align:center; color:#9b94c4; padding:34px 10px; font-size:14px; }
+</style>
+<section class="fr-section" id="frMemberDash" style="display:none; padding-top:52px;">
+  <div class="container" style="max-width:860px;">
+    <div style="text-align:center; margin-bottom:26px;">
+      <div style="display:inline-block; background:#ecfdf5; border:1px solid #a7f3d0; color:#166534; padding:7px 18px; border-radius:999px; font-size:13px; margin-bottom:14px;">승인된 파트너</div>
+      <h2 class="fr-section-title" id="frMemberTitle" style="margin-bottom:6px;">귀하는 가맹점입니다</h2>
+      <p class="fr-section-sub" id="frMemberSub" style="margin:0;"></p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
+      <button type="button" class="fr-mtab active" data-panel="orders" onclick="frDashTab('orders')">고객주문</button>
+      <button type="button" class="fr-mtab" data-panel="sales" onclick="frDashTab('sales')">매출집계</button>
+      <button type="button" class="fr-mtab" data-panel="inq" onclick="frDashTab('inq')">고객문의</button>
+      <button type="button" class="fr-mtab" data-panel="mat" onclick="frDashTab('mat')">자재주문</button>
+    </div>
+
+    <div id="frPanel-orders" class="fr-dash-card">
+      <div style="font-size:16px; color:#4c1d95; margin-bottom:4px;">고객 주문</div>
+      <div style="font-size:12.5px; color:#8b83b0; margin-bottom:16px;">내 홈페이지(복제 스토어)로 들어온 주문입니다.</div>
+      <div id="frOrdersBox"><div class="fr-empty">불러오는 중…</div></div>
+    </div>
+
+    <div id="frPanel-sales" class="fr-dash-card" style="display:none;">
+      <div style="font-size:16px; color:#4c1d95; margin-bottom:4px;">매출 집계</div>
+      <div style="font-size:12.5px; color:#8b83b0; margin-bottom:16px;">일 · 주 · 월별 매출과 주문 건수입니다.</div>
+      <div id="frSalesBox"><div class="fr-empty">불러오는 중…</div></div>
+    </div>
+
+    <div id="frPanel-inq" class="fr-dash-card" style="display:none;">
+      <div style="font-size:16px; color:#4c1d95; margin-bottom:4px;">고객 문의</div>
+      <div style="font-size:12.5px; color:#8b83b0; margin-bottom:16px;">내 홈페이지의 VIP 문의와 인공지능(챗봇) 문의 요약입니다.</div>
+      <div id="frInqBox"><div class="fr-empty">불러오는 중…</div></div>
+    </div>
+
+    <div id="frPanel-mat" class="fr-dash-card" style="display:none;">
+      <div style="font-size:16px; color:#4c1d95; margin-bottom:4px;">자재 주문</div>
+      <div style="font-size:12.5px; color:#8b83b0; margin-bottom:16px;">허니콤보드 원판 주문 및 대량 주문 계산기입니다. (가맹점 전용 공급가)</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        <label style="font-size:13px; color:#3b3560;">두께
+          <select id="frMatType" onchange="frMatCalc()" style="width:100%; margin-top:6px; padding:11px; border:1px solid #d9d2ee; border-radius:10px; font-family:inherit; font-size:14px;">
+            <option value="22000">16mm 허니콤보드 원판 — 장당 22,000원</option>
+            <option value="17600">10mm 허니콤보드 원판 — 장당 17,600원</option>
+          </select>
+        </label>
+        <label style="font-size:13px; color:#3b3560;">수량(장)
+          <input type="number" id="frMatQty" min="1" value="100" oninput="frMatCalc()" style="width:100%; margin-top:6px; padding:11px; border:1px solid #d9d2ee; border-radius:10px; font-family:inherit; font-size:14px;">
+        </label>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px; background:#faf9ff; border:1px solid #e5e0f5; border-radius:12px;">
+        <span style="color:#8b83b0; font-size:14px;">예상 자재비 (공급가 기준)</span>
+        <span id="frMatTotal" style="color:#4c1d95; font-size:22px; font-weight:800;">₩2,200,000</span>
+      </div>
+      <div style="font-size:12px; color:#9b94c4; margin-top:10px; line-height:1.7;">· 자재는 선금 결제이며, 해외 배송 시 한국 내 운송비 포함 모든 운송비는 각 국가 가맹점 부담입니다.<br>· 대량·정기 발주는 본사 담당자와 협의해 주세요.</div>
+      <a href="https://www.hexa-board.com" target="_blank" rel="noopener" style="display:inline-block; margin-top:16px; padding:13px 22px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border-radius:11px; font-weight:800; font-size:14px; text-decoration:none;">원판 주문 페이지 열기 →</a>
+    </div>
+  </div>
+</section>
+
 <!-- Three headline value props -->
 <!-- 2026-09-14: 파트너 2단계(pitch) 섹션 숨김 — 사장님 요청(불필요·간소화) -->
 <section class="fr-section fr-pitch" style="display:none;">
@@ -272,7 +343,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 </section>
 
 <!-- World map of franchise locations -->
-<section class="fr-section fr-globe">
+<!-- 2026-09-25(사장님): 전 세계 네트워크 월드맵 섹션 제거 -->
+<section class="fr-section fr-globe" style="display:none;">
     <div class="container">
         <h2 class="fr-section-title" id="txtGlobeTitle"></h2>
         <p class="fr-globe-sub" id="txtGlobeSub"></p>
@@ -1495,6 +1567,113 @@ function showToast(msg, type){
     }
     // 오버레이 바깥 클릭 시 닫기
     document.addEventListener('click', function(ev){ var o=document.getElementById('frTermsOverlay'); if(o && ev.target===o) frCloseTerms(); });
+    </script>
+
+    <!-- 2026-09-25(사장님): 승인 파트너 회원 대시보드 로직 -->
+    <script>
+    (function(){
+      var SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+      var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+      var msb=null, slug='', role='', ordersCache=null;
+      function won(n){ return '₩' + Math.round(Number(n)||0).toLocaleString(); }
+      function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+      function isPaid(st){ return /완료|입금확인|paid|결제/i.test(String(st||'')); }
+
+      window.frDashTab = function(name){
+        ['orders','sales','inq','mat'].forEach(function(p){ var el=document.getElementById('frPanel-'+p); if(el) el.style.display=(p===name)?'':'none'; });
+        var tabs=document.querySelectorAll('.fr-mtab'); for(var i=0;i<tabs.length;i++){ tabs[i].classList.toggle('active', tabs[i].getAttribute('data-panel')===name); }
+        if(name==='orders') frLoadOrders();
+        else if(name==='sales') frLoadSales();
+        else if(name==='inq') frLoadInq();
+      };
+
+      async function fetchOrders(){
+        if(ordersCache) return ordersCache;
+        try {
+          var r = await msb.from('orders').select('id,created_at,total_amount,payment_status,customer_name').eq('franchise_slug', slug).order('created_at',{ascending:false}).limit(200);
+          ordersCache = (r && r.data) ? r.data : [];
+        } catch(e){ ordersCache = []; }
+        return ordersCache;
+      }
+
+      async function frLoadOrders(){
+        var box=document.getElementById('frOrdersBox'); if(!box) return;
+        var rows = await fetchOrders();
+        if(!rows.length){ box.innerHTML='<div class="fr-empty">아직 들어온 주문이 없습니다. 내 홈페이지로 주문이 접수되면 여기에 표시됩니다.</div>'; return; }
+        var h='<table class="fr-otbl"><thead><tr><th>일자</th><th>고객</th><th>금액</th><th>상태</th></tr></thead><tbody>';
+        rows.slice(0,30).forEach(function(o){
+          var d=(o.created_at||'').slice(0,10);
+          h+='<tr><td>'+esc(d)+'</td><td>'+esc(o.customer_name||'-')+'</td><td>'+won(o.total_amount)+'</td><td>'+esc(o.payment_status||'-')+'</td></tr>';
+        });
+        h+='</tbody></table>';
+        box.innerHTML=h;
+      }
+
+      async function frLoadSales(){
+        var box=document.getElementById('frSalesBox'); if(!box) return;
+        var rows = await fetchOrders();
+        var now=new Date(), t0=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+        var w0=t0 - ((now.getDay()+6)%7)*86400000; // 이번주 월요일 0시
+        var m0=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+        var sum={d:0,w:0,m:0}, cnt={d:0,w:0,m:0};
+        rows.forEach(function(o){
+          if(!isPaid(o.payment_status)) return;
+          var ts=new Date(o.created_at).getTime(), amt=Number(o.total_amount)||0;
+          if(ts>=t0){ sum.d+=amt; cnt.d++; }
+          if(ts>=w0){ sum.w+=amt; cnt.w++; }
+          if(ts>=m0){ sum.m+=amt; cnt.m++; }
+        });
+        box.innerHTML =
+          '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">'
+          + '<div class="fr-stat"><div class="n">'+won(sum.d)+'</div><div class="l">오늘 매출 · '+cnt.d+'건</div></div>'
+          + '<div class="fr-stat"><div class="n">'+won(sum.w)+'</div><div class="l">이번주 매출 · '+cnt.w+'건</div></div>'
+          + '<div class="fr-stat"><div class="n">'+won(sum.m)+'</div><div class="l">이번달 매출 · '+cnt.m+'건</div></div>'
+          + '</div>'
+          + '<div style="font-size:12px; color:#9b94c4; margin-top:14px; line-height:1.7;">· 결제완료(입금확인 포함) 주문 기준입니다.<br>· 접속자 현황(방문자수)은 곧 추가될 예정입니다.</div>';
+      }
+
+      async function frLoadInq(){
+        var box=document.getElementById('frInqBox'); if(!box) return;
+        var vip=[], ai=[];
+        try { var rv = await msb.from('franchise_inquiries').select('*').eq('franchise_slug', slug).order('created_at',{ascending:false}).limit(20); vip=(rv&&rv.data)?rv.data:[]; } catch(e){ vip=[]; }
+        var h='';
+        h+='<div style="font-size:14px; color:#4c1d95; margin-bottom:8px;">VIP 문의</div>';
+        if(vip.length){
+          h+='<table class="fr-otbl"><tbody>';
+          vip.forEach(function(q){ h+='<tr><td>'+esc((q.created_at||'').slice(0,10))+'</td><td>'+esc(q.name||q.customer_name||'-')+'</td><td>'+esc((q.message||q.content||'').slice(0,40))+'</td></tr>'; });
+          h+='</tbody></table>';
+        } else { h+='<div class="fr-empty" style="padding:18px;">아직 VIP 문의가 없습니다.</div>'; }
+        h+='<div style="font-size:14px; color:#4c1d95; margin:20px 0 8px;">인공지능(챗봇) 문의</div>';
+        h+='<div class="fr-empty" style="padding:18px;">내 홈페이지 챗봇 상담 요약이 여기에 모입니다. (집계 준비 중)</div>';
+        box.innerHTML=h;
+      }
+
+      window.frMatCalc = function(){
+        var unit=parseInt((document.getElementById('frMatType')||{}).value||22000,10);
+        var qty=parseInt((document.getElementById('frMatQty')||{}).value||0,10); if(qty<0||isNaN(qty)) qty=0;
+        var el=document.getElementById('frMatTotal'); if(el) el.textContent=won(unit*qty);
+      };
+
+      (async function init(){
+        if(!window.supabase) return;
+        try { msb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){ return; }
+        var user=null;
+        try { var u = await msb.auth.getUser(); user = u && u.data && u.data.user; } catch(e){}
+        if(!user) return;
+        var fr=null;
+        try { var r = await msb.from('franchises').select('slug,company_name,status').eq('owner_id', user.id).eq('status','approved').order('updated_at',{ascending:false}).limit(1); fr=(r&&r.data)?r.data[0]:null; } catch(e){}
+        if(!fr) return;
+        try { var pr = await msb.from('profiles').select('role').eq('id', user.id).maybeSingle(); role=(pr&&pr.data)?pr.data.role:''; } catch(e){}
+        slug = fr.slug;
+        document.body.classList.add('fr-member-mode');
+        var dash=document.getElementById('frMemberDash'); if(dash) dash.style.display='';
+        var roleName = (role==='franchise')?'가맹점':((role==='reseller')?'리셀러':'파트너');
+        var t=document.getElementById('frMemberTitle'); if(t) t.textContent='귀하는 '+roleName+'입니다';
+        var sub=document.getElementById('frMemberSub');
+        if(sub) sub.textContent=(fr.company_name||fr.slug)+' — '+(role==='reseller'?'리셀러로 가입 승인되었습니다.':'가맹점으로 가입 승인되었습니다.')+' 매입 할인 20% 적용 중.';
+        frLoadOrders();
+      })();
+    })();
     </script>
     <script src="/jp-nanami-fab.js?v=2" defer></script>
 </body>
