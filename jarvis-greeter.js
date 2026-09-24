@@ -218,6 +218,19 @@
     var imgBtn = _root.querySelector('.jvg-img'), fileInp = _root.querySelector('.jvg-file');
     imgBtn.addEventListener('click', function () { fileInp.click(); });
     fileInp.addEventListener('change', function () { var f = fileInp.files && fileInp.files[0]; if (f) readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); fileInp.value = ''; });
+    // 2026-09-24: 캡쳐 이미지 붙여넣기(Ctrl+V) 지원 — 클립보드 이미지 바로 전송
+    function handlePaste(e) {
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf('image') === 0) {
+          var f = items[i].getAsFile();
+          if (f) { e.preventDefault(); readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); }
+          return;
+        }
+      }
+    }
+    inp.addEventListener('paste', handlePaste);
+    _root.addEventListener('paste', handlePaste);
     _root.querySelector('.jvg-x').addEventListener('click', close);
   }
 
