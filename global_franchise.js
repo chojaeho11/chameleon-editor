@@ -119,7 +119,7 @@ window.loadFranchiseManagement = async () => {
             const sl = _fmEsc(f.slug);
             const oid = _fmEsc(f.owner_id || '');
             const at = pendTypes[i];                 // 'franchise' | 'reseller'
-            const apprLabel = (at === 'franchise') ? '✅ 가맹점 승인(20%)' : '✅ 리셀러 승인(10%)';
+            const apprLabel = (at === 'franchise') ? '✅ 가맹점 승인(20%)' : '✅ 리셀러 승인(20%)';
             const apprBg = (at === 'franchise') ? '#c2410c' : '#6366f1';
             return '<div class="fm-card" style="border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#fff;">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">'
@@ -146,7 +146,7 @@ window.loadFranchiseManagement = async () => {
         const role = roles[f.owner_id];
         const tier = role === 'franchise'
             ? '<span style="background:#ffedd5;color:#c2410c;border:1px solid #fdba74;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🏭 가맹점 20%</span>'
-            : '<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🚀 리셀러 10%</span>';
+            : '<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🚀 리셀러 20%</span>';
         const orderRows = ords.slice(0, 50).map((o) => {
             const d = o.order_date ? new Date(o.order_date).toLocaleDateString() : '-';
             return '<tr><td style="padding:4px 8px;">' + d + '</td><td style="padding:4px 8px;">#' + o.id + '</td><td style="padding:4px 8px;text-align:right;">' + _fmWon(o.total_amount) + '</td><td style="padding:4px 8px;">' + (_FM_DONE.indexOf(o.status) >= 0 ? '✅ 완료' : _fmEsc(o.status || '진행중')) + '</td></tr>';
@@ -186,8 +186,8 @@ window.loadFranchiseManagement = async () => {
 const _FM_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_admin_rls.sql 을 Supabase SQL Editor 에서 먼저 실행하세요.';
 window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
     role = (role === 'franchise') ? 'franchise' : 'reseller';
-    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 10%';
-    if (!confirm('[' + slug + '] 을(를) ' + pctTxt + ' 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 ' + (role === 'franchise' ? '20' : '10') + '% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
+    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 20%';
+    if (!confirm('[' + slug + '] 을(를) ' + pctTxt + ' 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 ' + (role === 'franchise' ? '20' : '20') + '% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {

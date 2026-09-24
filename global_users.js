@@ -136,7 +136,7 @@ window.loadMembers = async (isNewSearch = false) => {
         if (m.role === 'gold') { badgeColor = '#fef9c3'; displayRole = '골드'; }
         if (m.role === 'platinum') { badgeColor = '#e0f2fe'; displayRole = '플레티넘'; }
         if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점20%'; }
-        if (m.role === 'reseller') { badgeColor = '#ede9fe'; displayRole = '🚀리셀러10%'; }
+        if (m.role === 'reseller') { badgeColor = '#ede9fe'; displayRole = '🚀리셀러20%'; }
         if (m.role === 'subscriber') { badgeColor = '#ede9fe'; displayRole = '⭐구독자'; }
         if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
 
@@ -154,7 +154,7 @@ window.loadMembers = async (isNewSearch = false) => {
         const roleSelect = `
             <select onchange="updateMemberRole('${m.id}', this.value)" style="border:1px solid #ddd; font-size:11px;">
                 <option value="customer" ${m.role==='customer'?'selected':''}>일반</option>
-                <option value="reseller" ${m.role==='reseller'?'selected':''}>🚀리셀러 10%</option>
+                <option value="reseller" ${m.role==='reseller'?'selected':''}>🚀리셀러 20%</option>
                 <option value="franchise" ${m.role==='franchise'?'selected':''}>🏢가맹점 20%</option>
                 <option value="admin" ${m.role==='admin'?'selected':''}>관리자</option>
                 ${_legacyOpt}
@@ -332,7 +332,7 @@ window.loadFranchiseApplications = async () => {
         const resPrimary = at !== 'franchise';
         let btns = '';
         if (st !== 'approved') {
-            btns += `<button class="btn btn-sm" style="background:${resPrimary?'#6366f1':'#c7d2fe'};color:${resPrimary?'#fff':'#3730a3'};font-weight:${resPrimary?'800':'600'};" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','reseller',this)">✅ 리셀러 승인(10%)</button> `;
+            btns += `<button class="btn btn-sm" style="background:${resPrimary?'#6366f1':'#c7d2fe'};color:${resPrimary?'#fff':'#3730a3'};font-weight:${resPrimary?'800':'600'};" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','reseller',this)">✅ 리셀러 승인(20%)</button> `;
             btns += `<button class="btn btn-sm" style="background:${!resPrimary?'#c2410c':'#fed7aa'};color:${!resPrimary?'#fff':'#9a3412'};font-weight:${!resPrimary?'800':'600'};" onclick="approveFranchise('${_frEsc(f.slug)}','${_frEsc(f.owner_id||'')}','franchise',this)">🏭 가맹점 승인(20%)</button> `;
         }
         if (st === 'pending') btns += `<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="rejectFranchise('${_frEsc(f.slug)}',this)">❌ 반려</button> `;
@@ -351,7 +351,7 @@ window.loadFranchiseApplications = async () => {
 const _FR_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_admin_rls.sql 을 Supabase SQL Editor 에서 먼저 실행하세요.';
 window.approveFranchise = async (slug, ownerId, role, btn) => {
     role = (role === 'franchise') ? 'franchise' : 'reseller';
-    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 10%';
+    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 20%';
     if (!confirm(`[${slug}] 을(를) ${pctTxt} 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 ${role==='franchise'?'20':'10'}% 할인가로 매입할 수 있습니다. 계속할까요?`)) return;
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }

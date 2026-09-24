@@ -215,7 +215,7 @@ input:focus{border-color:#3b82f6;}
       var d=f.created_at?new Date(f.created_at).toLocaleDateString():'-';
       var btns='';
       if(st!=='approved'){
-        btns+='<button class="btn btn-pri btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'" data-role="reseller">✅ 리셀러 승인 (10%)</button> ';
+        btns+='<button class="btn btn-pri btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'" data-role="reseller">✅ 리셀러 승인 (20%)</button> ';
         btns+='<button class="btn btn-gold btn-sm" data-appr="'+esc(f.slug)+'" data-oid="'+esc(f.owner_id||'')+'" data-role="franchise">🏭 가맹점 승인 (20%)</button> ';
       }
       if(st==='pending') btns+='<button class="btn btn-ghost btn-sm" data-rej="'+esc(f.slug)+'">❌ 반려</button> ';
@@ -233,7 +233,7 @@ input:focus{border-color:#3b82f6;}
   }
   async function approveFr(slug, ownerId, role, btn){
     role = (role==='franchise') ? 'franchise' : 'reseller';
-    var pctTxt = (role==='franchise') ? '가맹점 20%' : '리셀러 10%';
+    var pctTxt = (role==='franchise') ? '가맹점 20%' : '리셀러 20%';
     if(!confirm('['+slug+'] 을(를) '+pctTxt+' 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 '+(role==='franchise'?'20':'10')+'% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
     var orig = btn ? btn.textContent : '';
     if(btn){btn.disabled=true;btn.textContent='처리 중…';}

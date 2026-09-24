@@ -618,15 +618,15 @@ async function fetchUserDiscountRate() {
         const { data } = await _sb.from('profiles').select('role').eq('id', _user.id).maybeSingle();
         const role = data?.role;
 
-        // 2026-09-15: 등급 4단계로 정리 — 가맹점(20%)/리셀러(10%)/일반(0%)/관리자. 구 파트너스·골드 폐지(→일반).
+        // 2026-09-25(사장님): 리셀러도 가맹점과 동일하게 20%. 등급 — 가맹점(20%)/리셀러(20%)/일반(0%)/관리자. 구 파트너스·골드 폐지(→일반).
         if (role === 'franchise') currentUserDiscountRate = 0.20;
-        else if (role === 'reseller') currentUserDiscountRate = 0.10;
-        else if (role === 'subscriber') currentUserDiscountRate = 0.10;   // 레거시(리셀러 전환 대기) — 리셀러 취급
+        else if (role === 'reseller') currentUserDiscountRate = 0.20;
+        else if (role === 'subscriber') currentUserDiscountRate = 0.10;   // 레거시 PRO(리셀러 전환 대기) — 10% 유지
         else currentUserDiscountRate = 0;
 
         // 라이브 결제(simple_order)용 매입 할인 % + 티어 라벨
         if (role === 'franchise') { window.memberDiscountPct = 20; window.memberTier = 'franchise'; window.isProSubscriber = true; }
-        else if (role === 'reseller') { window.memberDiscountPct = 10; window.memberTier = 'reseller'; window.isProSubscriber = true; }
+        else if (role === 'reseller') { window.memberDiscountPct = 20; window.memberTier = 'reseller'; window.isProSubscriber = true; }
         else if (role === 'subscriber') { window.memberDiscountPct = 10; window.memberTier = 'pro'; window.isProSubscriber = true; }
 
         // PRO 구독자: subscriptions.status='active' 확인 → 최소 10% 보장 + PRO 플래그
