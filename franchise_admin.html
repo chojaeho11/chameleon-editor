@@ -464,11 +464,22 @@ select option{background:#1d1640;}
       <input type="file" id="myProdFileInput" accept="image/*" style="display:none;">
     </div>
 
-    <div class="card" id="cardOrders">
-      <h2 data-i18n="c3Title">③ 주문 · 정산 현황</h2>
-      <div class="desc" data-i18n="c3Desc">고객이 사장님 스토어에서 주문한 내역입니다. 결제는 본사가 대행하며, 제작·납품 완료 시 <b>중계수수료 20%를 제외한 금액</b>을 정산해 드립니다.</div>
-      <div id="ordSummary" class="ord-summary"></div>
-      <div style="overflow-x:auto;"><div id="ordList"></div></div>
+    <!-- 2026-09-25(사장님): 주문 현황은 /franchise 대시보드로 이동 → 여기는 홍보 꿀팁 안내(연하늘 배경). 주문 요소는 숨겨 두어 기존 JS 호환. -->
+    <div class="card" id="cardOrders" style="background:#e8f4ff; border:1px solid #c3e0fb;">
+      <h2 style="color:#0c4a6e;">홍보 꿀팁</h2>
+      <div class="desc" style="color:#1e4a6b;">가입한 파트너를 위한 마케팅 팁입니다. 조금만 움직이면 문의가 바로 들어옵니다.</div>
+      <div style="display:flex; flex-direction:column; gap:14px; margin-top:12px;">
+        <div style="background:#fff; border:1px solid #cfe6fb; border-radius:12px; padding:16px 18px;">
+          <div style="color:#0369a1; font-weight:700; margin-bottom:6px;">꿀팁 1 · 광고는 이렇게</div>
+          <div style="color:#1e3a5f; font-size:14px; line-height:1.9;">허니콤보드는 아직 많이 알려지지 않은 아이템이라, 네이버나 구글에 광고할 때 비용이 매우 적게 들고 효과가 좋습니다. 본인의 도메인 주소를 구입해 광고를 내면 광고비 대비 효과가 아주 좋습니다.</div>
+        </div>
+        <div style="background:#fff; border:1px solid #cfe6fb; border-radius:12px; padding:16px 18px;">
+          <div style="color:#0369a1; font-weight:700; margin-bottom:6px;">꿀팁 2 · 사진 마음껏 쓰세요</div>
+          <div style="color:#1e3a5f; font-size:14px; line-height:1.9;">회사 홈페이지나 카멜레온프린팅 관련 사진은 홍보 목적으로 사용해도 저작권에 위반되지 않습니다. 그 사진들로 스레드·인스타·유튜브에 홍보해 보세요. 아마 바로 구매 문의가 들어올 거예요.</div>
+        </div>
+      </div>
+      <div id="ordSummary" class="ord-summary" style="display:none;"></div>
+      <div id="ordList" style="display:none;"></div>
     </div>
 
     <div class="card" id="cardMsg">
