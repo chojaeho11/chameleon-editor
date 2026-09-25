@@ -494,7 +494,11 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 
       <!-- 좌: 단톡방 -->
       <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; display:flex; flex-direction:column; height:540px;">
-        <div style="padding:15px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700;">가맹점 대화방</div>
+        <div style="padding:13px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; align-items:center; justify-content:space-between;">
+          <span>가맹점 대화방</span>
+          <button type="button" onclick="fcOpenProfile()" style="display:flex; align-items:center; gap:7px; padding:5px 10px 5px 6px; border:1px solid #d9e2f0; border-radius:999px; background:#f6f9fd; color:#1e3a8a; font-size:12px; font-weight:600; cursor:pointer;"><span id="fcMyAvatarPrev" style="width:24px; height:24px; border-radius:50%; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; background:#e2e8f0; font-size:14px;">🙂</span> 내 프로필</button>
+        </div>
+        <input type="file" id="fcProfileFile" accept="image/*" style="display:none;" onchange="fcUploadProfile()">
         <div id="fcChatBox" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; background:#fbfcfe;"><div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">불러오는 중…</div></div>
         <div style="border-top:1px solid #eef2f7; padding:10px 12px; display:flex; gap:8px; align-items:center;">
           <button type="button" onclick="fcPickImg()" title="사진" style="flex:0 0 auto; width:40px; height:40px; border:1px solid #d9e2f0; border-radius:10px; background:#f2f6fc; color:#1e3a8a; cursor:pointer; font-size:16px;">＋</button>
@@ -1728,10 +1732,56 @@ function showToast(msg, type){
       function won(n){ return '₩'+Math.round(Number(n)||0).toLocaleString(); }
       function tstr(iso){ try{ var d=new Date(iso); return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }catch(e){ return ''; } }
       function paid(st){ return /완료|입금확인|paid|결제/i.test(String(st||'')); }
+      var ADMIN_UID='ff896a1c-4130-468b-a13f-e329209692a2';   // 방장(사장님) 계정 — 왕관 표시
+      function myAvatar(){ try{ return localStorage.getItem('fc_avatar')||''; }catch(e){ return ''; } }
+      function avInner(av){
+        if(av && /^https?:/i.test(av)) return '<img src="'+esc(av)+'" style="width:100%;height:100%;object-fit:cover;">';
+        var e = av==='icon:M'?'👨': av==='icon:F'?'👩':'🙂';
+        return '<span style="font-size:18px;line-height:1;">'+e+'</span>';
+      }
+      function avatarBox(av, isAdm){
+        return '<div style="position:relative; flex:0 0 auto;"><div style="width:38px;height:38px;border-radius:50%;overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">'+avInner(av)+'</div>'
+          + (isAdm?'<span style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:15px;">👑</span>':'')
+          + '</div>';
+      }
+      function setMyAvatar(av){ try{ localStorage.setItem('fc_avatar', av); }catch(e){} var pv=$('fcMyAvatarPrev'); if(pv) pv.innerHTML=avInner(av); }
+
+      window.fcOpenProfile=function(){
+        if($('fcProfileModal')) return;
+        var ov=document.createElement('div'); ov.id='fcProfileModal';
+        ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(17,24,39,0.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+        ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:340px;width:100%;padding:22px;">'
+          +'<div style="font-size:16px;color:#1e3a8a;font-weight:700;margin-bottom:4px;">내 프로필 선택</div>'
+          +'<div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">대화방에 표시될 사진 또는 아이콘</div>'
+          +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">'
+          +'<button type="button" onclick="fcSetIcon(\'icon:U\')" style="padding:14px 0;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:26px;">🙂</button>'
+          +'<button type="button" onclick="fcSetIcon(\'icon:M\')" style="padding:14px 0;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:26px;">👨</button>'
+          +'<button type="button" onclick="fcSetIcon(\'icon:F\')" style="padding:14px 0;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:26px;">👩</button>'
+          +'</div>'
+          +'<button type="button" onclick="(document.getElementById(\'fcProfileFile\')||{}).click&&document.getElementById(\'fcProfileFile\').click()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#1e3a8a;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">사진 업로드</button>'
+          +'<button type="button" onclick="fcCloseProfile()" style="width:100%;padding:11px;margin-top:8px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;color:#64748b;cursor:pointer;font-size:13px;">닫기</button>'
+          +'</div>';
+        ov.addEventListener('click', function(e){ if(e.target===ov) fcCloseProfile(); });
+        document.body.appendChild(ov);
+      };
+      window.fcCloseProfile=function(){ var m=$('fcProfileModal'); if(m) m.remove(); };
+      window.fcSetIcon=function(av){ setMyAvatar(av); fcCloseProfile(); fcLoadChat(); };
+      window.fcUploadProfile=async function(){
+        var f=$('fcProfileFile'); if(!f||!f.files||!f.files[0]||!msb||!me) return;
+        var file=f.files[0]; f.value='';
+        try{
+          var path='franchise_avatar/'+me.id+'_'+Date.now()+'.'+((file.name.split('.').pop()||'jpg'));
+          var up=await msb.storage.from('design').upload(path, file, { upsert:true });
+          if(up.error) throw up.error;
+          var pub=msb.storage.from('design').getPublicUrl(path);
+          setMyAvatar(pub.data.publicUrl); fcCloseProfile(); fcLoadChat();
+        }catch(e){ alert('사진 업로드 실패: '+(e.message||e)); }
+      };
 
       window.__fcInit = function(_msb, _user, opts){
         msb=_msb; me=_user; opts=opts||{}; meName=opts.name||'가맹점'; isAdmin=!!opts.isAdmin;
         var nb=$('fcNoticeNewBtn'); if(nb) nb.style.display=isAdmin?'':'none';
+        setMyAvatar(myAvatar());   // 헤더 미리보기 반영
         fcLoadChat(); fcLoadNotices(); fcLoadSales();
         if(chatTimer) clearInterval(chatTimer);
         chatTimer=setInterval(function(){ if($('frCommunity') && $('frCommunity').style.display!=='none') fcLoadChat(true); }, 7000);
@@ -1747,10 +1797,14 @@ function showToast(msg, type){
           var atBottom = box.scrollHeight-box.scrollTop-box.clientHeight < 60;
           box.innerHTML = rows.length ? rows.map(function(m){
             var mine = me && m.user_id===me.id;
+            var isAdm = m.user_id===ADMIN_UID;
             var body = m.image_url ? ('<img src="'+esc(m.image_url)+'" style="max-width:180px; border-radius:10px; display:block;">') : esc(m.message||'');
-            return '<div style="display:flex; flex-direction:column; align-items:'+(mine?'flex-end':'flex-start')+';">'
-              + '<div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">'+esc(m.author||'가맹점')+' · '+tstr(m.created_at)+'</div>'
-              + '<div style="max-width:80%; padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55; background:'+(mine?'#1e3a8a':'#eef2f8')+'; color:'+(mine?'#fff':'#1f2937')+'; word-break:break-word;">'+body+'</div></div>';
+            return '<div style="display:flex; gap:8px; flex-direction:'+(mine?'row-reverse':'row')+'; align-items:flex-start;">'
+              + avatarBox(m.avatar_url, isAdm)
+              + '<div style="max-width:76%; display:flex; flex-direction:column; align-items:'+(mine?'flex-end':'flex-start')+';">'
+              + '<div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">'+esc(m.author||'가맹점')+(isAdm?' <span style="color:#d97706;">👑방장</span>':'')+' · '+tstr(m.created_at)+'</div>'
+              + '<div style="padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55; background:'+(mine?'#1e3a8a':'#eef2f8')+'; color:'+(mine?'#fff':'#1f2937')+'; word-break:break-word;">'+body+'</div>'
+              + '</div></div>';
           }).join('') : '<div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">첫 메시지를 남겨보세요.</div>';
           if(atBottom||!quiet) box.scrollTop=box.scrollHeight;
         }catch(e){ if(!quiet) box.innerHTML='<div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">대화방 준비 중입니다. (관리자: _franchise_community.sql 실행 필요)</div>'; }
@@ -1758,7 +1812,7 @@ function showToast(msg, type){
       window.fcSendChat=async function(){
         var inp=$('fcChatInput'); if(!inp||!msb||!me) return;
         var v=(inp.value||'').trim(); if(!v) return; inp.value='';
-        try{ await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, message:v }); fcLoadChat(); }
+        try{ await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, message:v, avatar_url:myAvatar() }); fcLoadChat(); }
         catch(e){ alert('전송 실패: '+(e.message||e)); }
       };
       window.fcPickImg=function(){ var f=$('fcChatFile'); if(f) f.click(); };
@@ -1770,7 +1824,7 @@ function showToast(msg, type){
           var up=await msb.storage.from('design').upload(path, file, { upsert:true });
           if(up.error) throw up.error;
           var pub=msb.storage.from('design').getPublicUrl(path);
-          await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, image_url:pub.data.publicUrl });
+          await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, image_url:pub.data.publicUrl, avatar_url:myAvatar() });
           fcLoadChat();
         }catch(e){ alert('사진 전송 실패: '+(e.message||e)); }
       };
