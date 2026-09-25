@@ -1716,7 +1716,8 @@ function showToast(msg, type){
         // 가맹점 커뮤니티 초기화
         try {
           var comm=document.getElementById('frCommunity'); if(comm) comm.style.display='';
-          if (window.__fcInit) window.__fcInit(msb, user, { name:(fr.company_name||fr.slug||'가맹점'), isAdmin:(String(user.email||'').toLowerCase()==='korea900as@gmail.com') });
+          var _isAdm=(String(user.email||'').toLowerCase()==='korea900as@gmail.com');
+          if (window.__fcInit) window.__fcInit(msb, user, { name:(_isAdm ? '방장(카멜레온대표)' : (fr.company_name||fr.slug||'가맹점')), isAdmin:_isAdm });
         } catch(e){}
       })();
     })();
