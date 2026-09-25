@@ -294,8 +294,9 @@ select option{background:#1d1640;}
       <label class="fld"><span class="lb" data-i18n="bizNoLabel">사업자등록번호 *</span><input type="text" id="fBizNo" data-i18n-ph="bizNoPh" placeholder="예: 123-45-67890" maxlength="20"><span class="hint" data-i18n="bizNoHint">본사 승인에 필요합니다. 사업자만 신청 가능합니다.</span></label>
       <div class="row2">
         <label class="fld"><span class="lb" data-i18n="phoneLabel">대표 전화번호 *</span><input type="tel" id="fPhone" data-i18n-ph="phonePh" placeholder="예: 031-000-0000"></label>
-        <label class="fld"><span class="lb" data-i18n="emailLabel">이메일</span><input type="email" id="fEmail" placeholder="contact@company.com"></label>
+        <label class="fld"><span class="lb">휴대폰 번호</span><input type="tel" id="fMobile" placeholder="예: 010-0000-0000"></label>
       </div>
+      <label class="fld"><span class="lb" data-i18n="emailLabel">이메일</span><input type="email" id="fEmail" placeholder="contact@company.com"></label>
       <div class="row2">
         <label class="fld"><span class="lb" data-i18n="countryLabel">국가</span>
           <select id="fCountry">
@@ -308,6 +309,7 @@ select option{background:#1d1640;}
           <input type="file" id="fLogoFile" accept="image/*" style="font-size:12px;color:#9b94c4;padding:9px 0;">
         </label>
       </div>
+      <label class="fld"><span class="lb">지역 (도시) <small style="color:#9b94c4;">— 직접 입력</small></span><input type="text" id="fRegion" placeholder="예: 서울 강남구 · 부산 · 오사카시 등"></label>
       <div id="logoPreview" style="display:none;margin-top:-4px;margin-bottom:14px;">
         <img id="logoImg" style="height:54px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);background:#fff;padding:4px;">
       </div>
@@ -344,11 +346,12 @@ select option{background:#1d1640;}
           <svg id="mgDial" width="240" height="240" viewBox="0 0 200 200" style="touch-action:none;cursor:pointer;user-select:none;">
             <path d="M 32.3 167.7 A 95 95 0 1 1 167.7 167.7" fill="none" stroke="rgba(167,139,250,0.18)" stroke-width="14" stroke-linecap="round"/>
             <path id="mgArc" fill="none" stroke="#a855f7" stroke-width="14" stroke-linecap="round"/>
+            <path id="mgArcExtra" fill="none" stroke="#f97316" stroke-width="14" stroke-linecap="round"/>
             <circle id="mgHandle" r="12" fill="#fff" stroke="#a855f7" stroke-width="3"/>
           </svg>
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
             <div style="font-size:34px;font-weight:900;color:#fff;line-height:1;"><span id="mgVal">20</span><span style="font-size:18px;">%</span></div>
-            <div style="font-size:11px;color:#9b94c4;margin-top:4px;">판매 마진</div>
+            <div id="mgSubLabel" style="font-size:11px;color:#9b94c4;margin-top:4px;">할인 20%</div>
           </div>
         </div>
         <div style="flex:1;min-width:210px;">
@@ -363,24 +366,34 @@ select option{background:#1d1640;}
               <div style="font-weight:500;font-size:11.5px;color:#a49dc4;line-height:1.55;margin-top:4px;">열정만 있으면 신청 가능. 해당 국가·지역의 가맹점에서 제품을 공급받아 판매.</div>
             </button>
           </div>
-          <div style="font-size:12px;color:#b3aad4;line-height:1.65;"><b style="color:#fff;">가맹점은 본사 홈페이지 판매가에서 20% 할인된 금액</b>으로 매입합니다. 좌측 <b style="color:#fff;">판매 마진</b>은 그 위에 추가로 붙이는 마진율로, 여기서 정하고 <b style="color:#fff;">저장(홈페이지 생성)</b>하면 사장님 홈페이지 가격이 자동으로 만들어집니다.</div>
+          <div style="font-size:12px;color:#b3aad4;line-height:1.75;">판매 마진은 <span style="color:#c4b5fd;">기본 20%(할인 마진)</span>에서 시작합니다. 다이얼을 20%로 두면 본사 판매가에서 할인된 20%의 마진만 가져가고, 제작되는 홈페이지 가격은 <span style="color:#fff;">본사와 동일</span>하게 됩니다. 20%보다 더 올린 만큼은 <span style="color:#f97316;">세팅 마진</span>으로, 홈페이지 판매가에 그대로 얹혀 추가 수익이 됩니다. 정한 뒤 <span style="color:#fff;">저장(홈페이지 생성)</span>하면 가격이 자동으로 반영됩니다.</div>
         </div>
       </div>
       <input type="hidden" id="fMargin" value="20">
     </div>
     <script>
     (function(){
-      var CX=100, CY=100, R=95, MIN=0, MAX=120;   // 2026-09-15: 자유 마진(티어 하한 없음, 0%~120%)
+      // 2026-09-25(사장님): 기본 20%는 할인마진(보라, 하한). 그 이상은 세팅마진(주황). 다이얼 값 = 할인20 + 세팅. __FR_MARGIN(theme.margin) = 다이얼-20.
+      var CX=100, CY=100, R=95, BASE=20, MIN=20, MAX=120;
       var margin = 20;
       function $d(id){ return document.getElementById(id); }
       function polar(f){ var a=(135 + f*270)*Math.PI/180; return { x:CX+R*Math.cos(a), y:CY+R*Math.sin(a) }; }
+      function arcPath(f0, f1){
+        var a=polar(f0), b=polar(f1); var large=((f1-f0)*270>180)?1:0;
+        return 'M '+a.x.toFixed(1)+' '+a.y.toFixed(1)+' A '+R+' '+R+' 0 '+large+' 1 '+b.x.toFixed(1)+' '+b.y.toFixed(1);
+      }
       function render(){
         var f = Math.max(0, Math.min(1, margin/MAX));
-        var p = polar(f), s = polar(0);
-        var arc = $d('mgArc'), hd = $d('mgHandle'), vv=$d('mgVal'), fm=$d('fMargin');
-        if (arc) arc.setAttribute('d', 'M '+s.x.toFixed(1)+' '+s.y.toFixed(1)+' A '+R+' '+R+' 0 '+(f*270>180?1:0)+' 1 '+p.x.toFixed(1)+' '+p.y.toFixed(1));
-        if (hd){ hd.setAttribute('cx', p.x.toFixed(1)); hd.setAttribute('cy', p.y.toFixed(1)); }
+        var fBase = BASE/MAX;
+        var p = polar(f);
+        var arc = $d('mgArc'), arcX = $d('mgArcExtra'), hd = $d('mgHandle'), vv=$d('mgVal'), fm=$d('fMargin'), sl=$d('mgSubLabel');
+        // 기본(할인) 구간 0→20 = 보라, 항상 표시
+        if (arc) arc.setAttribute('d', arcPath(0, fBase));
+        // 세팅 구간 20→현재 = 주황 (20 초과일 때만)
+        if (arcX){ if (margin>BASE) arcX.setAttribute('d', arcPath(fBase, f)); else arcX.setAttribute('d', ''); }
+        if (hd){ hd.setAttribute('cx', p.x.toFixed(1)); hd.setAttribute('cy', p.y.toFixed(1)); hd.setAttribute('stroke', margin>BASE?'#f97316':'#a855f7'); }
         if (vv) vv.textContent = Math.round(margin);
+        if (sl) sl.textContent = (margin>BASE) ? ('할인 20% + 세팅 '+(Math.round(margin)-BASE)+'%') : '할인 20%';
         if (fm) fm.value = String(Math.round(margin));
       }
       function setMargin(m){ margin = Math.round(Math.max(MIN, Math.min(MAX, m))); render(); }   // 정수 단위로 스냅(소수점 방지)
@@ -1597,10 +1610,13 @@ select option{background:#1d1640;}
     state.heroImageUrl = th.image || '';
     $('fHeroMode').value = th.mode || (th.image ? 'image' : (th.color ? 'color' : 'default'));
     if (state.heroImageUrl){ $('heroImg').src = state.heroImageUrl; }
-    $('fMargin').value = (th.margin != null) ? th.margin : 20;
+    // 2026-09-25: theme.margin=세팅마진(마크업). 다이얼 표시값 = 세팅마진 + 기본할인 20.
+    $('fMargin').value = (th.margin != null) ? (Number(th.margin) + 20) : 20;
+    if ($('fRegion')) $('fRegion').value = th.region || '';
+    if ($('fMobile')) $('fMobile').value = th.mobile || (f.mobile || '');
     // 2026-09-14: 원형 마진 다이얼 동기화 + 저장된 파트너 유형 반영
     try {
-      var _sv = (th.margin != null) ? Number(th.margin) : 20;
+      var _sv = (th.margin != null) ? (Number(th.margin) + 20) : 20;
       // 2026-09-15: 저장된 신청 유형 복원(기본 리셀러). 없으면 리셀러.
       var _at = (th.applicantType === 'franchise') ? 'franchise' : 'reseller';
       window._frApplicantType = _at;
@@ -2011,7 +2027,9 @@ select option{background:#1d1640;}
           image: state.heroImageUrl || '',
           bizNo: bizNo,
           applicantType: (window._frApplicantType === 'franchise' ? 'franchise' : 'reseller'),   // 신청 유형(리셀러/가맹점) — 승인 시 본사가 확인
-          margin: Math.max(0, parseFloat($('fMargin').value) || 0),
+          margin: Math.max(0, (parseFloat($('fMargin').value) || 0) - 20),   // 2026-09-25: __FR_MARGIN=세팅마진=다이얼-20 (다이얼 20 → 마진 0 → 클론가=본사가)
+          region: $('fRegion') ? $('fRegion').value.trim() : '',
+          mobile: $('fMobile') ? $('fMobile').value.trim() : '',
           bank: { name:$('fBankName').value.trim(), number:$('fBankNumber').value.trim(), holder:$('fBankHolder').value.trim() },
           pg: $('fPgInfo').value.trim(),
           domain: $('fDomain').value.trim(),
