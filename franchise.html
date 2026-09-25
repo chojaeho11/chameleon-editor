@@ -490,7 +490,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
   <div class="container" style="max-width:1120px;">
     <h2 class="fr-section-title" style="color:#1e3a8a;">가맹점 커뮤니티</h2>
     <p class="fr-section-sub">가맹점·리셀러 전용 공간입니다. 자유롭게 소통하고, 공지와 실시간 매출을 확인하세요.</p>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:20px; align-items:start;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:20px; align-items:stretch;">
 
       <!-- 좌: 단톡방 -->
       <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; display:flex; flex-direction:column; height:540px;">
@@ -508,29 +508,29 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         </div>
       </div>
 
-      <!-- 우: 공지 + 매출 -->
-      <div style="display:flex; flex-direction:column; gap:20px;">
-        <div style="border:1px solid #d6def0; border-radius:14px; background:#fff;">
-          <div style="padding:15px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
-            <span>가맹점 공지사항</span>
-            <button type="button" id="fcNoticeNewBtn" onclick="fcNewNotice()" style="display:none; padding:7px 12px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 공지 작성</button>
-          </div>
-          <div id="fcNoticeBox" style="max-height:320px; overflow-y:auto; padding:8px 14px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
+      <!-- 우: 공지사항 (대화방과 같은 높이) -->
+      <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; display:flex; flex-direction:column; height:540px;">
+        <div style="padding:13px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+          <span>가맹점 공지사항</span>
+          <button type="button" id="fcNoticeNewBtn" onclick="fcNewNotice()" style="display:none; padding:7px 12px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 공지 작성</button>
         </div>
-        <div style="border:1px solid #d6def0; border-radius:14px; background:#fff;">
-          <div style="padding:15px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-            <span>실시간 매출 현황</span>
-            <span id="fcSalesMonth" style="font-size:13px; color:#059669; font-weight:700;"></span>
-          </div>
-          <div id="fcSalesBox" style="padding:6px 8px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-top:1px solid #eef2f7;">
-            <button type="button" onclick="fcSalesPage(-1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">‹ 이전</button>
-            <span id="fcSalesPageInfo" style="font-size:13px; color:#64748b;">1</span>
-            <button type="button" onclick="fcSalesPage(1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">다음 ›</button>
-          </div>
-        </div>
+        <div id="fcNoticeBox" style="flex:1; overflow-y:auto; padding:8px 14px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
       </div>
 
+    </div>
+
+    <!-- 아래: 실시간 매출 현황 (전체 폭) -->
+    <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; margin-top:20px;">
+      <div style="padding:15px 20px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <span>실시간 매출 현황</span>
+        <span id="fcSalesMonth" style="font-size:13.5px; color:#059669; font-weight:700;"></span>
+      </div>
+      <div id="fcSalesBox" style="padding:4px 10px; overflow-x:auto;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-top:1px solid #eef2f7;">
+        <button type="button" onclick="fcSalesPage(-1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">‹ 이전</button>
+        <span id="fcSalesPageInfo" style="font-size:13px; color:#64748b;">1</span>
+        <button type="button" onclick="fcSalesPage(1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">다음 ›</button>
+      </div>
     </div>
   </div>
 </section>
@@ -1745,6 +1745,23 @@ function showToast(msg, type){
         return '<div style="flex:0 0 auto;"><div style="width:38px;height:38px;border-radius:50%;overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">'+avInner(av)+'</div></div>';
       }
       function setMyAvatar(av){ try{ localStorage.setItem('fc_avatar', av); }catch(e){} var pv=$('fcMyAvatarPrev'); if(pv) pv.innerHTML=avInner(av); }
+      // 참여자별 말풍선 색상 (user_id 해시 → 팔레트)
+      var BUBBLE=['#1e3a8a','#0369a1','#047857','#7c3aed','#be185d','#b45309','#0f766e','#4338ca','#9d174d','#155e75'];
+      function bubbleColor(uid){ var h=0,s=String(uid||''); for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return BUBBLE[h%BUBBLE.length]; }
+      // 국가 코드 → 이름
+      function countryName(c){ return ({KR:'한국',JP:'일본',US:'미국',CN:'중국',SA:'사우디',ES:'스페인',DE:'독일',FR:'프랑스'})[String(c||'').toUpperCase()] || (c||'-'); }
+      // 상품군 분류
+      function catOf(items){
+        var s=''; try{ s=JSON.stringify(items||'').toLowerCase(); }catch(e){ s=''; }
+        if(/cotton-print|fabric|패브릭|원단|광목|쉬폰|캔버스|현수막천/.test(s)) return '패브릭';
+        if(/raw.?board|원판|원지|hexa|리보드/.test(s)) return '허니콤원지';
+        if(/paper.?stand|종이매대|pd_|매대/.test(s)) return '종이매대';
+        if(/실사|real.?print|실사출력/.test(s)) return '실사출력물';
+        if(/키링|keyring|acr|굿즈|goods|스티커|sticker|코롯토|아크릴/.test(s)) return '굿즈';
+        if(/hb_|허니콤|가벽|honeycomb|게이트|등신대|스카시|박스|테이블|booth|부스/.test(s)) return '허니콤보드';
+        return '기타';
+      }
+      var frMap={};   // slug → {country, type}
 
       window.fcOpenProfile=function(){
         if($('fcProfileModal')) return;
@@ -1798,15 +1815,16 @@ function showToast(msg, type){
           box.innerHTML = rows.length ? rows.map(function(m){
             var mine = me && m.user_id===me.id;
             var isAdm = m.user_id===ADMIN_UID;
+            var col = bubbleColor(m.user_id);
             var body = m.image_url ? ('<img src="'+esc(m.image_url)+'" style="max-width:180px; border-radius:10px; display:block;">') : esc(m.message||'');
             return '<div style="display:flex; gap:8px; flex-direction:'+(mine?'row-reverse':'row')+'; align-items:flex-start;">'
               + avatarBox(m.avatar_url, isAdm)
               + '<div style="max-width:76%; display:flex; flex-direction:column; align-items:'+(mine?'flex-end':'flex-start')+';">'
               + '<div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">'+esc(m.author||'가맹점')+(isAdm?' <span style="color:#d97706;">👑방장</span>':'')+' · '+tstr(m.created_at)+'</div>'
-              + '<div style="padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55; background:'+(mine?'#1e3a8a':'#eef2f8')+'; color:'+(mine?'#fff':'#1f2937')+'; word-break:break-word;">'+body+'</div>'
+              + '<div style="padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55; background:'+col+'; color:#fff; word-break:break-word;">'+body+'</div>'
               + '</div></div>';
           }).join('') : '<div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">첫 메시지를 남겨보세요.</div>';
-          if(atBottom||!quiet) box.scrollTop=box.scrollHeight;
+          if(atBottom||!quiet){ box.scrollTop=box.scrollHeight; setTimeout(function(){ try{ box.scrollTop=box.scrollHeight; }catch(e){} }, 450); }
         }catch(e){ if(!quiet) box.innerHTML='<div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">대화방 준비 중입니다. (관리자: _franchise_community.sql 실행 필요)</div>'; }
       }
       window.fcSendChat=async function(){
@@ -1882,27 +1900,48 @@ function showToast(msg, type){
       // ---------- 실시간 매출 현황 ----------
       async function fcLoadSales(){
         var box=$('fcSalesBox'); if(!box||!msb) return;
+        // 가맹점 맵 (slug → 국가/구분) 1회 구성
         try{
-          var r=await msb.from('orders').select('id,total_amount,payment_status,created_at,franchise_slug').order('created_at',{ascending:false}).limit(400);
+          if(!Object.keys(frMap).length){
+            var fr=await msb.from('franchises').select('slug,country,owner_id');
+            var frs=(fr.data)||[];
+            var oids=frs.map(function(x){return x.owner_id;}).filter(Boolean);
+            var roles={};
+            if(oids.length){ var pr=await msb.from('profiles').select('id,role').in('id',oids); (pr.data||[]).forEach(function(p){ roles[p.id]=p.role; }); }
+            frs.forEach(function(f){ frMap[f.slug]={ country:f.country, type:(roles[f.owner_id]==='reseller'?'리셀러':'가맹점') }; });
+          }
+        }catch(e){}
+        try{
+          var r=await msb.from('orders').select('id,total_amount,payment_status,created_at,franchise_slug,site_code,items').order('created_at',{ascending:false}).limit(400);
           salesRows=(r.data)||[];
         }catch(e){ salesRows=[]; }
-        // 이번달 합계(결제완료)
-        var now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(), mSum=0;
-        salesRows.forEach(function(o){ if(paid(o.payment_status) && new Date(o.created_at).getTime()>=m0) mSum+=Number(o.total_amount)||0; });
-        var mEl=$('fcSalesMonth'); if(mEl) mEl.textContent='이번달 합계 '+won(mSum);
+        // 최근 30일 합계(결제완료)
+        var cut=Date.now()-30*86400000, sum=0;
+        salesRows.forEach(function(o){ if(paid(o.payment_status) && new Date(o.created_at).getTime()>=cut) sum+=Number(o.total_amount)||0; });
+        var mEl=$('fcSalesMonth'); if(mEl) mEl.textContent='최근 30일 합계 '+won(sum);
         salesPage=0; fcRenderSales();
       }
       function fcRenderSales(){
         var box=$('fcSalesBox'); if(!box) return;
         if(!salesRows.length){ box.innerHTML='<div style="color:#9aa4b5; padding:16px; font-size:13px;">집계된 매출이 없습니다.</div>'; var pi0=$('fcSalesPageInfo'); if(pi0) pi0.textContent='1'; return; }
         var start=salesPage*salesPageSize, page=salesRows.slice(start, start+salesPageSize);
-        box.innerHTML='<table style="width:100%; border-collapse:collapse; font-size:12.5px;"><tbody>'
+        var th='<th style="text-align:left; padding:8px 10px; color:#94a3b8; font-weight:600; font-size:11.5px; white-space:nowrap;">';
+        box.innerHTML='<table style="width:100%; border-collapse:collapse; font-size:12.5px; min-width:640px;"><thead><tr>'
+          + th+'일시</th>'+th+'국가·지역</th>'+th+'구분</th>'+th+'상품군</th>'
+          + '<th style="text-align:right; padding:8px 10px; color:#94a3b8; font-weight:600; font-size:11.5px;">금액</th>'
+          + '<th style="text-align:right; padding:8px 10px; color:#94a3b8; font-weight:600; font-size:11.5px;">상태</th></tr></thead><tbody>'
           + page.map(function(o){
-              var who = o.franchise_slug ? esc(o.franchise_slug) : '본사';
-              return '<tr><td style="padding:7px 8px; color:#94a3b8; white-space:nowrap;">'+tstr(o.created_at)+'</td>'
-                + '<td style="padding:7px 8px; color:#1e3a8a;">'+who+'</td>'
-                + '<td style="padding:7px 8px; text-align:right; color:#1f2937; font-weight:700;">'+won(o.total_amount)+'</td>'
-                + '<td style="padding:7px 8px; text-align:right; color:'+(paid(o.payment_status)?'#059669':'#9aa4b5')+'; font-size:11px;">'+esc(o.payment_status||'-')+'</td></tr>';
+              var fm = o.franchise_slug ? (frMap[o.franchise_slug]||{}) : null;
+              var loc = fm ? (countryName(fm.country)+' · '+esc(o.franchise_slug)) : (countryName(o.site_code)+' · 본사');
+              var kind = fm ? (fm.type||'가맹점') : '본사';
+              var kindColor = kind==='본사'?'#1e3a8a':(kind==='가맹점'?'#b45309':'#7c3aed');
+              return '<tr style="border-top:1px solid #f1f5f9;">'
+                + '<td style="padding:8px 10px; color:#94a3b8; white-space:nowrap;">'+tstr(o.created_at)+'</td>'
+                + '<td style="padding:8px 10px; color:#334155;">'+loc+'</td>'
+                + '<td style="padding:8px 10px; color:'+kindColor+'; font-weight:700; white-space:nowrap;">'+kind+'</td>'
+                + '<td style="padding:8px 10px; color:#334155; white-space:nowrap;">'+esc(catOf(o.items))+'</td>'
+                + '<td style="padding:8px 10px; text-align:right; color:#1f2937; font-weight:700; white-space:nowrap;">'+won(o.total_amount)+'</td>'
+                + '<td style="padding:8px 10px; text-align:right; color:'+(paid(o.payment_status)?'#059669':'#9aa4b5')+'; font-size:11px; white-space:nowrap;">'+esc(o.payment_status||'-')+'</td></tr>';
             }).join('')
           + '</tbody></table>';
         var totalPages=Math.max(1, Math.ceil(salesRows.length/salesPageSize));
