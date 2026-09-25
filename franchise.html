@@ -507,6 +507,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <div id="fcChatBox" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; background:#fbfcfe;"><div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">불러오는 중…</div></div>
         <div style="border-top:1px solid #eef2f7; padding:10px 12px; display:flex; gap:8px; align-items:center;">
           <button type="button" onclick="fcPickImg()" title="사진" style="flex:0 0 auto; width:40px; height:40px; border:1px solid #d9e2f0; border-radius:10px; background:#f2f6fc; color:#1e3a8a; cursor:pointer; font-size:16px;">＋</button>
+          <button type="button" onclick="fcToggleEmoji()" title="이모티콘" style="flex:0 0 auto; width:40px; height:40px; border:1px solid #d9e2f0; border-radius:10px; background:#f2f6fc; cursor:pointer; font-size:18px;">😊</button>
           <input id="fcChatInput" type="text" placeholder="메시지를 입력하세요…" onkeydown="if(event.key==='Enter'){fcSendChat();}" style="flex:1; padding:11px 12px; border:1px solid #d9e2f0; border-radius:10px; font-family:inherit; font-size:14px;">
           <button type="button" onclick="fcSendChat()" style="flex:0 0 auto; padding:11px 16px; border:none; border-radius:10px; background:#1e3a8a; color:#fff; font-weight:700; cursor:pointer;">보내기</button>
           <input type="file" id="fcChatFile" accept="image/*" style="display:none;" onchange="fcSendImg()">
@@ -1811,6 +1812,9 @@ function showToast(msg, type){
       window.__fcInit = function(_msb, _user, opts){
         msb=_msb; me=_user; opts=opts||{}; meName=opts.name||'가맹점'; isAdmin=!!opts.isAdmin;
         var nb=$('fcNoticeNewBtn'); if(nb) nb.style.display=isAdmin?'':'none';
+        // 채팅 입력창 이미지 붙여넣기(Ctrl+V) 지원
+        var ci=$('fcChatInput');
+        if(ci && !ci._pasteBound){ ci._pasteBound=true; ci.addEventListener('paste', function(e){ var items=(e.clipboardData&&e.clipboardData.items)||[]; for(var i=0;i<items.length;i++){ if(items[i].type&&items[i].type.indexOf('image')===0){ var f=items[i].getAsFile(); if(f){ e.preventDefault(); fcUploadImageFile(f); } return; } } }); }
         setMyAvatar(myAvatar());   // 헤더 미리보기 반영
         fcLoadChat(); fcLoadNotices(); fcLoadSales();
         if(chatTimer) clearInterval(chatTimer);
@@ -1847,18 +1851,33 @@ function showToast(msg, type){
         catch(e){ alert('전송 실패: '+(e.message||e)); }
       };
       window.fcPickImg=function(){ var f=$('fcChatFile'); if(f) f.click(); };
-      window.fcSendImg=async function(){
-        var f=$('fcChatFile'); if(!f||!f.files||!f.files[0]||!msb||!me) return;
-        var file=f.files[0]; f.value='';
+      async function fcUploadImageFile(file){
+        if(!file||!msb||!me) return;
         try{
-          var path='franchise_chat/'+me.id+'_'+Date.now()+'.'+((file.name.split('.').pop()||'jpg'));
+          var ext=((file.name||'paste.jpg').split('.').pop()||'jpg');
+          var path='franchise_chat/'+me.id+'_'+Date.now()+'.'+ext;
           var up=await msb.storage.from('design').upload(path, file, { upsert:true });
           if(up.error) throw up.error;
           var pub=msb.storage.from('design').getPublicUrl(path);
           await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, image_url:pub.data.publicUrl, avatar_url:myAvatar() });
           fcLoadChat();
         }catch(e){ alert('사진 전송 실패: '+(e.message||e)); }
+      }
+      window.fcSendImg=function(){ var f=$('fcChatFile'); if(f&&f.files&&f.files[0]){ var file=f.files[0]; f.value=''; fcUploadImageFile(file); } };
+      // 이모티콘 픽커
+      var EMOJIS=['😀','😁','😂','🤣','😊','😍','😎','🤩','😅','😉','🙂','🥰','😘','🤗','🤔','😴','😇','🥳','😜','😋','👍','👏','🙏','💪','🔥','✨','🎉','🎊','💯','❤️','🧡','💛','💚','💙','💜','🤝','👀','😱','😭','😤','🤙','🫡','🍀','🌟','⭐','💰','🤑','📢','🚀','🎁'];
+      window.fcToggleEmoji=function(){
+        var p=$('fcEmojiPanel');
+        if(!p){
+          var inp=$('fcChatInput'); if(!inp) return;
+          var footer=inp.parentNode; footer.style.position='relative';
+          p=document.createElement('div'); p.id='fcEmojiPanel';
+          p.style.cssText='position:absolute; bottom:56px; left:10px; z-index:60; background:#fff; border:1px solid #d9e2f0; border-radius:12px; padding:8px; width:288px; max-height:180px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:2px;';
+          p.innerHTML=EMOJIS.map(function(e){ return '<button type="button" onclick="fcInsertEmoji(\''+e+'\')" style="border:none; background:none; cursor:pointer; font-size:21px; padding:4px; line-height:1;">'+e+'</button>'; }).join('');
+          footer.appendChild(p);
+        } else { p.style.display=(p.style.display==='none'?'flex':'none'); }
       };
+      window.fcInsertEmoji=function(e){ var inp=$('fcChatInput'); if(inp){ inp.value=(inp.value||'')+e; inp.focus(); } var p=$('fcEmojiPanel'); if(p) p.style.display='none'; };
 
       // ---------- 공지사항 ----------
       async function fcLoadNotices(){
