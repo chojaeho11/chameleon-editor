@@ -441,9 +441,8 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     </div>
 </section>
 
-<!-- Franchise-exclusive products (loaded inline from top_category 123456789) -->
-<!-- 2026-09-25(사장님): 원자재·반제품 카드 섹션 제거 → 운영 방식(가맹점·리셀러) 개요로 교체 -->
-<section class="fr-section fr-cats">
+<!-- 2026-09-25(사장님): 운영 방식 섹션은 푸터 바로 위로 이동함(아래 #phones 앞) -->
+<section class="fr-section fr-cats" id="frOpsSection" style="display:none;">
     <div class="container">
         <h2 class="fr-section-title">운영 방식 — 가맹점과 리셀러</h2>
         <p class="fr-section-sub">각 국가·도시의 <span style="color:#1e3a8a; font-weight:700;">가맹점</span>이 장비를 갖추고 제작·설치를 맡고, <span style="color:#1e3a8a; font-weight:700;">리셀러</span>는 장비 없이 광고·영업만으로 참여합니다. 두 방식 모두 본사와 함께 성장합니다.</p>
@@ -537,6 +536,12 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         <span id="fcSalesPageInfo" style="font-size:13px; color:#64748b;">1</span>
         <button type="button" onclick="fcSalesPage(1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">다음 ›</button>
       </div>
+    </div>
+
+    <!-- 가맹점 현황 리스트 (이름·연락처·올해 매출) -->
+    <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; margin-top:20px;">
+      <div style="padding:15px 20px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700;">가맹점 현황</div>
+      <div id="fcFrListBox" style="padding:4px 10px; overflow-x:auto;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
     </div>
   </div>
 </section>
@@ -1911,12 +1916,13 @@ function showToast(msg, type){
         // 가맹점 맵 (slug → 국가/구분) 1회 구성
         try{
           if(!Object.keys(frMap).length){
-            var fr=await msb.from('franchises').select('slug,country,owner_id');
+            var fr=await msb.from('franchises').select('slug,country,owner_id,company_name,phone,status');
             var frs=(fr.data)||[];
             var oids=frs.map(function(x){return x.owner_id;}).filter(Boolean);
             var roles={};
             if(oids.length){ var pr=await msb.from('profiles').select('id,role').in('id',oids); (pr.data||[]).forEach(function(p){ roles[p.id]=p.role; }); }
-            frs.forEach(function(f){ frMap[f.slug]={ country:f.country, type:(roles[f.owner_id]==='reseller'?'리셀러':'가맹점') }; });
+            frs.forEach(function(f){ frMap[f.slug]={ country:f.country, type:(roles[f.owner_id]==='reseller'?'리셀러':'가맹점'), name:f.company_name||f.slug, phone:f.phone||'', status:f.status }; });
+            window.__frList=frs.filter(function(f){ return f.status==='approved'; }).map(function(f){ return { slug:f.slug, name:f.company_name||f.slug, phone:f.phone||'', country:f.country, type:(roles[f.owner_id]==='reseller'?'리셀러':'가맹점') }; });
           }
         }catch(e){}
         try{
@@ -1932,6 +1938,31 @@ function showToast(msg, type){
           var mEl=$('fcSalesMonth'); if(mEl) mEl.textContent='최근 30일 합계 '+won(sum);
         }catch(e){ var mEl2=$('fcSalesMonth'); if(mEl2) mEl2.textContent=''; }
         salesPage=0; fcRenderSales();
+        fcLoadFrList();
+      }
+      async function fcLoadFrList(){
+        var box=$('fcFrListBox'); if(!box||!msb) return;
+        var list=window.__frList||[];
+        if(!list.length){ box.innerHTML='<div style="color:#9aa4b5; padding:16px; font-size:13px;">등록된 가맹점이 없습니다.</div>'; return; }
+        var yearStart=new Date(new Date().getFullYear(),0,1).toISOString(), bySlug={};
+        try{
+          var r=await msb.from('orders').select('franchise_slug,total_amount,payment_status').gte('created_at',yearStart).not('franchise_slug','is',null).limit(5000);
+          (r.data||[]).forEach(function(o){ if(/취소|환불|cancel|refund|실패/i.test(String(o.payment_status||''))) return; bySlug[o.franchise_slug]=(bySlug[o.franchise_slug]||0)+(Number(o.total_amount)||0); });
+        }catch(e){}
+        var th='<th style="text-align:left;padding:8px 10px;color:#94a3b8;font-weight:600;font-size:11.5px;white-space:nowrap;">';
+        box.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px;"><thead><tr>'
+          +th+'가맹점</th>'+th+'구분</th>'+th+'국가</th>'+th+'연락처</th>'
+          +'<th style="text-align:right;padding:8px 10px;color:#94a3b8;font-weight:600;font-size:11.5px;">올해 매출</th></tr></thead><tbody>'
+          + list.map(function(f){
+              var kindColor=f.type==='가맹점'?'#b45309':'#7c3aed';
+              return '<tr style="border-top:1px solid #f1f5f9;">'
+                +'<td style="padding:8px 10px;color:#1f2937;font-weight:700;">'+esc(f.name)+'</td>'
+                +'<td style="padding:8px 10px;color:'+kindColor+';font-weight:700;white-space:nowrap;">'+f.type+'</td>'
+                +'<td style="padding:8px 10px;color:#334155;">'+countryName(f.country)+'</td>'
+                +'<td style="padding:8px 10px;color:#334155;white-space:nowrap;">'+esc(f.phone||'-')+'</td>'
+                +'<td style="padding:8px 10px;text-align:right;color:#1f2937;font-weight:700;white-space:nowrap;">'+won(bySlug[f.slug]||0)+'</td></tr>';
+            }).join('')
+          +'</tbody></table>';
       }
       function fcRenderSales(){
         var box=$('fcSalesBox'); if(!box) return;
@@ -1944,7 +1975,7 @@ function showToast(msg, type){
           + '<th style="text-align:right; padding:8px 10px; color:#94a3b8; font-weight:600; font-size:11.5px;">상태</th></tr></thead><tbody>'
           + page.map(function(o){
               var fm = o.franchise_slug ? (frMap[o.franchise_slug]||{}) : null;
-              var loc = fm ? (countryName(fm.country)+' · '+esc(o.franchise_slug)) : (countryName(o.site_code)+' · 본사');
+              var loc = fm ? (countryName(fm.country)+' · '+esc(fm.name||o.franchise_slug)) : (countryName(o.site_code)+' · 본사');
               var kind = fm ? (fm.type||'가맹점') : '본사';
               var kindColor = kind==='본사'?'#1e3a8a':(kind==='가맹점'?'#b45309':'#7c3aed');
               return '<tr style="border-top:1px solid #f1f5f9;">'
@@ -1964,6 +1995,10 @@ function showToast(msg, type){
         salesPage=Math.max(0, Math.min(totalPages-1, salesPage+dir)); fcRenderSales();
       };
     })();
+    </script>
+    <!-- 2026-09-25(사장님): 운영 방식 섹션을 푸터(연락처) 바로 위로 이동 -->
+    <script>
+    (function(){ try{ var ops=document.getElementById('frOpsSection'), ph=document.getElementById('phones'); if(ops&&ph&&ph.parentNode){ ph.parentNode.insertBefore(ops, ph); ops.style.display=''; } }catch(e){} })();
     </script>
     <script src="/jp-nanami-fab.js?v=2" defer></script>
 </body>
