@@ -1741,9 +1741,8 @@ function showToast(msg, type){
         return '<span style="font-size:18px;line-height:1;">'+e+'</span>';
       }
       function avatarBox(av, isAdm){
-        return '<div style="position:relative; flex:0 0 auto;"><div style="width:38px;height:38px;border-radius:50%;overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">'+avInner(av)+'</div>'
-          + (isAdm?'<span style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:15px;">👑</span>':'')
-          + '</div>';
+        // 2026-09-25(사장님): 아바타 위 왕관 제거 — 여긴 프로필 사진만. (방장 표시는 이름 옆 👑방장)
+        return '<div style="flex:0 0 auto;"><div style="width:38px;height:38px;border-radius:50%;overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">'+avInner(av)+'</div></div>';
       }
       function setMyAvatar(av){ try{ localStorage.setItem('fc_avatar', av); }catch(e){} var pv=$('fcMyAvatarPrev'); if(pv) pv.innerHTML=avInner(av); }
 
