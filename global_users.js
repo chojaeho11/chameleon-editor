@@ -133,9 +133,9 @@ window.loadMembers = async (isNewSearch = false) => {
     members.forEach(m => {
         let name = m.username || m.email?.split('@')[0] || '미등록';
         let badgeColor = '#f1f5f9'; let displayRole = '일반';
-        if (m.role === 'gold') { badgeColor = '#fef9c3'; displayRole = '골드'; }
+        if (m.role === 'gold') { badgeColor = '#fef3c7'; displayRole = '🥇골드가맹점'; }
         if (m.role === 'platinum') { badgeColor = '#e0f2fe'; displayRole = '플레티넘'; }
-        if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점20%'; }
+        if (m.role === 'franchise') { badgeColor = '#f3e8ff'; displayRole = '가맹점'; }
         if (m.role === 'reseller') { badgeColor = '#ede9fe'; displayRole = '🚀리셀러20%'; }
         if (m.role === 'subscriber') { badgeColor = '#ede9fe'; displayRole = '⭐구독자'; }
         if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
@@ -148,14 +148,15 @@ window.loadMembers = async (isNewSearch = false) => {
 
         // 등급 선택 박스 — 2026-09-15: 일반/리셀러/가맹점/관리자 4단계로 정리.
         //   (구 등급 gold/platinum/subscriber 는 해당 회원이 아직 그 등급일 때만 옵션 표시 → 오표기 방지)
-        const _legacyRoles = { gold:'골드(구)', platinum:'파트너스(구)', subscriber:'구독자(구)' };
+        const _legacyRoles = { platinum:'파트너스(구)', subscriber:'구독자(구)' };
         const _legacyOpt = _legacyRoles[m.role]
             ? `<option value="${m.role}" selected>${_legacyRoles[m.role]}</option>` : '';
         const roleSelect = `
             <select onchange="updateMemberRole('${m.id}', this.value)" style="border:1px solid #ddd; font-size:11px;">
                 <option value="customer" ${m.role==='customer'?'selected':''}>일반</option>
                 <option value="reseller" ${m.role==='reseller'?'selected':''}>🚀리셀러 20%</option>
-                <option value="franchise" ${m.role==='franchise'?'selected':''}>🏢가맹점 20%</option>
+                <option value="franchise" ${m.role==='franchise'?'selected':''}>🏢가맹점(자재만)</option>
+                <option value="gold" ${m.role==='gold'?'selected':''}>🥇골드가맹점(본사지원)</option>
                 <option value="admin" ${m.role==='admin'?'selected':''}>관리자</option>
                 ${_legacyOpt}
             </select>
