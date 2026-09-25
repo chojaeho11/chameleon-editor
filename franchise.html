@@ -485,12 +485,50 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 </section>
 
 <!-- Testimonials -->
-<section class="fr-section fr-test">
-    <div class="container">
-        <h2 class="fr-section-title" id="txtTestH2"></h2>
-        <p class="fr-section-sub" id="txtTestSub"></p>
-        <div class="fr-grid-3" id="testGrid"></div>
+<!-- 2026-09-25(사장님): 후기 섹션 제거 → 가맹점 커뮤니티(단톡방·공지·실시간매출). 로그인 승인 회원에게만 노출. -->
+<section class="fr-section" id="frCommunity" style="display:none; background:#f6f9fd;">
+  <div class="container" style="max-width:1120px;">
+    <h2 class="fr-section-title" style="color:#1e3a8a;">가맹점 커뮤니티</h2>
+    <p class="fr-section-sub">가맹점·리셀러 전용 공간입니다. 자유롭게 소통하고, 공지와 실시간 매출을 확인하세요.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:20px; align-items:start;">
+
+      <!-- 좌: 단톡방 -->
+      <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; display:flex; flex-direction:column; height:540px;">
+        <div style="padding:15px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700;">가맹점 대화방</div>
+        <div id="fcChatBox" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; background:#fbfcfe;"><div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">불러오는 중…</div></div>
+        <div style="border-top:1px solid #eef2f7; padding:10px 12px; display:flex; gap:8px; align-items:center;">
+          <button type="button" onclick="fcPickImg()" title="사진" style="flex:0 0 auto; width:40px; height:40px; border:1px solid #d9e2f0; border-radius:10px; background:#f2f6fc; color:#1e3a8a; cursor:pointer; font-size:16px;">＋</button>
+          <input id="fcChatInput" type="text" placeholder="메시지를 입력하세요…" onkeydown="if(event.key==='Enter'){fcSendChat();}" style="flex:1; padding:11px 12px; border:1px solid #d9e2f0; border-radius:10px; font-family:inherit; font-size:14px;">
+          <button type="button" onclick="fcSendChat()" style="flex:0 0 auto; padding:11px 16px; border:none; border-radius:10px; background:#1e3a8a; color:#fff; font-weight:700; cursor:pointer;">보내기</button>
+          <input type="file" id="fcChatFile" accept="image/*" style="display:none;" onchange="fcSendImg()">
+        </div>
+      </div>
+
+      <!-- 우: 공지 + 매출 -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <div style="border:1px solid #d6def0; border-radius:14px; background:#fff;">
+          <div style="padding:15px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+            <span>가맹점 공지사항</span>
+            <button type="button" id="fcNoticeNewBtn" onclick="fcNewNotice()" style="display:none; padding:7px 12px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 공지 작성</button>
+          </div>
+          <div id="fcNoticeBox" style="max-height:320px; overflow-y:auto; padding:8px 14px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
+        </div>
+        <div style="border:1px solid #d6def0; border-radius:14px; background:#fff;">
+          <div style="padding:15px 18px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <span>실시간 매출 현황</span>
+            <span id="fcSalesMonth" style="font-size:13px; color:#059669; font-weight:700;"></span>
+          </div>
+          <div id="fcSalesBox" style="padding:6px 8px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-top:1px solid #eef2f7;">
+            <button type="button" onclick="fcSalesPage(-1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">‹ 이전</button>
+            <span id="fcSalesPageInfo" style="font-size:13px; color:#64748b;">1</span>
+            <button type="button" onclick="fcSalesPage(1)" style="padding:7px 14px; border:1px solid #d9e2f0; border-radius:8px; background:#fff; color:#1e3a8a; cursor:pointer; font-size:13px;">다음 ›</button>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 </section>
 
 <!-- Contact phones -->
@@ -1671,7 +1709,155 @@ function showToast(msg, type){
         var sub=document.getElementById('frMemberSub');
         if(sub) sub.textContent=(fr.company_name||fr.slug)+' — '+(role==='reseller'?'리셀러로 가입 승인되었습니다.':'가맹점으로 가입 승인되었습니다.')+' 매입 할인 20% 적용 중.';
         frLoadOrders();
+        // 가맹점 커뮤니티 초기화
+        try {
+          var comm=document.getElementById('frCommunity'); if(comm) comm.style.display='';
+          if (window.__fcInit) window.__fcInit(msb, user, { name:(fr.company_name||fr.slug||'가맹점'), isAdmin:(String(user.email||'').toLowerCase()==='korea900as@gmail.com') });
+        } catch(e){}
       })();
+    })();
+    </script>
+
+    <!-- 2026-09-25(사장님): 가맹점 커뮤니티 — 단톡방 / 공지+댓글 / 실시간 매출 -->
+    <script>
+    (function(){
+      var msb=null, me=null, meName='가맹점', isAdmin=false;
+      var chatTimer=null, salesPage=0, salesPageSize=20, salesRows=[];
+      function $(id){ return document.getElementById(id); }
+      function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+      function won(n){ return '₩'+Math.round(Number(n)||0).toLocaleString(); }
+      function tstr(iso){ try{ var d=new Date(iso); return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }catch(e){ return ''; } }
+      function paid(st){ return /완료|입금확인|paid|결제/i.test(String(st||'')); }
+
+      window.__fcInit = function(_msb, _user, opts){
+        msb=_msb; me=_user; opts=opts||{}; meName=opts.name||'가맹점'; isAdmin=!!opts.isAdmin;
+        var nb=$('fcNoticeNewBtn'); if(nb) nb.style.display=isAdmin?'':'none';
+        fcLoadChat(); fcLoadNotices(); fcLoadSales();
+        if(chatTimer) clearInterval(chatTimer);
+        chatTimer=setInterval(function(){ if($('frCommunity') && $('frCommunity').style.display!=='none') fcLoadChat(true); }, 7000);
+      };
+
+      // ---------- 단톡방 ----------
+      async function fcLoadChat(quiet){
+        var box=$('fcChatBox'); if(!box||!msb) return;
+        try{
+          var r=await msb.from('franchise_chat').select('*').order('created_at',{ascending:true}).limit(200);
+          if(r.error) throw r.error;
+          var rows=r.data||[];
+          var atBottom = box.scrollHeight-box.scrollTop-box.clientHeight < 60;
+          box.innerHTML = rows.length ? rows.map(function(m){
+            var mine = me && m.user_id===me.id;
+            var body = m.image_url ? ('<img src="'+esc(m.image_url)+'" style="max-width:180px; border-radius:10px; display:block;">') : esc(m.message||'');
+            return '<div style="display:flex; flex-direction:column; align-items:'+(mine?'flex-end':'flex-start')+';">'
+              + '<div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">'+esc(m.author||'가맹점')+' · '+tstr(m.created_at)+'</div>'
+              + '<div style="max-width:80%; padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55; background:'+(mine?'#1e3a8a':'#eef2f8')+'; color:'+(mine?'#fff':'#1f2937')+'; word-break:break-word;">'+body+'</div></div>';
+          }).join('') : '<div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">첫 메시지를 남겨보세요.</div>';
+          if(atBottom||!quiet) box.scrollTop=box.scrollHeight;
+        }catch(e){ if(!quiet) box.innerHTML='<div style="color:#9aa4b5; text-align:center; padding:20px; font-size:13px;">대화방 준비 중입니다. (관리자: _franchise_community.sql 실행 필요)</div>'; }
+      }
+      window.fcSendChat=async function(){
+        var inp=$('fcChatInput'); if(!inp||!msb||!me) return;
+        var v=(inp.value||'').trim(); if(!v) return; inp.value='';
+        try{ await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, message:v }); fcLoadChat(); }
+        catch(e){ alert('전송 실패: '+(e.message||e)); }
+      };
+      window.fcPickImg=function(){ var f=$('fcChatFile'); if(f) f.click(); };
+      window.fcSendImg=async function(){
+        var f=$('fcChatFile'); if(!f||!f.files||!f.files[0]||!msb||!me) return;
+        var file=f.files[0]; f.value='';
+        try{
+          var path='franchise_chat/'+me.id+'_'+Date.now()+'.'+((file.name.split('.').pop()||'jpg'));
+          var up=await msb.storage.from('design').upload(path, file, { upsert:true });
+          if(up.error) throw up.error;
+          var pub=msb.storage.from('design').getPublicUrl(path);
+          await msb.from('franchise_chat').insert({ user_id:me.id, author:meName, image_url:pub.data.publicUrl });
+          fcLoadChat();
+        }catch(e){ alert('사진 전송 실패: '+(e.message||e)); }
+      };
+
+      // ---------- 공지사항 ----------
+      async function fcLoadNotices(){
+        var box=$('fcNoticeBox'); if(!box||!msb) return;
+        try{
+          var r=await msb.from('franchise_notices').select('*').order('created_at',{ascending:false}).limit(30);
+          if(r.error) throw r.error;
+          var rows=r.data||[];
+          if(!rows.length){ box.innerHTML='<div style="color:#9aa4b5; padding:16px; font-size:13px;">등록된 공지가 없습니다.</div>'; return; }
+          box.innerHTML=rows.map(function(n){
+            return '<div style="border-bottom:1px solid #f1f5f9; padding:12px 4px;">'
+              + '<div style="display:flex; justify-content:space-between; gap:8px;"><div style="font-weight:700; color:#1f2937; font-size:14px;">'+esc(n.title||'(제목 없음)')+'</div>'
+              + '<div style="font-size:11px; color:#9aa4b5; white-space:nowrap;">'+tstr(n.created_at)+'</div></div>'
+              + '<div style="color:#475569; font-size:13px; line-height:1.65; margin-top:5px; white-space:pre-wrap;">'+esc(n.body||'')+'</div>'
+              + '<button type="button" onclick="fcToggleComments('+n.id+')" style="margin-top:8px; background:none; border:none; color:#1e3a8a; font-size:12.5px; cursor:pointer; padding:0;">댓글 보기 / 달기</button>'
+              + '<div id="fcCmt-'+n.id+'" style="display:none; margin-top:8px;"></div>'
+              + (isAdmin?(' <button type="button" onclick="fcDelNotice('+n.id+')" style="margin-top:8px; margin-left:10px; background:none; border:none; color:#dc2626; font-size:12px; cursor:pointer; padding:0;">삭제</button>'):'')
+              + '</div>';
+          }).join('');
+        }catch(e){ box.innerHTML='<div style="color:#9aa4b5; padding:16px; font-size:13px;">공지 준비 중입니다. (관리자: _franchise_community.sql 실행 필요)</div>'; }
+      }
+      window.fcNewNotice=async function(){
+        if(!isAdmin||!msb) return;
+        var title=prompt('공지 제목'); if(!title) return;
+        var body=prompt('공지 내용'); if(body==null) return;
+        try{ await msb.from('franchise_notices').insert({ title:title.trim(), body:body.trim(), created_by:meName }); fcLoadNotices(); }
+        catch(e){ alert('공지 등록 실패: '+(e.message||e)); }
+      };
+      window.fcDelNotice=async function(id){
+        if(!isAdmin||!msb) return; if(!confirm('이 공지를 삭제할까요?')) return;
+        try{ await msb.from('franchise_notices').delete().eq('id',id); fcLoadNotices(); }catch(e){ alert('삭제 실패: '+(e.message||e)); }
+      };
+      window.fcToggleComments=async function(id){
+        var box=$('fcCmt-'+id); if(!box||!msb) return;
+        if(box.style.display!=='none'){ box.style.display='none'; return; }
+        box.style.display='block'; box.innerHTML='<div style="color:#9aa4b5; font-size:12px;">불러오는 중…</div>';
+        try{
+          var r=await msb.from('franchise_notice_comments').select('*').eq('notice_id',id).order('created_at',{ascending:true}).limit(100);
+          var rows=(r.data)||[];
+          var list=rows.map(function(c){ return '<div style="font-size:12.5px; color:#374151; padding:5px 0; border-top:1px solid #f4f6fa;"><span style="color:#1e3a8a; font-weight:700;">'+esc(c.author||'가맹점')+'</span> · <span style="color:#9aa4b5; font-size:11px;">'+tstr(c.created_at)+'</span><br>'+esc(c.body||'')+'</div>'; }).join('');
+          box.innerHTML=(list||'<div style="color:#9aa4b5; font-size:12px; padding:4px 0;">첫 댓글을 남겨보세요.</div>')
+            + '<div style="display:flex; gap:6px; margin-top:8px;"><input id="fcCmtIn-'+id+'" type="text" placeholder="댓글…" onkeydown="if(event.key===\'Enter\'){fcAddComment('+id+');}" style="flex:1; padding:8px 10px; border:1px solid #d9e2f0; border-radius:8px; font-size:13px; font-family:inherit;"><button type="button" onclick="fcAddComment('+id+')" style="padding:8px 12px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; font-size:13px; cursor:pointer;">등록</button></div>';
+        }catch(e){ box.innerHTML='<div style="color:#9aa4b5; font-size:12px;">댓글 준비 중입니다.</div>'; }
+      };
+      window.fcAddComment=async function(id){
+        var inp=$('fcCmtIn-'+id); if(!inp||!msb||!me) return;
+        var v=(inp.value||'').trim(); if(!v) return;
+        try{ await msb.from('franchise_notice_comments').insert({ notice_id:id, user_id:me.id, author:meName, body:v }); fcToggleComments(id); fcToggleComments(id); }
+        catch(e){ alert('댓글 등록 실패: '+(e.message||e)); }
+      };
+
+      // ---------- 실시간 매출 현황 ----------
+      async function fcLoadSales(){
+        var box=$('fcSalesBox'); if(!box||!msb) return;
+        try{
+          var r=await msb.from('orders').select('id,total_amount,payment_status,created_at,franchise_slug').order('created_at',{ascending:false}).limit(400);
+          salesRows=(r.data)||[];
+        }catch(e){ salesRows=[]; }
+        // 이번달 합계(결제완료)
+        var now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(), mSum=0;
+        salesRows.forEach(function(o){ if(paid(o.payment_status) && new Date(o.created_at).getTime()>=m0) mSum+=Number(o.total_amount)||0; });
+        var mEl=$('fcSalesMonth'); if(mEl) mEl.textContent='이번달 합계 '+won(mSum);
+        salesPage=0; fcRenderSales();
+      }
+      function fcRenderSales(){
+        var box=$('fcSalesBox'); if(!box) return;
+        if(!salesRows.length){ box.innerHTML='<div style="color:#9aa4b5; padding:16px; font-size:13px;">집계된 매출이 없습니다.</div>'; var pi0=$('fcSalesPageInfo'); if(pi0) pi0.textContent='1'; return; }
+        var start=salesPage*salesPageSize, page=salesRows.slice(start, start+salesPageSize);
+        box.innerHTML='<table style="width:100%; border-collapse:collapse; font-size:12.5px;"><tbody>'
+          + page.map(function(o){
+              var who = o.franchise_slug ? esc(o.franchise_slug) : '본사';
+              return '<tr><td style="padding:7px 8px; color:#94a3b8; white-space:nowrap;">'+tstr(o.created_at)+'</td>'
+                + '<td style="padding:7px 8px; color:#1e3a8a;">'+who+'</td>'
+                + '<td style="padding:7px 8px; text-align:right; color:#1f2937; font-weight:700;">'+won(o.total_amount)+'</td>'
+                + '<td style="padding:7px 8px; text-align:right; color:'+(paid(o.payment_status)?'#059669':'#9aa4b5')+'; font-size:11px;">'+esc(o.payment_status||'-')+'</td></tr>';
+            }).join('')
+          + '</tbody></table>';
+        var totalPages=Math.max(1, Math.ceil(salesRows.length/salesPageSize));
+        var pi=$('fcSalesPageInfo'); if(pi) pi.textContent=(salesPage+1)+' / '+totalPages;
+      }
+      window.fcSalesPage=function(dir){
+        var totalPages=Math.max(1, Math.ceil(salesRows.length/salesPageSize));
+        salesPage=Math.max(0, Math.min(totalPages-1, salesPage+dir)); fcRenderSales();
+      };
     })();
     </script>
     <script src="/jp-nanami-fab.js?v=2" defer></script>
