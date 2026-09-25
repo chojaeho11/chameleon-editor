@@ -357,13 +357,17 @@ select option{background:#1d1640;}
         <div style="flex:1;min-width:210px;">
           <div style="font-size:12px;color:#cfc8ee;font-weight:700;margin-bottom:8px;">파트너 유형</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
-            <button type="button" id="mgTierF" style="width:100%;padding:13px 15px;border-radius:12px;border:2px solid #a855f7;background:rgba(124,58,237,0.15);color:#fff;cursor:pointer;font-family:inherit;text-align:left;">
-              <div style="font-weight:800;font-size:14px;">🏭 가맹점 <span style="color:#c4b5fd;font-size:12px;">— 기본 할인 20%</span></div>
-              <div style="font-weight:500;font-size:11.5px;color:#c9c1e8;line-height:1.55;margin-top:4px;">60평 이상 공장·평판프린터·디지털커터 보유사 신청 가능. 장비 미보유 시 할부 구매 가능(초기자본 약 3천만원).</div>
+            <button type="button" id="mgTierG" style="width:100%;padding:13px 15px;border-radius:12px;border:2px solid rgba(217,119,6,0.4);background:none;color:#cfc8ee;cursor:pointer;font-family:inherit;text-align:left;">
+              <div style="font-weight:800;font-size:14px;">🥇 골드 가맹점 <span style="color:#fbbf24;font-size:12px;">— 본사 실무 지원</span></div>
+              <div style="font-weight:500;font-size:11.5px;color:#a49dc4;line-height:1.55;margin-top:4px;">가맹비 1,000만원(해외 3,000만)·월 관리비 300만원·매출 10% 로열티. 본사가 칼선·디자인·경리·회계까지 대행.</div>
+            </button>
+            <button type="button" id="mgTierF" style="width:100%;padding:13px 15px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;cursor:pointer;font-family:inherit;text-align:left;">
+              <div style="font-weight:800;font-size:14px;">🏭 일반 가맹점 <span style="color:#c4b5fd;font-size:12px;">— 자재만 구매</span></div>
+              <div style="font-weight:500;font-size:11.5px;color:#c9c1e8;line-height:1.55;margin-top:4px;">장비 보유. 디자인·칼선·회계 직접 처리. 가입비·관리비 없음, 로열티 1%.</div>
             </button>
             <button type="button" id="mgTierR" style="width:100%;padding:13px 15px;border-radius:12px;border:2px solid rgba(167,139,250,0.3);background:none;color:#cfc8ee;cursor:pointer;font-family:inherit;text-align:left;">
-              <div style="font-weight:800;font-size:14px;">🚀 리셀러 <span style="color:#9b94c4;font-size:12px;">— 기본 할인 20%</span></div>
-              <div style="font-weight:500;font-size:11.5px;color:#a49dc4;line-height:1.55;margin-top:4px;">열정만 있으면 신청 가능. 해당 국가·지역의 가맹점에서 제품을 공급받아 판매.</div>
+              <div style="font-weight:800;font-size:14px;">🚀 리셀러 <span style="color:#9b94c4;font-size:12px;">— 완제품 20% 할인</span></div>
+              <div style="font-weight:500;font-size:11.5px;color:#a49dc4;line-height:1.55;margin-top:4px;">장비 없이 영업. 완제품 20% 할인 구매, 로열티 1%.</div>
             </button>
           </div>
           <div style="font-size:12px;color:#b3aad4;line-height:1.75;">판매 마진은 <span style="color:#c4b5fd;">기본 20%(할인 마진)</span>에서 시작합니다. 다이얼을 20%로 두면 본사 판매가에서 할인된 20%의 마진만 가져가고, 제작되는 홈페이지 가격은 <span style="color:#fff;">본사와 동일</span>하게 됩니다. 20%보다 더 올린 만큼은 <span style="color:#f97316;">세팅 마진</span>으로, 홈페이지 판매가에 그대로 얹혀 추가 수익이 됩니다. 정한 뒤 <span style="color:#fff;">저장(홈페이지 생성)</span>하면 가격이 자동으로 반영됩니다.</div>
@@ -420,22 +424,24 @@ select option{background:#1d1640;}
         svg.addEventListener('touchstart', start, {passive:false}); window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', end);
       }
       function tier(which){
-        // 2026-09-15: 신청 유형 선택(리셀러/가맹점). 마진은 티어와 무관(자유). 스타일 토글 + 유형 저장.
-        which = (which==='franchise') ? 'franchise' : 'reseller';
-        $d('mgTierR').style.borderColor = which==='reseller'?'#a855f7':'rgba(167,139,250,0.3)';
-        $d('mgTierR').style.background   = which==='reseller'?'rgba(124,58,237,0.15)':'none';
-        $d('mgTierR').style.color        = which==='reseller'?'#fff':'#cfc8ee';
-        $d('mgTierF').style.borderColor = which==='franchise'?'#a855f7':'rgba(167,139,250,0.3)';
-        $d('mgTierF').style.background   = which==='franchise'?'rgba(124,58,237,0.15)':'none';
-        $d('mgTierF').style.color        = which==='franchise'?'#fff':'#cfc8ee';
+        // 2026-09-25: 신청 유형 3종(골드/가맹점/리셀러). 스타일 토글 + 유형 저장.
+        which = (which==='franchise' || which==='gold') ? which : 'reseller';
+        var map={gold:'mgTierG', franchise:'mgTierF', reseller:'mgTierR'};
+        Object.keys(map).forEach(function(k){
+          var el=$d(map[k]); if(!el) return; var on=(k===which);
+          el.style.borderColor = on ? (k==='gold'?'#d97706':'#a855f7') : (k==='gold'?'rgba(217,119,6,0.4)':'rgba(167,139,250,0.3)');
+          el.style.background   = on ? (k==='gold'?'rgba(217,119,6,0.15)':'rgba(124,58,237,0.15)') : 'none';
+          el.style.color        = on ? '#fff' : '#cfc8ee';
+        });
         window._frApplicantType = which;
         try { localStorage.setItem('_fr_tier', which); } catch(e){}
       }
       window._mgSetTier = tier;
-      // 2026-09-15: 리셀러/가맹점 둘 다 선택 가능(신청 유형). 본사가 승인 시 유형 확인.
+      if ($d('mgTierG')) $d('mgTierG').onclick = function(){ tier('gold'); };
       if ($d('mgTierR')) $d('mgTierR').onclick = function(){ tier('reseller'); };
       if ($d('mgTierF')) $d('mgTierF').onclick = function(){ tier('franchise'); };
-      tier('reseller');   // 기본 신청 유형 = 리셀러 (저장된 값 있으면 로드 시 덮어씀)
+      // 2026-09-25: 운영방식 카드에서 넘어온 ?type= 우선 선택, 없으면 리셀러 기본(로드 시 저장값으로 덮어씀).
+      try { var _qt=new URLSearchParams(location.search).get('type'); tier((_qt==='gold'||_qt==='franchise'||_qt==='reseller')?_qt:'reseller'); } catch(e){ tier('reseller'); }
       render();
     })();
     </script>
@@ -1617,8 +1623,10 @@ select option{background:#1d1640;}
     // 2026-09-14: 원형 마진 다이얼 동기화 + 저장된 파트너 유형 반영
     try {
       var _sv = (th.margin != null) ? (Number(th.margin) + 20) : 20;
-      // 2026-09-15: 저장된 신청 유형 복원(기본 리셀러). 없으면 리셀러.
-      var _at = (th.applicantType === 'franchise') ? 'franchise' : 'reseller';
+      // 2026-09-25: 저장된 신청 유형(골드/가맹점/리셀러) 우선, 없으면 운영방식 카드에서 넘어온 ?type=, 그것도 없으면 리셀러.
+      var _qt=''; try { _qt=new URLSearchParams(location.search).get('type')||''; } catch(e){}
+      var _at = (th.applicantType==='franchise'||th.applicantType==='gold'||th.applicantType==='reseller') ? th.applicantType
+              : ((_qt==='gold'||_qt==='franchise'||_qt==='reseller') ? _qt : 'reseller');
       window._frApplicantType = _at;
       if (window._mgSetTier) window._mgSetTier(_at);
       if (window._mgSetMargin) window._mgSetMargin(_sv);
@@ -2026,7 +2034,7 @@ select option{background:#1d1640;}
           color: $('fHeroColor').value,
           image: state.heroImageUrl || '',
           bizNo: bizNo,
-          applicantType: (window._frApplicantType === 'franchise' ? 'franchise' : 'reseller'),   // 신청 유형(리셀러/가맹점) — 승인 시 본사가 확인
+          applicantType: (['gold','franchise','reseller'].indexOf(window._frApplicantType)>=0 ? window._frApplicantType : 'reseller'),   // 신청 유형(골드/가맹점/리셀러) — 승인 시 본사가 확인
           margin: Math.max(0, (parseFloat($('fMargin').value) || 0) - 20),   // 2026-09-25: __FR_MARGIN=세팅마진=다이얼-20 (다이얼 20 → 마진 0 → 클론가=본사가)
           region: $('fRegion') ? $('fRegion').value.trim() : '',
           mobile: $('fMobile') ? $('fMobile').value.trim() : '',

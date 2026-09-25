@@ -108,7 +108,9 @@ window.loadFranchiseManagement = async () => {
 
     // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — [승인](신청 유형으로) + [반려] + [관리].
     const pendTypes = pendingFrs.length ? await Promise.all(pendingFrs.map((f) => _fmApplicantType(f.slug))) : [];
-    const _fmTypeBadge = (t) => (t === 'franchise')
+    const _fmTypeBadge = (t) => (t === 'gold')
+        ? '<span style="background:#fef3c7;color:#b45309;border:1px solid #f5cf94;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🥇 골드 가맹점 신청</span>'
+        : (t === 'franchise')
         ? '<span style="background:#ffedd5;color:#c2410c;border:1px solid #fdba74;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🏭 가맹점 신청</span>'
         : '<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">🚀 리셀러 신청</span>';
     const pendHtml = pendingFrs.length ? (
@@ -119,8 +121,8 @@ window.loadFranchiseManagement = async () => {
             const sl = _fmEsc(f.slug);
             const oid = _fmEsc(f.owner_id || '');
             const at = pendTypes[i];                 // 'franchise' | 'reseller'
-            const apprLabel = (at === 'franchise') ? '✅ 가맹점 승인(20%)' : '✅ 리셀러 승인(20%)';
-            const apprBg = (at === 'franchise') ? '#c2410c' : '#6366f1';
+            const apprLabel = (at === 'gold') ? '✅ 골드 가맹점 승인' : (at === 'franchise') ? '✅ 가맹점 승인' : '✅ 리셀러 승인(20%)';
+            const apprBg = (at === 'gold') ? '#d97706' : (at === 'franchise') ? '#c2410c' : '#6366f1';
             return '<div class="fm-card" style="border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#fff;">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">'
                   + '<div style="font-size:13px;color:#334155;min-width:240px;">'
@@ -185,9 +187,10 @@ window.loadFranchiseManagement = async () => {
 //   RLS 로 UPDATE 0행(조용한 실패) 대비 .select() 로 반영 확인.
 const _FM_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_admin_rls.sql 을 Supabase SQL Editor 에서 먼저 실행하세요.';
 window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
-    role = (role === 'franchise') ? 'franchise' : 'reseller';
-    const pctTxt = (role === 'franchise') ? '가맹점 20%' : '리셀러 20%';
-    if (!confirm('[' + slug + '] 을(를) ' + pctTxt + ' 로 승인합니다.\n\n승인 시 이 회원은 본사 상품을 ' + (role === 'franchise' ? '20' : '20') + '% 할인가로 매입할 수 있습니다. 계속할까요?')) return;
+    role = (role === 'franchise' || role === 'gold') ? role : 'reseller';
+    const pctTxt = (role === 'gold') ? '골드 가맹점' : (role === 'franchise') ? '가맹점' : '리셀러(완제품 20% 할인)';
+    const _msg = (role === 'reseller') ? '\n\n승인 시 이 회원은 완제품을 20% 할인가로 매입할 수 있습니다.' : '\n\n승인 시 이 회원은 자재·원지·장비를 구매해 제작합니다(완제품 할인 없음).';
+    if (!confirm('[' + slug + '] 을(를) ' + pctTxt + ' 로 승인합니다.' + _msg + ' 계속할까요?')) return;
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
