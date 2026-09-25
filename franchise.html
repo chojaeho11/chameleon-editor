@@ -225,8 +225,13 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
     <div style="text-align:center; margin-bottom:26px;">
       <div style="display:inline-block; background:#ecfdf5; border:1px solid #a7f3d0; color:#166534; padding:7px 18px; border-radius:999px; font-size:13px; margin-bottom:14px;">승인된 파트너</div>
       <h2 class="fr-section-title" id="frMemberTitle" style="margin-bottom:6px;">귀하는 가맹점입니다</h2>
-      <p class="fr-section-sub" id="frMemberSub" style="margin:0;"></p>
+      <p class="fr-section-sub" id="frMemberSub" style="margin:0 0 18px;"></p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <a id="frMyStoreBtn" href="#" target="_blank" rel="noopener" style="padding:12px 26px; border-radius:999px; background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; font-weight:800; font-size:15px; text-decoration:none;">내 홈페이지</a>
+        <button type="button" onclick="frToggleMyPage()" style="padding:12px 26px; border-radius:999px; border:2px solid #1e3a8a; background:#fff; color:#1e3a8a; font-weight:800; font-size:15px; cursor:pointer; font-family:inherit;">마이페이지</button>
+      </div>
     </div>
+    <div id="frMyPage" style="display:none;">
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
       <button type="button" class="fr-mtab active" data-panel="orders" onclick="frDashTab('orders')">고객주문</button>
       <button type="button" class="fr-mtab" data-panel="sales" onclick="frDashTab('sales')">매출집계</button>
@@ -284,6 +289,7 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
         · 100장 이하 소량 구매는 아래 소량구매 페이지(혜림허니콤)를 이용해 주세요.
       </div>
       <a href="https://www.hexa-board.com" target="_blank" rel="noopener" style="display:inline-block; margin-top:16px; padding:13px 22px; background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; border-radius:11px; font-weight:800; font-size:14px; text-decoration:none;">소량구매 · 혜림허니콤 바로가기 →</a>
+    </div>
     </div>
   </div>
 </section>
@@ -1627,6 +1633,7 @@ function showToast(msg, type){
         else if(name==='sales') frLoadSales();
         else if(name==='inq') frLoadInq();
       };
+      window.frToggleMyPage = function(){ var mp=document.getElementById('frMyPage'); if(mp){ mp.style.display=(mp.style.display==='none'?'':'none'); if(mp.style.display!=='none') frLoadOrders(); } };
 
       async function fetchOrders(){
         if(ordersCache) return ordersCache;
@@ -1706,6 +1713,7 @@ function showToast(msg, type){
         if(!fr) return;
         try { var pr = await msb.from('profiles').select('role').eq('id', user.id).maybeSingle(); role=(pr&&pr.data)?pr.data.role:''; } catch(e){}
         slug = fr.slug;
+        var _msBtn=document.getElementById('frMyStoreBtn'); if(_msBtn) _msBtn.href='/store/'+fr.slug;
         document.body.classList.add('fr-member-mode');
         var dash=document.getElementById('frMemberDash'); if(dash) dash.style.display='';
         var roleName = (role==='franchise')?'가맹점':((role==='reseller')?'리셀러':'파트너');
@@ -1815,7 +1823,7 @@ function showToast(msg, type){
           box.innerHTML = rows.length ? rows.map(function(m){
             var mine = me && m.user_id===me.id;
             var isAdm = m.user_id===ADMIN_UID;
-            var col = bubbleColor(m.user_id);
+            var col = mine ? '#1e3a8a' : bubbleColor(m.user_id);
             var body = m.image_url ? ('<img src="'+esc(m.image_url)+'" style="max-width:180px; border-radius:10px; display:block;">') : esc(m.message||'');
             return '<div style="display:flex; gap:8px; flex-direction:'+(mine?'row-reverse':'row')+'; align-items:flex-start;">'
               + avatarBox(m.avatar_url, isAdm)
@@ -1915,10 +1923,14 @@ function showToast(msg, type){
           var r=await msb.from('orders').select('id,total_amount,payment_status,created_at,franchise_slug,site_code,items').order('created_at',{ascending:false}).limit(400);
           salesRows=(r.data)||[];
         }catch(e){ salesRows=[]; }
-        // 최근 30일 합계(결제완료)
-        var cut=Date.now()-30*86400000, sum=0;
-        salesRows.forEach(function(o){ if(paid(o.payment_status) && new Date(o.created_at).getTime()>=cut) sum+=Number(o.total_amount)||0; });
-        var mEl=$('fcSalesMonth'); if(mEl) mEl.textContent='최근 30일 합계 '+won(sum);
+        // 최근 30일 합계 — 목록(400건 제한)과 별개로, 30일 전체를 따로 조회해 정확히 합산(취소·환불 제외)
+        try{
+          var cutISO=new Date(Date.now()-30*86400000).toISOString();
+          var sr=await msb.from('orders').select('total_amount,payment_status').gte('created_at', cutISO).limit(5000);
+          var srows=(sr.data)||[], sum=0;
+          srows.forEach(function(o){ if(!/취소|환불|cancel|refund|실패/i.test(String(o.payment_status||''))) sum+=Number(o.total_amount)||0; });
+          var mEl=$('fcSalesMonth'); if(mEl) mEl.textContent='최근 30일 합계 '+won(sum);
+        }catch(e){ var mEl2=$('fcSalesMonth'); if(mEl2) mEl2.textContent=''; }
         salesPage=0; fcRenderSales();
       }
       function fcRenderSales(){
