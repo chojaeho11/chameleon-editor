@@ -530,6 +530,18 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
 
     </div>
 
+    <!-- 팁 & 노하우 게시판 (매출 현황 바로 위) -->
+    <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; margin-top:20px;">
+      <div style="padding:15px 20px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span>팁 &amp; 노하우 게시판</span>
+        <span style="display:flex; gap:8px;">
+          <button type="button" id="fcTipPinBtn" onclick="fcNewTip(true)" style="display:none; padding:7px 12px; border:none; border-radius:8px; background:#b45309; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 팁 공지</button>
+          <button type="button" onclick="fcNewTip(false)" style="padding:7px 12px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 글쓰기</button>
+        </span>
+      </div>
+      <div id="fcTipBox" style="padding:8px 16px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
+    </div>
+
     <!-- 아래: 실시간 매출 현황 (전체 폭) -->
     <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; margin-top:20px;">
       <div style="padding:15px 20px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
@@ -550,17 +562,6 @@ body{font-family:'Pretendard',sans-serif;color:#0f172a;background:#fff;line-heig
       <div id="fcFrListBox" style="padding:4px 10px; overflow-x:auto;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
     </div>
 
-    <!-- 팁 & 노하우 게시판 -->
-    <div style="border:1px solid #d6def0; border-radius:14px; background:#fff; margin-top:20px;">
-      <div style="padding:15px 20px; border-bottom:1px solid #eef2f7; color:#1e3a8a; font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-        <span>팁 &amp; 노하우 게시판</span>
-        <span style="display:flex; gap:8px;">
-          <button type="button" id="fcTipPinBtn" onclick="fcNewTip(true)" style="display:none; padding:7px 12px; border:none; border-radius:8px; background:#b45309; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 팁 공지</button>
-          <button type="button" onclick="fcNewTip(false)" style="padding:7px 12px; border:none; border-radius:8px; background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer;">+ 글쓰기</button>
-        </span>
-      </div>
-      <div id="fcTipBox" style="padding:8px 16px;"><div style="color:#9aa4b5; padding:16px; font-size:13px;">불러오는 중…</div></div>
-    </div>
   </div>
 </section>
 
