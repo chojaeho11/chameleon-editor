@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929000945';
+    var CV = '20260929002537';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1090,7 +1090,16 @@ if ('caches' in window) {
         <!-- 2026-08-10: SNS 체험단 탑바 버튼 (귀엽게, KR/JP 노출) -->
         <!-- 2026-09-18(사장님): 무료쿠폰 버튼 제거 → 그 자리에 가맹모집 버튼(/franchise). 모바일 글자 안 깨지게 nowrap. -->
         <style>
-            #btnFranchiseTop{ display:inline-flex !important; align-items:center; white-space:nowrap; flex-shrink:0; }
+            /* 2026-09-29(사장님): 가맹모집 버튼 — 흐르는 그라데이션 + 빛 스윕으로 심하게 반짝이게 (잘 보이게) */
+            #btnFranchiseTop{ display:inline-flex !important; align-items:center; white-space:nowrap; flex-shrink:0; position:relative; overflow:hidden;
+                background:linear-gradient(120deg,#6366f1,#8b5cf6,#ec4899,#f59e0b,#ec4899,#8b5cf6,#6366f1) !important;
+                background-size:320% 100% !important; animation:frTopGrad 3s linear infinite; }
+            #btnFranchiseTop span{ position:relative; z-index:1; }
+            #btnFranchiseTop::after{ content:''; position:absolute; top:0; left:-70%; width:45%; height:100%;
+                background:linear-gradient(100deg, transparent, rgba(255,255,255,0.85), transparent); transform:skewX(-20deg);
+                animation:frTopShine 2.1s ease-in-out infinite; pointer-events:none; }
+            @keyframes frTopGrad{ 0%{background-position:0% 50%} 100%{background-position:320% 50%} }
+            @keyframes frTopShine{ 0%{left:-70%} 55%{left:130%} 100%{left:130%} }
         </style>
         <a class="btn" id="btnFranchiseTop" href="/franchise" title="가맹점 모집" style="margin-right:6px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; text-decoration:none; white-space:nowrap;">
             <span id="franchiseTopLabel">가맹모집</span>
@@ -1441,8 +1450,8 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'<span class="hw-t-rest">최대 39만원</span> <span class="hw-t-brand">카멜레온 쿠폰받기</span>',
-                      sub:'여름 무료 이벤트 · 눌러서 받기',
+                kr: { title:'<span class="hw-t-rest">기획사라면 리셀러로,</span> <span class="hw-t-brand">20% 즉시할인</span>',
+                      sub:'가입만 하면 완제품 20% 할인 · 눌러서 신청',
                       ph:'어떤 디자인을 하고싶어?', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
                 ja: { title:'<span class="hw-t-rest">企業のための</span> <span class="hw-t-brand">印刷プラットフォーム</span>',
@@ -1480,14 +1489,13 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
             var t = T[lang] || T.en || T.kr;
             document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
-            // 2026-08-14: 여름 무료 이벤트 리워드 허브 — 타이틀 클릭 시 rewards.js openRewardHub.
-            // 2026-09-17(사장님): 한국(KR) 전용 — 일본/기타 국가는 타이틀 클릭 이벤트 제거.
+            // 2026-09-29(사장님): 히어로 타이틀을 '리셀러 20% 즉시할인' 홍보로 변경 → 클릭 시 가맹/리셀러 페이지로.
             if (lang === 'kr' || lang === 'ko') {
                 var _hh = document.querySelector('#heroWorks .hw-head');
                 if (_hh) {
                     _hh.style.cursor = 'pointer';
-                    _hh.setAttribute('title', (lang === 'ja') ? 'タップで開始' : '눌러서 시작');
-                    _hh.onclick = function () { if (window.openRewardHub) window.openRewardHub(); else if (window.openSummerEvent) window.openSummerEvent(); };
+                    _hh.setAttribute('title', '리셀러 가입 안내 보기');
+                    _hh.onclick = function () { location.href = '/franchise'; };
                 }
             }
             // 2026-07-27: 해외(비한국) 사이트는 타이틀이 길어 모바일에서 2줄로 넘어가 아래 이미지를 가림.
