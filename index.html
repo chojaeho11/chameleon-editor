@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929003544';
+    var CV = '20260929004131';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1017,14 +1017,18 @@ if ('caches' in window) {
                         ps.forEach(function(a){ a.textContent = f.phone; a.setAttribute('href', 'tel:' + f.phone.replace(/[^0-9+]/g,'')); });
                     })();
                 }
-                // 2026-09-14: 히어로 메인 타이틀 → 가맹점 타이틀(tagline). 프로모 문구 세팅(hwTitle) 이후 덮어씀 + 잠깐 반복.
-                if (f.tagline) {
+                // 2026-09-14: 히어로 메인 타이틀 → 가맹점. 프로모 문구 세팅(hwTitle) 이후 덮어씀 + 잠깐 반복.
+                // 2026-09-29(사장님): 클론은 리셀러 CTA 대신 가맹점이 적은 소개(tagline)를 서브글씨로. 타이틀=상호명, 서브=소개문구.
+                if (f.tagline || f.company_name) {
                     var trh = 0;
+                    var _cTitle = f.company_name || f.tagline || '';
+                    var _cSub = (f.company_name && f.tagline) ? f.tagline : '';   // 상호·소개 둘 다 있으면 소개를 서브로
                     (function applyHero(){
                         var h = document.getElementById('hwTitle');
                         if (!h){ if (trh++ < 40) setTimeout(applyHero, 300); return; }
-                        h.textContent = f.tagline;
-                        var sub = document.getElementById('hwSub'); if (sub && f.company_name) sub.textContent = f.company_name;
+                        h.textContent = _cTitle;
+                        var sub = document.getElementById('hwSub'); if (sub){ sub.textContent = _cSub; sub.style.display = _cSub ? '' : 'none'; }
+                        var cta = document.getElementById('hwFranchiseCta'); if (cta) cta.style.display = 'none';   // 클론에선 리셀러 모집 CTA 숨김
                         if (trh++ < 12) setTimeout(applyHero, 500);   // 프로모 로직이 다시 덮으면 재적용
                     })();
                 }
@@ -1488,15 +1492,25 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
             document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
             // 2026-09-29(사장님): 히어로 타이틀을 '리셀러 20% 즉시할인' 홍보로 변경 → 클릭 시 가맹/리셀러 페이지로.
+            //   단, 가맹점/리셀러 복제 스토어(?fr=)에서는 리셀러 모집 CTA를 숨기고, 가맹점이 적은 소개(서브글씨)를 그대로 보여준다.
             if (lang === 'kr' || lang === 'ko') {
+                var _isCloneHero = false; try { _isCloneHero = !!(new URLSearchParams(location.search).get('fr') || sessionStorage.getItem('_franchise_ref')); } catch(e){}
                 var _hh = document.querySelector('#heroWorks .hw-head');
-                if (_hh) {
-                    _hh.style.cursor = 'pointer';
-                    _hh.setAttribute('title', '리셀러 가입 안내 보기');
-                    _hh.onclick = function (ev) { if (ev && ev.target && ev.target.closest && ev.target.closest('#hwFranchiseCta')) return; location.href = '/franchise'; };
+                var _cta = document.getElementById('hwFranchiseCta');
+                var _sub = document.getElementById('hwSub');
+                if (_isCloneHero) {
+                    if (_cta) _cta.style.display = 'none';           // 클론: 리셀러 모집 버튼 숨김
+                    if (_sub) _sub.style.display = '';               // 클론이 세팅한 소개(서브글씨) 노출
+                    if (_hh) { _hh.style.cursor = ''; _hh.removeAttribute('title'); _hh.onclick = null; }
+                } else {
+                    if (_hh) {
+                        _hh.style.cursor = 'pointer';
+                        _hh.setAttribute('title', '리셀러 가입 안내 보기');
+                        _hh.onclick = function (ev) { if (ev && ev.target && ev.target.closest && ev.target.closest('#hwFranchiseCta')) return; location.href = '/franchise'; };
+                    }
+                    if (_cta) _cta.style.display = 'inline-flex';
+                    if (_sub) _sub.style.display = 'none';           // 본사 홈: 중복 윗줄(부제) 삭제 — CTA 버튼만
                 }
-                var _cta = document.getElementById('hwFranchiseCta'); if (_cta) _cta.style.display = 'inline-flex';
-                var _sub = document.getElementById('hwSub'); if (_sub) _sub.style.display = 'none';   // 중복 윗줄 삭제(버튼과 겹침)
             }
             // 2026-07-27: 해외(비한국) 사이트는 타이틀이 길어 모바일에서 2줄로 넘어가 아래 이미지를 가림.
             //   hw-i18n 클래스로 모바일 타이틀 폰트를 줄여 한 줄에 들어오게 한다(한국어는 그대로).
