@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929003246';
+    var CV = '20260929003544';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1449,7 +1449,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
             lang = String(lang).toLowerCase();
             var T = {
                 kr: { title:'<span class="hw-t-rest">기획사라면 리셀러로,</span> <span class="hw-t-brand"><span style="font-weight:900;">20%</span> 즉시할인</span>',
-                      sub:'가입만 하면 완제품 20% 할인 · 눌러서 신청',
+                      sub:'',
                       ph:'어떤 디자인을 하고싶어?', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
                 ja: { title:'<span class="hw-t-rest">企業のための</span> <span class="hw-t-brand">印刷プラットフォーム</span>',
@@ -1496,6 +1496,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     _hh.onclick = function (ev) { if (ev && ev.target && ev.target.closest && ev.target.closest('#hwFranchiseCta')) return; location.href = '/franchise'; };
                 }
                 var _cta = document.getElementById('hwFranchiseCta'); if (_cta) _cta.style.display = 'inline-flex';
+                var _sub = document.getElementById('hwSub'); if (_sub) _sub.style.display = 'none';   // 중복 윗줄 삭제(버튼과 겹침)
             }
             // 2026-07-27: 해외(비한국) 사이트는 타이틀이 길어 모바일에서 2줄로 넘어가 아래 이미지를 가림.
             //   hw-i18n 클래스로 모바일 타이틀 폰트를 줄여 한 줄에 들어오게 한다(한국어는 그대로).
