@@ -20145,17 +20145,44 @@ html, body { background: #ffffff !important; }
         if (box) box.style.display = '';
         _soApplyWalletToTotal();
     };
+    // 2026-09-29: 가맹점 클론 입금 계좌(theme.bank) 로드 — 제품페이지를 안 거치고 바로 체크아웃해도 계좌가 채워지도록.
+    async function _soEnsureFrBank() {
+        if (state.frBank && state.frBank.number) return;
+        var ref = ''; try { ref = sessionStorage.getItem('_franchise_ref') || ''; } catch (e) {}
+        if (!ref) { try { ref = new URLSearchParams(location.search).get('fr') || ''; } catch (e) {} }
+        if (!ref) return;
+        state.frSlug = state.frSlug || ref;
+        try {
+            var tj = await fetch('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/' + encodeURIComponent(ref) + '.json?_t=' + Date.now());
+            if (tj.ok) { var th = await tj.json(); state.frBank = (th && th.bank && th.bank.number) ? th.bank : null; if (state.frMargin == null) state.frMargin = Number(th && th.margin) || 0; }
+        } catch (e) {}
+    }
+    window._soEnsureFrBank = _soEnsureFrBank;
     window._soInitWallet = async function () {
         var box = document.getElementById('soCoWalletBox');
         window._soWallet = { ready: false, discChoice: null };
         if (box) box.style.display = 'none';
-        // 2026-09-29(사장님): 가맹점/리셀러 복제 스토어(?fr=)에선 본사 프로모(SNS 홍보쿠폰·포인트·예치금·PRO 구독할인) 사용 불가 → 전부 숨기고 종료.
+        // 2026-09-29(사장님): 가맹점/리셀러 복제 스토어(?fr=)에선 본사 프로모(SNS 홍보쿠폰·포인트·예치금·PRO 구독할인) 사용 불가.
+        //   대신 그 자리에 '가맹점이 입력한 입금 계좌'를 표시(무통장 안내). 계좌 없으면 그냥 숨김.
         try {
-            var _isFrCloneWallet = !!(new URLSearchParams(location.search).get('fr') || sessionStorage.getItem('_franchise_ref'));
-            if (_isFrCloneWallet) {
-                if (box) box.style.display = 'none';
+            var _frRefW=''; try { _frRefW = (new URLSearchParams(location.search).get('fr') || sessionStorage.getItem('_franchise_ref') || ''); } catch(e){}
+            if (_frRefW) {
                 var _snsB0 = document.getElementById('soSnsCouponBox'); if (_snsB0) _snsB0.style.display = 'none';
                 window._soWallet = { ready: false, discChoice: null };
+                try { await _soEnsureFrBank(); } catch (e) {}
+                var _fb = state.frBank;
+                if (box) {
+                    if (_fb && _fb.number) {
+                        var _esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+                        box.style.display = '';
+                        box.innerHTML = '<span class="so-co-label">'+tr('입금 계좌','振込先口座','Bank account')+'</span>'
+                          + '<div style="margin-top:6px; padding:14px 16px; border:2px solid #99f6e4; background:#ecfeff; border-radius:12px; color:#0e7490; line-height:1.7;">'
+                          + '<div style="font-size:15px; font-weight:800;">'+_esc(_fb.name||'')+' '+_esc(_fb.number)+'</div>'
+                          + '<div style="font-size:12.5px; color:#0891b2;">'+tr('예금주','口座名義','Holder')+': '+_esc(_fb.holder||'')+'</div>'
+                          + '<div style="font-size:11.5px; color:#64748b; margin-top:6px;">'+tr('무통장 입금 시 위 계좌로 입금해 주세요.','銀行振込は上記口座へ。','Bank transfers go to the account above.')+'</div>'
+                          + '</div>';
+                    } else { box.style.display = 'none'; }
+                }
                 try { if (window._soApplyWalletToTotal) window._soApplyWalletToTotal(); } catch (e) {}
                 return;
             }
@@ -21968,7 +21995,8 @@ html, body { background: #ffffff !important; }
 
             // 무통장: 안내 메시지 + 카트 비우기
             if (payMethod === 'bank') {
-                // 2026-05-17: 가맹점 주문이면 가맹점 계좌로 안내
+                // 2026-05-17: 가맹점 주문이면 가맹점 계좌로 안내 (2026-09-29: 계좌 미로드 대비 보장 로드)
+                try { if (window._soEnsureFrBank) await window._soEnsureFrBank(); } catch (e) {}
                 var _acct = (state.frBank && state.frBank.number)
                     ? ((state.frBank.name || '') + ' ' + state.frBank.number + '\n' +
                        tr('예금주', '口座名義', 'Account holder') + ': ' + (state.frBank.holder || ''))
