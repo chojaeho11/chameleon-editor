@@ -2055,17 +2055,25 @@ function showToast(msg, type){
           var r=await msb.from('orders').select('franchise_slug,total_amount,payment_status').gte('created_at',yearStart).not('franchise_slug','is',null).limit(5000);
           (r.data||[]).forEach(function(o){ if(/취소|환불|cancel|refund|실패/i.test(String(o.payment_status||''))) return; bySlug[o.franchise_slug]=(bySlug[o.franchise_slug]||0)+(Number(o.total_amount)||0); });
         }catch(e){}
+        // 각 가맹점 테마 JSON에서 지역(도시)·휴대폰 병렬 로드 (1회만)
+        var SB_URL='https://qinvtnhiidtmrzosyvys.supabase.co';
+        await Promise.all(list.map(async function(f){
+          if(f._themeLoaded) return;
+          try{ var tj=await fetch(SB_URL+'/storage/v1/object/public/logos/franchise/themes/'+encodeURIComponent(f.slug)+'.json?_t='+Date.now()); if(tj.ok){ var t=await tj.json(); f.region=(t&&t.region)||''; f.mobile=(t&&t.mobile)||''; } }catch(e){}
+          f._themeLoaded=true;
+        }));
         var th='<th style="text-align:left;padding:8px 10px;color:#94a3b8;font-weight:600;font-size:11.5px;white-space:nowrap;">';
-        box.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px;"><thead><tr>'
-          +th+'가맹점</th>'+th+'구분</th>'+th+'국가</th>'+th+'연락처</th>'
+        box.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px;"><thead><tr>'
+          +th+'가맹점</th>'+th+'구분</th>'+th+'지역(도시)</th>'+th+'연락처</th>'+th+'휴대폰</th>'
           +'<th style="text-align:right;padding:8px 10px;color:#94a3b8;font-weight:600;font-size:11.5px;">올해 매출</th></tr></thead><tbody>'
           + list.map(function(f){
-              var kindColor=f.type==='가맹점'?'#b45309':'#7c3aed';
+              var kindColor=f.type==='가맹점'?'#b45309':(f.type==='골드'?'#a16207':'#7c3aed');
               return '<tr style="border-top:1px solid #f1f5f9;">'
                 +'<td style="padding:8px 10px;color:#1f2937;font-weight:700;">'+esc(f.name)+'</td>'
                 +'<td style="padding:8px 10px;color:'+kindColor+';font-weight:700;white-space:nowrap;">'+f.type+'</td>'
-                +'<td style="padding:8px 10px;color:#334155;">'+countryName(f.country)+'</td>'
+                +'<td style="padding:8px 10px;color:#334155;white-space:nowrap;">'+esc(f.region || countryName(f.country))+'</td>'
                 +'<td style="padding:8px 10px;color:#334155;white-space:nowrap;">'+esc(f.phone||'-')+'</td>'
+                +'<td style="padding:8px 10px;color:#334155;white-space:nowrap;">'+esc(f.mobile||'-')+'</td>'
                 +'<td style="padding:8px 10px;text-align:right;color:#1f2937;font-weight:700;white-space:nowrap;">'+won(bySlug[f.slug]||0)+'</td></tr>';
             }).join('')
           +'</tbody></table>';
