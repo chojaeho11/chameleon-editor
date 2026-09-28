@@ -106,10 +106,13 @@ select option{background:#1d1640;}
     <div class="center-box">
       <div class="ic">🔐</div>
       <h1 data-i18n="loginTitle">가맹점 관리자 로그인</h1>
-      <p data-i18n="loginDesc">카멜레온프린팅 계정으로 로그인하세요.<br>아직 계정이 없다면 먼저 가입이 필요합니다.</p>
-      <label class="fld"><span class="lb" data-i18n="email">이메일</span><input type="email" id="loginEmail" autocomplete="username"></label>
-      <label class="fld"><span class="lb" data-i18n="password">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password"></label>
-      <button class="btn btn-pri" id="btnLogin" data-i18n="login" style="width:100%;">로그인</button>
+      <p data-i18n="loginDesc">처음이신가요? 아이디·비밀번호로 <b>회원가입</b> 후, 그 계정으로 로그인하면 가맹 신청이 시작됩니다.</p>
+      <label class="fld"><span class="lb">아이디 (또는 이메일)</span><input type="text" id="loginEmail" autocomplete="username" placeholder="아이디 또는 이메일"></label>
+      <label class="fld"><span class="lb" data-i18n="password">비밀번호</span><input type="password" id="loginPw" autocomplete="current-password" placeholder="6자 이상"></label>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-pri" id="btnLogin" data-i18n="login" style="flex:1;">로그인</button>
+        <button class="btn" id="btnSignup" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1.5px solid rgba(167,139,250,0.45);">회원가입</button>
+      </div>
       <p style="margin-top:16px;font-size:13px;"><span data-i18n="needJoinQ">가맹점 가입이 필요하신가요?</span> <a href="/franchise" data-i18n="joinGuide" style="color:#c4b5fd;font-weight:700;">가맹 안내 보기</a></p>
     </div>
   </div>
@@ -1745,9 +1748,17 @@ select option{background:#1d1640;}
     if (state.products && state.products.length) loadProducts();
   });
 
-  // ===== 2. 로그인 =====
+  // ===== 2. 로그인 / 회원가입 =====
+  // 2026-09-28: 이메일 없이 아이디만으로도 가입/로그인 가능 — 아이디는 내부적으로 합성 이메일로 변환(로그인·가입 동일 변환).
+  function _frNormEmail(v){
+    v = (v||'').trim();
+    if (!v) return '';
+    if (v.indexOf('@') >= 0) return v.toLowerCase();
+    var id = v.toLowerCase().replace(/[^a-z0-9._-]/g,'');
+    return id ? (id + '@fr.cafe2626.com') : '';
+  }
   $('btnLogin').onclick = async function(){
-    var em = $('loginEmail').value.trim();
+    var em = _frNormEmail($('loginEmail').value);
     var pw = $('loginPw').value;
     if (!em || !pw){ toast(T.loginEmpty,'err'); return; }
     this.disabled = true; this.textContent = T.loggingIn;
@@ -1757,8 +1768,43 @@ select option{background:#1d1640;}
       state.user = r.data.user;
       await afterLogin();
     } catch(e){
-      toast(T.loginFail + (e.message||e), 'err');
+      var msg = (e.message||'')+'';
+      if (/invalid login|credentials/i.test(msg)) toast('아이디 또는 비밀번호가 맞지 않아요. 처음이면 [회원가입]을 눌러 주세요.', 'err');
+      else toast(T.loginFail + msg, 'err');
       this.disabled = false; this.textContent = T.login;
+    }
+  };
+  $('btnSignup').onclick = async function(){
+    var idRaw = ($('loginEmail').value||'').trim();
+    var em = _frNormEmail(idRaw);
+    var pw = $('loginPw').value;
+    if (!em || !pw){ toast('아이디와 비밀번호를 입력하세요.','err'); return; }
+    if ((pw||'').length < 6){ toast('비밀번호는 6자 이상으로 입력하세요.','err'); return; }
+    this.disabled = true; var _orig = this.textContent; this.textContent = '가입 중…';
+    try {
+      var su = await sb.auth.signUp({ email:em, password:pw });
+      if (su.error) {
+        // 이미 가입된 계정이면 바로 로그인 시도
+        if (/registered|exists|already/i.test(su.error.message||'')) {
+          var li = await sb.auth.signInWithPassword({ email:em, password:pw });
+          if (li.error) throw new Error('이미 가입된 아이디입니다. 비밀번호를 확인해 주세요.');
+          state.user = li.data.user; await afterLogin(); return;
+        }
+        throw su.error;
+      }
+      // 확인메일이 꺼져 있으면 세션이 바로 생김 → 그대로 진행. 아니면 명시적 로그인.
+      var user = su.data && su.data.user, sess = su.data && su.data.session;
+      if (!sess) {
+        var li2 = await sb.auth.signInWithPassword({ email:em, password:pw });
+        if (li2.error) { toast('가입은 됐지만 자동 로그인이 막혔어요. [로그인]을 눌러 주세요.', 'err'); this.disabled=false; this.textContent=_orig; return; }
+        user = li2.data.user;
+      }
+      state.user = user;
+      toast('가입 완료! 가맹 신청을 시작합니다.', 'ok');
+      await afterLogin();
+    } catch(e){
+      toast('회원가입 실패: ' + (e.message||e), 'err');
+      this.disabled = false; this.textContent = _orig;
     }
   };
   $('loginPw').addEventListener('keydown', function(e){ if(e.key==='Enter') $('btnLogin').click(); });
