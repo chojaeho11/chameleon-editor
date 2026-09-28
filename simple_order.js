@@ -20149,6 +20149,17 @@ html, body { background: #ffffff !important; }
         var box = document.getElementById('soCoWalletBox');
         window._soWallet = { ready: false, discChoice: null };
         if (box) box.style.display = 'none';
+        // 2026-09-29(사장님): 가맹점/리셀러 복제 스토어(?fr=)에선 본사 프로모(SNS 홍보쿠폰·포인트·예치금·PRO 구독할인) 사용 불가 → 전부 숨기고 종료.
+        try {
+            var _isFrCloneWallet = !!(new URLSearchParams(location.search).get('fr') || sessionStorage.getItem('_franchise_ref'));
+            if (_isFrCloneWallet) {
+                if (box) box.style.display = 'none';
+                var _snsB0 = document.getElementById('soSnsCouponBox'); if (_snsB0) _snsB0.style.display = 'none';
+                window._soWallet = { ready: false, discChoice: null };
+                try { if (window._soApplyWalletToTotal) window._soApplyWalletToTotal(); } catch (e) {}
+                return;
+            }
+        } catch (e) {}
         var bd = document.getElementById('soCoWalletBreakdown'); if (bd) bd.innerHTML = '';
         var inp = document.getElementById('soUseMileage'); if (inp) inp.value = '0';
         var chk = document.getElementById('soUseDepositAll'); if (chk) chk.checked = false;
