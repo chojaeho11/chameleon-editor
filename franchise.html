@@ -1803,14 +1803,27 @@ function showToast(msg, type){
       // 국가 코드 → 이름
       function countryName(c){ return ({KR:'한국',JP:'일본',US:'미국',CN:'중국',SA:'사우디',ES:'스페인',DE:'독일',FR:'프랑스'})[String(c||'').toUpperCase()] || (c||'-'); }
       // 상품군 분류
+      // 2026-09-28: 관리자 대시보드(admin_m_secret_882) 기준과 동일하게 분류.
+      //   ★ 허니콤원지(원판)는 코드가 hb_ 가 아니면서 이름에 "원판" 또는 "NNmm 허니콤보드"일 때만. ("리보드"는 일반 허니콤보드 소재명이라 원지 아님)
       function catOf(items){
-        var s=''; try{ s=JSON.stringify(items||'').toLowerCase(); }catch(e){ s=''; }
-        if(/cotton-print|fabric|패브릭|원단|광목|쉬폰|캔버스|현수막천/.test(s)) return '패브릭';
-        if(/raw.?board|원판|원지|hexa|리보드/.test(s)) return '허니콤원지';
-        if(/paper.?stand|종이매대|pd_|매대/.test(s)) return '종이매대';
-        if(/실사|real.?print|실사출력/.test(s)) return '실사출력물';
-        if(/키링|keyring|acr|굿즈|goods|스티커|sticker|코롯토|아크릴/.test(s)) return '굿즈';
-        if(/hb_|허니콤|가벽|honeycomb|게이트|등신대|스카시|박스|테이블|booth|부스/.test(s)) return '허니콤보드';
+        var arr = Array.isArray(items) ? items : [];
+        var it = arr[0] || {};
+        var name = String((it.product && it.product.name) || it.name || it.fabric || '');
+        var code = String((it.product && it.product.code) || it.code || '');
+        var src  = String(it.source || '').toLowerCase();
+        var type = String(it.type || '');
+        // 패브릭
+        if(/cotton-print|cotton_designer|fabric/.test(src) || it.fabric || /패브릭|원단|광목|쉬폰|캔버스/.test(name)) return '패브릭';
+        // 허니콤 원판(원지): 코드가 hb_ 아니고 이름에 "원판" 또는 "NNmm 허니콤보드"
+        if(!/^hb_/i.test(code) && (/원판/.test(name) || /\d+\s*mm\s*허니콤보드/i.test(name))) return '허니콤원지';
+        // 종이매대
+        if(/^pd_/i.test(code) || /종이\s*매대|종이\s*진열|진열대/.test(name)) return '종이매대';
+        // 실사출력물
+        if(/실사|현수막.*출력|배너.*출력/.test(name)) return '실사출력물';
+        // 굿즈
+        if(/키링|코롯토|아크릴|스티커|굿즈/.test(name) || /keyring|acr_|sticker/i.test(code)) return '굿즈';
+        // 허니콤보드: hb_* 코드 또는 허니콤 관련 이름, 또는 내용없는 매니저 견적
+        if(/^hb_/i.test(code) || /허니콤|가벽|게이트|등신대|스카시|박스|테이블|부스|booth|honeycomb/i.test(name) || type==='manager_quote') return '허니콤보드';
         return '기타';
       }
       var frMap={};   // slug → {country, type}
