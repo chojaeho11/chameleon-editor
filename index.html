@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929002537';
+    var CV = '20260929003246';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1101,10 +1101,7 @@ if ('caches' in window) {
             @keyframes frTopGrad{ 0%{background-position:0% 50%} 100%{background-position:320% 50%} }
             @keyframes frTopShine{ 0%{left:-70%} 55%{left:130%} 100%{left:130%} }
         </style>
-        <a class="btn" id="btnFranchiseTop" href="/franchise" title="가맹점 모집" style="margin-right:6px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; color:#fff; padding:8px 15px; border-radius:980px; font-weight:800; letter-spacing:.2px; text-decoration:none; white-space:nowrap;">
-            <span id="franchiseTopLabel">가맹모집</span>
-        </a>
-        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('franchiseTopLabel');if(el)el.textContent=(c==='JP')?'加盟店募集':(c==='US'||c==='CN'||c==='SA'||c==='ES'||c==='DE'||c==='FR')?'Franchise':'가맹모집';})();</script>
+        <!-- 2026-09-29(사장님): 헤더 가맹모집 버튼 삭제 (히어로에 리셀러 CTA로 대체). frTopGrad 키프레임은 위 style 에 남겨 CTA 애니메이션에 사용. -->
 
         <button class="btn" id="btnCartTop" onclick="window._tbRetry('_soToggleCart', true)" style="position:relative; margin-right:5px; background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
             <span id="cartTopLabel">장바구니</span>
@@ -1417,6 +1414,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
             <div class="hw-head">
                 <h2 class="hw-title" id="hwTitle">고객님들이 만든 디자인</h2>
                 <p class="hw-sub" id="hwSub">문구만 적으면 인공지능이 몇 초 만에 만들어 드립니다</p>
+                <a id="hwFranchiseCta" href="/franchise" style="display:none; margin:12px auto 0; align-items:center; gap:6px; padding:11px 22px; border-radius:980px; background:linear-gradient(120deg,#6366f1,#8b5cf6,#ec4899,#8b5cf6,#6366f1); background-size:300% 100%; animation:frTopGrad 3s linear infinite; color:#fff; font-weight:800; font-size:14px; text-decoration:none; white-space:nowrap;">가입 즉시 전제품 20% 할인 · 신청하기 →</a>
             </div>
             <div class="hw-prompt">
                 <!-- 2026-07-20: <input> 이 아니라 contenteditable div.
@@ -1450,7 +1448,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'<span class="hw-t-rest">기획사라면 리셀러로,</span> <span class="hw-t-brand">20% 즉시할인</span>',
+                kr: { title:'<span class="hw-t-rest">기획사라면 리셀러로,</span> <span class="hw-t-brand"><span style="font-weight:900;">20%</span> 즉시할인</span>',
                       sub:'가입만 하면 완제품 20% 할인 · 눌러서 신청',
                       ph:'어떤 디자인을 하고싶어?', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
@@ -1495,8 +1493,9 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                 if (_hh) {
                     _hh.style.cursor = 'pointer';
                     _hh.setAttribute('title', '리셀러 가입 안내 보기');
-                    _hh.onclick = function () { location.href = '/franchise'; };
+                    _hh.onclick = function (ev) { if (ev && ev.target && ev.target.closest && ev.target.closest('#hwFranchiseCta')) return; location.href = '/franchise'; };
                 }
+                var _cta = document.getElementById('hwFranchiseCta'); if (_cta) _cta.style.display = 'inline-flex';
             }
             // 2026-07-27: 해외(비한국) 사이트는 타이틀이 길어 모바일에서 2줄로 넘어가 아래 이미지를 가림.
             //   hw-i18n 클래스로 모바일 타이틀 폰트를 줄여 한 줄에 들어오게 한다(한국어는 그대로).
