@@ -180,7 +180,64 @@ window.loadFranchiseManagement = async () => {
             + _fmMgmtContent(f)
           + '</div>';
     }).join('');
-    wrap.innerHTML = pendHtml + apprHtml;
+    wrap.innerHTML = pendHtml
+      + '<div id="fmNotesBox" style="border:1px solid #e2e8f0;border-radius:12px;background:#fff;padding:16px 18px;margin-bottom:16px;">'
+      +   '<div style="font-weight:800;color:#1e3a8a;margin-bottom:4px;">🗒 리셀러 주문 메모</div>'
+      +   '<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">리셀러가 주문에 남긴 메모입니다. 답변이 필요한 건(리셀러 마지막 발신)은 빨간색으로 표시돼요.</div>'
+      +   '<div id="fmNotesList"><div style="color:#94a3b8;font-size:13px;">불러오는 중…</div></div>'
+      + '</div>'
+      + apprHtml;
+    try { fmLoadNotes(); } catch (e) {}
+};
+
+// 2026-09-29: 본사(관리자) — 리셀러 주문 메모 목록 + 답변
+window.fmLoadNotes = async () => {
+    const box = document.getElementById('fmNotesList'); if (!box) return;
+    let rows = [];
+    try { const r = await sb.rpc('order_notes_counts', { p_slug: null }); if (r.error) throw r.error; rows = r.data || []; }
+    catch (e) { box.innerHTML = '<div style="color:#94a3b8;font-size:13px;">메모 기능 준비 중입니다. (_order_notes.sql 실행 필요)</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div style="color:#94a3b8;font-size:13px;">아직 리셀러 메모가 없습니다.</div>'; return; }
+    rows.sort((a, b) => new Date(b.last_at) - new Date(a.last_at));
+    box.innerHTML = rows.slice(0, 40).map(n => {
+        const need = (n.last_role === 'reseller');
+        return '<div onclick="fmOpenNoteThread(' + n.order_id + ')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 6px;border-top:1px solid #f1f5f9;cursor:pointer;">'
+          + '<div style="font-size:13px;color:#334155;">주문 <b>#' + n.order_id + '</b> <span style="color:#94a3b8;font-size:12px;">· 메모 ' + n.cnt + '건</span></div>'
+          + '<div style="font-size:12px;font-weight:700;color:' + (need ? '#dc2626' : '#059669') + ';">' + (need ? '답변 필요' : '답변 완료') + ' ›</div>'
+          + '</div>';
+    }).join('');
+};
+window.fmOpenNoteThread = async (orderId) => {
+    let ov = document.getElementById('fmNoteModal'); if (ov) ov.remove();
+    ov = document.createElement('div'); ov.id = 'fmNoteModal';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(17,24,39,0.6);display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML = '<div style="background:#fff;width:100%;max-width:540px;max-height:86vh;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">'
+      + '<div style="padding:15px 18px;border-bottom:1px solid #eef2f7;display:flex;justify-content:space-between;align-items:center;"><div style="font-weight:800;color:#1e3a8a;">주문 #' + orderId + ' 메모</div><button onclick="document.getElementById(\'fmNoteModal\').remove()" style="background:none;border:none;font-size:22px;color:#9ca3af;cursor:pointer;">&times;</button></div>'
+      + '<div id="fmNoteThread" style="padding:16px 18px;overflow-y:auto;flex:1;"><div style="color:#94a3b8;font-size:13px;">불러오는 중…</div></div>'
+      + '<div style="padding:12px 16px;border-top:1px solid #eef2f7;display:flex;gap:8px;"><input id="fmNoteIn" type="text" placeholder="본사 답변을 입력하세요…" onkeydown="if(event.key===\'Enter\'){fmPostHqNote(' + orderId + ');}" style="flex:1;padding:10px 12px;border:1px solid #d9e2f0;border-radius:9px;font-size:13px;"><button onclick="fmPostHqNote(' + orderId + ')" style="padding:10px 16px;border:none;border-radius:9px;background:#1e3a8a;color:#fff;font-weight:700;cursor:pointer;font-size:13px;">답변</button></div>'
+      + '</div>';
+    ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+    fmLoadNoteThread(orderId);
+};
+window.fmLoadNoteThread = async (orderId) => {
+    const box = document.getElementById('fmNoteThread'); if (!box) return;
+    try {
+        const r = await sb.rpc('order_notes_list', { p_order_id: orderId }); if (r.error) throw r.error;
+        const rows = r.data || [];
+        box.innerHTML = rows.length ? rows.map(n => {
+            const hq = (n.role === 'hq');
+            return '<div style="display:flex;flex-direction:column;align-items:' + (hq ? 'flex-end' : 'flex-start') + ';margin-bottom:8px;">'
+              + '<div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">' + (hq ? '🏢 본사' : _fmEsc(n.author || '가맹점')) + ' · ' + String(n.created_at || '').slice(5, 16).replace('T', ' ') + '</div>'
+              + '<div style="max-width:85%;padding:8px 11px;border-radius:10px;font-size:13px;line-height:1.5;background:' + (hq ? '#1e3a8a' : '#eef2f8') + ';color:' + (hq ? '#fff' : '#1f2937') + ';word-break:break-word;">' + _fmEsc(n.body || '') + '</div></div>';
+        }).join('') : '<div style="color:#94a3b8;font-size:13px;">메모가 없습니다.</div>';
+        box.scrollTop = box.scrollHeight;
+    } catch (e) { box.innerHTML = '<div style="color:#94a3b8;font-size:13px;">불러오기 실패: ' + _fmEsc(e.message || e) + '</div>'; }
+};
+window.fmPostHqNote = async (orderId) => {
+    const inp = document.getElementById('fmNoteIn'); if (!inp) return;
+    const v = (inp.value || '').trim(); if (!v) return; inp.value = '';
+    try { const r = await sb.rpc('order_notes_add', { p_order_id: orderId, p_body: v }); if (r.error) throw r.error; fmLoadNoteThread(orderId); fmLoadNotes(); }
+    catch (e) { alert('답변 실패: ' + (e.message || e)); }
 };
 
 // 2026-09-21(사장님): 가맹관리 화면에서 신청 승인/반려 — 처리 후 이 화면을 새로고침.

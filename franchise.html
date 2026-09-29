@@ -1695,13 +1695,22 @@ function showToast(msg, type){
           + '<b style="color:#1e3a8a;">리셀러 진행 안내</b> — 고객 주문을 받아 본사에 접수하면, 여기서 <b>작업지시서 확인 · 파일 관리 · 제작 진행 · 배송 일정</b>을 직접 챙길 수 있어요.<br>'
           + '아래 주문을 <b>클릭</b>하면 상세 콘솔이 열립니다. (단계별 설명이 함께 나와요)</div>';
         if(!rows.length){ box.innerHTML=guide+'<div class="fr-empty">아직 들어온 주문이 없습니다. 내 홈페이지/영업으로 주문이 접수되면 여기에 표시됩니다.</div>'; return; }
+        // 주문별 메모 카운트(배지·미확인) 로드
+        var counts={}; try{ var cr=await msb.rpc('order_notes_counts',{ p_slug:slug }); (cr&&cr.data||[]).forEach(function(c){ counts[c.order_id]={ cnt:Number(c.cnt)||0, last_role:c.last_role }; }); }catch(e){}
+        window.__frNoteCounts=counts;
         var h=guide+'<table class="fr-otbl"><thead><tr><th>일자</th><th>주문자</th><th>금액</th><th>진행</th><th></th></tr></thead><tbody>';
         rows.slice(0,60).forEach(function(o){
           var d=(o.created_at||'').slice(0,10);
           var st=frStage(o);
+          var c=counts[o.id]; var badge='';
+          if(c && c.cnt>0){
+            var seen=0; try{ seen=parseInt(localStorage.getItem('fr_on_seen_'+o.id)||'0',10)||0; }catch(e){}
+            var unread=(c.last_role==='hq' && c.cnt>seen);
+            badge=' <span style="font-size:11px; color:'+(unread?'#dc2626':'#94a3b8')+'; font-weight:700;">💬'+c.cnt+(unread?' 새답변':'')+'</span>';
+          }
           h+='<tr style="cursor:pointer;" onclick="frOpenOrderDetail('+o.id+')">'
             +'<td>'+esc(d)+'</td><td>'+esc(o.manager_name||'-')+'</td><td>'+won(o.total_amount)+'</td>'
-            +'<td><span style="color:'+st.color+'; font-weight:700;">'+st.label+'</span></td>'
+            +'<td><span style="color:'+st.color+'; font-weight:700;">'+st.label+'</span>'+badge+'</td>'
             +'<td style="text-align:right; color:#1e3a8a;">상세 ›</td></tr>';
         });
         h+='</tbody></table>';
@@ -1760,9 +1769,37 @@ function showToast(msg, type){
           +sec('파일','고객이 준 인쇄용 파일입니다. 문제가 있으면 제작 시작 전까지 수정본을 올려 주세요.',fileHtml+'<div style="margin-top:12px;"><input type="file" id="frOdFile" style="display:none;" onchange="frOrderUpload('+esc(o.id)+')"><button type="button" onclick="var f=document.getElementById(\'frOdFile\'); if(f)f.click();" style="padding:10px 16px; border:1px solid #1e3a8a; border-radius:10px; background:#fff; color:#1e3a8a; font-weight:700; cursor:pointer; font-size:13px;">＋ 수정본 파일 올리기</button> <span id="frOdUpStatus" style="font-size:12px; color:#64748b; margin-left:8px;"></span></div>')
           +sec('배송 일정','예정일과 송장을 확인해 고객에게 안내하세요.','<div style="font-size:14px; color:#1f2937;">예정: <b>'+deliv+'</b></div>'+(track?('<div style="font-size:13px; color:#64748b; margin-top:4px;">송장: '+track+'</div>'):''))
           +(o.request_note?sec('고객 요청','','<div style="font-size:13px; color:#374151; white-space:pre-wrap; line-height:1.6;">'+esc(o.request_note)+'</div>'):'')
+          +sec('메모 · 문의 (본사와 소통)','수정 요청·확인 사항을 남기면 본사가 답해 드려요. 답이 오면 여기서 바로 볼 수 있어요.','<div id="frOdNotes" style="max-height:210px; overflow-y:auto; margin-bottom:10px;"><div style="color:#94a3b8; font-size:12px;">불러오는 중…</div></div><div style="display:flex; gap:8px;"><input id="frOdNoteIn" type="text" placeholder="메모를 입력하세요…" onkeydown="if(event.key===\'Enter\'){frPostOrderNote('+esc(o.id)+');}" style="flex:1; padding:10px 12px; border:1px solid #d9e2f0; border-radius:9px; font-size:13px; font-family:inherit;"><button type="button" onclick="frPostOrderNote('+esc(o.id)+')" style="padding:10px 14px; border:none; border-radius:9px; background:#1e3a8a; color:#fff; font-weight:700; cursor:pointer; font-size:13px;">등록</button></div>')
           +'</div></div>';
         ov.addEventListener('click', function(e){ if(e.target===ov) frCloseOrderDetail(); });
         document.body.appendChild(ov);
+        frLoadOrderNotes(o.id);
+      };
+      window.frLoadOrderNotes=async function(id){
+        var box=document.getElementById('frOdNotes'); if(!box||!msb) return;
+        try{
+          var r=await msb.rpc('order_notes_list',{ p_order_id:id });
+          if(r.error) throw r.error;
+          var rows=r.data||[];
+          if(!rows.length){ box.innerHTML='<div style="color:#94a3b8; font-size:12px; padding:8px 0;">아직 메모가 없습니다. 궁금한 점을 남겨보세요.</div>'; }
+          else {
+            box.innerHTML=rows.map(function(n){
+              var hq=(n.role==='hq');
+              return '<div style="display:flex; flex-direction:column; align-items:'+(hq?'flex-start':'flex-end')+'; margin-bottom:8px;">'
+                +'<div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">'+(hq?'🏢 본사':esc(n.author||'가맹점'))+' · '+String(n.created_at||'').slice(5,16).replace('T',' ')+'</div>'
+                +'<div style="max-width:85%; padding:8px 11px; border-radius:10px; font-size:13px; line-height:1.5; background:'+(hq?'#eef2f8':'#1e3a8a')+'; color:'+(hq?'#1f2937':'#fff')+'; word-break:break-word;">'+esc(n.body||'')+'</div></div>';
+            }).join('');
+            box.scrollTop=box.scrollHeight;
+          }
+          try{ localStorage.setItem('fr_on_seen_'+id, String(rows.length)); }catch(e){}
+          if(window.__frNoteCounts) window.__frNoteCounts[id]={ cnt:rows.length, last_role:(rows.length?rows[rows.length-1].role:null) };
+        }catch(e){ box.innerHTML='<div style="color:#94a3b8; font-size:12px;">메모 준비 중입니다. (관리자: _order_notes.sql 실행 필요)</div>'; }
+      };
+      window.frPostOrderNote=async function(id){
+        var inp=document.getElementById('frOdNoteIn'); if(!inp||!msb) return;
+        var v=(inp.value||'').trim(); if(!v) return; inp.value='';
+        try{ var r=await msb.rpc('order_notes_add',{ p_order_id:id, p_body:v }); if(r.error) throw r.error; frLoadOrderNotes(id); }
+        catch(e){ alert('메모 등록 실패: '+(e.message||e)); }
       };
       window.frOrderUpload=async function(orderId){
         var inp=document.getElementById('frOdFile'); if(!inp||!inp.files||!inp.files[0]||!msb) return;
