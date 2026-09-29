@@ -80,6 +80,8 @@
       '#jvgCard .jvg-quick{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 6px;}' +
       '#jvgCard .jvg-q{background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;}' +
       '#jvgCard .jvg-q:hover{background:#e0e7ff;}' +
+      '#jvgCard .jvg-q-primary{background:#4f46e5;border-color:#4f46e5;color:#fff;}' +
+      '#jvgCard .jvg-q-primary:hover{background:#4338ca;}' +
       '#jvgCard .jvg-img{background:#fff;border:2px solid #a5b4fc;color:#6366f1;border-radius:12px;padding:0 12px;font-size:18px;cursor:pointer;flex-shrink:0;animation:jvgSpark 1.5s ease-in-out infinite;}' +
       '#jvgCard .jvg-img:hover{background:#eef2ff;}' +
       '@keyframes jvgSpark{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.55);border-color:#818cf8;}50%{box-shadow:0 0 0 7px rgba(99,102,241,0);border-color:#6366f1;}}' +
@@ -171,18 +173,28 @@
   }
 
   function _cartCount() { try { return (JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || []).length; } catch (e) { return 0; } }
+  // 2026-09-29(사장님): 장바구니 담은 뒤 안내 문구
+  function _afterCartMsg() {
+    return tr(
+      '이건 장바구니에 잘 담았네!\n더 주문할 게 있으면 여기 사진을 올리거나 어떤 제품인지 말해줘. 내가 링크를 줄게.\n이대로 주문 진행하려면 주문 페이지로 보내줄게.',
+      'カートに入れておいたよ！\n他にも注文するものがあれば、写真を送るか製品名を教えてね。リンクを送るよ。\nこのまま注文するなら注文ページへ案内するね。',
+      'Added to your cart!\nWant to order more? Upload a photo here or tell me the product — I\'ll send you a link.\nReady to order? I\'ll take you to the checkout page.'
+    );
+  }
   function _addCartActions() {
     var b = _root.querySelector('.jvg-body');
     var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
-    var n = _cartCount();
-    var acts = [{ label: '아니, 주문할게', fn: function () { close(); location.href = '/?cart=checkout'; } }];
-    if (n >= 2) acts.push({ label: '견적서 받기 (' + n + '개)', fn: function () { try { if (window._soDownloadQuotePreview) window._soDownloadQuotePreview(); else location.href = '/?cart=open'; } catch (e) { location.href = '/?cart=open'; } } });
-    acts.forEach(function (a) { var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label; btn.addEventListener('click', a.fn); wrap.appendChild(btn); });
+    var acts = [
+      // 다른 제품 문의 — 입력창으로 유도 (사진 업로드/제품명 입력)
+      { label: tr('다른 제품 문의', '他の製品を問い合わせ', 'Ask about another'), primary: false, fn: function () { var i = _root.querySelector('.jvg-in-txt'); if (i) { i.focus(); i.scrollIntoView({ block: 'nearest' }); } } },
+      // 주문 바로가기 — 통합 결제창으로
+      { label: tr('주문 바로가기 →', '注文ページへ →', 'Go to checkout →'), primary: true, fn: function () { close(); location.href = '/?cart=checkout'; } }
+    ];
+    acts.forEach(function (a) { var btn = document.createElement('button'); btn.className = 'jvg-q' + (a.primary ? ' jvg-q-primary' : ''); btn.textContent = a.label; btn.addEventListener('click', a.fn); wrap.appendChild(btn); });
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
   }
-  window.openJarvisAfterCart = function () {   // 2026-09-22(사장님): 장바구니 담은 뒤 "같이 살 거 있어?"
-    var msg = '장바구니에 담았어!\n같이 살 다른 제품 있어? 있으면 사진 올리거나 제품을 말해줘.';
-    if (_root) { addMsg(msg, 'ai'); _addCartActions(); }
+  window.openJarvisAfterCart = function () {   // 2026-09-22(사장님): 장바구니 담은 뒤 안내 + 다른제품/주문 버튼
+    if (_root) { addMsg(_afterCartMsg(), 'ai'); _addCartActions(); }
     else { open('aftercart'); }
   };
 
@@ -199,7 +211,7 @@
       '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
     if (mode === 'aftercart') {
-      addMsg('장바구니에 담았어!\n같이 살 다른 제품 있어? 있으면 사진 올리거나 제품을 말해줘.', 'ai');
+      addMsg(_afterCartMsg(), 'ai');
       _addCartActions();
     } else {
       // 첫 인사 (반말·친근, 간결하게. 이모지 지양)
