@@ -379,85 +379,52 @@
                 + rowHtml(3, T2('포토댓글', '写真コメント', 'Photo comment'), won(3000) + T2('/일', '/日', '/day'), '')
                 + rowHtml(4, T2('일반댓글', 'コメント', 'Comment'), won(1000) + T2('/일', '/日', '/day'), '');
             var note = '<div style="text-align:center;font-size:11px;color:#dc2626;margin:14px 0 4px;">' + T2('매월 말일 미사용분 소멸됩니다. 말일전 꼭 사용해주세요!', '毎月末に未使用分は消滅します。月末までに必ずご利用ください！', 'Unused balance expires at month-end — please use it before then!') + '</div>';
-            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
+            var submitHtml = st.logged_in ? '<button id="rhSubmitAll" style="width:100%;margin-top:12px;padding:13px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">' + T2('한번에 등록하고 포인트 받기', 'まとめて登録してポイント', 'Submit all & earn points') + '</button>' : '';
+            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + submitHtml + note;
             var byId = function (id) { return document.getElementById(id); };
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
             var _doSignup = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
             if (byId('rhSignupHero')) byId('rhSignupHero').onclick = _doSignup;   // 비회원 히어로 버튼 → 가입 후 render()로 아래 창들 열림
             if (!st.logged_in) { for (var _n = 1; _n <= 4; _n++) { var _ex = byId('rhExtra' + _n); if (_ex) _ex.innerHTML = '<div style="margin-top:6px;font-size:11.5px;color:#cbd5e1;">' + T2('로그인 후 참여할 수 있어요', 'ログイン後に参加できます', 'Log in to join') + '</div>'; } return; }
-            var inStyle = 'flex:1;min-width:0;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;font-family:inherit;';
-            var goStyle = 'padding:8px 12px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;';
-            // 1) 출석체크 — 한마디 + 출석
+            var inStyle = 'width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;font-family:inherit;';
+            var _rhPhotoFile = null;
+            // 각 행 아래 입력만 배치 (버튼 없음). 하단 '한번에 등록'에서 합산 지급.
+            // 1) 출석체크
             (function () {
                 var ex = byId('rhExtra1'); if (!ex) return;
                 if (st.attendance_done) { ex.innerHTML = '<div style="margin-top:6px;font-size:12px;color:#16a34a;">' + T2('오늘 출석 완료! 내일 또 만나요', '本日出席済み！', 'Checked in today!') + '</div>'; return; }
-                ex.innerHTML = '<div style="display:flex;gap:6px;margin-top:8px;"><input id="rhAttIn" placeholder="' + T2('오늘 한마디 남기고 출석 :)', '今日のひとこと :)', 'Say hi & check in :)') + '" style="' + inStyle + '"><button id="rhAttGo" style="' + goStyle + '">' + T2('출석', '出席', 'Check in') + ' 1,000P</button></div>';
-                byId('rhAttGo').onclick = async function () {
-                    var t = (byId('rhAttIn').value || '').trim(); if (!t) { byId('rhAttIn').focus(); return; } this.disabled = true;
-                    try { await sbc.from('blog_posts').insert({ category: 'freetalk', country_code: sc, author_id: st.uid, author_name: st.name, author_email: st.email, title: t.slice(0, 80), content: t }); } catch (e) {}
-                    var got = false; try { var r = await sbc.rpc('attendance_claim'); var d = r && r.data; if (d && d.ok && d.mileage_added) got = true; } catch (e) {}
-                    if (got) celebrate(1000, T2('출석 완료! 포인트 지급', '出席完了！', 'Checked in!')); else _rwInfo(T2('오늘은 이미 출석했어요', '本日は出席済み', 'Already checked in'));
-                    render();
-                };
+                ex.innerHTML = '<input id="rhAttIn" placeholder="' + T2('오늘 한마디 남기고 출석 :)', '今日のひとこと :)', 'Say hi & check in :)') + '" style="margin-top:8px;' + inStyle + '">';
             })();
-            // 2) 끝말잇기 — 다음 글자 안내 + 이어쓰기
+            // 2) 끝말잇기 — 다음 글자 안내
             (function () {
                 var ex = byId('rhExtra2'); if (!ex) return;
-                ex.innerHTML = '<div style="margin-top:8px;"><div id="rhWordHint" style="font-size:11.5px;color:#7c3aed;margin-bottom:4px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div><div style="display:flex;gap:6px;"><input id="rhWordIn" placeholder="' + T2('단어 입력', '単語', 'Word') + '" style="' + inStyle + '"><button id="rhWordGo" style="' + goStyle + '">' + T2('이어쓰기', '続ける', 'Play') + ' 1,000P</button></div><div id="rhWordMsg" style="font-size:11px;color:#dc2626;margin-top:4px;"></div></div>';
-                (async function () { try { var s = await sbc.rpc('word_chain_status', { p_lang: 'kr' }); var d = s && s.data; var nx = (d && d.next_char) || ''; var h = byId('rhWordHint'); if (h) h.innerHTML = (nx ? (T2('다음 글자로 시작', '次の文字で開始', 'Start with') + ': <b>' + esc(nx) + '</b>') : T2('아무 단어로 시작하세요', 'どの単語でもOK', 'Start with any word')) + ' · ' + T2('하루 1회', '1日1回', '1/day'); } catch (e) {} })();
-                byId('rhWordGo').onclick = async function () {
-                    var w = (byId('rhWordIn').value || '').trim(); var msg = byId('rhWordMsg'); if (!w) { byId('rhWordIn').focus(); return; } this.disabled = true; if (msg) msg.textContent = '';
-                    try {
-                        var r = await sbc.rpc('word_chain_play', { p_word: w, p_lang: 'kr' }); var d = r && r.data;
-                        if (d && d.ok) {
-                            if (d.rewarded) { celebrate(d.mileage_added || 1000, T2('끝말잇기 성공! 포인트 지급', 'しりとり成功！', 'Word chain!')); render(); }
-                            else { if (msg) { msg.style.color = '#16a34a'; msg.textContent = T2('오늘 보상은 다 받았어요 (계속 놀 수는 있어요)', '本日の報酬は終了', 'Daily reward done'); } this.disabled = false; byId('rhWordIn').value = ''; }
-                        } else {
-                            var rz = d && d.reason; var m = (rz === 'chain') ? (T2('앞 단어의 끝 글자로 시작해야 해요', '前の単語の最後の文字で', 'Chain the last char') + ' (' + esc((d && d.need) || '') + ')') : (rz === 'dup') ? T2('이미 나온 단어예요', '既出です', 'Already used') : (rz === 'short') ? T2('2글자 이상 입력', '2文字以上', '2+ chars') : (rz === 'notvalid') ? T2('한글 단어만 가능', '有効な単語のみ', 'Valid word only') : T2('다시 시도해주세요', '再試行', 'Try again');
-                            if (msg) { msg.style.color = '#dc2626'; msg.textContent = m; } this.disabled = false;
-                        }
-                    } catch (e) { if (msg) msg.textContent = T2('오류가 났어요', 'エラー', 'Error'); this.disabled = false; }
-                };
+                ex.innerHTML = '<div style="margin-top:8px;"><div id="rhWordHint" style="font-size:11.5px;color:#7c3aed;margin-bottom:4px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div><input id="rhWordIn" placeholder="' + T2('단어 입력', '単語', 'Word') + '" style="' + inStyle + '"><div id="rhWordMsg" style="font-size:11px;color:#dc2626;margin-top:4px;"></div></div>';
+                (async function () { try { var s = await sbc.rpc('word_chain_status', { p_lang: 'kr' }); var d = s && s.data; var nx = (d && d.next_char) || ''; var h = byId('rhWordHint'); if (h) h.innerHTML = (nx ? (T2('다음 글자로 시작', '次の文字で開始', 'Start with') + ': <b>' + esc(nx) + '</b>') : T2('아무 단어로 시작하세요', 'どの単語でもOK', 'Any word')) + ' · ' + T2('하루 1회', '1日1回', '1/day'); } catch (e) {} })();
             })();
-            // 3) 포토댓글 — 사진 + 한마디
+            // 3) 포토댓글 — 사진 + 한마디 (등록은 하단 통합 버튼에서)
             (function () {
-                var ex = byId('rhExtra3'); if (!ex) return; var _pf = null;
-                ex.innerHTML = '<div style="margin-top:8px;"><textarea id="rhPhIn" rows="2" placeholder="' + T2('사진과 함께 한마디 (선택)', '写真とひとこと（任意）', 'A word with your photo (optional)') + '" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;resize:none;font-family:inherit;"></textarea><div id="rhPhPrev" style="display:none;margin-top:6px;"></div><input type="file" id="rhPhFile" accept="image/*" style="display:none;"><div style="display:flex;gap:6px;margin-top:6px;align-items:center;"><button id="rhPhPick" style="padding:8px 12px;background:#fff;color:#6d28d9;border:1px solid #7c3aed;border-radius:8px;font-size:12.5px;cursor:pointer;font-family:inherit;">' + T2('사진 선택', '写真を選ぶ', 'Pick photo') + '</button><span id="rhPhStat" style="font-size:11px;color:#94a3b8;margin-right:auto;"></span><button id="rhPhGo" style="' + goStyle + '">' + T2('사진 남기기', '投稿', 'Post') + ' 3,000P</button></div></div>';
+                var ex = byId('rhExtra3'); if (!ex) return;
+                ex.innerHTML = '<div style="margin-top:8px;"><textarea id="rhPhIn" rows="2" placeholder="' + T2('사진과 함께 한마디 (선택)', '写真とひとこと（任意）', 'A word with your photo (optional)') + '" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;resize:none;font-family:inherit;"></textarea><div id="rhPhPrev" style="display:none;margin-top:6px;"></div><input type="file" id="rhPhFile" accept="image/*" style="display:none;"><button id="rhPhPick" style="margin-top:6px;padding:8px 12px;background:#fff;color:#6d28d9;border:1px solid #7c3aed;border-radius:8px;font-size:12.5px;cursor:pointer;font-family:inherit;">' + T2('사진 선택', '写真を選ぶ', 'Pick photo') + '</button></div>';
                 byId('rhPhPick').onclick = function () { byId('rhPhFile').click(); };
-                byId('rhPhFile').onchange = function () { var f = this.files && this.files[0]; if (!f) return; _pf = f; var rd = new FileReader(); rd.onload = function () { var pv = byId('rhPhPrev'); if (pv) { pv.style.display = ''; pv.innerHTML = '<img src="' + String(rd.result) + '" style="max-height:110px;border-radius:8px;">'; } }; rd.readAsDataURL(f); };
-                byId('rhPhGo').onclick = async function () {
-                    var stt = byId('rhPhStat'); if (!_pf) { if (stt) stt.textContent = T2('사진을 먼저 선택하세요', '写真を選択', 'Pick a photo'); return; } this.disabled = true;
-                    var t = (byId('rhPhIn').value || '').trim();
-                    try {
-                        if (stt) stt.textContent = T2('올리는 중…', 'アップ中…', 'Uploading…');
-                        var path = 'home_comments/' + st.uid + '/' + Date.now() + '_' + String(_pf.name || 'p').replace(/[^a-zA-Z0-9._-]/g, '_');
-                        var up = await sbc.storage.from('design').upload(path, _pf, { upsert: true }); if (up.error) throw up.error;
-                        var url = sbc.storage.from('design').getPublicUrl(path).data.publicUrl;
-                        var ins = await sbc.from('home_comments').insert({ user_id: st.uid, author_name: st.name, content: t, photo_url: url, country_code: sc }).select('id').maybeSingle(); if (ins.error) throw ins.error;
-                        var id = ins.data && ins.data.id; var got = null;
-                        try { var rr = await sbc.rpc('reward_grant', { p_type: 'comment', p_ref: 'hc_' + id }); got = rr && rr.data; } catch (e) {}
-                        try { if (window.loadHomeComments) window.loadHomeComments(); } catch (e) {}
-                        if (got && got.ok && got.mileage_added) celebrate(got.mileage_added, T2('포토댓글 등록! 포인트 지급', '写真コメント投稿！', 'Photo posted!')); else _rwInfo(T2('등록됐어요 (오늘 포토댓글 보상은 소진)', '投稿しました', 'Posted'));
-                        render();
-                    } catch (e) { if (stt) stt.textContent = T2('등록 실패 — 잠시 후 다시', '失敗', 'Failed'); this.disabled = false; }
-                };
+                byId('rhPhFile').onchange = function () { var f = this.files && this.files[0]; if (!f) return; _rhPhotoFile = f; var rd = new FileReader(); rd.onload = function () { var pv = byId('rhPhPrev'); if (pv) { pv.style.display = ''; pv.innerHTML = '<img src="' + String(rd.result) + '" style="max-height:110px;border-radius:8px;">'; } }; rd.readAsDataURL(f); };
             })();
-            // 4) 일반댓글 — 글
+            // 4) 일반댓글
             (function () {
                 var ex = byId('rhExtra4'); if (!ex) return;
-                ex.innerHTML = '<div style="display:flex;gap:6px;margin-top:8px;"><input id="rhTxIn" placeholder="' + T2('댓글 남기기', 'コメント', 'Comment') + '" style="' + inStyle + '"><button id="rhTxGo" style="' + goStyle + '">' + T2('댓글', 'コメント', 'Post') + ' 1,000P</button></div>';
-                byId('rhTxGo').onclick = async function () {
-                    var t = (byId('rhTxIn').value || '').trim(); if (!t) { byId('rhTxIn').focus(); return; } this.disabled = true;
-                    try {
-                        var ins = await sbc.from('home_comments').insert({ user_id: st.uid, author_name: st.name, content: t, photo_url: null, country_code: sc }).select('id').maybeSingle(); if (ins.error) throw ins.error;
-                        var id = ins.data && ins.data.id; var got = null;
-                        try { var rr = await sbc.rpc('reward_grant', { p_type: 'post', p_ref: 'hc_' + id }); got = rr && rr.data; } catch (e) {}
-                        try { if (window.loadHomeComments) window.loadHomeComments(); } catch (e) {}
-                        if (got && got.ok && got.mileage_added) celebrate(got.mileage_added, T2('댓글 등록! 포인트 지급', 'コメント投稿！', 'Comment posted!')); else _rwInfo(T2('등록됐어요 (오늘 댓글 보상은 소진)', '投稿しました', 'Posted'));
-                        render();
-                    } catch (e) { this.disabled = false; if (window.alert) alert(T2('등록 실패 — 잠시 후 다시', '失敗', 'Failed')); }
-                };
+                ex.innerHTML = '<input id="rhTxIn" placeholder="' + T2('댓글 남기기', 'コメント', 'Comment') + '" style="margin-top:8px;' + inStyle + '">';
             })();
+            // 하단: 쓴 것 전부 합산해서 한번에 지급
+            if (byId('rhSubmitAll')) byId('rhSubmitAll').onclick = async function () {
+                var btn = this; btn.disabled = true; var prevT = btn.textContent; btn.textContent = T2('등록 중…', '登録中…', 'Submitting…');
+                var total = 0;
+                if (!st.attendance_done) { var at = byId('rhAttIn'); var atv = at ? (at.value || '').trim() : ''; if (atv) { try { await sbc.from('blog_posts').insert({ category: 'freetalk', country_code: sc, author_id: st.uid, author_name: st.name, author_email: st.email, title: atv.slice(0, 80), content: atv }); } catch (e) {} try { var ra = await sbc.rpc('attendance_claim'); var da = ra && ra.data; if (da && da.ok && da.mileage_added) total += da.mileage_added; } catch (e) {} } }
+                var wi = byId('rhWordIn'); var wv = wi ? (wi.value || '').trim() : ''; if (wv) { try { var rw = await sbc.rpc('word_chain_play', { p_word: wv, p_lang: 'kr' }); var dw = rw && rw.data; var wm = byId('rhWordMsg'); if (dw && dw.ok) { if (dw.rewarded) total += (dw.mileage_added || 1000); } else if (wm) { var rz = dw && dw.reason; wm.textContent = (rz === 'chain') ? (T2('끝말잇기: 앞 단어 끝 글자로 시작', 'しりとり：前の最後の文字で', 'Chain last char') + ' (' + esc((dw && dw.need) || '') + ')') : (rz === 'dup') ? T2('끝말잇기: 이미 나온 단어', 'しりとり：既出', 'Word used') : (rz === 'short') ? T2('끝말잇기: 2글자 이상', 'しりとり：2文字以上', '2+ chars') : T2('끝말잇기: 유효한 한글 단어', 'しりとり：有効な単語', 'Valid word'); } } catch (e) {} }
+                if (_rhPhotoFile) { try { var pt = (byId('rhPhIn') && byId('rhPhIn').value || '').trim(); var ppath = 'home_comments/' + st.uid + '/' + Date.now() + '_' + String(_rhPhotoFile.name || 'p').replace(/[^a-zA-Z0-9._-]/g, '_'); var up = await sbc.storage.from('design').upload(ppath, _rhPhotoFile, { upsert: true }); if (!up.error) { var purl = sbc.storage.from('design').getPublicUrl(ppath).data.publicUrl; var ip = await sbc.from('home_comments').insert({ user_id: st.uid, author_name: st.name, content: pt, photo_url: purl, country_code: sc }).select('id').maybeSingle(); if (!ip.error) { try { var rp = await sbc.rpc('reward_grant', { p_type: 'comment', p_ref: 'hc_' + (ip.data && ip.data.id) }); var dp = rp && rp.data; if (dp && dp.ok && dp.mileage_added) total += dp.mileage_added; } catch (e) {} } } } catch (e) {} }
+                var ti = byId('rhTxIn'); var tv = ti ? (ti.value || '').trim() : ''; if (tv) { try { var itt = await sbc.from('home_comments').insert({ user_id: st.uid, author_name: st.name, content: tv, photo_url: null, country_code: sc }).select('id').maybeSingle(); if (!itt.error) { try { var rt = await sbc.rpc('reward_grant', { p_type: 'post', p_ref: 'hc_' + (itt.data && itt.data.id) }); var dt = rt && rt.data; if (dt && dt.ok && dt.mileage_added) total += dt.mileage_added; } catch (e) {} } } catch (e) {} }
+                try { if (window.loadHomeComments) window.loadHomeComments(); } catch (e) {}
+                if (total > 0) { celebrate(total, T2('한번에 적립 완료!', 'まとめて付与！', 'Earned!')); render(); }
+                else { _rwInfo(T2('등록할 내용을 입력해주세요 (또는 오늘 보상 소진)', '入力してください', 'Nothing to submit')); btn.disabled = false; btn.textContent = prevT; }
+            };
         }
         render();
     };
