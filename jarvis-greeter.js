@@ -176,9 +176,9 @@
   // 2026-09-29(사장님): 장바구니 담은 뒤 안내 문구
   function _afterCartMsg() {
     return tr(
-      '이건 장바구니에 잘 담았네!\n더 주문할 게 있으면 여기 사진을 올리거나 어떤 제품인지 말해줘. 내가 링크를 줄게.\n이대로 주문 진행하려면 주문 페이지로 보내줄게.',
-      'カートに入れておいたよ！\n他にも注文するものがあれば、写真を送るか製品名を教えてね。リンクを送るよ。\nこのまま注文するなら注文ページへ案内するね。',
-      'Added to your cart!\nWant to order more? Upload a photo here or tell me the product — I\'ll send you a link.\nReady to order? I\'ll take you to the checkout page.'
+      '와 대단한데 매우 잘했어!\n제품과 옵션을 잘 골랐다면 이제 주문할 수 있어.\n만약 다른 상품이 추가로 필요하다면 사진이나 제품명을 말해줘, 내가 링크를 줄게.',
+      'わあ、すごい！よくできたね。\n製品とオプションをちゃんと選べたなら、このまま注文できるよ。\n他にも必要な商品があれば、写真か製品名を教えてね。リンクを送るよ。',
+      'Wow, nicely done!\nIf you\'ve picked the product and options you want, you\'re ready to order.\nNeed anything else? Send a photo or the product name and I\'ll get you a link.'
     );
   }
   function _addCartActions() {
