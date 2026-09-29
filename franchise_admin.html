@@ -197,7 +197,7 @@ select option{background:#1d1640;}
         <!-- Step 5: 신청 (가맹점/리셀러) -->
         <div class="mwStep" data-step="5" style="display:none;">
           <h2 style="font-size:20px;font-weight:900;margin-bottom:6px;">📝 어떤 파트너로 신청할까요?</h2>
-          <p style="font-size:13px;color:#b3aad4;line-height:1.6;margin-bottom:16px;">선택 후 저장하면 <b style="color:#fff;">즉시 활성화</b>됩니다(본사 승인 불필요).</p>
+          <p style="font-size:13px;color:#b3aad4;line-height:1.6;margin-bottom:16px;">선택 후 저장하면 신청이 접수됩니다. <b style="color:#fff;">기본 교육 후 본사 승인 시 활성화</b>됩니다.</p>
           <div id="mwTierReseller" class="mwTier" data-tier="reseller" style="border:2px solid rgba(167,139,250,0.3);border-radius:14px;padding:16px;margin-bottom:12px;cursor:pointer;">
             <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;">🚀 리셀러</div>
             <div style="font-size:12.5px;color:#b3aad4;line-height:1.6;">가맹비 <b style="color:#fff;">무료</b> · 마진 <b style="color:#fff;">10%</b> · 로열티 없음. 판매만 하고 제작·배송은 인근 가맹점이 처리. <b style="color:#fff;">인근 가맹점이 있어야 운영 가능</b>.</div>
@@ -278,7 +278,7 @@ select option{background:#1d1640;}
         } catch(e){}
         closeWiz();
         var tierName = mw.tier==='franchise' ? '가맹점' : '리셀러';
-        alert('입력하신 내용으로 홈페이지를 저장합니다.\n\n선택: ' + tierName + '\n\n확인을 누르면 저장 즉시 활성화됩니다(본사 승인 불필요).');
+        alert('입력하신 내용으로 홈페이지를 저장합니다.\n\n선택: ' + tierName + '\n\n확인을 누르면 신청이 접수되고, 기본 교육 후 본사 승인 시 활성화됩니다.');
         var bs = $w('btnSave'); if (bs) bs.click();
       }
       // 2026-09-14: 자동 위저드 실행 제거(폼과 중복) — 아래 폼에서 직접 입력.
@@ -2000,7 +2000,7 @@ select option{background:#1d1640;}
   window._renderFrStatus = function(status){
     var el = $('frStatusBanner'); if (!el) return;
     var map = {
-      pending:   { bg:'#fef9c3', bd:'#fde047', fg:'#854d0e', txt:'🕒 본사 승인 대기 중입니다. 승인되면 리셀러 매입 할인(20%)이 적용됩니다. 승인 전에도 홈페이지는 저장·수정할 수 있습니다.' },
+      pending:   { bg:'#fef9c3', bd:'#fde047', fg:'#854d0e', txt:'🕒 본사 승인 대기 중입니다. 기본 교육 이수 후 본사 승인 시 활성화되며(리셀러는 고객과 본사를 연결하는 역할), 승인되면 리셀러 매입 할인(20%)이 적용됩니다. 승인 전에도 홈페이지는 저장·수정할 수 있습니다.' },
       approved:  { bg:'#dcfce7', bd:'#86efac', fg:'#166534', txt:'✅ 승인 완료 — 리셀러로 활성화되었습니다. 본사 상품을 할인가로 매입하실 수 있습니다.' },
       rejected:  { bg:'#fee2e2', bd:'#fca5a5', fg:'#991b1b', txt:'❌ 신청이 반려되었습니다. 내용을 보완해 다시 저장하시면 재신청됩니다. (문의는 본사로)' },
       cancelled: { bg:'#f3f4f6', bd:'#d1d5db', fg:'#374151', txt:'⛔ 가맹 계약이 취소되었습니다. 재신청은 불가합니다. 본사에 문의해 주세요.' }
@@ -2063,25 +2063,15 @@ select option{background:#1d1640;}
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
-      // 2026-09-29(사장님): 본사 승인 없이 저장 즉시 활성화 — 신규/재저장 모두 approved. (취소 계정은 위에서 차단)
-      payload.status = 'approved';
+      // 2026-09-29(사장님): 본사 승인제로 복귀 — 신규/재저장은 pending(본사 승인 필요). 기본 교육 후 본사가 승인하면 등급 부여·활성화.
+      //   그냥 할인만 받는 게 아니라 고객과 본사를 연결하는 역할이라, 자동 활성화하지 않는다. 등급(role)은 승인 단계에서만 부여.
+      if (!(existing && existing.id)) payload.status = 'pending';
+      else if (existing.status === 'rejected') payload.status = 'pending';
       var res = (existing && existing.id)
         ? await sb.from('franchises').update(payload).eq('id', existing.id).select().maybeSingle()
         : await sb.from('franchises').insert(payload).select().maybeSingle();
       if (res.error) throw res.error;
       state.franchise = res.data;
-
-      // 2026-09-29: 승인 없이 즉시 등급 부여(골드/가맹점/리셀러). 보안: SECURITY DEFINER RPC(본인 계정만, 관리자 제외).
-      try {
-        var _appType = (window._frApplicantType === 'gold' || window._frApplicantType === 'franchise') ? window._frApplicantType : 'reseller';
-        var _rpc = await sb.rpc('fr_self_activate', { p_slug: slug, p_type: _appType });
-        if (_rpc && _rpc.error) {
-          // RPC 미배포 폴백: 관리자/매니저가 아니면 본인 등급 직접 시도(RLS 허용 시)
-          var _pr = await sb.from('profiles').select('role').eq('id', state.user.id).maybeSingle();
-          var _cur = _pr && _pr.data && _pr.data.role;
-          if (['admin','superadmin','manager'].indexOf(_cur) < 0) { try { await sb.from('profiles').update({ role: _appType }).eq('id', state.user.id); } catch (e) {} }
-        }
-      } catch (e) { console.warn('[fr self-activate]', e); }
 
       // 홈페이지 테마(상단 배지·배경) 저장 — DB 컬럼 대신 스토리지 JSON
       try {
