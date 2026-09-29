@@ -1698,7 +1698,8 @@ function showToast(msg, type){
         // 주문별 메모 카운트(배지·미확인) 로드
         var counts={}; try{ var cr=await msb.rpc('order_notes_counts',{ p_slug:slug }); (cr&&cr.data||[]).forEach(function(c){ counts[c.order_id]={ cnt:Number(c.cnt)||0, last_role:c.last_role }; }); }catch(e){}
         window.__frNoteCounts=counts;
-        var h=guide+'<table class="fr-otbl"><thead><tr><th>일자</th><th>주문자</th><th>금액</th><th>진행</th><th></th></tr></thead><tbody>';
+        var newCount=0;
+        var body='';
         rows.slice(0,60).forEach(function(o){
           var d=(o.created_at||'').slice(0,10);
           var st=frStage(o);
@@ -1708,13 +1709,17 @@ function showToast(msg, type){
             var unread=(c.last_role==='hq' && c.cnt>seen);
             badge=' <span style="font-size:11px; color:'+(unread?'#dc2626':'#94a3b8')+'; font-weight:700;">💬'+c.cnt+(unread?' 새답변':'')+'</span>';
           }
-          h+='<tr style="cursor:pointer;" onclick="frOpenOrderDetail('+o.id+')">'
+          var progBadge='';
+          if(frProgIsNew(o)){ newCount++; progBadge=' <span style="font-size:11px; color:#dc2626; font-weight:800;">🔔 새 업데이트</span>'; }
+          body+='<tr style="cursor:pointer;'+(progBadge?' background:#fff7ed;':'')+'" onclick="frOpenOrderDetail('+o.id+')">'
             +'<td>'+esc(d)+'</td><td>'+esc(o.manager_name||'-')+'</td><td>'+won(o.total_amount)+'</td>'
-            +'<td><span style="color:'+st.color+'; font-weight:700;">'+st.label+'</span>'+badge+'</td>'
+            +'<td><span style="color:'+st.color+'; font-weight:700;">'+st.label+'</span>'+progBadge+badge+'</td>'
             +'<td style="text-align:right; color:#1e3a8a;">상세 ›</td></tr>';
         });
-        h+='</tbody></table>';
-        box.innerHTML=h;
+        var notice = newCount>0
+          ? '<div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px 16px; margin-bottom:14px; font-size:13px; color:#9a3412;"><b>🔔 '+newCount+'건</b>의 주문에 본사 진행 업데이트(상태·배송·송장 등)가 있어요. 아래에서 <b>🔔 새 업데이트</b> 표시된 주문을 열어 확인하세요.</div>'
+          : '';
+        box.innerHTML=guide+notice+'<table class="fr-otbl"><thead><tr><th>일자</th><th>주문자</th><th>금액</th><th>진행</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
       }
 
       // 주문 진행 단계 판정 (0접수 →1결제확인 →2디자인확인 →3제작중 →4출고/배송 →5완료)
@@ -1737,11 +1742,24 @@ function showToast(msg, type){
       }
       function frStage(o){ return FR_STAGES[frStageIdx(o)]; }
 
+      // 본사가 바꾸는 진행 필드(상태/배송/송장/제작사진)의 시그니처 — 바뀌면 리셀러에게 "새 업데이트" 알림
+      function frProgSig(o){
+        var ph=o.production_photos; var phN=Array.isArray(ph)?ph.length:(ph?1:0);
+        return [frStageIdx(o), String(o.status||''), String(o.payment_status||''),
+                (o.design_complete?1:0), String(o.delivery_target_date||''), String(o.delivery_time||''),
+                String(o.carrier||''), String(o.tracking_number||''), phN].join('|');
+      }
+      function frProgSeen(id){ try{ return localStorage.getItem('fr_prog_seen_'+id); }catch(e){ return null; } }
+      function frProgMark(o){ try{ localStorage.setItem('fr_prog_seen_'+o.id, frProgSig(o)); }catch(e){} }
+      // 최초 목격 주문은 조용히 기준선만 저장(과거 주문 전부를 '새 업데이트'로 표시하지 않음)
+      function frProgIsNew(o){ var seen=frProgSeen(o.id); if(seen===null){ frProgMark(o); return false; } return seen!==frProgSig(o); }
+
       window.frCloseOrderDetail=function(){ var m=document.getElementById('frOdModal'); if(m) m.remove(); };
       window.frOpenOrderDetail=async function(id){
         var rows=ordersCache||[]; var o=null;
         for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(id)){ o=rows[i]; break; } }
         if(!o) return;
+        var progWasNew=frProgIsNew(o);
         var cur=frStageIdx(o);
         var files=Array.isArray(o.files)?o.files:[];
         var fileHtml=files.length ? files.map(function(f){ var url=(typeof f==='string')?f:(f&&(f.url||f.href||f.path)); var nm=(f&&f.name)||(url?String(url).split('/').pop():'파일'); return url?('<a href="'+esc(url)+'" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid #d9e2f0; border-radius:9px; color:#1e3a8a; text-decoration:none; font-size:13px; margin:0 8px 8px 0;">📄 '+esc(nm)+' · 다운로드</a>'):''; }).join('') : '<span style="color:#94a3b8; font-size:13px;">첨부 파일이 없습니다.</span>';
@@ -1764,7 +1782,7 @@ function showToast(msg, type){
           +'<div><div style="font-size:16px; color:#1e3a8a; font-weight:800;">주문 #'+esc(o.id)+'</div><div style="font-size:12px; color:#94a3b8; margin-top:2px;">'+esc((o.created_at||"").slice(0,10))+' · '+esc(o.manager_name||"-")+' · '+won(o.total_amount)+'</div></div>'
           +'<button type="button" onclick="frCloseOrderDetail()" style="background:none; border:none; font-size:22px; color:#9ca3af; cursor:pointer;">&times;</button></div>'
           +'<div style="padding:18px 20px; overflow-y:auto;">'
-          +sec('진행 상태','지금 어느 단계인지 한눈에 보세요. 각 단계에서 할 일이 설명돼 있어요.',tl)
+          +sec('진행 상태','지금 어느 단계인지 한눈에 보세요. 각 단계에서 할 일이 설명돼 있어요.',(progWasNew?'<div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:9px; padding:9px 12px; margin-bottom:10px; font-size:12px; color:#9a3412;">🔔 본사가 이 주문의 진행 상태를 업데이트했어요. 아래 단계·배송 일정을 확인하세요.</div>':'')+tl)
           +sec('작업지시서','제품 사양·납기가 담긴 지시서입니다. 열어서 확인하고, 필요하면 다운로드/인쇄하세요.','<button type="button" onclick="window.open(\'/workorder.html?id='+esc(o.id)+'\',\'_blank\')" style="padding:11px 18px; border:none; border-radius:10px; background:#1e3a8a; color:#fff; font-weight:700; cursor:pointer; font-size:14px;">작업지시서 열기 →</button>')
           +sec('파일','고객이 준 인쇄용 파일입니다. 문제가 있으면 제작 시작 전까지 수정본을 올려 주세요.',fileHtml+'<div style="margin-top:12px;"><input type="file" id="frOdFile" style="display:none;" onchange="frOrderUpload('+esc(o.id)+')"><button type="button" onclick="var f=document.getElementById(\'frOdFile\'); if(f)f.click();" style="padding:10px 16px; border:1px solid #1e3a8a; border-radius:10px; background:#fff; color:#1e3a8a; font-weight:700; cursor:pointer; font-size:13px;">＋ 수정본 파일 올리기</button> <span id="frOdUpStatus" style="font-size:12px; color:#64748b; margin-left:8px;"></span></div>')
           +sec('배송 일정','예정일과 송장을 확인해 고객에게 안내하세요.','<div style="font-size:14px; color:#1f2937;">예정: <b>'+deliv+'</b></div>'+(track?('<div style="font-size:13px; color:#64748b; margin-top:4px;">송장: '+track+'</div>'):''))
@@ -1774,6 +1792,8 @@ function showToast(msg, type){
         ov.addEventListener('click', function(e){ if(e.target===ov) frCloseOrderDetail(); });
         document.body.appendChild(ov);
         frLoadOrderNotes(o.id);
+        frProgMark(o);                 // 열어봤으니 이 주문의 진행 업데이트를 확인 처리
+        try{ frLoadOrders(); }catch(e){} // 목록 배지 갱신(모달은 위에 그대로 유지)
       };
       window.frLoadOrderNotes=async function(id){
         var box=document.getElementById('frOdNotes'); if(!box||!msb) return;

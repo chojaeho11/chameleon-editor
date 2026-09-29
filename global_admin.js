@@ -4,7 +4,7 @@ import { sb, initConfig } from "./global_config.js?v=435";
 window.sb = sb;
 window._supabase = sb; 
 
-import { checkAdminAccess } from "./global_common.js?v=435";
+import { checkAdminAccess } from "./global_common.js?v=436";
 
 // 나머지 기능 파일들 불러오기
 import "./global_orders.js?v=501";

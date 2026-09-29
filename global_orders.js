@@ -1,5 +1,5 @@
 import { sb } from "./global_config.js?v=435";
-import { showLoading } from "./global_common.js?v=435";
+import { showLoading } from "./global_common.js?v=436";
 
 // 2026-06-22 v695: 현장 매니저 목록 — chatbot_knowledge category='_managers' 에서 동적 로드.
 //   하드코딩된 ['은미','성희','지숙','연두'] 제거 → 새 매니저는 직원관리(admin_staff) + 챗봇등록(chatbot_knowledge)

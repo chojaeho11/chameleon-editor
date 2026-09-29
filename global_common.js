@@ -31,9 +31,15 @@ export async function checkAdminAccess() {
         return false;
     }
 
-    const { data: profile, error } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
-    
-    if (error || !profile || profile.role !== 'admin') {
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+
+    // 2026-09-29: 관리자 이메일 화이트리스트 겸용 — 본사 계정이 리셀러 역할로 로그인해도 관리자 페이지 접근 유지
+    //   (profiles.role='reseller' 로 바꿔 리셀러 화면을 테스트하면서도 admin 콘솔을 잃지 않도록)
+    const ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com', 'scr3257@naver.com'];
+    const _email = String((session.user && session.user.email) || '').toLowerCase();
+    const _ok = ADMIN_EMAILS.indexOf(_email) >= 0 || (profile && profile.role === 'admin');
+
+    if (!_ok) {
         showToast("접근 권한이 없습니다.", "error");
         await sb.auth.signOut();
         window.location.replace("index.html");
