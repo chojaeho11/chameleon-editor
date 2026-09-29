@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929155653';
+    var CV = '20260929160041';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -7525,8 +7525,10 @@ async function handleSubReturn() {
       <button type="button" id="hcSendBtn" onclick="window.postHomeComment&&window.postHomeComment()" style="padding:9px 16px;border:none;background:#7c3aed;color:#fff;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;">등록하기</button>
     </div>
   </div>
-  <div id="hcPhotoWall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;"></div>
+  <div id="hcPhotoWall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:10px;"></div>
+  <div id="hcPhotoPager" style="text-align:center;margin-bottom:24px;"></div>
   <div id="hcTextList" style="display:flex;flex-direction:column;gap:2px;"></div>
+  <div id="hcTextPager" style="text-align:center;margin-top:12px;"></div>
 </div>
 <script>
 (function(){
@@ -7540,24 +7542,44 @@ async function handleSubReturn() {
     try{ sec.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
     setTimeout(function(){ if(mode==='photo'){ window._hcPickPhoto(); } else { var i=document.getElementById('hcInput'); if(i) i.focus(); } }, 420);
   };
+  var _hcPhotos=[], _hcTexts=[], _hcPP=0, _hcTP=0;
+  var HC_PH_PER=6, HC_TX_PER=5;   // 포토=한 줄(6), 글=5줄
+  function _hcPager(kind, page, totalPages){
+    if(totalPages<=1) return '';
+    var b=function(lbl,pg,dis){ return '<button '+(dis?'disabled ':'')+'onclick="window._hcGo(\''+kind+'\','+pg+')" style="padding:6px 12px;margin:0 3px;border:1px solid #e9d5ff;background:'+(dis?'#f8fafc':'#fff')+';color:'+(dis?'#cbd5e1':'#6d28d9')+';border-radius:8px;font-size:12.5px;cursor:'+(dis?'default':'pointer')+';font-family:inherit;">'+lbl+'</button>'; };
+    return b('‹', page-1, page<=0) + '<span style="font-size:12.5px;color:#94a3b8;margin:0 8px;">'+(page+1)+' / '+totalPages+'</span>' + b('›', page+1, page>=totalPages-1);
+  }
+  function _hcRenderPhotos(){
+    var pw=document.getElementById('hcPhotoWall'), pg=document.getElementById('hcPhotoPager'); if(!pw) return;
+    if(!_hcPhotos.length){ pw.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#cbd5e1;padding:16px;font-size:13px;">아직 포토댓글이 없어요. 첫 사진을 남겨보세요!</div>'; if(pg) pg.innerHTML=''; return; }
+    var tot=Math.ceil(_hcPhotos.length/HC_PH_PER); if(_hcPP>=tot)_hcPP=tot-1; if(_hcPP<0)_hcPP=0;
+    pw.innerHTML=_hcPhotos.slice(_hcPP*HC_PH_PER,(_hcPP+1)*HC_PH_PER).map(function(p){
+      return '<div style="border:1px solid #f1e9ff;border-radius:12px;overflow:hidden;background:#fff;">'
+        +'<img src="'+esc(p.photo_url)+'" loading="lazy" style="width:100%;height:150px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">'
+        +'<div style="padding:8px 10px;"><div style="font-size:12.5px;color:#334155;line-height:1.5;word-break:break-word;">'+esc(p.content||'')+'</div>'
+        +'<div style="font-size:10.5px;color:#a78bfa;margin-top:3px;">'+esc(p.author_name||'')+'</div></div></div>';
+    }).join('');
+    if(pg) pg.innerHTML=_hcPager('p',_hcPP,tot);
+  }
+  function _hcRenderTexts(){
+    var tl=document.getElementById('hcTextList'), pg=document.getElementById('hcTextPager'); if(!tl) return;
+    if(!_hcTexts.length){ tl.innerHTML=''; if(pg) pg.innerHTML=''; return; }
+    var tot=Math.ceil(_hcTexts.length/HC_TX_PER); if(_hcTP>=tot)_hcTP=tot-1; if(_hcTP<0)_hcTP=0;
+    tl.innerHTML=_hcTexts.slice(_hcTP*HC_TX_PER,(_hcTP+1)*HC_TX_PER).map(function(t){
+      return '<div style="border-bottom:1px solid #f1f5f9;padding:9px 2px;"><span style="font-size:13px;color:#334155;word-break:break-word;">'+esc(t.content||'')+'</span> <span style="font-size:11px;color:#a78bfa;">— '+esc(t.author_name||'')+'</span></div>';
+    }).join('');
+    if(pg) pg.innerHTML=_hcPager('t',_hcTP,tot);
+  }
+  window._hcGo=function(kind,pg){ if(kind==='p'){ _hcPP=pg; _hcRenderPhotos(); } else { _hcTP=pg; _hcRenderTexts(); } };
   window.loadHomeComments = async function(){
     var sb=window.sb; if(!sb) return;
     try{
-      var r=await sb.from('home_comments').select('id,author_name,content,photo_url,created_at').eq('country_code', scc()).order('created_at',{ascending:false}).limit(60);
+      var r=await sb.from('home_comments').select('id,author_name,content,photo_url,created_at').eq('country_code', scc()).order('created_at',{ascending:false}).limit(120);
       var rows=(r&&r.data)||[];
-      var photos=rows.filter(function(x){return x.photo_url;});
-      var texts=rows.filter(function(x){return !x.photo_url;});
-      var pw=document.getElementById('hcPhotoWall');
-      if(pw) pw.innerHTML = photos.length ? photos.map(function(p){
-        return '<div style="border:1px solid #f1e9ff;border-radius:12px;overflow:hidden;background:#fff;">'
-          +'<img src="'+esc(p.photo_url)+'" loading="lazy" style="width:100%;height:150px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">'
-          +'<div style="padding:8px 10px;"><div style="font-size:12.5px;color:#334155;line-height:1.5;word-break:break-word;">'+esc(p.content||'')+'</div>'
-          +'<div style="font-size:10.5px;color:#a78bfa;margin-top:3px;">'+esc(p.author_name||'')+'</div></div></div>';
-      }).join('') : '<div style="grid-column:1/-1;text-align:center;color:#cbd5e1;padding:16px;font-size:13px;">아직 포토댓글이 없어요. 첫 사진을 남겨보세요!</div>';
-      var tl=document.getElementById('hcTextList');
-      if(tl) tl.innerHTML = texts.map(function(t){
-        return '<div style="border-bottom:1px solid #f1f5f9;padding:9px 2px;"><span style="font-size:13px;color:#334155;word-break:break-word;">'+esc(t.content||'')+'</span> <span style="font-size:11px;color:#a78bfa;">— '+esc(t.author_name||'')+'</span></div>';
-      }).join('');
+      _hcPhotos=rows.filter(function(x){return x.photo_url;});
+      _hcTexts=rows.filter(function(x){return !x.photo_url;});
+      _hcPP=0; _hcTP=0;
+      _hcRenderPhotos(); _hcRenderTexts();
     }catch(e){}
   };
   window.postHomeComment = async function(){
