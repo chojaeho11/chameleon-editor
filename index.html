@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929154914';
+    var CV = '20260929155653';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -7522,7 +7522,7 @@ async function handleSubReturn() {
     <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
       <span id="hcStatus" style="font-size:12px;color:#94a3b8;margin-right:auto;"></span>
       <button type="button" id="hcPhotoBtn" onclick="window._hcPickPhoto&&window._hcPickPhoto()" style="padding:9px 14px;border:1px solid #7c3aed;background:#fff;color:#6d28d9;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;">사진 첨부 · 3,000P</button>
-      <button type="button" id="hcSendBtn" onclick="window.postHomeComment&&window.postHomeComment()" style="padding:9px 16px;border:none;background:#7c3aed;color:#fff;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;">남기기 · 1,000P</button>
+      <button type="button" id="hcSendBtn" onclick="window.postHomeComment&&window.postHomeComment()" style="padding:9px 16px;border:none;background:#7c3aed;color:#fff;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;">등록하기</button>
     </div>
   </div>
   <div id="hcPhotoWall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;"></div>
