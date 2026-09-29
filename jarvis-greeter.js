@@ -253,9 +253,14 @@
     if (!_fabAllowed()) return;
     makeFab();                  // 우측 카멜레온 버튼 — 홈/상세 어디서나 (재열기, 기존 💬 대체)
     if (!_isHomeView()) return; // 자동 인사는 홈에서만
-    setTimeout(function () {     // 2026-09-22(사장님): 매번(재진입·새로고침) 자동으로 열기
+    // 2026-09-29(사장님): 자동 인사는 "최초 접속 1회만". 이후엔 우측 카푸 버튼으로 직접 열기.
+    var _greeted = false;
+    try { _greeted = (localStorage.getItem('jvg_greeted') === '1'); } catch (e) {}
+    if (_greeted) return;
+    setTimeout(function () {
       if (_root) return;
       if (document.querySelector('#advPanel.open, .adv-panel.open')) return;
+      try { localStorage.setItem('jvg_greeted', '1'); } catch (e) {}
       open();
     }, 2200);
   }
