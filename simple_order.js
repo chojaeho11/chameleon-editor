@@ -3425,20 +3425,15 @@ html, body { background: #ffffff !important; }
         </div>
       </div>
 
-      <!-- 2026-08-12: SNS 홍보 무료쿠폰 주문 (체험단 회원 전용) — 결제방법 바로 아래 크게 노출. 잘 보이는 색 + 홍보이벤트 참여 버튼. -->
+      <!-- 2026-09-29(사장님): 참여형 리워드 진입 — 포인트 모으기 (KR 로그인). openRewardHub 로 이동. 기존 SNS 홍보쿠폰·홍보이벤트 버튼 제거. -->
       <div class="so-co-section" id="soSnsCouponBox" style="display:none;">
-        <div style="display:flex; gap:8px; align-items:stretch;">
-          <button type="button" id="soSnsCouponBtn" onclick="window._soToggleSnsCoupon&&window._soToggleSnsCoupon()" style="flex:1; min-width:0; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:10px; padding:13px 15px; border:2px solid #16a34a; background:linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
-            <span style="display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0;">
-              <span style="font-size:14px;">🎁 ${tr('SNS 홍보 무료쿠폰으로 주문','SNS PR無料クーポンで注文','Order with SNS free coupon')}</span>
-              <span id="soSnsCouponSub" style="font-size:11px; font-weight:700; opacity:.92;">${tr('눌러서 적용 · 구매금액 10% 이내 (최대 5만원)','タップで適用 · 購入金額の10%以内（最大5,000円）','Tap to apply · up to 10% of order (max 50,000 KRW)')}</span>
-            </span>
-            <span id="soSnsCouponBal" style="flex-shrink:0; text-align:right; line-height:1.05;"></span>
-          </button>
-          <button type="button" onclick="if(window.openBlogRecruitInfo)window.openBlogRecruitInfo()" title="${tr('홍보이벤트 참여','PRイベント参加','Join event')}" style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:10px 14px; border:2px solid #e879f9; background:linear-gradient(135deg,#fae8ff,#f5d0fe); color:#a21caf; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12px; line-height:1.25; white-space:nowrap;">
-            🏆 ${tr('홍보이벤트<br>참여','PRイベント<br>参加','Join<br>Event')}
-          </button>
-        </div>
+        <button type="button" onclick="if(window.openRewardHub)window.openRewardHub()" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 15px; border:2px solid #7c3aed; background:linear-gradient(135deg,#f5f3ff,#ede9fe); color:#5b21b6; border-radius:12px; font-weight:800; cursor:pointer; font-family:inherit; text-align:left;">
+          <span style="display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0;">
+            <span style="font-size:14px;">🏆 ${tr('이벤트 참여 · 포인트 모으기','イベント参加・ポイントを貯める','Join events · earn points')}</span>
+            <span style="font-size:11px; font-weight:700; opacity:.9;">${tr('출석·끝말잇기·첫방문으로 포인트 적립 → 주문에 현금처럼 사용','出席・しりとり・初訪問でポイント → 注文に現金のように','Earn via check-in, word chain, first visit — spend like cash')}</span>
+          </span>
+          <span style="flex-shrink:0; font-size:13px;">${tr('참여 →','参加 →','Join →')}</span>
+        </button>
       </div>
 
       <!-- 2026-06-01: 할인 4종 (이벤트 쿠폰 / 마일리지 / 예치금 / 구독할인) — 라디오 1개 선택 (중복 불가) -->
@@ -20126,8 +20121,8 @@ html, body { background: #ffffff !important; }
         var cart = _soReadAllCart();
         var calc = _soCalcCartTotal(cart);
         var grand = Math.max(0, calc.grandTotal || 0);
-        // 2026-09-15(사장님): 포인트/무료쿠폰 1회 사용 = 구매금액의 10% 이내 + 최대 5만원. (전액 결제 방지)
-        var blogMax = Math.min(bal, 50000, Math.floor(grand * 0.1));
+        // 2026-09-29(사장님): 포인트 1회 사용 = 구매금액의 5% 이내 + 최대 5만원. (기존 10% → 5%)
+        var blogMax = Math.min(bal, 50000, Math.floor(grand * 0.05));
         window._soWallet = {
             ready: true, userId: uid,
             mileageBalKRW: 0, depositBalKRW: 0, eventCouponBalKRW: 0, blogCouponBalKRW: bal,
@@ -20141,16 +20136,8 @@ html, body { background: #ffffff !important; }
             var hintEl = document.getElementById('soDiscBlogHint'); if (hintEl) hintEl.textContent = tr('남은 ','残り ','Remaining ') + _soFormatPrice(bal);
             var chkEl = document.getElementById('soDiscBlogChk'); if (chkEl) chkEl.disabled = false;
         }
-        // 2026-08-12: 체험단 회원이면 그리드 포인트카드 대신 큰 'SNS 홍보 무료쿠폰 주문' 버튼 노출
-        try {
-            var _isMon = await window._soCheckBlogMonitor(uid);
-            var _snsBox = document.getElementById('soSnsCouponBox');
-            if (_isMon && bal > 0) {
-                if (_snsBox) _snsBox.style.display = '';
-                if (blogCard) blogCard.style.display = 'none';
-                if (window._soSyncSnsCouponBtn) window._soSyncSnsCouponBtn();
-            } else if (_snsBox) { _snsBox.style.display = 'none'; }
-        } catch (e) {}
+        // 2026-09-29(사장님): 리워드는 KR 전용 — 비KR 경로에선 '이벤트 참여' 버튼 숨김 (포인트 카드는 그대로).
+        try { var _snsBox = document.getElementById('soSnsCouponBox'); if (_snsBox) _snsBox.style.display = 'none'; } catch (e) {}
         var lblEl = box ? box.querySelector('.so-co-label') : null;
         if (lblEl) lblEl.textContent = tr('포인트', 'ポイント', 'Points');
         if (box) box.style.display = '';
@@ -20314,7 +20301,7 @@ html, body { background: #ffffff !important; }
         try { var _prTtl = document.getElementById('soDiscProTitle'); if (_prTtl) { if (window.memberTier === 'reseller') _prTtl.textContent = tr('리셀러 할인','リセラー割引','Reseller discount'); else if (window.memberTier === 'franchise' || window.memberTier === 'gold') _prTtl.textContent = tr('가맹점 할인','加盟店割引','Franchise discount'); else _prTtl.textContent = tr('PRO 구독할인','PRO会員割引','PRO Subscriber'); } } catch(e){}
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
-        var blogMax = Math.min(blogBal, 50000, Math.floor((calc.grandTotal || discBase || 0) * 0.1));   // 2026-09-15: 구매금액 10% 이내 + 최대 5만원
+        var blogMax = Math.min(blogBal, 50000, Math.floor((calc.grandTotal || discBase || 0) * 0.05));   // 2026-09-29: 구매금액 5% 이내 + 최대 5만원
         window._soWallet.blogCouponBalKRW = blogBal;
         window._soWallet.blogMax = blogMax;
         window._soWallet.blogOn = false;
@@ -20325,15 +20312,10 @@ html, body { background: #ffffff !important; }
             var _bHint = document.getElementById('soDiscBlogHint'); if (_bHint) _bHint.textContent = tr('남은 ','残り ','Remaining ') + _soFormatPrice(blogBal);
             var _bChk = document.getElementById('soDiscBlogChk'); if (_bChk) _bChk.disabled = false;
         } else if (_blogCardK) { _blogCardK.style.display = 'none'; }
-        // 2026-08-12: 체험단 회원이면 그리드 포인트카드 대신 큰 'SNS 홍보 무료쿠폰 주문' 버튼 노출 (결제방법 아래)
+        // 2026-09-29(사장님): '이벤트 참여 · 포인트 모으기' 버튼 — KR 로그인 사용자에 노출 (포인트 카드는 그대로 유지). 리워드는 KR 전용.
         try {
-            var _isMonK = await window._soCheckBlogMonitor(uid);
             var _snsBoxK = document.getElementById('soSnsCouponBox');
-            if (_isMonK && blogBal > 0) {
-                if (_snsBoxK) _snsBoxK.style.display = '';
-                if (_blogCardK) _blogCardK.style.display = 'none';   // 그리드 중복 포인트카드 숨김
-                if (window._soSyncSnsCouponBtn) window._soSyncSnsCouponBtn();
-            } else if (_snsBoxK) { _snsBoxK.style.display = 'none'; }
+            if (_snsBoxK) _snsBoxK.style.display = ((window.__SITE_CODE || 'KR') === 'KR') ? '' : 'none';
         } catch (e) {}
         var exMsg = document.getElementById('soWalletExcludedMsg'); if (exMsg) exMsg.style.display = excluded ? '' : 'none';
         if (box) box.style.display = '';
@@ -20373,7 +20355,7 @@ html, body { background: #ffffff !important; }
         var afterDeposit = Math.max(0, afterDiscount - useDeposit);
         var _bcChkLive = document.getElementById('soDiscBlogChk');
         var _blogOnLive = !!(_bcChkLive && _bcChkLive.checked && !_bcChkLive.disabled);
-        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 50000, Math.floor(grand * 0.1)) : 0;   // 2026-09-15: 구매금액 10% 이내 + 최대 5만원
+        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit, 50000, Math.floor(grand * 0.05)) : 0;   // 2026-09-29: 구매금액 5% 이내 + 최대 5만원
         return { useMileage: useMileage, useDeposit: useDeposit, useBlogCoupon: useBlogCoupon, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {

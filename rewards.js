@@ -253,6 +253,21 @@
         } catch (e) {}
     };
 
+    // 2026-09-29(사장님): 이달 첫방문 10,000 / 이번주 첫방문 5,000 자동 적립 (접속 시 1회, 지급될 때만 팝업). KR 전용.
+    window.rewardVisitBonuses = async function () {
+        if (!_rwKROnly()) return;
+        var sb = await sbReady(); if (!sb) return;
+        var uid = await loggedInUid(sb); if (!uid) return;
+        try {
+            var rm = await sb.rpc('monthly_visit_claim'); var dm = rm && rm.data;
+            if (dm && dm.ok && dm.granted) window.showRewardPopup({ kind: 'mileage', title: '이달 첫방문 선물!', mileage: 10000 });
+        } catch (e) {}
+        try {
+            var rw = await sb.rpc('weekly_visit_claim'); var dw = rw && rw.data;
+            if (dw && dw.ok && dw.granted) window.showRewardPopup({ kind: 'mileage', title: '이번주 첫방문 선물!', mileage: 5000 });
+        } catch (e) {}
+    };
+
     // 2026-08-14: 리워드 허브 — 이벤트 팝업에서 5가지 보상을 그 자리에서. 상단 누적포인트 + 축하 빵빠레.
     window.openRewardHub = async function () {
         if (!_rwKROnly()) return;   // 2026-09-17(사장님): 리워드 이벤트 한국 전용
@@ -274,11 +289,10 @@
         ov.addEventListener('click', function (e) { if (e.target === ov) closeHub(); });
 
         async function getState() {
-            var st = { logged_in: false, mileage: 0, monthly_gift_done: false, attendance_done: false, first_cashback_done: false, first_ever_cashback_done: false, sns: 'none', uid: null, email: '', name: '' };
+            var st = { logged_in: false, mileage: 0, attendance_done: false, weekly_visit_done: false, monthly_visit_done: false, uid: null, email: '', name: '' };
             try { var u = await sbc.auth.getUser(); var user = u && u.data && u.data.user; if (user) { st.logged_in = true; st.uid = user.id; st.email = user.email || ''; } } catch (e) {}
             if (st.logged_in) {
-                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.monthly_gift_done = !!d.monthly_gift_done; st.attendance_done = !!d.attendance_done; st.first_cashback_done = !!d.first_cashback_done; st.first_ever_cashback_done = !!d.first_ever_cashback_done; } } catch (e) {}
-                try { var s = await sbc.rpc('blog_monitor_sync'); if (s && s.data) st.sns = s.data.status || 'none'; } catch (e) {}
+                try { var r = await sbc.rpc('reward_hub_status'); var d = r && r.data; if (d && d.ok && d.logged_in) { st.mileage = d.mileage || 0; st.attendance_done = !!d.attendance_done; st.weekly_visit_done = !!d.weekly_visit_done; st.monthly_visit_done = !!d.monthly_visit_done; } } catch (e) {}
                 try { var pf = await sbc.from('profiles').select('username').eq('id', st.uid).maybeSingle(); st.name = (pf && pf.data && pf.data.username) || (st.email.split('@')[0]) || 'user'; } catch (e) { st.name = (st.email.split('@')[0]) || 'user'; }
             }
             return st;
@@ -303,7 +317,7 @@
             bov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147482996; display:flex; align-items:center; justify-content:center; padding:14px;';
             bov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:430px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">'
                 + '<div style="padding:15px 18px 8px;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:16px;font-weight:700;color:#4c1d95;">' + T2('오늘의 잡담', '今日のひとこと', 'Today chat') + '</div><button id="rhTbX" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button></div>'
-                + '<div style="padding:0 18px 8px;font-size:11.5px;color:#7c3aed;line-height:1.5;">' + T2('한마디 남기면 출석 완료! (하루 1회 · ' + won(2000) + ')<br>가벼운 인사나 농담, 내 회사 홍보도 좋아요 :)', 'ひとことで出席完了！ 挨拶や冗談、自社PRもOK :)', 'Post to check in! A hello, a joke, or your own promo — all welcome :)') + '</div>'
+                + '<div style="padding:0 18px 8px;font-size:11.5px;color:#7c3aed;line-height:1.5;">' + T2('한마디 남기면 출석 완료! (하루 1회 · ' + won(1000) + ')<br>가벼운 인사나 농담, 내 회사 홍보도 좋아요 :)', 'ひとことで出席完了！ 挨拶や冗談、自社PRもOK :)', 'Post to check in! A hello, a joke, or your own promo — all welcome :)') + '</div>'
                 + '<div id="rhTbList" style="flex:1;overflow-y:auto;padding:0 18px;min-height:120px;"><div style="text-align:center;color:#cbd5e1;padding:20px;font-size:12px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div></div>'
                 + '<div style="padding:12px 16px 16px;border-top:1px solid #f1f5f9;"><textarea id="rhTbInput" rows="2" placeholder="' + T2('오늘 하고 싶은 한마디 :)', '今日のひとこと :)', 'Say hi :)') + '" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;resize:none;"></textarea>'
                 + '<button id="rhTbGo" style="margin-top:6px;width:100%;padding:11px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">' + T2('글쓰고 출석하기', '投稿して出席', 'Post & check in') + '</button></div></div>';
@@ -332,7 +346,7 @@
                 var got = false;
                 try { var r = await sbc.rpc('attendance_claim'); var d = r && r.data; if (d && d.ok && d.mileage_added) got = true; } catch (e) {}
                 closeBoard();
-                if (got) celebrate(2000, T2('출석 완료! 포인트 지급', '出席完了！', 'Checked in!'));
+                if (got) celebrate(1000, T2('출석 완료! 포인트 지급', '出席完了！', 'Checked in!'));
                 render();
             };
         }
@@ -347,14 +361,14 @@
                         + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
                         + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + won(st.mileage) + '</div>'
                         + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>'
-                        + '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                        + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('매월 첫구매 20% 페이백 (최대 20만원)', '毎月 初回購入20%還元（最大2万円）', '20% cashback on your first purchase each month (up to ~$200)') + '</div>'
-                        + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('말일 초기화 후 그달 첫 구매에 페이백 적용', '月末リセット後、その月の初回購入に還元適用', 'Applies to the first purchase after each month-end reset') + '</div></div>'
-                        + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>'
-                        + '<div style="background:linear-gradient(135deg,#db2777,#9d174d);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                        + '<div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;">' + T2('첫구매 페이백 (최대 10만원)', '初回購入還元（最大1万円）', 'First-purchase cashback (up to ~$100)') + '</div>'
-                        + '<div style="font-size:11px;opacity:0.85;margin-top:2px;line-height:1.4;">' + T2('첫 구매 실입금액 100% 페이백 · 평생 1회', '初回購入の実支払額100%還元 · 生涯1回', '100% of your first purchase · once in a lifetime') + '</div></div>'
-                        + '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.first_ever_cashback_done ? T2('✓ 받음', '✓ 受取', '✓ Done') : T2('구매 시 자동', '購入で自動', 'Auto')) + '</div></div>')
+                        + '<div style="display:grid;gap:8px;margin-bottom:10px;">'
+                        +   '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
+                        +     '<div style="min-width:0;font-size:13.5px;font-weight:700;">' + T2('이달 첫방문 선물', '今月の初訪問ギフト', 'Monthly first-visit gift') + ' <span style="opacity:.9;font-weight:800;">' + won(10000) + '</span></div>'
+                        +     '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.monthly_visit_done ? T2('✓ 적립됨', '✓ 付与済', '✓ Added') : T2('접속 시 자동', 'アクセスで自動', 'Auto on visit')) + '</div></div>'
+                        +   '<div style="background:linear-gradient(135deg,#db2777,#9d174d);border-radius:12px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
+                        +     '<div style="min-width:0;font-size:13.5px;font-weight:700;">' + T2('이번주 첫방문 선물', '今週の初訪問ギフト', 'Weekly first-visit gift') + ' <span style="opacity:.9;font-weight:800;">' + won(5000) + '</span></div>'
+                        +     '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.weekly_visit_done ? T2('✓ 적립됨', '✓ 付与済', '✓ Added') : T2('접속 시 자동', 'アクセスで自動', 'Auto on visit')) + '</div></div>'
+                        + '</div>')
                     : ('<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:14px 12px;margin:8px 0 12px;">'
                         + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
                         + '<div style="font-size:31px;font-weight:900;color:#7c3aed;line-height:1.1;">' + won(10000) + '</div>'
@@ -366,29 +380,16 @@
                             '· Collect points daily like a game (check-in, word chain, promote your shop)<br>· Spend them <b>like cash</b> on orders (up to ₩160,000/mo)<br>· SOHO founders can order cards, stickers & goods with free points only') + '</div>'
                         + '<button id="rhSignupHero" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:12px;">' + T2('회원가입하고 1만원 받기 →', '会員登録して1万ウォン受取 →', 'Sign up & get ₩10,000 →') + '</button>'));
             var rows = ''
-                + rowHtml(1, T2('회원가입', '会員登録', 'Sign up'), won(10000), st.logged_in ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct1', T2('가입하고 받기', '登録して受取', 'Join')))
-                + rowHtml(2, T2('이번주 접속', '今週のログイン', 'Weekly login'), won(10000), !st.logged_in ? lockTag() : (st.monthly_gift_done ? doneTag(T2('받음', '受取済み', 'Claimed')) : actBtn('rhAct2', T2('받기', '受取', 'Claim'))))
-                + rowHtml(3, T2('SNS 체험단', 'SNS体験団', 'SNS monitor') + (st.sns !== 'none' ? ' ✓' : ''), won(50000) + T2('/월', '/月', '/mo'), !st.logged_in ? lockTag() : actBtn('rhAct3', T2('이벤트 보기', 'イベント', 'View')))
-                + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(2000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post')))
-                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')))
-                + rowHtml(6, T2('카멜SNS', 'カメレオンSNS', 'Chameleon SNS'), T2('내 업체 홍보도 하고 만원도 받기', '自分の店をPRして1万ウォンももらおう', 'Promote your shop & get 10,000 KRW'), !st.logged_in ? lockTag() : actBtn('rhAct6', T2('입장하기', '入場する', 'Enter')));
+                + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post'))))
+                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
             var note = '<div style="text-align:center;font-size:11px;color:#dc2626;margin:14px 0 4px;">' + T2('매월 말일 미사용분 소멸됩니다. 말일전 꼭 사용해주세요!', '毎月末に未使用分は消滅します。月末までに必ずご利用ください！', 'Unused balance expires at month-end — please use it before then!') + '</div>';
-            // 2026-08-16: 하단 구독 링크 — 누르면 구독 페이지로
-            var subLink = '<a id="rhSubLink" href="javascript:void(0)" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 2px;padding:11px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:2px solid #7c3aed;border-radius:12px;text-decoration:none;color:#5b21b6;font-weight:800;font-size:12.5px;cursor:pointer;">'
-                + '<span>👑 ' + T2('PRO 구독 · 모든 구매 10% 추가할인', 'PRO購読 · 全商品10%追加割引', 'PRO subscription · extra 10% off everything') + '</span>'
-                + '<span style="background:#fff;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:900;flex-shrink:0;">' + T2('구독하기 →', '購読 →', 'Subscribe →') + '</span></a>';
-            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note + subLink;
+            card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
             var byId = function (id) { return document.getElementById(id); };
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
             var _doSignup = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
-            if (byId('rhAct1')) byId('rhAct1').onclick = _doSignup;
             if (byId('rhSignupHero')) byId('rhSignupHero').onclick = _doSignup;   // 비회원 히어로 버튼 → 가입 후 render()로 아래 창들 열림
-            if (byId('rhAct2')) byId('rhAct2').onclick = async function () { this.disabled = true; try { var r = await sbc.rpc('monthly_gift_claim'); var d = r && r.data; if (d && d.ok && d.granted) celebrate(10000); } catch (e) {} render(); };
-            if (byId('rhAct3')) byId('rhAct3').onclick = function () { if (window.openBlogRecruitInfo) window.openBlogRecruitInfo(); else if (window.openSnsRankingModal) window.openSnsRankingModal(); };
             if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
             if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
-            if (byId('rhAct6')) byId('rhAct6').onclick = function () { closeHub(); if (window.openBizPromo) window.openBizPromo(); };   // 이벤트 모달 닫고 우측 홍보 패널만 남김
-            if (byId('rhSubLink')) byId('rhSubLink').onclick = function () { closeHub(); if (window.openSubPopup) window.openSubPopup(); else location.href = '/#subscriptionSection'; };
         }
         render();
     };
