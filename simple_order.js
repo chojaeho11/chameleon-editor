@@ -4921,7 +4921,10 @@ html, body { background: #ffffff !important; }
         const isPro = !!window.isProSubscriber;
         // 2026-09-15(사장님): 원판(허니콤보드 원판)은 이미 도매가라 가맹/리셀러 매입할인 제외.
         // 2026-09-15: 가맹/리셀러 매입 할인 — 가맹점 20% / 리셀러·PRO 10% (window.memberDiscountPct). 미설정 시 10% 폴백.
-        const _noProDisc = state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint || state.isRawBoard;
+        // 2026-09-29(사장님): 리셀러는 "허니콤보드 원판만 제외, 전 제품 20%". 그 외 등급/PRO 는 기존 제외 리스트 유지.
+        const _noProDisc = (window.memberTier === 'reseller')
+            ? state.isRawBoard
+            : (state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint || state.isRawBoard);
         const _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
         const proPct = (isPro && !_noProDisc) ? _memberPct : 0;
         const totalDiscPct = amountPct + proPct;
@@ -7775,7 +7778,8 @@ html, body { background: #ffffff !important; }
             if (shipMethod === 'regional_delivery') shipFee = (totalQty >= 100) ? 0 : 200000;
             else                                    shipFee = (totalQty >= 10)  ? 0 : 100000;
             // PRO/가맹/리셀러 매입 할인 (가맹점 20% / 리셀러·PRO 10%)
-            var proPct = (!!window.isProSubscriber) ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
+            // 2026-09-29(사장님): 원판(허니콤보드 원지)은 리셀러 할인 제외 — 리셀러만 0%, PRO 구독자는 기존대로 유지.
+            var proPct = (!!window.isProSubscriber && window.memberTier !== 'reseller') ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
             // 2026-08-16: 커팅비 — 판당 3만원 flat × 원판 장수 (기존 개수 구간제 폐지).
             var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
@@ -20014,11 +20018,16 @@ html, body { background: #ffffff !important; }
         var proPct = window.isProSubscriber ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
         var amountDisc = Math.round(taxBase * amountPct / 100);
         // 2026-09-15(사장님): 원판(rawBoardBase)은 이미 도매가 — 가맹/리셀러/구독 할인 제외. proDisc base 에서 뺌.
-        var proDisc = Math.round(taxBase * proPct / 100);
+        // 2026-09-29(사장님): 리셀러는 "허니콤보드 원판만 제외, 전 제품 20%" → 할인 base = 전체(taxBase+nonDiscountBase) − 원판.
+        //   그 외 등급/PRO 는 기존대로 taxBase 만 (베스트굿즈·금액주문·매니저견적 제외 유지).
+        var _isReseller = (window.memberTier === 'reseller');
+        var _proBase = _isReseller ? Math.max(0, taxBase + nonDiscountBase - rawBoardBase) : taxBase;
+        var proDisc = Math.round(_proBase * proPct / 100);
         var grandTotal = taxBase + nonDiscountBase - amountDisc - proDisc + shipTotal;
         return {
             taxBase: taxBase,
             nonDiscountBase: nonDiscountBase,
+            rawBoardBase: rawBoardBase,
             shipTotal: shipTotal,
             amountPct: amountPct,
             amountDisc: amountDisc,
@@ -20263,7 +20272,9 @@ html, body { background: #ffffff !important; }
         var depositMax = excluded ? 0 : Math.min(depositBal, Math.max(0, calc.grandTotal || discBase));
         // 4) PRO/가맹/리셀러 매입 할인 (가맹점 20% / 리셀러·PRO 10%)
         var _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
-        var proMax = isPro ? Math.floor(discBase * _memberPct / 100) : 0;
+        // 2026-09-29(사장님): 리셀러 자동할인 base(전체 − 원판)와 동일하게 잡아 결제창 이중차감 방지.
+        var _proMaxBase = (window.memberTier === 'reseller') ? Math.max(0, discBase - (calc.rawBoardBase || 0)) : discBase;
+        var proMax = isPro ? Math.floor(_proMaxBase * _memberPct / 100) : 0;
 
         window._soWallet = {
             ready: true, userId: uid,
