@@ -21063,10 +21063,56 @@ html, body { background: #ffffff !important; }
         agree.addEventListener('click', function () { if (!chk.checked) return; state._termsAgreed = true; ov.style.display = 'none'; window._soSubmitOrder(); });
     };
 
+    // 2026-09-29(사장님): 리셀러 접수 검수 게이트 — 결제 전 사양·파일 확인 체크리스트 (리셀러만).
+    window._soShowResellerGate = function () {
+        if (document.getElementById('soResellerGate')) return;
+        var ov = document.createElement('div'); ov.id = 'soResellerGate';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:100000; background:rgba(17,24,39,0.62); display:flex; align-items:center; justify-content:center; padding:16px;';
+        var items = [
+            tr('작업지시서(제품 사양·사이즈·수량·옵션)를 확인했습니다.', '作業指示書(仕様·サイズ·数量·オプション)を確認しました。', 'I reviewed the work order (spec, size, qty, options).'),
+            tr('인쇄용 파일이 정상입니다 — 재단선·해상도·글자 깨짐 없음.', '印刷用ファイルは正常です(裁ち·解像度·文字化けなし)。', 'The print file is OK — bleed, resolution, no broken text.'),
+            tr('배송지·납기를 고객과 확인했습니다.', 'お届け先·納期をお客様と確認しました。', 'I confirmed the address & deadline with the customer.')
+        ];
+        var boxes = items.map(function (t, i) {
+            return '<label style="display:flex; align-items:flex-start; gap:10px; padding:11px 13px; border:1px solid #e5e7eb; border-radius:11px; margin-bottom:9px; cursor:pointer; font-size:13.5px; color:#1f2937; line-height:1.5;">'
+              + '<input type="checkbox" class="so-rg-chk" onchange="window._soResellerGateSync()" style="margin-top:3px; width:17px; height:17px;">'
+              + '<span>' + t + '</span></label>';
+        }).join('');
+        ov.innerHTML = '<div style="background:#fff; width:100%; max-width:460px; border-radius:16px; overflow:hidden;">'
+          + '<div style="padding:18px 22px 6px;"><div style="font-size:17px; font-weight:800; color:#1e3a8a;">' + tr('리셀러 접수 확인', 'リセラー受付確認', 'Reseller submit check') + '</div>'
+          + '<div style="font-size:12.5px; color:#8b93a7; margin-top:4px; line-height:1.6;">' + tr('고객 대신 본사에 접수합니다. 아래를 모두 확인하고 접수하세요.', 'お客様に代わって本社へ受付します。下記をすべて確認して受付してください。', 'You are submitting on behalf of your customer. Confirm all below.') + '</div></div>'
+          + '<div style="padding:14px 22px 4px;">' + boxes + '</div>'
+          + '<div style="padding:6px 22px 18px; font-size:11.5px; color:#94a3b8; line-height:1.6;">' + tr('접수 후에도 마이페이지 › 고객주문에서 작업지시서·파일·진행 상태·배송 일정을 확인할 수 있어요.', '受付後もマイページ›顧客注文で確認できます。', 'After submit, track everything in My Page › Orders.') + '</div>'
+          + '<div style="display:flex; gap:9px; padding:0 22px 20px;">'
+          + '<button type="button" onclick="var m=document.getElementById(\'soResellerGate\'); if(m)m.remove();" style="flex:0 0 auto; padding:13px 18px; border:1px solid #d9d2ee; border-radius:11px; background:#fff; color:#6b7280; font-size:14px; cursor:pointer; font-family:inherit;">' + tr('취소', 'キャンセル', 'Cancel') + '</button>'
+          + '<button type="button" id="soRgConfirm" disabled style="flex:1; padding:13px; border:none; border-radius:11px; background:#c7cbd6; color:#fff; font-size:15px; font-weight:800; cursor:not-allowed; font-family:inherit;">' + tr('확인하고 접수', '確認して受付', 'Confirm & submit') + '</button>'
+          + '</div></div>';
+        document.body.appendChild(ov);
+        ov.querySelector('#soRgConfirm').addEventListener('click', function () {
+            if (this.disabled) return;
+            state._resellerConfirmed = true;
+            var m = document.getElementById('soResellerGate'); if (m) m.remove();
+            window._soSubmitOrder();
+        });
+    };
+    window._soResellerGateSync = function () {
+        var all = Array.prototype.slice.call(document.querySelectorAll('.so-rg-chk'));
+        var ok = all.length > 0 && all.every(function (c) { return c.checked; });
+        var b = document.getElementById('soRgConfirm'); if (!b) return;
+        b.disabled = !ok;
+        b.style.background = ok ? 'linear-gradient(135deg,#1e3a8a,#2563eb)' : '#c7cbd6';
+        b.style.cursor = ok ? 'pointer' : 'not-allowed';
+    };
+
     window._soSubmitOrder = async function () {
+        // 2026-09-29(사장님): 리셀러 접수 검수 게이트 (리셀러만, 1회) — 사양·파일 확인 후 접수.
+        if (window.memberTier === 'reseller' && !state._resellerConfirmed) {
+            if (typeof window._soShowResellerGate === 'function') { window._soShowResellerGate(); return; }
+        }
         // 2026-08-31: 주문 전 약관 동의 게이트 — 동의 전이면 약관 모달을 띄우고 중단. 동의 시 재호출됨.
         if (!state._termsAgreed) { if (typeof window._soShowTermsModal === 'function') window._soShowTermsModal(); return; }
         state._termsAgreed = false;   // 1회성 — 다음 주문은 다시 동의 필요
+        state._resellerConfirmed = false;   // 1회성 — 다음 주문은 다시 검수
         var name = (document.getElementById('soCoName').value || '').trim();
         // 2026-06-18 v604: JP 한정 후리가나 수집
         var nameFurigana = '';
