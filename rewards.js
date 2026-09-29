@@ -361,14 +361,7 @@
                         + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
                         + '<div style="font-size:27px;font-weight:800;color:#7c3aed;">' + won(st.mileage) + '</div>'
                         + '<div style="font-size:10.5px;color:#a78bfa;margin-top:2px;">' + T2('구매 시 현금처럼 사용하세요', '購入時に現金のように使えます', 'Use like cash at checkout') + '</div></div>'
-                        + '<div style="display:grid;gap:8px;margin-bottom:10px;">'
-                        +   '<div style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:12px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                        +     '<div style="min-width:0;font-size:13.5px;font-weight:700;">' + T2('이달 첫방문 선물', '今月の初訪問ギフト', 'Monthly first-visit gift') + ' <span style="opacity:.9;font-weight:800;">' + won(10000) + '</span></div>'
-                        +     '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.monthly_visit_done ? T2('✓ 적립됨', '✓ 付与済', '✓ Added') : T2('접속 시 자동', 'アクセスで自動', 'Auto on visit')) + '</div></div>'
-                        +   '<div style="background:linear-gradient(135deg,#db2777,#9d174d);border-radius:12px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;">'
-                        +     '<div style="min-width:0;font-size:13.5px;font-weight:700;">' + T2('이번주 첫방문 선물', '今週の初訪問ギフト', 'Weekly first-visit gift') + ' <span style="opacity:.9;font-weight:800;">' + won(5000) + '</span></div>'
-                        +     '<div style="font-size:12px;flex-shrink:0;opacity:0.95;">' + (st.weekly_visit_done ? T2('✓ 적립됨', '✓ 付与済', '✓ Added') : T2('접속 시 자동', 'アクセスで自動', 'Auto on visit')) + '</div></div>'
-                        + '</div>')
+                        + '')
                     : ('<div style="text-align:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:14px;padding:14px 12px;margin:8px 0 12px;">'
                         + '<div style="font-size:12px;color:#6d28d9;">' + T2('내 누적 포인트', 'マイポイント', 'My points') + '</div>'
                         + '<div style="font-size:31px;font-weight:900;color:#7c3aed;line-height:1.1;">' + won(10000) + '</div>'
@@ -380,16 +373,20 @@
                             '· Collect points daily like a game (check-in, word chain, promote your shop)<br>· Spend them <b>like cash</b> on orders (up to ₩160,000/mo)<br>· SOHO founders can order cards, stickers & goods with free points only') + '</div>'
                         + '<button id="rhSignupHero" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:12px;">' + T2('회원가입하고 1만원 받기 →', '会員登録して1万ウォン受取 →', 'Sign up & get ₩10,000 →') + '</button>'));
             var rows = ''
-                + rowHtml(4, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhAct4', T2('오늘의 잡담', '今日のひとこと', 'Post'))))
-                + rowHtml(5, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhAct5', T2('게임', 'ゲーム', 'Play')));
+                + rowHtml(1, T2('출석체크', '出席チェック', 'Check-in') + (st.attendance_done ? ' ✓' : ''), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : (st.attendance_done ? doneTag(T2('완료', '完了', 'Done')) : actBtn('rhActAtt', T2('오늘의 잡담', '今日のひとこと', 'Post'))))
+                + rowHtml(2, T2('끝말잇기', 'しりとり', 'Word chain'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhActWord', T2('게임', 'ゲーム', 'Play')))
+                + rowHtml(3, T2('포토댓글', '写真コメント', 'Photo comment'), won(3000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhActPhoto', T2('사진 남기기', '写真を投稿', 'Post photo')))
+                + rowHtml(4, T2('일반댓글', 'コメント', 'Comment'), won(1000) + T2('/일', '/日', '/day'), !st.logged_in ? lockTag() : actBtn('rhActText', T2('댓글 남기기', 'コメント', 'Comment')));
             var note = '<div style="text-align:center;font-size:11px;color:#dc2626;margin:14px 0 4px;">' + T2('매월 말일 미사용분 소멸됩니다. 말일전 꼭 사용해주세요!', '毎月末に未使用分は消滅します。月末までに必ずご利用ください！', 'Unused balance expires at month-end — please use it before then!') + '</div>';
             card.innerHTML = top + '<div style="display:grid;gap:8px;">' + rows + '</div>' + note;
             var byId = function (id) { return document.getElementById(id); };
             if (byId('rhCloseX')) byId('rhCloseX').onclick = closeHub;
             var _doSignup = function () { if (window.openAuthModal) { window.openAuthModal('signup', function () { celebrate(10000, T2('가입 완료! 포인트 지급', '登録完了！', 'Welcome!')); render(); }); } };
             if (byId('rhSignupHero')) byId('rhSignupHero').onclick = _doSignup;   // 비회원 히어로 버튼 → 가입 후 render()로 아래 창들 열림
-            if (byId('rhAct4')) byId('rhAct4').onclick = function () { openTodayTalk(st); };
-            if (byId('rhAct5')) byId('rhAct5').onclick = function () { if (window.openWordChain) window.openWordChain(); };
+            if (byId('rhActAtt')) byId('rhActAtt').onclick = function () { openTodayTalk(st); };
+            if (byId('rhActWord')) byId('rhActWord').onclick = function () { if (window.openWordChain) window.openWordChain(); };
+            if (byId('rhActPhoto')) byId('rhActPhoto').onclick = function () { closeHub(); if (window.openHomeComments) window.openHomeComments('photo'); };
+            if (byId('rhActText')) byId('rhActText').onclick = function () { closeHub(); if (window.openHomeComments) window.openHomeComments('text'); };
         }
         render();
     };

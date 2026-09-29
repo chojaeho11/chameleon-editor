@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260929151718';
+    var CV = '20260929153003';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -6492,7 +6492,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script src="./mini-editor.js?v=559"></script>
-<script src="./rewards.js?v=36"></script>
+<script src="./rewards.js?v=37"></script>
 <script src="/biz-promo.js?v=9"></script>
 
 <!-- 2026-08-15: 「내가 만든 디자인」 모달 (히어로 + 마이페이지에서 진입) — 고른 디자인을 에디터에 올려 제품 주문으로 연결 -->
@@ -7508,6 +7508,100 @@ async function handleSubReturn() {
         <script>document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('homeReviewMoreBtn');if(b){var c=(window.SITE_CONFIG&&window.SITE_CONFIG.COUNTRY)||'KR';var t={KR:'더보기',JP:'もっと見る',US:'Load More',CN:'加载更多',AR:'عرض المزيد',ES:'Ver más',DE:'Mehr laden',FR:'Voir plus'};b.textContent=t[c]||t.US;}});</script>
     </div>
 </div>
+
+<!-- 2026-09-29(사장님): 고객 한마디 — 포토댓글(사진+글 3,000P) + 일반댓글(글 1,000P). 리워드 허브 '포토댓글/일반댓글' 이 여기로 연결. -->
+<div class="home-comments-section" id="homeCommentsSection" style="max-width:1100px;margin:44px auto 12px;padding:0 16px;">
+  <div style="text-align:center;margin-bottom:18px;">
+    <h2 style="font-size:22px;color:#4c1d95;margin:0 0 6px;font-weight:600;">고객 한마디</h2>
+    <p style="font-size:13px;color:#94a3b8;margin:0;">사진 한 장이면 3,000P, 글 한 줄이면 1,000P · 포인트는 주문 시 현금처럼 사용</p>
+  </div>
+  <div id="hcCompose" style="border:1px solid #e9d5ff;border-radius:14px;padding:14px;margin-bottom:22px;background:#faf5ff;">
+    <textarea id="hcInput" rows="2" placeholder="한마디 남겨보세요 :)" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #e2e8f0;border-radius:9px;font-size:13px;resize:none;font-family:inherit;"></textarea>
+    <div id="hcPhotoPreview" style="display:none;margin-top:8px;"></div>
+    <input type="file" id="hcPhotoFile" accept="image/*" style="display:none;">
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+      <span id="hcStatus" style="font-size:12px;color:#94a3b8;margin-right:auto;"></span>
+      <button type="button" id="hcPhotoBtn" onclick="window._hcPickPhoto&&window._hcPickPhoto()" style="padding:9px 14px;border:1px solid #7c3aed;background:#fff;color:#6d28d9;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;">사진 첨부 · 3,000P</button>
+      <button type="button" id="hcSendBtn" onclick="window.postHomeComment&&window.postHomeComment()" style="padding:9px 16px;border:none;background:#7c3aed;color:#fff;border-radius:9px;font-size:13px;cursor:pointer;font-family:inherit;">남기기 · 1,000P</button>
+    </div>
+  </div>
+  <div id="hcPhotoWall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;"></div>
+  <div id="hcTextList" style="display:flex;flex-direction:column;gap:2px;"></div>
+</div>
+<script>
+(function(){
+  var _hcPhoto = null;
+  var scc = function(){ return (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || window.__SITE_CODE || 'KR'; };
+  var esc = function(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); };
+  window._hcPickPhoto = function(){ var f=document.getElementById('hcPhotoFile'); if(f) f.click(); };
+  window._hcClearPhoto = function(){ _hcPhoto=null; var f=document.getElementById('hcPhotoFile'); if(f)f.value=''; var pv=document.getElementById('hcPhotoPreview'); if(pv){pv.style.display='none';pv.innerHTML='';} };
+  window.openHomeComments = function(mode){
+    var sec=document.getElementById('homeCommentsSection'); if(!sec) return;
+    try{ sec.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
+    setTimeout(function(){ if(mode==='photo'){ window._hcPickPhoto(); } else { var i=document.getElementById('hcInput'); if(i) i.focus(); } }, 420);
+  };
+  window.loadHomeComments = async function(){
+    var sb=window.sb; if(!sb) return;
+    try{
+      var r=await sb.from('home_comments').select('id,author_name,content,photo_url,created_at').eq('country_code', scc()).order('created_at',{ascending:false}).limit(60);
+      var rows=(r&&r.data)||[];
+      var photos=rows.filter(function(x){return x.photo_url;});
+      var texts=rows.filter(function(x){return !x.photo_url;});
+      var pw=document.getElementById('hcPhotoWall');
+      if(pw) pw.innerHTML = photos.length ? photos.map(function(p){
+        return '<div style="border:1px solid #f1e9ff;border-radius:12px;overflow:hidden;background:#fff;">'
+          +'<img src="'+esc(p.photo_url)+'" loading="lazy" style="width:100%;height:150px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">'
+          +'<div style="padding:8px 10px;"><div style="font-size:12.5px;color:#334155;line-height:1.5;word-break:break-word;">'+esc(p.content||'')+'</div>'
+          +'<div style="font-size:10.5px;color:#a78bfa;margin-top:3px;">'+esc(p.author_name||'')+'</div></div></div>';
+      }).join('') : '<div style="grid-column:1/-1;text-align:center;color:#cbd5e1;padding:16px;font-size:13px;">아직 포토댓글이 없어요. 첫 사진을 남겨보세요!</div>';
+      var tl=document.getElementById('hcTextList');
+      if(tl) tl.innerHTML = texts.map(function(t){
+        return '<div style="border-bottom:1px solid #f1f5f9;padding:9px 2px;"><span style="font-size:13px;color:#334155;word-break:break-word;">'+esc(t.content||'')+'</span> <span style="font-size:11px;color:#a78bfa;">— '+esc(t.author_name||'')+'</span></div>';
+      }).join('');
+    }catch(e){}
+  };
+  window.postHomeComment = async function(){
+    var sb=window.sb; if(!sb){ alert('잠시 후 다시 시도해주세요'); return; }
+    var u=null; try{ var uu=await sb.auth.getUser(); u=uu&&uu.data&&uu.data.user; }catch(e){}
+    if(!u){ if(window.openAuthModal) window.openAuthModal('login'); else alert('로그인 후 이용해주세요'); return; }
+    var inp=document.getElementById('hcInput'); var txt=((inp&&inp.value)||'').trim();
+    if(!txt && !_hcPhoto){ if(inp) inp.focus(); return; }
+    var st=document.getElementById('hcStatus'); var send=document.getElementById('hcSendBtn'); if(send) send.disabled=true;
+    var name=''; try{ var pf=await sb.from('profiles').select('username').eq('id',u.id).maybeSingle(); name=(pf&&pf.data&&pf.data.username)||''; }catch(e){}
+    if(!name) name=String(u.email||'user').split('@')[0];
+    var photoUrl=null;
+    try{
+      if(_hcPhoto){
+        if(st) st.textContent='사진 올리는 중…';
+        var path='home_comments/'+u.id+'/'+Date.now()+'_'+String(_hcPhoto.name||'p').replace(/[^a-zA-Z0-9._-]/g,'_');
+        var up=await sb.storage.from('design').upload(path,_hcPhoto,{upsert:true});
+        if(up.error) throw up.error;
+        photoUrl=sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+      }
+      if(st) st.textContent='등록 중…';
+      var ins=await sb.from('home_comments').insert({user_id:u.id,author_name:name,content:txt,photo_url:photoUrl,country_code:scc()}).select('id').maybeSingle();
+      if(ins.error) throw ins.error;
+      var newId=ins.data&&ins.data.id;
+      // 보상(팝업은 rewardComment/rewardPost 내부에서 표시): 포토=3,000(comment) / 글=1,000(post). 하루한도·중복방지는 서버.
+      try{ if(photoUrl && window.rewardComment) window.rewardComment('hc_'+newId); else if(window.rewardPost) window.rewardPost('hc_'+newId); }catch(e){}
+      if(inp) inp.value=''; window._hcClearPhoto();
+      if(st) st.textContent=''; if(send) send.disabled=false;
+      window.loadHomeComments();
+    }catch(e){ if(st) st.textContent='등록 실패 — 다시 시도해주세요'; if(send) send.disabled=false; }
+  };
+  document.addEventListener('DOMContentLoaded', function(){
+    if(scc() !== 'KR'){ var _s=document.getElementById('homeCommentsSection'); if(_s) _s.style.display='none'; return; }  // 리워드는 KR 전용 → 한국 사이트에만 노출
+    var f=document.getElementById('hcPhotoFile');
+    if(f) f.addEventListener('change', function(){
+      var file=f.files&&f.files[0]; if(!file) return; _hcPhoto=file;
+      var rd=new FileReader(); rd.onload=function(){
+        var pv=document.getElementById('hcPhotoPreview'); if(pv){ pv.style.display=''; pv.innerHTML='<img src="'+String(rd.result)+'" style="max-height:120px;border-radius:9px;vertical-align:middle;"> <button type="button" onclick="window._hcClearPhoto&&window._hcClearPhoto()" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:12px;">사진 빼기</button>'; }
+      }; rd.readAsDataURL(file);
+    });
+    setTimeout(function(){ window.loadHomeComments && window.loadHomeComments(); }, 300);
+  });
+})();
+</script>
 <script>
 // 홈페이지 실제 후기 로딩 — 2026-06-01: 최신순 10개, 국가별 (현재 언어 우선, 부족시 타 언어 폴백)
 (function(){
@@ -11135,7 +11229,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=5"></script>
-<script src="/simple_order.js?v=923"></script>
+<script src="/simple_order.js?v=924"></script>
 <script src="/sns-ranking.js?v=11"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=732"></script>
@@ -19780,8 +19874,7 @@ if (w >= 20 && h >= 20) {
                     setTimeout(function () { try { if (window.openRewardHub) window.openRewardHub(); } catch (e) {} }, 700);
                 }
             } catch (_dg) {}
-            // 2026-09-29(사장님): 이달 첫방문 1만 / 이번주 첫방문 5천 자동 적립 (서버에서 중복방지, 지급될 때만 팝업).
-            try { if (window.rewardVisitBonuses) window.rewardVisitBonuses(); } catch (_mg) {}
+            // 2026-09-29(사장님): 첫방문 선물 폐지 — 참여형 리워드(출석·끝말잇기·댓글·포토댓글)만 운영.
             if (btnLogin) {
                 // [수정] "로그아웃" -> window.t('btn_logout')
                 btnLogin.innerText = window.t('btn_logout');

@@ -20299,6 +20299,8 @@ html, body { background: #ffffff !important; }
             '원');
         // 2026-09-29(사장님): 지갑 할인 카드 제목을 등급명으로 (리셀러=리셀러 할인, PRO=PRO 구독할인).
         try { var _prTtl = document.getElementById('soDiscProTitle'); if (_prTtl) { if (window.memberTier === 'reseller') _prTtl.textContent = tr('리셀러 할인','リセラー割引','Reseller discount'); else if (window.memberTier === 'franchise' || window.memberTier === 'gold') _prTtl.textContent = tr('가맹점 할인','加盟店割引','Franchise discount'); else _prTtl.textContent = tr('PRO 구독할인','PRO会員割引','PRO Subscriber'); } } catch(e){}
+        // 2026-09-29(사장님): 리셀러는 20% 가 합계에 자동 반영되므로 지갑 '리셀러 할인' 카드는 숨김(중복 표시 혼란 방지). 할인은 그대로 적용됨.
+        try { if (window.memberTier === 'reseller') { var _proCd = document.querySelector('.so-disc-card[data-disc="pro"]'); if (_proCd) _proCd.style.display = 'none'; } } catch(e){}
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
         var blogMax = Math.min(blogBal, 50000, Math.floor((calc.grandTotal || discBase || 0) * 0.05));   // 2026-09-29: 구매금액 5% 이내 + 최대 5만원
