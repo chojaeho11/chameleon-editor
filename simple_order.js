@@ -3238,7 +3238,7 @@ html, body { background: #ffffff !important; }
           <!-- 2026-05-29: 베스트굿즈 프리셋 100개 이상 50% 할인 -->
           <div class="so-price-row discount" id="soPresetBulkDiscRow" style="display:none;"><span>${tr('100개 이상 50% 할인', '100個以上 50%割引', '100+ pcs 50% off')} <span class="so-tier-tag" style="background:#dc2626; color:#fff;">50%</span></span><span id="soPresetBulkDisc">-0원</span></div>
           <!-- 구독자 할인 (PRO 회원, 중복 가능) -->
-          <div class="so-price-row discount" id="soProDiscRow" style="display:none;"><span>${tr('PRO 구독자 할인', 'PRO会員割引', 'PRO discount')} <span class="so-tier-tag" style="background:#7c3aed; color:#fff;">10%</span></span><span id="soProDisc">-0원</span></div>
+          <div class="so-price-row discount" id="soProDiscRow" style="display:none;"><span><span id="soProDiscLabel">${tr('PRO 구독자 할인', 'PRO会員割引', 'PRO discount')}</span> <span class="so-tier-tag" style="background:#7c3aed; color:#fff;">10%</span></span><span id="soProDisc">-0원</span></div>
           <!-- 배송/시공 라인 -->
           <div class="so-price-row" id="soShipRow" style="display:none;"><span id="soShipLabel">${tr('배송/시공', '配送', 'Shipping')}</span><span id="soShipAmount">-</span></div>
           <!-- 2026-06-13: 디자인 의뢰비 라인 — 의뢰 후 노출 -->
@@ -3467,7 +3467,7 @@ html, body { background: #ffffff !important; }
           <label class="so-disc-card" data-disc="pro" style="cursor:pointer; padding:10px 12px; border:2px solid #ddd6fe; background:#f5f3ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <input type="radio" name="soDiscChoice" value="pro" onchange="window._soOnDiscountSelect()" style="margin:0;">
-              <b style="font-size:12px; color:#6d28d9;">👑 ${tr('PRO 구독할인','PRO会員割引','PRO Subscriber')} <span style="font-size:9.5px; color:#7c3aed; font-weight:800;">${tr('포인트 중복','ポイント併用','+ points')}</span></b>
+              <b style="font-size:12px; color:#6d28d9;">👑 <span id="soDiscProTitle">${tr('PRO 구독할인','PRO会員割引','PRO Subscriber')}</span> <span style="font-size:9.5px; color:#7c3aed; font-weight:800;">${tr('포인트 중복','ポイント併用','+ points')}</span></b>
             </div>
             <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="soDiscProAmount">-</div>
             <div style="font-size:10.5px; color:#7c3aed;" id="soDiscProHint">${tr('주문의 10%','注文金額の10%','10% of order')}</div>
@@ -5096,6 +5096,8 @@ html, body { background: #ffffff !important; }
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
         try { var _ptag = document.querySelector('#soProDiscRow .so-tier-tag'); if (_ptag) _ptag.textContent = proPct + '%'; } catch(e){}
+        // 2026-09-29(사장님): 할인 라벨을 등급명으로 (리셀러/가맹점/PRO). 리셀러가 'PRO 구독' 으로 보이던 문제.
+        try { var _plbl = document.getElementById('soProDiscLabel'); if (_plbl) { var _mdiL = _soMemberDiscInfo(); _plbl.textContent = tr(_mdiL.kr, _mdiL.ja, _mdiL.en); } } catch(e){}
         // 2026-05-29: 베스트굿즈 프리셋 50% 할인 라인 (100개+ — 티셔츠는 인쇄비 라인에서 별도 처리)
         // 2026-06-12: 종이매대 / 배너 family — 수량 티어 별 라벨
         showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
@@ -20308,6 +20310,8 @@ html, body { background: #ffffff !important; }
         setCard('pro', 'soDiscProAmount', 'soDiscProHint', isPro ? 1 : 0, proMax,
             isPro ? tr('주문의 ' + _memberPct + '%','注文金額の' + _memberPct + '%',_memberPct + '% of order') : tr('미구독','未加入','Not subscribed'),
             '원');
+        // 2026-09-29(사장님): 지갑 할인 카드 제목을 등급명으로 (리셀러=리셀러 할인, PRO=PRO 구독할인).
+        try { var _prTtl = document.getElementById('soDiscProTitle'); if (_prTtl) { if (window.memberTier === 'reseller') _prTtl.textContent = tr('리셀러 할인','リセラー割引','Reseller discount'); else if (window.memberTier === 'franchise' || window.memberTier === 'gold') _prTtl.textContent = tr('가맹점 할인','加盟店割引','Franchise discount'); else _prTtl.textContent = tr('PRO 구독할인','PRO会員割引','PRO Subscriber'); } } catch(e){}
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
         var blogMax = Math.min(blogBal, 50000, Math.floor((calc.grandTotal || discBase || 0) * 0.1));   // 2026-09-15: 구매금액 10% 이내 + 최대 5만원
