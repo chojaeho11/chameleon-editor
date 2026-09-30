@@ -20043,17 +20043,21 @@ html, body { background: #ffffff !important; }
         var card = document.getElementById('soCoPayCard');
         var bank = document.getElementById('soCoPayBank');
         if (!card || !bank) return;
-        var isKR = (window.__SITE_CODE || 'KR') === 'KR';
+        // 2026-09-30(사장님): 국가 판정은 호스트 기반(신뢰) — __SITE_CODE 는 렌더 시점 불안정.
+        var _c = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || (window.__SITE_CODE || 'KR');
+        var _h = (location.hostname || '').toLowerCase();
+        if (!_c || _c === 'KR') { if (_h.indexOf('cafe0101') >= 0) _c = 'JP'; else if (_h.indexOf('cafe3355') >= 0) _c = 'US'; }
+        var isKR = (_c === 'KR');
         if (state.frSlug && state.frBank && state.frBank.number) {
             // 가맹점 계좌가 있으면 — 그 계좌로 계좌이체만 (결제는 가맹점에게 직접 입금)
             card.style.display = 'none';
             bank.style.display = '';
             var br = bank.querySelector('input'); if (br) br.checked = true;
         } else {
-            // 비가맹점(또는 결제정보 미등록) — 기본 동작
-            card.style.display = '';
-            bank.style.display = isKR ? '' : 'none';
-            var cr = card.querySelector('input'); if (cr) cr.checked = true;
+            // 2026-09-30(사장님): 한국=카드(Toss)+무통장. 해외=무통장만(카드 숨김, Stripe 중단).
+            card.style.display = isKR ? '' : 'none';
+            bank.style.display = '';
+            var _pi = (isKR ? card : bank).querySelector('input'); if (_pi) _pi.checked = true;
         }
     }
     // 2026-05-22: 마일리지/예치금 — KR + 로그인 사용자만. 메인 장바구니(order.js)와 동일 정책.
