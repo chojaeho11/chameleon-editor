@@ -647,6 +647,14 @@ async function fetchUserDiscountRate() {
 
         // 할인율 반영 후 카트 재렌더 (항상 시도 — 화면이 떠 있을 때만 visible 영향)
         try { if (window.renderCart) window.renderCart(); } catch(e) {}
+        // 2026-09-30(사장님): 간편주문 결제창이 이미 열려 있으면 등급할인(리셀러 20% 등) 반영해 재렌더.
+        try {
+            var _soCo = document.getElementById('soCheckoutOverlay');
+            if (_soCo && _soCo.classList.contains('open') && typeof window._soRenderCheckoutSummary === 'function') {
+                window._soRenderCheckoutSummary();
+                if (typeof window._soInitWallet === 'function') window._soInitWallet();
+            }
+        } catch(e) {}
 
     } catch(e) {
         console.warn("등급 정보 로드 실패:", e);

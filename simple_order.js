@@ -20456,6 +20456,8 @@ html, body { background: #ffffff !important; }
         }
         // 2026-08-10: 스티커 단가 캐시 선로딩 — 캐시 miss 시 스티커가 0원 계산되는 버그 방지(구 카트항목 대비)
         try { if (!_stickerVariantsCache && cart.some(function (it) { return it && (it.sticker || it._isSticker); })) await _soLoadStickerVariants(); } catch (e) {}
+        // 2026-09-30(사장님): ?cart=checkout 자동열림이 등급할인(fetchUserDiscountRate) 로드보다 빨라 리셀러 20% 미적용되던 문제 — 렌더 전에 등급 보장 로드.
+        try { if (typeof window.fetchUserDiscountRate === 'function' && !window.memberTier) await window.fetchUserDiscountRate(); } catch (e) {}
         _renderCheckoutSummary();
         // 2026-06-26: 원판 배송 메모 → 체크아웃 메모(소CoMemo) 자동 채움 → 주문 request_note 로 저장돼
         //   작업지시서의 "고객 요청사항 (배송 메모)" 박스에 표시됨. (소CoMemo 비어있을 때만)
@@ -20616,6 +20618,7 @@ html, body { background: #ffffff !important; }
         var subBtn2 = document.getElementById('soCoSubmitBtn');
         if (subBtn2) subBtn2.disabled = false;
     }
+    window._soRenderCheckoutSummary = _renderCheckoutSummary;   // 2026-09-30: 등급할인 로드 후 재렌더용(order.js fetchUserDiscountRate)
 
     // 2026-05-13: 주문 요약에서 항목 삭제
     // 2026-07-19: 위치 인덱스 → __cart_id/uid 기반. (패브릭 삭제와 같은 버그였음 —
