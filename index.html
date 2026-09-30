@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20261001011128';
+    var CV = '20261001011544';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2442,8 +2442,11 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dollar"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_bulk_inquiry">대량문의</span>
                 </button>
-                <!-- 2026-10-01(사장님): 디자이너 기여(/contribute) 기능 삭제 — 진입 버튼 제거. -->
-
+                <!-- 디자이너 진입 (고객 의뢰 확인 · 디자이너 활동). /contribute 로 이동 (업로드 카드만 숨김 처리됨). -->
+                <a class="mgr-action mgr-coupon" href="/contribute" style="text-decoration:none;">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-pen-ruler"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_designer_apply">디자이너</span>
+                </a>
                 <!-- 2026-08-18: 디자인의뢰 재추가 (사장님 요청 - 고객들이 다시 찾음). 디자인 의뢰 팝업(기본디자인 3만원 티어)로 오픈. -->
                 <button type="button" class="mgr-action mgr-designreq" onclick="window.openDesignRequestPopup && window.openDesignRequestPopup({ product: '기본디자인' })">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-palette"></i></span>
