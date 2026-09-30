@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
+#seRejectedBox { display:none !important; }   /* 2026-10-01(사장님): 반려된 자산 섹션 숨김(업로드 기능 제거) */
 body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a; }
 .wrap { max-width:1100px; margin:0 auto; padding:20px; }
 .top-back { display:inline-flex; align-items:center; gap:6px; color:#64748b; text-decoration:none; padding:8px 14px; background:#f1f5f9; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:18px; }
@@ -114,7 +115,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
         </a>
     </div>
 
-    <div class="hero">
+    <div class="hero" style="display:none;">
         <div class="pill">DESIGNER CONTRIBUTOR</div>
         <h1 id="i18nHeroH1">당신의 재능을 판매하세요</h1>
         <p id="i18nHeroP">디자이너가 아니라도 괜찮아요. 카멜레온 에디터 안의 요소를 이것저것 합쳐서 예쁘고 감각적인 디자인을 만들어 올려주세요. 관리자 승인 즉시 적립금이 들어오고, 판매될 때마다 3% 마일리지가 추가됩니다.</p>
