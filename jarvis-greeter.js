@@ -137,6 +137,42 @@
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
   }
 
+  // 2026-09-30(사장님): 지금 상담 가능한 매니저 전화 안내 (chatbot_knowledge _managers). KR 위주, 없으면 본사 전화.
+  async function _jvgShowManagers() {
+    var hq = (_lang === 'ja') ? '047-712-1148' : '031-366-1984';
+    var sb = window.sb;
+    if (!sb || !sb.from) { addMsg(tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq), 'ai'); return; }
+    try {
+      var r = await sb.from('chatbot_knowledge').select('question,answer,is_active').eq('category', '_managers');
+      var NAMES = ['성희', '지숙', '연두'];
+      var rows = (r.data || []).filter(function (x) { return NAMES.some(function (n) { return (x.question || '').indexOf(n) >= 0; }); });
+      var lines = [];
+      rows.forEach(function (x) {
+        var phone = ''; try { phone = (JSON.parse(x.answer || '{}').phone) || ''; } catch (e) {}
+        if (!phone) return;
+        var fmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+        var nm = NAMES.filter(function (n) { return (x.question || '').indexOf(n) >= 0; })[0] || '매니저';
+        lines.push('· ' + nm + ' 매니저 — ' + fmt + (x.is_active === false ? ' (지금 부재중)' : ''));
+      });
+      if (lines.length) addMsg(tr('지금 상담 가능한 매니저야. 편하게 전화해줘:\n', '担当マネージャーです:\n', 'Available managers:\n') + lines.join('\n'), 'ai');
+      else addMsg(tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq), 'ai');
+    } catch (e) { addMsg(tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq), 'ai'); }
+  }
+  // 인사 아래 안내 버튼: 매니저 / 이메일 / 사진올리기 / 출고문의(본사)
+  function addGreetActions() {
+    var b = _root.querySelector('.jvg-body');
+    var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
+    var hq = (_lang === 'ja') ? '047-712-1148' : '031-366-1984';
+    var acts = [
+      { label: tr('매니저 안내', '担当マネージャー', 'Manager'), fn: _jvgShowManagers },
+      { label: tr('이메일 안내', 'メール', 'Email'), fn: function () { addMsg(tr('이메일로 문의할래? 여기로 보내줘:\ndesign@chameleon.design', 'メールはこちら:\ndesign@chameleon.design', 'Email us:\ndesign@chameleon.design'), 'ai'); } },
+      { label: tr('사진 올리기', '写真を送る', 'Upload photo'), fn: function () { var f = _root.querySelector('.jvg-file'); if (f) f.click(); } },
+      { label: tr('출고 문의', '出荷の問い合わせ', 'Shipping'), fn: function () { addMsg(tr('출고·배송 문의는 본사로 연락해줘:\n' + hq + ' (평일 09:00-18:00)', '出荷・配送は本社へ:\n' + hq, 'For shipping, call HQ:\n' + hq), 'ai'); } }
+    ];
+    acts.forEach(function (a) { var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label; btn.addEventListener('click', a.fn); wrap.appendChild(btn); });
+    b.appendChild(wrap); b.scrollTop = b.scrollHeight;
+  }
+
   function readImage(file, cb) {
     try { var r = new FileReader(); r.onload = function () { var du = String(r.result); cb((du.split(',')[1] || ''), file.type || 'image/jpeg', du); }; r.readAsDataURL(file); } catch (e) {}
   }
@@ -214,12 +250,22 @@
       addMsg(_afterCartMsg(), 'ai');
       _addCartActions();
     } else {
-      // 첫 인사 (반말·친근, 간결하게. 이모지 지양)
+      // 첫 인사 (반말·친근). 주문 방법 3가지 안내 + 버튼.
       addMsg(tr(
-        '안녕~ 방가워!\n행사 준비해? 만들고 싶은 제품의 사진을 올려줘.\n내가 보고 안내해줄게.',
-        'こんにちは！\nイベントの準備かな？作りたい製品の写真を送ってね。\n見て案内するよ。',
-        'Hey!\nPlanning an event? Send a photo of what you want to make.\nI\'ll take a look and guide you.'
+        '안녕! 행사 준비해? 내가 안내할게.\n\n주문하는 방법은 3가지가 있어.\n\n' +
+        '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓거나, "가벽"·"배너"처럼 제품명을 말해줘.\n내가 딱 맞는 링크를 줄게. 링크에 들어가면 튜토리얼로 차근차근 안내해줄게.\n\n' +
+        '2. 여러 제품을 한번에 주문해도 걱정 마. 내가 순서대로 하나씩 안내할게.\n\n' +
+        '3. 직접 하기 어렵다면 담당 매니저를 통해 주문할 수도 있어.\n아래 "매니저 안내"를 누르면 지금 상담 가능한 매니저 전화번호를 알려줄게.',
+        'こんにちは！イベントの準備かな？案内するよ。\n\nご注文の方法は3つあるよ。\n\n' +
+        '1. チャットに作りたい製品の画像をドラッグするか、「パーティション」「バナー」のように製品名を教えてね。ぴったりのリンクを送るよ。リンクに入るとチュートリアルで案内するよ。\n\n' +
+        '2. 複数の製品を一度に注文しても大丈夫。順番に一つずつ案内するよ。\n\n' +
+        '3. 難しければ担当マネージャー経由でも注文できるよ。下の「担当マネージャー」を押すと、今対応できるマネージャーの電話番号を送るよ。',
+        'Hi! Planning an event? Let me guide you.\n\nThere are 3 ways to order.\n\n' +
+        '1. Drag a product image into the chat, or just tell me the product (e.g. "wall", "banner"). I\'ll send the right link — it has a step-by-step tutorial.\n\n' +
+        '2. Ordering several products at once? No worries — I\'ll walk you through them one by one.\n\n' +
+        '3. Prefer a person? You can order through your manager. Tap "Manager" below and I\'ll share an available manager\'s number.'
       ), 'ai');
+      addGreetActions();
     }
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
 
