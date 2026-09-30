@@ -229,20 +229,40 @@
 
         // ── 공통 유틸 ──
         function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-        // 2026-09-30(사장님): 메시지 속 제품링크·견적PDF·URL 을 클릭 가능한 짧은 링크로 (긴 raw URL 방지)
-        function _linkify(raw){
+        // 2026-09-30(사장님): 제품 추천(<!--PRODUCTS:...-->)을 이미지 카드로. 텍스트에서 주석 제거 후 카드 HTML 반환.
+        function _extractProducts(raw){
             raw = String(raw==null?'':raw);
-            var re = /\[QUOTE_PDF:([^\]]+)\]|(https?:\/\/[^\s<]+)|(\/\?product=[A-Za-z0-9_%\-]+)/g;
+            var cards = '';
+            raw = raw.replace(/<!--PRODUCTS:([\s\S]*?)-->/g, function(_, json){
+                try {
+                    var arr = JSON.parse(json) || [];
+                    var items = arr.map(function(p){
+                        if(!p || !p.code) return '';
+                        var url = 'https://www.cafe2626.com/?product=' + encodeURIComponent(p.code);
+                        var img = (p.img && /^https?:/.test(p.img)) ? '<img src="'+esc(p.img)+'" alt="" style="width:100%;height:110px;object-fit:cover;display:block;" onerror="this.style.display=\'none\'">' : '';
+                        return '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="display:block;width:150px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;text-decoration:none;color:#1f2937;background:#fff;">'
+                            + img
+                            + '<div style="padding:7px 9px;"><div style="font-size:12px;font-weight:600;line-height:1.4;">'+esc(p.name||p.code)+'</div>'
+                            + (p.price?('<div style="font-size:11px;color:#6366f1;margin-top:2px;">'+esc(p.price)+'</div>'):'')
+                            + '<div style="font-size:11px;color:#6366f1;margin-top:3px;">제품 보기 ›</div></div></a>';
+                    }).join('');
+                    if(items) cards += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">'+items+'</div>';
+                } catch(e) {}
+                return '';
+            });
+            return { text: raw, cards: cards };
+        }
+        // 메시지 속 제품링크·견적PDF·URL·마크다운링크 를 클릭 가능한 짧은 링크로 (긴 raw URL 방지)
+        function _linkify(raw){
+            raw = String(raw==null?'':raw).replace(/\*\*/g,'');   // 굵게 마커 제거
+            var re = /\[QUOTE_PDF:([^\]]+)\]|\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s<]+)|(\/\?product=[A-Za-z0-9_%\-]+)/g;
             var out='', last=0, m;
+            function anchor(url,label,color){ return '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:'+color+';text-decoration:underline;">'+esc(label)+'</a>'; }
             while((m=re.exec(raw))){
                 out += esc(raw.slice(last, m.index));
-                if(m[1]){ out += '<a href="'+esc(m[1])+'" target="_blank" rel="noopener" style="color:#0891b2;text-decoration:underline;">📄 견적서 PDF</a>'; }
-                else {
-                    var url = m[2] || (location.origin + m[3]);
-                    var isProd = /[?&]product=/.test(url);
-                    var label = isProd ? '🔗 제품 보기' : (url.length>42 ? url.slice(0,39)+'…' : url);
-                    out += '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:#6366f1;text-decoration:underline;">'+esc(label)+'</a>';
-                }
+                if(m[1]){ out += anchor(m[1],'📄 견적서 PDF','#0891b2'); }
+                else if(m[2]!=null && m[3]){ var u3=/^\//.test(m[3])?(location.origin+m[3]):m[3]; out += anchor(u3, m[2], '#6366f1'); }
+                else { var url = m[4] || (location.origin + m[5]); var isProd = /[?&]product=/.test(url); out += anchor(url, isProd?'🔗 제품 보기':(url.length>42?url.slice(0,39)+'…':url), '#6366f1'); }
                 last = re.lastIndex;
             }
             out += esc(raw.slice(last));
@@ -250,6 +270,8 @@
         }
         function _previewText(msg){
             return String(msg==null?'':msg)
+                .replace(/<!--PRODUCTS:[\s\S]*?-->/g,' [제품 추천]')
+                .replace(/\*\*/g,'')
                 .replace(/\[QUOTE_PDF:[^\]]+\]/g,'[견적서]')
                 .replace(/https?:\/\/[^\s<]*[?&]product=[^\s<]*/g,'[제품 링크]')
                 .replace(/\/\?product=[A-Za-z0-9_%\-]+/g,'[제품 링크]')
@@ -390,7 +412,8 @@
                 if(isImg) fileHtml = `<img src="${esc(m.file_url)}" alt="" onclick="window.open('${esc(m.file_url)}','_blank')" style="cursor:pointer;">`;
                 else fileHtml = `<a class="cfile" href="${esc(m.file_url)}" target="_blank" rel="noopener">첨부파일: ${esc(m.file_name||'다운로드')}</a>`;
             }
-            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${_linkify(m.message||'')}${fileHtml}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
+            const _pe = _extractProducts(m.message||'');
+            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${_linkify(_pe.text)}${_pe.cards}${fileHtml}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
         }
         function appendConvBubble(m){ const body=document.getElementById('convBody'); const near=(body.scrollHeight-body.scrollTop-body.clientHeight)<80; body.insertAdjacentHTML('beforeend', convBubble(m)); if(near) body.scrollTop=body.scrollHeight; }
 

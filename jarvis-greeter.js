@@ -139,26 +139,40 @@
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
   }
 
+  // 2026-09-30(사장님): 버튼 응답을 화면표시 + DB 저장(관리자 콘솔에서도 보이도록). room 있을 때만 저장.
+  async function _jvgReply(intentLabel, text) {
+    addMsg(text, 'ai');
+    try {
+      var sb = window.sb;
+      if (sb && sb.from && _room) {
+        await sb.from('chat_messages').insert({ room_id: _room, sender_type: 'customer', sender_name: '고객', message: '[' + intentLabel + ' 요청]', created_at: new Date().toISOString() });
+        await sb.from('chat_messages').insert({ room_id: _room, sender_type: 'chatbot', sender_name: 'AI 카푸', message: text, created_at: new Date().toISOString() });
+      }
+    } catch (e) {}
+  }
   // 2026-09-30(사장님): 지금 상담 가능한 매니저 전화 안내 (chatbot_knowledge _managers). KR 위주, 없으면 본사 전화.
   async function _jvgShowManagers() {
     var hq = (_lang === 'ja') ? '047-712-1148' : '031-366-1984';
-    var sb = window.sb;
-    if (!sb || !sb.from) { addMsg(tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq), 'ai'); return; }
+    var fallback = tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq);
+    var text = fallback;
     try {
-      var r = await sb.from('chatbot_knowledge').select('question,answer,is_active').eq('category', '_managers');
-      var NAMES = ['성희', '지숙', '연두'];
-      var rows = (r.data || []).filter(function (x) { return NAMES.some(function (n) { return (x.question || '').indexOf(n) >= 0; }); });
-      var lines = [];
-      rows.forEach(function (x) {
-        var phone = ''; try { phone = (JSON.parse(x.answer || '{}').phone) || ''; } catch (e) {}
-        if (!phone) return;
-        var fmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
-        var nm = NAMES.filter(function (n) { return (x.question || '').indexOf(n) >= 0; })[0] || '매니저';
-        lines.push('· ' + nm + ' 매니저 — ' + fmt + (x.is_active === false ? ' (지금 부재중)' : ''));
-      });
-      if (lines.length) addMsg(tr('지금 상담 가능한 매니저야. 편하게 전화해줘:\n', '担当マネージャーです:\n', 'Available managers:\n') + lines.join('\n'), 'ai');
-      else addMsg(tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq), 'ai');
-    } catch (e) { addMsg(tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq), 'ai'); }
+      var sb = window.sb;
+      if (sb && sb.from) {
+        var r = await sb.from('chatbot_knowledge').select('question,answer,is_active').eq('category', '_managers');
+        var NAMES = ['성희', '지숙', '연두'];
+        var rows = (r.data || []).filter(function (x) { return NAMES.some(function (n) { return (x.question || '').indexOf(n) >= 0; }); });
+        var lines = [];
+        rows.forEach(function (x) {
+          var phone = ''; try { phone = (JSON.parse(x.answer || '{}').phone) || ''; } catch (e) {}
+          if (!phone) return;
+          var fmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+          var nm = NAMES.filter(function (n) { return (x.question || '').indexOf(n) >= 0; })[0] || '매니저';
+          lines.push('· ' + nm + ' 매니저 — ' + fmt + (x.is_active === false ? ' (지금 부재중)' : ''));
+        });
+        if (lines.length) text = tr('지금 상담 가능한 매니저야. 편하게 전화해줘:\n', '担当マネージャーです:\n', 'Available managers:\n') + lines.join('\n');
+      }
+    } catch (e) {}
+    _jvgReply(tr('매니저 안내', '担当マネージャー', 'Manager'), text);
   }
   // 인사 아래 안내 버튼: 매니저 / 이메일 / 사진올리기 / 출고문의(본사)
   function addGreetActions() {
@@ -167,9 +181,9 @@
     var hq = (_lang === 'ja') ? '047-712-1148' : '031-366-1984';
     var acts = [
       { label: tr('매니저 안내', '担当マネージャー', 'Manager'), fn: _jvgShowManagers },
-      { label: tr('이메일 안내', 'メール', 'Email'), fn: function () { addMsg(tr('이메일로 문의할래? 여기로 보내줘:\ndesign@chameleon.design', 'メールはこちら:\ndesign@chameleon.design', 'Email us:\ndesign@chameleon.design'), 'ai'); } },
+      { label: tr('이메일 안내', 'メール', 'Email'), fn: function () { _jvgReply(tr('이메일 안내', 'メール', 'Email'), tr('이메일로 문의할래? 여기로 보내줘:\ndesign@chameleon.design', 'メールはこちら:\ndesign@chameleon.design', 'Email us:\ndesign@chameleon.design')); } },
       { label: tr('사진 올리기', '写真を送る', 'Upload photo'), fn: function () { var f = _root.querySelector('.jvg-file'); if (f) f.click(); } },
-      { label: tr('출고 문의', '出荷の問い合わせ', 'Shipping'), fn: function () { addMsg(tr('출고·배송 문의는 본사로 연락해줘:\n' + hq + ' (평일 09:00-18:00)', '出荷・配送は本社へ:\n' + hq, 'For shipping, call HQ:\n' + hq), 'ai'); } }
+      { label: tr('출고 문의', '出荷の問い合わせ', 'Shipping'), fn: function () { _jvgReply(tr('출고 문의', '出荷の問い合わせ', 'Shipping'), tr('출고·배송 문의는 본사로 연락해줘:\n' + hq + ' (평일 09:00-18:00)', '出荷・配送は本社へ:\n' + hq, 'For shipping, call HQ:\n' + hq)); } }
     ];
     acts.forEach(function (a) { var btn = document.createElement('button'); btn.className = 'jvg-q'; btn.textContent = a.label; btn.addEventListener('click', a.fn); wrap.appendChild(btn); });
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
