@@ -21070,7 +21070,8 @@ html, body { background: #ffffff !important; }
     window._soShowResellerGate = function () {
         if (document.getElementById('soResellerGate')) return;
         var ov = document.createElement('div'); ov.id = 'soResellerGate';
-        ov.style.cssText = 'position:fixed; inset:0; z-index:100000; background:rgba(17,24,39,0.62); display:flex; align-items:center; justify-content:center; padding:16px;';
+        // 2026-09-30(사장님): 결제창(.so-co-overlay z-index:1000000) 위로 — 이전 100000 이라 뒤에 가려 안 보였음(주문완료 무반응).
+        ov.style.cssText = 'position:fixed; inset:0; z-index:2000001; background:rgba(17,24,39,0.62); display:flex; align-items:center; justify-content:center; padding:16px;';
         var items = [
             tr('작업지시서(제품 사양·사이즈·수량·옵션)를 확인했습니다.', '作業指示書(仕様·サイズ·数量·オプション)を確認しました。', 'I reviewed the work order (spec, size, qty, options).'),
             tr('인쇄용 파일이 정상입니다 — 재단선·해상도·글자 깨짐 없음.', '印刷用ファイルは正常です(裁ち·解像度·文字化けなし)。', 'The print file is OK — bleed, resolution, no broken text.'),
