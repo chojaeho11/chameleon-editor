@@ -39,7 +39,11 @@ let isProcessing = false;
 let lastProducts = [];
 let pendingImage = null;
 let conversationHistory = [];
-let _advRoomId = null; // product-advisor room_id 유지
+// 2026-09-30(사장님): 공용 room_id — 홈 그리터(jarvis-greeter)와 공유(localStorage 'kapu_room_id', 언어중립, 로그아웃에도 유지).
+//   재방문·새로고침·언어변경·양 위젯 무관하게 한 대화로 이어져 관리자에서 하나의 대화로 보임.
+function _kapuRoom() { try { return localStorage.getItem('kapu_room_id') || null; } catch (e) { return null; } }
+function _kapuSetRoom(id) { try { if (id) localStorage.setItem('kapu_room_id', id); } catch (e) {} }
+let _advRoomId = _kapuRoom(); // product-advisor room_id 유지 (공용키에서 복원)
 let _custName = ''; // 고객 이름
 let _custPhone = ''; // 고객 전화번호
 // 2026-08-17: 매니저 답변 수신 안정화 — realtime + 폴링 병행. lastMsgAt 로 중복/누락 방지.
@@ -95,8 +99,10 @@ function loadChat() {
         conversationHistory = data.history || [];
         lastProducts = data.lastProducts || [];
         // 2026-08-17: 이전 세션의 room/최종시각 복원 → 매니저 답변 수신 재개 (놓친 답변 즉시 catch-up)
-        if (data.roomId) {
-            _advRoomId = data.roomId;
+        // 2026-09-30: 공용 kapu_room_id 우선(그리터와 공유·언어중립).
+        var _sharedRoom = _kapuRoom();
+        if (_sharedRoom || data.roomId) {
+            _advRoomId = _sharedRoom || data.roomId;
             _advLastMsgAt = data.lastMsgAt || null;
             try { _advStartAdminSync(_advRoomId); } catch(e) {}
         }
@@ -118,6 +124,7 @@ function clearChat() {
     try { localStorage.removeItem(chatKey()); } catch(e) {}
     try { localStorage.removeItem('kapu_customer'); sessionStorage.removeItem('kapu_customer'); } catch(e) {}
     try { localStorage.removeItem(chatKey()); localStorage.removeItem('kapu_chat_guest'); } catch(e) {}
+    try { localStorage.removeItem('kapu_room_id'); } catch(e) {}   // 2026-09-30: 리셋 시 새 대화 시작(공용 room 초기화)
     showEntryForm();
 }
 
@@ -1866,12 +1873,14 @@ A: "是的，可以在棉布、帆布、各种织物上印刷。常用于背景�
         if (!res.ok) throw new Error('API ' + res.status);
         const data = await res.json();
 
-        // room_id 저장 (다음 메시지에서 재사용)
+        // room_id 저장 (다음 메시지에서 재사용) + 공용키 기록(그리터·재방문 공유)
         if (data.room_id && data.room_id !== _advRoomId) {
             _advRoomId = data.room_id;
+            _kapuSetRoom(_advRoomId);
             _advStartAdminSync(_advRoomId);
         } else if (data.room_id) {
             _advRoomId = data.room_id;
+            _kapuSetRoom(_advRoomId);
             if (!_advPollTimer) _advStartAdminSync(_advRoomId);   // 폴링 미가동 시 보장
         }
 

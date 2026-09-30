@@ -37,7 +37,9 @@
   })();
   function tr(kr, ja, en) { return _lang === 'ja' ? ja : (_lang === 'kr' ? kr : en); }
 
-  var _room = null, _hist = [], _busy = false, _root = null, _backdrop = null;
+  // 2026-09-30(사장님): 공용 room_id — advisor-panel 과 공유(localStorage 'kapu_room_id'). 재방문·새로고침에도 같은 대화로 이어져 관리자에서 한 대화로 보임.
+  var _room = (function () { try { return localStorage.getItem('kapu_room_id') || null; } catch (e) { return null; } })();
+  var _hist = [], _busy = false, _root = null, _backdrop = null;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
@@ -194,7 +196,7 @@
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
-      if (data.room_id) _room = data.room_id;
+      if (data.room_id) { _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} }
       var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
       typing.classList.remove('jvg-typing'); typing.textContent = msg;
       _hist.push({ role: 'user', content: text || '[사진 업로드]' });

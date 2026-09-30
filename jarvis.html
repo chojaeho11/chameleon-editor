@@ -229,6 +229,32 @@
 
         // ── 공통 유틸 ──
         function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        // 2026-09-30(사장님): 메시지 속 제품링크·견적PDF·URL 을 클릭 가능한 짧은 링크로 (긴 raw URL 방지)
+        function _linkify(raw){
+            raw = String(raw==null?'':raw);
+            var re = /\[QUOTE_PDF:([^\]]+)\]|(https?:\/\/[^\s<]+)|(\/\?product=[A-Za-z0-9_%\-]+)/g;
+            var out='', last=0, m;
+            while((m=re.exec(raw))){
+                out += esc(raw.slice(last, m.index));
+                if(m[1]){ out += '<a href="'+esc(m[1])+'" target="_blank" rel="noopener" style="color:#0891b2;text-decoration:underline;">📄 견적서 PDF</a>'; }
+                else {
+                    var url = m[2] || (location.origin + m[3]);
+                    var isProd = /[?&]product=/.test(url);
+                    var label = isProd ? '🔗 제품 보기' : (url.length>42 ? url.slice(0,39)+'…' : url);
+                    out += '<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:#6366f1;text-decoration:underline;">'+esc(label)+'</a>';
+                }
+                last = re.lastIndex;
+            }
+            out += esc(raw.slice(last));
+            return out;
+        }
+        function _previewText(msg){
+            return String(msg==null?'':msg)
+                .replace(/\[QUOTE_PDF:[^\]]+\]/g,'[견적서]')
+                .replace(/https?:\/\/[^\s<]*[?&]product=[^\s<]*/g,'[제품 링크]')
+                .replace(/\/\?product=[A-Za-z0-9_%\-]+/g,'[제품 링크]')
+                .replace(/https?:\/\/[^\s<]+/g,'[링크]');
+        }
         function fmtTime(iso){ try{ const d=new Date(iso); const m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2),h=('0'+d.getHours()).slice(-2),mi=('0'+d.getMinutes()).slice(-2); return `${m}/${dd} ${h}:${mi}`; }catch(e){return '';} }
         function fmtAgo(iso){ try{ const s=Math.floor((Date.now()-new Date(iso).getTime())/1000); if(s<60)return '방금'; if(s<3600)return Math.floor(s/60)+'분전'; if(s<86400)return Math.floor(s/3600)+'시간전'; return fmtTime(iso);}catch(e){return '';} }
         function toast(msg,isErr){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':''); setTimeout(()=>{t.className='toast'+(isErr?' err':'');},2600); }
@@ -280,7 +306,7 @@
                 el.innerHTML = _roomsCache.map(r=>{
                     const nm = (r.customer_name||r.nickname||'게스트');
                     const lm = lastMap[r.id];
-                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+(lm.message||'').slice(0,40)) : '';
+                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,40)) : '';
                     const fresh = _freshRooms[r.id];
                     const av = esc(nm.slice(0,1).toUpperCase());
                     const am = (r.assigned_manager||'').trim();
@@ -364,7 +390,7 @@
                 if(isImg) fileHtml = `<img src="${esc(m.file_url)}" alt="" onclick="window.open('${esc(m.file_url)}','_blank')" style="cursor:pointer;">`;
                 else fileHtml = `<a class="cfile" href="${esc(m.file_url)}" target="_blank" rel="noopener">첨부파일: ${esc(m.file_name||'다운로드')}</a>`;
             }
-            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${esc(m.message||'')}${fileHtml}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
+            return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${_linkify(m.message||'')}${fileHtml}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
         }
         function appendConvBubble(m){ const body=document.getElementById('convBody'); const near=(body.scrollHeight-body.scrollTop-body.clientHeight)<80; body.insertAdjacentHTML('beforeend', convBubble(m)); if(near) body.scrollTop=body.scrollHeight; }
 
