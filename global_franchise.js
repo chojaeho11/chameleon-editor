@@ -253,20 +253,27 @@ window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
-        const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug).select('id');
-        if (r1.error) throw r1.error;
-        if (!r1.data || !r1.data.length) throw new Error(_FM_RLS_MSG);
         let roleSkipped = false;
-        if (ownerId) {
-            // 관리자/매니저 계정은 등급 변경 안 함 (본인 계정 승인 시 관리자 권한 상실 방지).
-            let cur = null;
-            try { const { data: p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); cur = p && p.role; } catch (e) {}
-            if (['admin', 'superadmin', 'manager'].indexOf(cur) >= 0) {
-                roleSkipped = true;
-            } else {
-                const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId).select('id');
-                if (r2.error) throw r2.error;
-                if (!r2.data || !r2.data.length) throw new Error('상태는 승인됐지만 등급 부여가 RLS 로 막혔습니다. ' + _FM_RLS_MSG);
+        // 2026-09-30(사장님): 관리자 공용 RPC 우선(모든 관리자 승인 가능). RPC 미설치 시 기존 직접 업데이트로 폴백.
+        const rr = await sb.rpc('fr_admin_approve', { p_slug: slug, p_owner: ownerId || null, p_role: role });
+        if (!rr.error) {
+            roleSkipped = !!(rr.data && rr.data.role_skipped);
+        } else {
+            const m = (rr.error.message || '').toLowerCase();
+            if (m.indexOf('forbidden') >= 0) throw new Error('승인 권한이 없습니다. 관리자 계정으로 로그인해 주세요.');
+            if (!/does not exist|could not find|schema cache|function/.test(m)) throw rr.error;
+            const r1 = await sb.from('franchises').update({ status: 'approved' }).eq('slug', slug).select('id');
+            if (r1.error) throw r1.error;
+            if (!r1.data || !r1.data.length) throw new Error(_FM_RLS_MSG);
+            if (ownerId) {
+                let cur = null;
+                try { const { data: p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); cur = p && p.role; } catch (e) {}
+                if (['admin', 'superadmin', 'manager'].indexOf(cur) >= 0) { roleSkipped = true; }
+                else {
+                    const r2 = await sb.from('profiles').update({ role }).eq('id', ownerId).select('id');
+                    if (r2.error) throw r2.error;
+                    if (!r2.data || !r2.data.length) throw new Error('상태는 승인됐지만 등급 부여가 RLS 로 막혔습니다. ' + _FM_RLS_MSG);
+                }
             }
         }
         _fmToast(roleSkipped ? '승인 완료 — 관리자/매니저 계정이라 등급은 변경하지 않았습니다.' : ('승인 완료 — ' + pctTxt), 'success');
@@ -279,9 +286,15 @@ window.fmRejectApplicant = async (slug, btn) => {
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
-        const r = await sb.from('franchises').update({ status: 'rejected' }).eq('slug', slug).select('id');
-        if (r.error) throw r.error;
-        if (!r.data || !r.data.length) throw new Error(_FM_RLS_MSG);
+        const rr = await sb.rpc('fr_admin_reject', { p_slug: slug });
+        if (rr.error) {
+            const m = (rr.error.message || '').toLowerCase();
+            if (m.indexOf('forbidden') >= 0) throw new Error('반려 권한이 없습니다. 관리자 계정으로 로그인해 주세요.');
+            if (!/does not exist|could not find|schema cache|function/.test(m)) throw rr.error;
+            const r = await sb.from('franchises').update({ status: 'rejected' }).eq('slug', slug).select('id');
+            if (r.error) throw r.error;
+            if (!r.data || !r.data.length) throw new Error(_FM_RLS_MSG);
+        }
         _fmToast('반려 처리됨', 'success');
         loadFranchiseManagement();
         if (window.loadFranchiseApplications) { try { window.loadFranchiseApplications(); } catch (e) {} }
@@ -294,17 +307,22 @@ window.fmRevokeApproval = async (slug, ownerId, btn) => {
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
     try {
-        const r1 = await sb.from('franchises').update({ status: 'cancelled' }).eq('slug', slug).select('id');
-        if (r1.error) throw r1.error;
-        if (!r1.data || !r1.data.length) throw new Error(_FM_RLS_MSG);
-        if (ownerId) {
-            // 관리자/매니저 계정은 등급 강등 안 함 (권한 상실 방지).
-            let cur = null;
-            try { const { data: p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); cur = p && p.role; } catch (e) {}
-            if (['admin', 'superadmin', 'manager'].indexOf(cur) < 0) {
-                const r2 = await sb.from('profiles').update({ role: 'customer' }).eq('id', ownerId).select('id');
-                if (r2.error) throw r2.error;
-                if (!r2.data || !r2.data.length) throw new Error('상태는 취소됐지만 등급 전환이 RLS 로 막혔습니다. ' + _FM_RLS_MSG);
+        const rr = await sb.rpc('fr_admin_revoke', { p_slug: slug, p_owner: ownerId || null });
+        if (rr.error) {
+            const m = (rr.error.message || '').toLowerCase();
+            if (m.indexOf('forbidden') >= 0) throw new Error('승인취소 권한이 없습니다. 관리자 계정으로 로그인해 주세요.');
+            if (!/does not exist|could not find|schema cache|function/.test(m)) throw rr.error;
+            const r1 = await sb.from('franchises').update({ status: 'cancelled' }).eq('slug', slug).select('id');
+            if (r1.error) throw r1.error;
+            if (!r1.data || !r1.data.length) throw new Error(_FM_RLS_MSG);
+            if (ownerId) {
+                let cur = null;
+                try { const { data: p } = await sb.from('profiles').select('role').eq('id', ownerId).single(); cur = p && p.role; } catch (e) {}
+                if (['admin', 'superadmin', 'manager'].indexOf(cur) < 0) {
+                    const r2 = await sb.from('profiles').update({ role: 'customer' }).eq('id', ownerId).select('id');
+                    if (r2.error) throw r2.error;
+                    if (!r2.data || !r2.data.length) throw new Error('상태는 취소됐지만 등급 전환이 RLS 로 막혔습니다. ' + _FM_RLS_MSG);
+                }
             }
         }
         _fmToast('승인 취소 완료 — 일반 고객으로 전환되었습니다.', 'success');
