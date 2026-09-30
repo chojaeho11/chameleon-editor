@@ -2260,7 +2260,10 @@ function showToast(msg, type){
     </script>
     <!-- 2026-09-25(사장님): 운영 방식 섹션을 푸터(연락처) 바로 위로 이동 -->
     <script>
-    (function(){ try{ var ops=document.getElementById('frOpsSection'), hero=document.querySelector('.fr-hero'); if(ops&&hero&&hero.parentNode){ hero.parentNode.insertBefore(ops, hero.nextSibling); ops.style.display=''; } }catch(e){} })();
+    (function(){ try{ var ops=document.getElementById('frOpsSection'), hero=document.querySelector('.fr-hero'); if(ops&&hero&&hero.parentNode){ hero.parentNode.insertBefore(ops, hero.nextSibling); ops.style.display=''; }
+      // 2026-10-01(사장님): 승인된 파트너 대시보드(귀하는 리셀러입니다)를 히어로 바로 아래(운영방식 위)로 올림.
+      var dash=document.getElementById('frMemberDash'); if(dash&&hero&&hero.parentNode){ hero.parentNode.insertBefore(dash, hero.nextSibling); }
+    }catch(e){} })();
     </script>
     <script src="/jp-nanami-fab.js?v=2" defer></script>
 </body>
