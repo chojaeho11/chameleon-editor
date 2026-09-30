@@ -398,8 +398,20 @@
             // 2) 끝말잇기 — 다음 글자 안내
             (function () {
                 var ex = byId('rhExtra2'); if (!ex) return;
-                ex.innerHTML = '<div style="margin-top:8px;"><div id="rhWordHint" style="font-size:11.5px;color:#7c3aed;margin-bottom:4px;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div><input id="rhWordIn" placeholder="' + T2('단어 입력', '単語', 'Word') + '" style="' + inStyle + '"><div id="rhWordMsg" style="font-size:11px;color:#dc2626;margin-top:4px;"></div></div>';
-                (async function () { try { var s = await sbc.rpc('word_chain_status', { p_lang: 'kr' }); var d = s && s.data; var nx = (d && d.next_char) || ''; var h = byId('rhWordHint'); if (h) h.innerHTML = (nx ? (T2('다음 글자로 시작', '次の文字で開始', 'Start with') + ': <b>' + esc(nx) + '</b>') : T2('아무 단어로 시작하세요', 'どの単語でもOK', 'Any word')) + ' · ' + T2('하루 1회', '1日1回', '1/day'); } catch (e) {} })();
+                // 2026-09-30(사장님): 너무 어려운 글자에서 막히면 '새로 시작'으로 체인 리셋(누구나 새 단어로 시작).
+                ex.innerHTML = '<div style="margin-top:8px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;"><div id="rhWordHint" style="font-size:11.5px;color:#7c3aed;">' + T2('불러오는 중…', '読み込み中…', 'Loading…') + '</div><button id="rhWordReset" type="button" style="flex-shrink:0;background:none;border:none;color:#94a3b8;font-size:11.5px;cursor:pointer;text-decoration:underline;font-family:inherit;">' + T2('🔄 새로 시작', '🔄 リセット', '🔄 Reset') + '</button></div><input id="rhWordIn" placeholder="' + T2('단어 입력', '単語', 'Word') + '" style="' + inStyle + '"><div id="rhWordMsg" style="font-size:11px;color:#dc2626;margin-top:4px;"></div></div>';
+                function _rhWordHint() { (async function () { try { var s = await sbc.rpc('word_chain_status', { p_lang: 'kr' }); var d = s && s.data; var nx = (d && d.next_char) || ''; var h = byId('rhWordHint'); if (h) h.innerHTML = (nx ? (T2('다음 글자로 시작', '次の文字で開始', 'Start with') + ': <b>' + esc(nx) + '</b>') : T2('아무 단어로 시작하세요', 'どの単語でもOK', 'Any word')) + ' · ' + T2('하루 1회', '1日1回', '1/day'); } catch (e) {} })(); }
+                _rhWordHint();
+                var _rwReset = byId('rhWordReset');
+                if (_rwReset) _rwReset.onclick = async function () {
+                    if (!confirm(T2('끝말잇기를 새로 시작할까요?\n(체인이 초기화되어 누구나 새 단어로 시작할 수 있어요)', 'しりとりをリセットしますか？', 'Reset the word chain? Anyone can start fresh.'))) return;
+                    this.disabled = true;
+                    try { await sbc.rpc('word_chain_reset', { p_lang: 'kr' }); } catch (e) {}
+                    var _wi = byId('rhWordIn'); if (_wi) _wi.value = '';
+                    var _wm = byId('rhWordMsg'); if (_wm) _wm.textContent = '';
+                    _rhWordHint();
+                    this.disabled = false;
+                };
             })();
             // 3) 포토댓글 — 사진 + 한마디 (등록은 하단 통합 버튼에서)
             (function () {
