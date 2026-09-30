@@ -252,18 +252,15 @@
     } else {
       // 첫 인사 (반말·친근). 주문 방법 3가지 안내 + 버튼.
       addMsg(tr(
-        '안녕! 행사 준비해? 내가 안내할게.\n\n주문하는 방법은 3가지가 있어.\n\n' +
-        '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓거나, "가벽"·"배너"처럼 제품명을 말해줘.\n내가 딱 맞는 링크를 줄게. 링크에 들어가면 튜토리얼로 차근차근 안내해줄게.\n\n' +
-        '2. 여러 제품을 한번에 주문해도 걱정 마. 내가 순서대로 하나씩 안내할게.\n\n' +
-        '3. 직접 하기 어렵다면 담당 매니저를 통해 주문할 수도 있어.\n아래 "매니저 안내"를 누르면 지금 상담 가능한 매니저 전화번호를 알려줄게.',
-        'こんにちは！イベントの準備かな？案内するよ。\n\nご注文の方法は3つあるよ。\n\n' +
+        '안녕! 행사 준비해? 내가 안내할게.\n\n주문하는 방법은 2가지가 있어.\n\n' +
+        '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓거나, "가벽"·"배너"처럼 제품명을 말해줘. 내가 딱 맞는 링크를 줄게. 링크에 들어가면 튜토리얼로 차근차근 안내해줄게.\n\n' +
+        '2. 직접 하기 어렵다면 담당 매니저를 통해 주문할 수도 있어. 아래 "매니저 안내"를 누르면 지금 상담 가능한 매니저 전화번호를 알려줄게.',
+        'こんにちは！イベントの準備かな？案内するよ。\n\nご注文の方法は2つあるよ。\n\n' +
         '1. チャットに作りたい製品の画像をドラッグするか、「パーティション」「バナー」のように製品名を教えてね。ぴったりのリンクを送るよ。リンクに入るとチュートリアルで案内するよ。\n\n' +
-        '2. 複数の製品を一度に注文しても大丈夫。順番に一つずつ案内するよ。\n\n' +
-        '3. 難しければ担当マネージャー経由でも注文できるよ。下の「担当マネージャー」を押すと、今対応できるマネージャーの電話番号を送るよ。',
-        'Hi! Planning an event? Let me guide you.\n\nThere are 3 ways to order.\n\n' +
+        '2. 難しければ担当マネージャー経由でも注文できるよ。下の「担当マネージャー」を押すと、今対応できるマネージャーの電話番号を送るよ。',
+        'Hi! Planning an event? Let me guide you.\n\nThere are 2 ways to order.\n\n' +
         '1. Drag a product image into the chat, or just tell me the product (e.g. "wall", "banner"). I\'ll send the right link — it has a step-by-step tutorial.\n\n' +
-        '2. Ordering several products at once? No worries — I\'ll walk you through them one by one.\n\n' +
-        '3. Prefer a person? You can order through your manager. Tap "Manager" below and I\'ll share an available manager\'s number.'
+        '2. Prefer a person? You can order through your manager. Tap "Manager" below and I\'ll share an available manager\'s number.'
       ), 'ai');
       addGreetActions();
     }
