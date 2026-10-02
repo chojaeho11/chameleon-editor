@@ -2103,7 +2103,7 @@ async function showPhoneCard() {
                 const { data } = await sb.from('chatbot_knowledge')
                     .select('question,answer,is_active')
                     .eq('category', '_managers');
-                const FIELD_MGR_NAMES = ['성희','지숙','연두'];
+                const FIELD_MGR_NAMES = ['성희','지숙','연두','혜림'];
                 const rows = (data || []).filter(r => FIELD_MGR_NAMES.some(n => (r.question||'').includes(n)));
                 rows.sort((a,b) => {
                     const ai = FIELD_MGR_NAMES.findIndex(n => (a.question||'').includes(n));
