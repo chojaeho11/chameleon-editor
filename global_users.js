@@ -139,6 +139,7 @@ window.loadMembers = async (isNewSearch = false) => {
         if (m.role === 'reseller') { badgeColor = '#ede9fe'; displayRole = '🚀리셀러20%'; }
         if (m.role === 'subscriber') { badgeColor = '#ede9fe'; displayRole = '⭐구독자'; }
         if (m.role === 'admin') { badgeColor = '#fee2e2'; displayRole = '관리자'; }
+        if (m.role === 'manager') { badgeColor = '#fef3c7'; displayRole = '👤매니저'; }
 
         // 추천인 적립 배지
         const ref = refMap[m.id];
@@ -157,6 +158,7 @@ window.loadMembers = async (isNewSearch = false) => {
                 <option value="reseller" ${m.role==='reseller'?'selected':''}>🚀리셀러 20%</option>
                 <option value="franchise" ${m.role==='franchise'?'selected':''}>🏢가맹점(자재만)</option>
                 <option value="gold" ${m.role==='gold'?'selected':''}>🥇골드가맹점(본사지원)</option>
+                <option value="manager" ${m.role==='manager'?'selected':''}>👤매니저</option>
                 <option value="admin" ${m.role==='admin'?'selected':''}>관리자</option>
                 ${_legacyOpt}
             </select>
