@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20261002172727';
+        var CV = '20261002173326';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -2718,22 +2718,7 @@ function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>
                     <div id="mgrVacationGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;"></div>
                 </div>
 
-                <!-- 🎨 디자이너 신청·승인 관리 -->
-                <div class="card" style="margin-bottom:16px; border:2px solid #c4b5fd; background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                        <h3 style="margin:0;color:#5b21b6;">🎨 디자이너 신청·승인 관리</h3>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <select id="dgnFilter" onchange="loadDesignerApplications()" style="padding:5px 10px;border-radius:6px;border:1px solid #c4b5fd;font-size:12px;background:#fff;">
-                                <option value="pending">⏳ 승인 대기</option>
-                                <option value="active">✓ 승인된 디자이너</option>
-                                <option value="all">전체</option>
-                            </select>
-                            <button class="btn btn-outline btn-sm" onclick="loadDesignerApplications()" style="font-size:12px;">🔄 새로고침</button>
-                        </div>
-                    </div>
-                    <div style="font-size:12px;color:#5b21b6;margin-bottom:12px;">메인 페이지의 <b>DESIGNER 신청</b> 카드에서 신청한 디자이너 목록입니다. 승인된 디자이너만 <b>/designer-board</b> 에서 의뢰를 받을 수 있습니다.</div>
-                    <div id="designerAppListBody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;"><div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</div></div>
-                </div>
+                <!-- 2026-10-02(사장님): 디자이너 신청·승인 관리 섹션 삭제 (디자이너 기여/업로드 기능 폐지). -->
 
                 <!-- 💰 페이 정산 (매니저 4% + 디자이너) -->
                 <div class="card" style="margin-bottom:16px; border:2px solid #fcd34d; background:linear-gradient(135deg,#fffbeb 0%,#fef9c3 100%);">
