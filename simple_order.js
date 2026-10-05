@@ -3420,8 +3420,8 @@ html, body { background: #ffffff !important; }
       <div class="so-co-section">
         <span class="so-co-label">${tr('결제 방법', 'お支払い方法', 'Payment method')}</span>
         <div class="so-co-pay-opts">
-          <label class="so-co-pay-opt" id="soCoPayCard" style="${ (window.__SITE_CODE||'KR')==='KR' ? '' : 'display:none;' }"><input type="radio" name="soPayMethod" value="card" ${ (window.__SITE_CODE||'KR')==='KR' ? 'checked' : '' } onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss</span></label>
-          <label class="so-co-pay-opt" id="soCoPayBank"><input type="radio" name="soPayMethod" value="bank" ${ (window.__SITE_CODE||'KR')==='KR' ? '' : 'checked' } onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금','銀行振込','Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리','すぐ処理','Instant')}</span></label>
+          <label class="so-co-pay-opt" id="soCoPayCard"><input type="radio" name="soPayMethod" value="card" checked onchange="window._soOnPayMethodChange()"> 💳 ${tr('카드 결제', 'カード決済', 'Card payment')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">Toss/Stripe</span></label>
+          <label class="so-co-pay-opt" id="soCoPayBank" style="${ (window.__SITE_CODE||'KR')==='KR' ? '' : 'display:none;' }"><input type="radio" name="soPayMethod" value="bank" onchange="window._soOnPayMethodChange()"> 🏦 ${tr('무통장 입금','銀行振込','Bank transfer')} <span style="color:#9ca3af; margin-left:auto; font-size:11px;">${tr('즉시 처리','すぐ処理','Instant')}</span></label>
         </div>
       </div>
 
@@ -20054,10 +20054,10 @@ html, body { background: #ffffff !important; }
             bank.style.display = '';
             var br = bank.querySelector('input'); if (br) br.checked = true;
         } else {
-            // 2026-09-30(사장님): 한국=카드(Toss)+무통장. 해외=무통장만(카드 숨김, Stripe 중단).
-            card.style.display = isKR ? '' : 'none';
-            bank.style.display = '';
-            var _pi = (isKR ? card : bank).querySelector('input'); if (_pi) _pi.checked = true;
+            // 2026-10-05(사장님): 해외 카드결제 재개 — 해외=카드(Stripe) 노출·무통장 숨김. 한국=카드(Toss)+무통장.
+            card.style.display = '';
+            bank.style.display = isKR ? '' : 'none';
+            var _pi = card.querySelector('input'); if (_pi) _pi.checked = true;
         }
     }
     // 2026-05-22: 마일리지/예치금 — KR + 로그인 사용자만. 메인 장바구니(order.js)와 동일 정책.
@@ -22050,17 +22050,10 @@ html, body { background: #ffffff !important; }
             if (payMethod === 'bank') {
                 // 2026-05-17: 가맹점 주문이면 가맹점 계좌로 안내 (2026-09-29: 계좌 미로드 대비 보장 로드)
                 try { if (window._soEnsureFrBank) await window._soEnsureFrBank(); } catch (e) {}
-                // 2026-09-30(사장님): 한국=국민은행(유지) / 해외=해외계좌 안내. (해외 카드결제 중단 → 무통장입금만)
-                var _bkCountry = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || (window.__SITE_CODE || 'KR');
-                var _bkHost = (location.hostname || '').toLowerCase();
-                if (!_bkCountry || _bkCountry === 'KR') { if (_bkHost.indexOf('cafe0101') >= 0) _bkCountry = 'JP'; else if (_bkHost.indexOf('cafe3355') >= 0) _bkCountry = 'US'; }
-                var _hqAcct = (_bkCountry === 'KR')
-                    ? '국민은행 647701-04-277763\n예금주: (주)카멜레온프린팅'
-                    : 'Community Federal Savings Bank\nAccount No: 8487335989\nACH Routing: 026073150 / Fedwire: 026073008\nSWIFT: CMFGUS33\nCHAMELEON PRINTING INC\n89-16 Jamaica Ave, Woodhaven, NY 11421';
                 var _acct = (state.frBank && state.frBank.number)
                     ? ((state.frBank.name || '') + ' ' + state.frBank.number + '\n' +
                        tr('예금주', '口座名義', 'Account holder') + ': ' + (state.frBank.holder || ''))
-                    : _hqAcct;
+                    : '국민은행 647701-04-277763\n예금주: (주)카멜레온프린팅';
                 alert(
                     tr('주문이 접수되었습니다!', 'ご注文を受け付けました！', 'Your order has been received!') + '\n\n' +
                     tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
@@ -22089,13 +22082,12 @@ html, body { background: #ffffff !important; }
                 else if (host.indexOf('cafe3355') >= 0) country = 'US';
             }
             if (country === 'KR') {
-                // 한국: Toss (유지)
+                // 한국: Toss
                 location.href = '/cotton_checkout.html?order_id=' + newOrderId;
             } else {
-                // 2026-09-30(사장님): 해외 카드결제(Stripe) 중단 — 무통장입금만. (안전망: 카드는 해외에서 숨김이라 원칙적으로 여기 안 옴)
-                alert(tr('해외 카드결제는 현재 이용할 수 없습니다.\n무통장 입금으로 다시 진행해 주세요.', '海外カード決済は現在ご利用いただけません。\n銀行振込で再度お進みください。', 'Overseas card payment is currently unavailable.\nPlease use bank transfer instead.'));
-                try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
-                location.href = state.frSlug ? ('/store/' + state.frSlug) : '/';
+                // 2026-10-05(사장님): 해외 카드결제(Stripe) 재개.
+                var clang = (country === 'JP') ? 'ja' : 'en';
+                location.href = '/cotton_stripe_checkout.html?order_id=' + newOrderId + '&lang=' + clang;
             }
         } catch (e) {
             console.error('[_soSubmitOrder]', e);

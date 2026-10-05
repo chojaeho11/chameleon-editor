@@ -4647,9 +4647,7 @@ function processCardPayment(confirmedAmount) {
         });
 
     } else if (pgConfig.provider === 'stripe') {
-        // 2026-09-30(사장님): 해외 카드결제(Stripe) 중단 — 무통장입금(해외계좌)만 이용. 한국 Toss 는 위 분기 그대로 유지.
-        alert(window.t('msg_overseas_card_off', 'Overseas card payment is currently unavailable. Please use bank transfer instead.'));
-        return;
+        initiateStripeCheckout(pgConfig.publishableKey, realPayAmount, country, window.currentDbId);
     }
 }
 

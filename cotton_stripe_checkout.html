@@ -66,15 +66,6 @@ function showError(msg) {
         document.getElementById('h2Title').textContent = t.connecting;
         document.getElementById('pSub').textContent = t.wait;
 
-        // 2026-09-30(사장님): 해외 카드결제(Stripe) 전면 중단 — 무통장입금(해외계좌)만. 한국 Toss/국민은행은 별도 경로라 영향 없음.
-        var _offMsg = (lang === 'ja')
-            ? '海外カード決済は現在ご利用いただけません。銀行振込でお願いします — Community Federal Savings Bank / Account 8487335989 / SWIFT CMFGUS33 (CHAMELEON PRINTING INC)'
-            : (lang === 'ko')
-            ? '해외 카드결제는 현재 이용할 수 없습니다. 무통장 입금으로 진행해 주세요 — Community Federal Savings Bank / Account 8487335989 / SWIFT CMFGUS33 (CHAMELEON PRINTING INC)'
-            : 'Overseas card payment is currently unavailable. Please pay by bank transfer — Community Federal Savings Bank / Account 8487335989 / SWIFT CMFGUS33 (CHAMELEON PRINTING INC)';
-        showError(_offMsg);
-        return;
-
         if (!orderId) { showError('Missing order_id'); return; }
         // 2026-06-17: Stripe SDK 가 차단된 경우(iOS 추적방지/광고차단)도 폴백 (직접 URL 이동) 가능.
         //   Stripe 가 로드 안 됐어도 결제 진행에는 영향 없음 — edge function 이 반환하는 session.url 로 직접 이동.
