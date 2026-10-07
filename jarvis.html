@@ -155,6 +155,43 @@
         .room-mgr-dd button:hover { background: rgba(255,255,255,0.09); }
         .room-mgr-dd button.cur { background: rgba(34,197,94,0.18); color: #86efac; }
         .room-mgr-dd .dd-rel { color: #94a3b8; border-top: 1px solid rgba(148,163,184,0.15); margin-top: 4px; padding-top: 8px; }
+
+        /* 2026-10-07: 바둑판 그리드(5열×3줄=15) + 페이지네이션 + 매니저별 보기 버튼 */
+        #roomList { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: stretch; }
+        @media (max-width: 1100px){ #roomList { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 720px){ #roomList { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 460px){ #roomList { grid-template-columns: 1fr; } }
+        #roomList .empty { grid-column: 1 / -1; }
+        .room-tile {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            padding: 12px 13px; min-height: 66px;
+            background: linear-gradient(165deg,#1e293b 0%,#0f172a 100%);
+            border: 1px solid rgba(148,163,184,0.15); border-radius: 14px;
+            transition: border-color 0.15s;
+        }
+        .room-tile.fresh { border-color: rgba(239,68,68,0.55); box-shadow: 0 0 0 1px rgba(239,68,68,0.35); }
+        .rt-open { flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; padding: 0; }
+        .rt-name { font-size: 14px; font-weight: 800; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+        .rt-sub { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+        .room-tile .room-mgr-wrap { margin-top: 0; flex-shrink: 0; }
+
+        .mgr-filter-bar { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 14px 12px; align-items: center; border-bottom: 1px solid rgba(148,163,184,0.12); }
+        .mgr-filter-bar .mflabel { font-size: 12px; color: #94a3b8; margin-right: 2px; }
+        .mgr-filter-btn {
+            font-size: 12.5px; font-weight: 800; padding: 7px 13px; border-radius: 20px; cursor: pointer; font-family: inherit;
+            background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); transition: all 0.12s;
+        }
+        .mgr-filter-btn:hover { filter: brightness(1.2); }
+        .mgr-filter-btn.active { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; border-color: transparent; }
+
+        .room-pager { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; margin: 18px 0 6px; }
+        .room-pager button {
+            min-width: 34px; height: 34px; padding: 0 9px; border-radius: 9px; cursor: pointer; font-family: inherit;
+            font-size: 13px; font-weight: 800; background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2);
+        }
+        .room-pager button:hover { filter: brightness(1.2); }
+        .room-pager button.cur { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; border-color: transparent; }
+        .room-pager button:disabled { opacity: 0.35; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -176,11 +213,9 @@
 
     <!-- 라이브 패널 -->
     <div id="livePanel">
-        <div id="roomFilterBar" style="padding:8px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid rgba(148,163,184,0.12);">
-            <span style="font-size:12px; color:#94a3b8;">담당 필터</span>
-            <select id="roomMgrFilter" onchange="onRoomFilterChange()" style="height:32px; border-radius:9px; background:rgba(255,255,255,0.06); border:1px solid rgba(148,163,184,0.2); color:#e2e8f0; font-family:inherit; font-size:12.5px; font-weight:700; padding:0 8px; cursor:pointer;"></select>
-        </div>
-        <div id="roomList"><div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div></div>
+        <div class="mgr-filter-bar" id="roomFilterBar"><span class="mflabel">매니저별 보기</span></div>
+        <div id="roomList"><div class="empty" style="color:#64748b; font-weight:600;">불러오는 중...</div></div>
+        <div class="room-pager" id="roomPager"></div>
     </div>
 
     <!-- 학습 패널 -->
@@ -232,6 +267,8 @@
         let _reloadRoomsTimer = null;
         let _staffList = [];          // admin_staff (id,name,role) — 담당 매니저 id 매칭용
         let _roomFilter = '';         // 담당 매니저 필터 ('' = 전체, '__none__' = 미지정)
+        let _roomPage = 0;            // 방 목록 페이지 (0-based)
+        const ROOMS_PER_PAGE = 15;    // 바둑판 5열 × 3줄
 
         // ── 공통 유틸 ──
         function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -334,27 +371,29 @@
                 if(_roomFilter==='__none__') _view = _roomsCache.filter(r=>!((r.assigned_manager||'').trim()));
                 else if(_roomFilter) _view = _roomsCache.filter(r=>{ const am=(r.assigned_manager||'').trim(); return am===_roomFilter || am.includes(_roomFilter) || _roomFilter.includes(am); });
                 document.getElementById('liveCount').textContent = _view.length ? '('+_view.length+(_roomFilter?' / '+_roomsCache.length:'')+')' : '';
-                if(!_view.length){ el.innerHTML='<div class="empty">'+(_roomFilter?'이 담당의 채팅방이 없습니다.':'아직 대화가 없습니다.')+'</div>'; return; }
-                el.innerHTML = _view.map(r=>{
+                buildRoomFilter();
+                if(!_view.length){ el.innerHTML='<div class="empty" style="color:#64748b; font-weight:600;">'+(_roomFilter?'이 담당의 채팅방이 없습니다.':'아직 대화가 없습니다.')+'</div>'; renderRoomPager(0); return; }
+                // 페이지네이션 (15개/페이지)
+                const totalPages = Math.max(1, Math.ceil(_view.length / ROOMS_PER_PAGE));
+                if(_roomPage >= totalPages) _roomPage = totalPages - 1;
+                if(_roomPage < 0) _roomPage = 0;
+                const pageRooms = _view.slice(_roomPage*ROOMS_PER_PAGE, _roomPage*ROOMS_PER_PAGE + ROOMS_PER_PAGE);
+                el.innerHTML = pageRooms.map(r=>{
                     const nm = (r.customer_name||r.nickname||'게스트');
                     const lm = lastMap[r.id];
-                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,40)) : '';
+                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,24)) : '';
                     const fresh = _freshRooms[r.id];
-                    const av = esc(nm.slice(0,1).toUpperCase());
                     const am = (r.assigned_manager||'').trim();
                     const chip = `<span class="room-mgr ${am?'assigned':''}" onclick="event.stopPropagation(); toggleRoomMgr('${r.id}')">${am?('👤 '+esc(am)+(r.human_active?' 상담중':'')):'담당 지정'} ▾</span>`;
-                    return `<div class="room ${fresh?'fresh':''}" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">
-                        <div class="room-av">${av}</div>
-                        <div class="room-mid">
-                            <div class="room-name">${esc(nm)} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
-                            <div class="room-prev">${esc(prev)}</div>
-                        </div>
-                        <div class="room-right">
-                            <div class="room-time">${fmtAgo(r.updated_at)}</div>
-                            <div class="room-mgr-wrap">${chip}<div class="room-mgr-dd" id="rmdd-${r.id}" onclick="event.stopPropagation()">${mgrDdOptions(r.id, am)}</div></div>
-                        </div>
+                    return `<div class="room-tile ${fresh?'fresh':''}">
+                        <button class="rt-open" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">
+                            <div class="rt-name">${esc(nm)} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
+                            <div class="rt-sub">${esc(fmtAgo(r.updated_at))}${prev?' · '+esc(prev):''}</div>
+                        </button>
+                        <div class="room-mgr-wrap">${chip}<div class="room-mgr-dd" id="rmdd-${r.id}" onclick="event.stopPropagation()">${mgrDdOptions(r.id, am)}</div></div>
                     </div>`;
                 }).join('');
+                renderRoomPager(totalPages);
             }catch(e){ console.error('[rooms]',e); el.innerHTML='<div style="text-align:center;color:#fca5a5;padding:40px 0;">불러오기 실패: '+esc(e?.message||e)+'</div>'; }
         };
         function scheduleRoomsReload(){ clearTimeout(_reloadRoomsTimer); _reloadRoomsTimer=setTimeout(loadRooms, 600); }
@@ -729,13 +768,26 @@
             buildRoomFilter();
             repaintMgrUI();
         }
-        // 방 목록 담당 매니저 필터
-        window.onRoomFilterChange = function(){ const s=document.getElementById('roomMgrFilter'); _roomFilter = s ? (s.value||'') : ''; loadRooms(); };
+        // 방 목록 담당 매니저 필터 — 버튼형 (매니저별 보기)
+        window.onRoomFilter = function(val){ _roomFilter = val||''; _roomPage = 0; loadRooms(); };
         function buildRoomFilter(){
-            const sel=document.getElementById('roomMgrFilter'); if(!sel) return;
+            const bar=document.getElementById('roomFilterBar'); if(!bar) return;
             const names = (_mgrNames && _mgrNames.length) ? _mgrNames : [];
-            sel.innerHTML = '<option value="">전체 담당</option>' + names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('') + '<option value="__none__">미지정</option>';
-            sel.value = _roomFilter;
+            const btn = (val,label)=>`<button class="mgr-filter-btn ${_roomFilter===val?'active':''}" onclick="onRoomFilter(${JSON.stringify(val).replace(/"/g,'&quot;')})">${esc(label)}</button>`;
+            let h = '<span class="mflabel">매니저별 보기</span>' + btn('','전체');
+            names.forEach(n=>{ h += btn(n, n); });
+            h += btn('__none__','미지정');
+            bar.innerHTML = h;
+        }
+        // 페이지네이션 렌더
+        window._roomGo = function(p){ _roomPage = p; loadRooms(); };
+        function renderRoomPager(totalPages){
+            const pg=document.getElementById('roomPager'); if(!pg) return;
+            if(totalPages<=1){ pg.innerHTML=''; return; }
+            let h = `<button ${_roomPage<=0?'disabled':''} onclick="_roomGo(${_roomPage-1})">‹</button>`;
+            for(let i=0;i<totalPages;i++){ h += `<button class="${i===_roomPage?'cur':''}" onclick="_roomGo(${i})">${i+1}</button>`; }
+            h += `<button ${_roomPage>=totalPages-1?'disabled':''} onclick="_roomGo(${_roomPage+1})">›</button>`;
+            pg.innerHTML = h;
         }
         window.onMgrChange = function(){ const sel=document.getElementById('mgrSelect'); const v=sel.value; if(v==='__custom__'){ onMgrCustom(); return; } setManager(v); };
         window.onMgrCustom = function(){ const c=(prompt('상담 매니저 이름을 입력하세요','')||'').trim(); if(c){ if(!_mgrNames.includes(c)){ _mgrNames.push(c); buildMgrUI().then(()=>setManager(c)); } else setManager(c); } else repaintMgrUI(); };
