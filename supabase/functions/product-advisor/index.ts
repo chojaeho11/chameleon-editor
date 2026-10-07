@@ -60,7 +60,7 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone, force_ai: forceAi } = reqBody;
+        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone, force_ai: forceAi, request_reassign: requestReassign } = reqBody;
         const trimmedMsg = (message || '').trim();
         if (!trimmedMsg && !image) throw new Error("message or image is required");
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
@@ -85,6 +85,10 @@ serve(async (req) => {
         // 2026-08-15: 매니저 실시간 개입 중(human_active)인 방이면 AI 응답을 건너뛴다.
         //   고객 메시지는 chat_messages 에 기록(매니저가 관제 콘솔에서 봄) + 빈 응답 반환(위젯이 버블 안 띄움).
         //   매니저의 답변은 chat_messages realtime 으로 고객에게 전달됨.
+        // 2026-10-07(사장님): 고객 '담당자 변경 요청' → 담당자없음(해제) + AI 재개.
+        if (clientRoomId && requestReassign) {
+            try { await sb.from('chat_rooms').update({ assigned_manager: '', human_active: false, staff_manager_id: null, human_active_until: null, status: 'ai_chatting' }).eq('id', clientRoomId); } catch (_e) {}
+        }
         if (clientRoomId) {
             try {
                 const { data: _hr } = await sb.from('chat_rooms').select('human_active, human_active_until').eq('id', clientRoomId).maybeSingle();

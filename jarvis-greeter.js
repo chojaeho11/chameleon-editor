@@ -48,6 +48,8 @@
   var _msgSub = null, _seenMsgIds = {}, _humanNoticeShown = false;
   // 2026-10-07(사장님): 담당자 자리비움 시 30초 후 AI 전환 제안
   var _humanWaitTimer = null, _lastAskedText = '', _forceAiNext = false;
+  // 2026-10-07(사장님): 현재 담당 매니저 표시 + 변경요청
+  var _roomMgr = '', _forceReassignNext = false;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
@@ -152,6 +154,12 @@
       '#jvgCard .jvg-custinfo .ci-name{font-size:14px;font-weight:800;letter-spacing:.2px;}' +
       '#jvgCard .jvg-custinfo .ci-phone{font-size:13.5px;font-weight:600;opacity:.96;letter-spacing:.3px;}' +
       '#jvgCard .jvg-custinfo .ci-sep{width:1px;height:13px;background:rgba(255,255,255,.45);}' +
+      '#jvgCard .jvg-mgrinfo{clear:both;align-self:center;display:inline-flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;background:rgba(255,255,255,.92);border:1px solid #c7d2fe;border-radius:999px;padding:7px 14px;margin:0 auto 10px;width:fit-content;max-width:94%;font-size:12.5px;}' +
+      '#jvgCard .jvg-mgrinfo .mi-label{color:#64748b;font-weight:600;}' +
+      '#jvgCard .jvg-mgrinfo .mi-name{color:#4338ca;font-weight:800;}' +
+      '#jvgCard .jvg-mgrinfo .mi-none{color:#94a3b8;font-weight:700;}' +
+      '#jvgCard .jvg-mgrinfo .mi-change{background:#eef2ff;border:1px solid #c7d2fe;color:#4f46e5;border-radius:999px;padding:5px 11px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;}' +
+      '#jvgCard .jvg-mgrinfo .mi-change:hover{background:#e0e7ff;}' +
       '#jvgCard .jvg-send:disabled{opacity:.5;cursor:default;}' +
       '#jvgCard .jvg-typing{font-size:13px;color:#94a3b8;}' +
       '#jvgCard.jvg-drag{outline:3px dashed #6366f1;outline-offset:-6px;}' +
@@ -309,6 +317,8 @@
       if (_humanWaitTimer) { clearTimeout(_humanWaitTimer); _humanWaitTimer = null; }
       _hideAiTakeoverPrompt();
       _renderIncoming(m);   // AI(카푸)·고객 본인 메시지는 이미 표시됨 → 제외
+      if (isMgr) _loadRoomMeta();   // 매니저가 응대 → 담당매니저 표시 갱신
+      if (!_root.querySelector('#jvgMgrInfo')) _custInfoLine();   // 담당매니저 줄이 없으면 생성
     }
   }
   // 담당자 자리비움 — 30초 내 답 없으면 "AI 전환?" 제안 + 버튼
@@ -351,6 +361,7 @@
     try {
       _msgSub = sb.channel('kapu-room-' + _room)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + _room }, function (p) { _onIncoming(p.new); })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_rooms', filter: 'id=eq.' + _room }, function (p) { var am = (p.new && p.new.assigned_manager || '').trim(); if (am !== _roomMgr) { _roomMgr = am; _refreshMgrInfo(); } })
         .subscribe();
     } catch (e) {}
   }
@@ -422,6 +433,7 @@
       if (_custName) payload.customer_name = _custName;
       if (_custPhone) payload.customer_phone = _custPhone;   // 2026-10-07: 전화번호도 서버 저장(window.sb 미의존)
       if (_forceAiNext) { payload.force_ai = true; _forceAiNext = false; }   // 담당자 자리비움 → AI 전환
+      if (_forceReassignNext) { payload.request_reassign = true; _forceReassignNext = false; }   // 담당자 변경요청 → 담당자없음
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
@@ -495,14 +507,45 @@
     if (p.length === 10) return p.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
     return String(_custPhone || '');
   }
-  // 기존 고객 정보 줄 (매니저 안내 위) — 보라 그라데이션 박스, 흰 글씨, 픽토그램 없음
+  // 기존 고객 정보 줄 (매니저 안내 위) — 보라 그라데이션 박스 + 담당매니저 표시/변경요청
   function _custInfoLine() {
-    if (!_custName && !_custPhone) return;
     var b = _root.querySelector('.jvg-body');
-    var d = document.createElement('div'); d.className = 'jvg-custinfo';
-    d.innerHTML = '<span class="ci-name">' + esc(_custName || tr('고객', 'お客様', 'Customer')) + '</span>' +
-      (_custPhone ? ('<span class="ci-sep"></span><span class="ci-phone">' + esc(_fmtPhone(_custPhone)) + '</span>') : '');
-    b.appendChild(d); b.scrollTop = b.scrollHeight;
+    if (!_root.querySelector('#jvgCustInfo') && (_custName || _custPhone)) {
+      var d = document.createElement('div'); d.id = 'jvgCustInfo'; d.className = 'jvg-custinfo';
+      d.innerHTML = '<span class="ci-name">' + esc(_custName || tr('고객', 'お客様', 'Customer')) + '</span>' +
+        (_custPhone ? ('<span class="ci-sep"></span><span class="ci-phone">' + esc(_fmtPhone(_custPhone)) + '</span>') : '');
+      b.appendChild(d);
+    }
+    if (!_root.querySelector('#jvgMgrInfo')) {
+      var m = document.createElement('div'); m.id = 'jvgMgrInfo'; m.className = 'jvg-mgrinfo'; m.style.display = 'none';
+      b.appendChild(m);
+    }
+    _refreshMgrInfo();
+    b.scrollTop = b.scrollHeight;
+  }
+  // 담당 매니저 표시 + 변경요청 버튼 갱신
+  function _refreshMgrInfo() {
+    var m = _root && _root.querySelector('#jvgMgrInfo'); if (!m) return;
+    if (_roomMgr) {
+      m.style.display = '';
+      m.innerHTML = '<span class="mi-label">' + tr('담당 매니저', '担当マネージャー', 'Manager') + '</span><b class="mi-name">' + esc(_roomMgr) + '</b>';
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mi-change';
+      btn.textContent = tr('담당자 변경 요청', '担当変更をリクエスト', 'Request change');
+      btn.addEventListener('click', _requestReassign);
+      m.appendChild(btn);
+    } else { m.style.display = 'none'; m.innerHTML = ''; }
+  }
+  // 현재 담당 매니저 로드 (chat_rooms.assigned_manager)
+  async function _loadRoomMeta() {
+    if (!_room) return;
+    try { var sb = window.sb; if (!sb || !sb.from) return; var r = await sb.from('chat_rooms').select('assigned_manager').eq('id', _room).maybeSingle(); if (r && r.data) { _roomMgr = (r.data.assigned_manager || '').trim(); _refreshMgrInfo(); } } catch (e) {}
+  }
+  // 담당자 변경 요청 → 담당자없음 (서버가 처리, AI 재개)
+  function _requestReassign() {
+    if (!confirm(tr('담당자 변경을 요청하시겠어요?\n현재 담당 매니저 지정이 해제됩니다.', '担当変更をリクエストしますか？\n現在の担当が解除されます。', 'Request a different manager?\nThe current one will be released.'))) return;
+    _forceReassignNext = true;
+    send(tr('담당자 변경을 요청합니다.', '担当の変更をお願いします。', 'I\'d like to request a different manager.'));
+    setTimeout(_loadRoomMeta, 1600);   // 서버 반영 후 담당매니저 표시 갱신(실시간 미보장 폴백)
   }
   function _addIntakeForm() {
     var b = _root.querySelector('.jvg-body');
@@ -635,7 +678,7 @@
     ))) return;
     try { _unsubscribeRoom(); } catch (e) {}
     if (_humanWaitTimer) { clearTimeout(_humanWaitTimer); _humanWaitTimer = null; }
-    _room = null; _hist = []; _seenMsgIds = {}; _humanNoticeShown = false; _awaitingName = false; _pendingMsg = ''; _lastAskedText = ''; _forceAiNext = false;
+    _room = null; _hist = []; _seenMsgIds = {}; _humanNoticeShown = false; _awaitingName = false; _pendingMsg = ''; _lastAskedText = ''; _forceAiNext = false; _roomMgr = ''; _forceReassignNext = false;
     try { localStorage.removeItem('kapu_room_id'); } catch (e) {}
     var b = _root && _root.querySelector('.jvg-body'); if (b) b.innerHTML = '';
     _renderGreeting();
@@ -658,7 +701,7 @@
       _addCartActions();
     } else if (_room) {
       // 재방문: 전체 대화 복원. 빈 방이면 인사, 있으면 아래에 고객정보+빠른버튼.
-      _loadHistory(function (had) { if (!had) { _renderGreeting(); } else { _custInfoLine(); addGreetActions(); } });
+      _loadHistory(function (had) { if (!had) { _renderGreeting(); } else { _custInfoLine(); addGreetActions(); } _loadRoomMeta(); });
     } else {
       _renderGreeting();
     }
