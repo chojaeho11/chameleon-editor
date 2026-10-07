@@ -37,7 +37,9 @@ export async function checkAdminAccess() {
     //   (profiles.role='reseller' 로 바꿔 리셀러 화면을 테스트하면서도 admin 콘솔을 잃지 않도록)
     const ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com', 'scr3257@naver.com'];
     const _email = String((session.user && session.user.email) || '').toLowerCase();
-    const _ok = ADMIN_EMAILS.indexOf(_email) >= 0 || (profile && profile.role === 'admin');
+    // 2026-10-07(사장님): 매니저도 관리자 페이지 전체 접근 허용 (role='manager'/'superadmin' 추가)
+    const _ADMIN_ROLES = ['admin', 'superadmin', 'manager'];
+    const _ok = ADMIN_EMAILS.indexOf(_email) >= 0 || (profile && _ADMIN_ROLES.indexOf(profile.role) >= 0);
 
     if (!_ok) {
         showToast("접근 권한이 없습니다.", "error");
