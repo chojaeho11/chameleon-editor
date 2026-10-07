@@ -389,19 +389,26 @@
             try{
                 if(name){
                     const sid = _resolveStaffId(name);
-                    await sb.from('chat_rooms').update({ assigned_manager:name, human_active:true, status:'human', staff_manager_id:sid }).eq('id',roomId);
-                    // 고객 귀속 (전화번호 기준) — 매니저 직원ID + 전화번호가 있을 때만
+                    // (1) 핵심 배정 — 기존 동작 (SQL 미실행 상태에서도 반드시 성공해야 함)
+                    await sb.from('chat_rooms').update({ assigned_manager:name, human_active:true, status:'human' }).eq('id',roomId);
+                    // (2) 직원ID 링크 — staff_manager_id 컬럼이 아직 없으면 조용히 skip (SQL 미실행 대비)
+                    try{ await sb.from('chat_rooms').update({ staff_manager_id:sid }).eq('id',roomId); }catch(e){ console.warn('[staff_manager_id]',e); }
+                    // (3) 고객 귀속 (전화번호 기준) — 매니저 직원ID + 전화번호가 있을 때만
                     if(sid && phoneNorm.length>=9){
-                        try{ await sb.from('manager_customers').upsert({ phone_norm:phoneNorm, staff_manager_id:sid, manager_name:name, customer_name:custName, source_room_id:String(roomId), updated_at:new Date().toISOString() }, { onConflict:'phone_norm' }); }catch(e){ console.warn('[ownership upsert]',e); }
+                        let owned=false;
+                        try{ const { error } = await sb.from('manager_customers').upsert({ phone_norm:phoneNorm, staff_manager_id:sid, manager_name:name, customer_name:custName, source_room_id:String(roomId), updated_at:new Date().toISOString() }, { onConflict:'phone_norm' }); if(!error) owned=true; }catch(e){ console.warn('[ownership upsert]',e); }
                         let back=0; try{ const { data } = await sb.rpc('attribute_customer_orders',{ p_phone_norm:phoneNorm, p_staff_id:sid }); back = (typeof data==='number')?data:0; }catch(e){ console.warn('[backfill]',e); }
-                        toast('👤 '+name+' 담당 지정 · 고객 귀속'+(back?(' (기존주문 '+back+'건)'):'')+' · AI 정지');
+                        if(owned) toast('👤 '+name+' 담당 지정 · 고객 귀속'+(back?(' (기존주문 '+back+'건)'):'')+' · AI 정지');
+                        else toast('👤 '+name+' 담당 지정 (귀속 테이블 미생성 — SQL 실행 필요)', true);
                     } else if(sid){
                         toast('👤 '+name+' 담당 지정 (전화번호 없어 고객 귀속 보류)', true);
                     } else {
                         toast('👤 '+name+' 담당 지정 (직원DB 매칭 안됨 — 귀속 보류)', true);
                     }
                 } else {
-                    await sb.from('chat_rooms').update({ assigned_manager:'', human_active:false, status:'open', staff_manager_id:null }).eq('id',roomId);
+                    // 해제 — 핵심 먼저, 링크/귀속은 best-effort
+                    await sb.from('chat_rooms').update({ assigned_manager:'', human_active:false, status:'open' }).eq('id',roomId);
+                    try{ await sb.from('chat_rooms').update({ staff_manager_id:null }).eq('id',roomId); }catch(e){}
                     if(phoneNorm.length>=9){ try{ await sb.from('manager_customers').delete().eq('phone_norm',phoneNorm); }catch(e){ console.warn('[ownership delete]',e); } }
                     toast('🤖 AI 에게 맡김 (고객 귀속 해제)');
                 }
