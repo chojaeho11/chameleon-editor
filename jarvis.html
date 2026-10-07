@@ -613,18 +613,33 @@
         }
 
         // ════════════════ 전역 알림 (모든 새 고객 메시지) ════════════════
+        // 2026-10-07(사장님): '새 고객 안내' OS 팝업은 고객이 '이름을 입력했을 때' 방당 1회만.
+        //   (메시지마다 X) — chat_rooms 의 customer_name 이 실명이 되는 순간만.
+        var _notifiedRooms = {};
+        var _DEFAULT_NAMES = ['웹 고객','게스트','ウェブ顧客','Webお客様','Web Customer','Web Kunde','Cliente Web','Client Web','عميل ويب','网页客户','Guest'];
+        function _isRealName(nm){ nm=String(nm==null?'':nm).split('|')[0].trim(); if(!nm) return false; return _DEFAULT_NAMES.indexOf(nm)<0 && !/\s고객$/.test(nm); }
+        function _notifyNewCustomer(row){
+            if(!row || !row.id || _notifiedRooms[row.id]) return;
+            if(!_isRealName(row.customer_name)) return;
+            _notifiedRooms[row.id]=true;
+            var nm=String(row.customer_name||'').split('|')[0].trim();
+            beep(); notify('새 고객 문의', nm+' 님이 상담을 시작했어요');
+            toast('🙋 새 고객 문의: '+nm+' 님');
+            scheduleRoomsReload();
+        }
         function subscribeGlobal(){
             if(_globalSub){ try{_globalSub.unsubscribe();}catch(e){} }
             _globalSub = sb.channel('admin-chat-global')
+                // 메시지: 목록 갱신 + NEW 배지만 (OS 팝업은 아래 chat_rooms 에서 이름 기준 1회)
                 .on('postgres_changes',{ event:'INSERT', schema:'public', table:'chat_messages' }, (p)=>{
                     const m=p.new; if(!m || m.sender_type!=='customer') return;
-                    // 현재 열린 방이면 알림 생략(대화창에서 이미 보임)
                     if(_curRoom && m.room_id===_curRoom.id) return;
                     _freshRooms[m.room_id]=true;
-                    beep(); notify('새 고객 문의', (m.message||'').slice(0,60));
-                    toast('💬 새 고객 문의: '+(m.message||'').slice(0,24));
                     scheduleRoomsReload();
                 })
+                // 새 고객(이름 입력) 1회 알림
+                .on('postgres_changes',{ event:'INSERT', schema:'public', table:'chat_rooms' }, (p)=>{ _notifyNewCustomer(p.new); })
+                .on('postgres_changes',{ event:'UPDATE', schema:'public', table:'chat_rooms' }, (p)=>{ _notifyNewCustomer(p.new); })
                 .subscribe();
         }
 
