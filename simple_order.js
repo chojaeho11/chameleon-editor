@@ -20517,6 +20517,9 @@ html, body { background: #ffffff !important; }
             return;
         }
         // 항목 카드들
+        // 2026-10-07(#59 최연두): 라인합(총 상품가) + 라인에 포함된 배송/시공비(bakedShip) 누적 →
+        //   합계와 일관되게 '소계 − 묶음 배송·시공 조정 = 합계' 로 표시 (라인합 680k vs 합계 580k 오해 방지).
+        var _lineSum = 0, _bakedShip = 0;
         var itemsHtml = cart.map(function (it, idx) {
             var name, opts;
             if (_soIsFabricItem(it)) {
@@ -20575,6 +20578,13 @@ html, body { background: #ffffff !important; }
                 }
             }
             var p = _soCalcItemPrice(it);
+            // _soCalcCartTotal 과 동일한 per-item 배송비(라인가에 포함된 몫) — 소계/합계 일관 표시용
+            var _sfD;
+            if (_soIsFabricItem(it)) _sfD = p - (it.price || 0);
+            else if (it._isBestGoods) _sfD = 3000;
+            else if (_soIsAcrylicFamilyItem(it) || it._isRealPrint || (it.product && String(it.product.code || '').indexOf('goods_') === 0) || it.bundleShipping) _sfD = 0;
+            else _sfD = (it.shipping && it.shipping.fee) || 0;
+            _lineSum += p; _bakedShip += _sfD;
             return '<div class="so-co-summary-item" style="position:relative;">' +
                 '<button type="button" onclick="window._soRemoveCheckoutItem(\'' + escapeHtml(String(it.__cart_id || it.uid || '')) + '\', ' + idx + ')" title="삭제" ' +
                   'style="position:absolute; top:6px; right:6px; width:22px; height:22px; padding:0; border:none; background:transparent; color:#9ca3af; font-size:16px; cursor:pointer; border-radius:50%; line-height:1;" ' +
@@ -20589,12 +20599,13 @@ html, body { background: #ffffff !important; }
         // 2026-05-13: 카트 전체 할인 계산
         var calc = _soCalcCartTotal(cart);
         var discHtml = '';
-        if (calc.amountPct > 0 || calc.proPct > 0 || calc.shipTotal > 0) {
-            // 2026-05-30: 소계 = 할인 대상(taxBase) + 비할인 대상(nonDiscountBase: 베스트굿즈/원판/금액주문/매니저견적)
-            //   기존엔 taxBase 만 표시해 베스트굿즈가 0원으로 보였음 → "배송비만 더한 것처럼" 보이는 시각적 버그
-            var _itemsSub = (calc.taxBase || 0) + (calc.nonDiscountBase || 0);
+        // 2026-10-07(#59): 소계 = 라인합(화면의 품목가 합) → 할인/배송 조정 → 합계. 라인합과 합계가 어긋나 보이던 오해 해소.
+        //   _shipNet = 실제 부과 배송/시공비(shipTotal) − 라인가에 이미 포함된 배송비(bakedShip).
+        //   <0 이면 "묶음 배송·시공 적용"(여러 시공 1회·면제)으로 라인합에서 차감, >0 이면 추가 배송비.
+        var _shipNet = (calc.shipTotal || 0) - _bakedShip;
+        if (calc.amountPct > 0 || calc.proPct > 0 || _shipNet !== 0) {
             discHtml = '<div style="margin:10px 0; padding:10px 12px; background:#fff; border-radius:10px; font-size:12px; line-height:1.7;">' +
-                '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('소계 (상품+옵션)','小計 (商品+オプション)','Subtotal (item + option)') + '</span><span>' + _soFormatPrice(_itemsSub) + '</span></div>';
+                '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('소계 (상품+옵션)','小計 (商品+オプション)','Subtotal (item + option)') + '</span><span>' + _soFormatPrice(_lineSum) + '</span></div>';
             if (calc.amountPct > 0) {
                 discHtml += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('구매금액','購入金額','Volume') + ' ' + calc.amountPct + '% ' + tr('할인','割引','off') + '</span><span>-' + _soFormatPrice(calc.amountDisc) + '</span></div>';
             }
@@ -20602,8 +20613,10 @@ html, body { background: #ffffff !important; }
                 var _mdiC = _soMemberDiscInfo();
                 discHtml += '<div style="display:flex; justify-content:space-between; color:#7c3aed;"><span>· ' + tr(_mdiC.kr,_mdiC.ja,_mdiC.en) + '</span><span>-' + _soFormatPrice(calc.proDisc) + '</span></div>';
             }
-            if (calc.shipTotal > 0) {
-                discHtml += '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('+ 배송/시공비','+ 配送/施工費','+ Shipping/Install') + '</span><span>+' + _soFormatPrice(calc.shipTotal) + '</span></div>';
+            if (_shipNet < 0) {
+                discHtml += '<div style="display:flex; justify-content:space-between; color:#059669;"><span>' + tr('묶음 배송·시공 적용','まとめ配送・施工適用','Bundled shipping/install') + '</span><span>-' + _soFormatPrice(-_shipNet) + '</span></div>';
+            } else if (_shipNet > 0) {
+                discHtml += '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('+ 배송/시공비','+ 配送/施工費','+ Shipping/Install') + '</span><span>+' + _soFormatPrice(_shipNet) + '</span></div>';
             }
             discHtml += '</div>';
         }
