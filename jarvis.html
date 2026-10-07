@@ -162,17 +162,21 @@
         @media (max-width: 460px){ #roomList { grid-template-columns: minmax(0, 1fr); } }
         #roomList .empty { grid-column: 1 / -1; }
         .room-tile {
-            display: flex; align-items: center; justify-content: space-between; gap: 8px;
-            padding: 12px 13px; min-height: 66px; min-width: 0;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+            padding: 13px 14px; min-height: 160px; min-width: 0;
             background: linear-gradient(165deg,#1e293b 0%,#0f172a 100%);
             border: 1px solid rgba(148,163,184,0.15); border-radius: 14px;
             transition: border-color 0.15s;
         }
         .room-tile.fresh { border-color: rgba(239,68,68,0.55); box-shadow: 0 0 0 1px rgba(239,68,68,0.35); }
-        .rt-open { flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; padding: 0; }
-        .rt-name { font-size: 14px; font-weight: 800; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
-        .rt-sub { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
-        .room-tile .room-mgr-wrap { margin-top: 0; flex-shrink: 0; }
+        .rt-body { min-width: 0; overflow: hidden; flex: 1; }
+        .rt-top { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #64748b; margin-bottom: 7px; }
+        .rt-prev { font-size: 13px; color: #cbd5e1; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+        .rt-btns { display: flex; gap: 6px; align-items: stretch; }
+        .rt-name-btn { flex: 1; min-width: 0; text-align: center; background: rgba(99,102,241,0.14); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.3); border-radius: 10px; padding: 10px 8px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rt-name-btn:hover { background: rgba(99,102,241,0.24); }
+        .room-tile .room-mgr-wrap { flex: 1; min-width: 0; margin-top: 0; }
+        .room-tile .room-mgr { display: block; width: 100%; box-sizing: border-box; text-align: center; padding: 10px 8px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .mgr-filter-bar { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 14px 12px; align-items: center; border-bottom: 1px solid rgba(148,163,184,0.12); }
         .mgr-filter-bar .mflabel { font-size: 12px; color: #94a3b8; margin-right: 2px; }
@@ -380,16 +384,19 @@
                 el.innerHTML = pageRooms.map(r=>{
                     const nm = (r.customer_name||r.nickname||'게스트');
                     const lm = lastMap[r.id];
-                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,24)) : '';
+                    const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,90)) : '';
                     const fresh = _freshRooms[r.id];
                     const am = (r.assigned_manager||'').trim();
                     const chip = `<span class="room-mgr ${am?'assigned':''}" onclick="event.stopPropagation(); toggleRoomMgr('${r.id}')">${am?('👤 '+esc(am)+(r.human_active?' 상담중':'')):'담당 지정'} ▾</span>`;
                     return `<div class="room-tile ${fresh?'fresh':''}">
-                        <button class="rt-open" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">
-                            <div class="rt-name">${esc(nm)} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
-                            <div class="rt-sub">${esc(fmtAgo(r.updated_at))}${prev?' · '+esc(prev):''}</div>
-                        </button>
-                        <div class="room-mgr-wrap">${chip}<div class="room-mgr-dd" id="rmdd-${r.id}" onclick="event.stopPropagation()">${mgrDdOptions(r.id, am)}</div></div>
+                        <div class="rt-body">
+                            <div class="rt-top">${esc(fmtAgo(r.updated_at))} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
+                            <div class="rt-prev">${esc(prev)}</div>
+                        </div>
+                        <div class="rt-btns">
+                            <button class="rt-name-btn" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">${esc(nm)}</button>
+                            <div class="room-mgr-wrap">${chip}<div class="room-mgr-dd" id="rmdd-${r.id}" onclick="event.stopPropagation()">${mgrDdOptions(r.id, am)}</div></div>
+                        </div>
                     </div>`;
                 }).join('');
                 renderRoomPager(totalPages);
