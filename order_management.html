@@ -786,18 +786,33 @@ import './manager_quote.js?v=4';
         function beep(){ if(!ALARM)return; try{ var ac=new (window.AudioContext||window.webkitAudioContext)(); var o=ac.createOscillator(),g=ac.createGain(); o.connect(g); g.connect(ac.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.12,ac.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.35); o.start(); o.stop(ac.currentTime+0.36); setTimeout(function(){try{ac.close();}catch(e){}},500);}catch(e){} }
         function badge(){ var el=document.getElementById('omChatBadge'); if(!el)return; if(unread>0){ el.textContent=unread; el.style.display=''; } else el.style.display='none'; }
         function toastMsg(txt){ try{ if(window.showToast){ window.showToast(txt); return; } }catch(e){} }
+        // 2026-10-07(사장님): 메시지마다 알림 X → 고객이 '이름을 입력했을 때' 방당 1회만 알림.
+        //   chat_rooms 의 customer_name 이 실명(기본값 아님)이 되는 순간(INSERT/UPDATE) 한 번.
+        var _notifiedRooms = {};
+        var _DEFAULT_NAMES = ['웹 고객','게스트','ウェブ顧客','Webお客様','Web Customer','Web Kunde','Cliente Web','Client Web','عميل ويب','网页客户'];
+        function _isRealName(nm){
+            nm = String(nm==null?'':nm).split('|')[0].trim();   // 'name | phone' → name
+            if(!nm) return false;
+            return _DEFAULT_NAMES.indexOf(nm) < 0 && !/\s고객$/.test(nm);
+        }
+        function _notifyNewCustomer(row){
+            if(!row || !row.id) return;
+            if(_notifiedRooms[row.id]) return;
+            if(!_isRealName(row.customer_name)) return;
+            _notifiedRooms[row.id] = true;
+            var nm = String(row.customer_name||'').split('|')[0].trim();
+            unread++; badge(); beep();
+            toastMsg('🙋 새 고객 문의: ' + nm + ' 님');
+            try{ if(ALARM && window.Notification && Notification.permission==='granted') new Notification('새 고객 문의', { body: nm + ' 님이 상담을 시작했어요', icon:'/mascot-character.png' }); }catch(e){}
+        }
         function subscribe(){
             var sb = window.sb;
             if(!sb || !sb.channel){ setTimeout(subscribe, 800); return; }
             paintAlarm();
             try{ if(ALARM && window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
             sb.channel('om-chat-global')
-              .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_messages' }, function(p){
-                  var m=p.new; if(!m || m.sender_type!=='customer') return;
-                  unread++; badge(); beep();
-                  toastMsg('💬 새 고객 문의: ' + (m.message||'').slice(0,26));
-                  try{ if(ALARM && window.Notification && Notification.permission==='granted') new Notification('새 고객 문의', { body:(m.message||'').slice(0,60), icon:'/mascot-character.png' }); }catch(e){}
-              })
+              .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_rooms' }, function(p){ _notifyNewCustomer(p.new); })
+              .on('postgres_changes', { event:'UPDATE', schema:'public', table:'chat_rooms' }, function(p){ _notifyNewCustomer(p.new); })
               .subscribe();
         }
         // 채팅관리 버튼 누르면 배지 리셋
