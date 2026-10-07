@@ -42,6 +42,7 @@
   var _hist = [], _busy = false, _root = null, _backdrop = null;
   // 2026-10-07(사장님): 채팅에서 고객 성함 1회 물어보기 → chat_rooms.customer_name 반영(관리자 콘솔에 실명 표기)
   var _custName = (function () { try { return localStorage.getItem('kapu_cust_name') || ''; } catch (e) { return ''; } })();
+  var _custPhone = (function () { try { return localStorage.getItem('kapu_cust_phone') || ''; } catch (e) { return ''; } })();
   var _awaitingName = false, _pendingMsg = '';
   // 2026-10-07(사장님): 담당매니저 답변 실시간 수신 — chat_messages 구독
   var _msgSub = null, _seenMsgIds = {}, _humanNoticeShown = false;
@@ -91,11 +92,20 @@
       '#jvgFab img{width:100%;height:100%;object-fit:cover;}' +
       '#advFloatingFab,#kapuFab,#btnAiAdvisor,#floatingChatBtn{display:none!important;}' +
       '#jvgCard .jvg-x{margin-left:auto;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
-      '#jvgCard .jvg-body{flex:1;overflow-y:auto;padding:16px;background:#fafafa;}' +
-      '#jvgCard .jvg-msg{font-size:14px;line-height:1.5;color:#1e293b;white-space:pre-wrap;word-break:break-word;width:fit-content;max-width:82%;margin:0 0 8px 0;padding:9px 13px;border-radius:15px 15px 15px 4px;background:#fff;border:1px solid #e9edf5;box-sizing:border-box;}' +
-      '#jvgCard .jvg-msg.me{margin-left:auto;background:#6366f1;color:#fff;border-color:#6366f1;border-radius:15px 15px 4px 15px;}' +
-      '#jvgCard .jvg-msg a{color:#4f46e5;text-decoration:underline;word-break:break-all;}' +
-      '#jvgCard .jvg-msg.me a{color:#eef2ff;}' +
+      '#jvgCard .jvg-body{flex:1;overflow-y:auto;padding:14px 12px;background:#b2c7d9;}' +
+      '#jvgCard .jvg-row{display:flex;align-items:flex-start;gap:7px;margin-bottom:12px;}' +
+      '#jvgCard .jvg-row.me{flex-direction:row-reverse;}' +
+      '#jvgCard .jvg-row-ava{width:38px;height:38px;border-radius:14px;object-fit:cover;flex-shrink:0;background:#fff;}' +
+      '#jvgCard .jvg-rowmain{display:flex;flex-direction:column;min-width:0;max-width:76%;}' +
+      '#jvgCard .jvg-row.me .jvg-rowmain{align-items:flex-end;}' +
+      '#jvgCard .jvg-who{font-size:12px;color:#36414d;margin:0 0 4px 3px;font-weight:600;}' +
+      '#jvgCard .jvg-bubwrap{display:flex;align-items:flex-end;gap:5px;max-width:100%;}' +
+      '#jvgCard .jvg-row.me .jvg-bubwrap{flex-direction:row-reverse;}' +
+      '#jvgCard .jvg-time{font-size:10px;color:#48596a;white-space:nowrap;margin-bottom:1px;flex-shrink:0;}' +
+      '#jvgCard .jvg-msg{font-size:14px;line-height:1.5;color:#1e293b;white-space:pre-wrap;word-break:break-word;min-width:0;padding:9px 12px;border-radius:4px 16px 16px 16px;background:#fff;box-sizing:border-box;}' +
+      '#jvgCard .jvg-row.me .jvg-msg{background:#fee500;color:#1a1a1a;border-radius:16px 4px 16px 16px;}' +
+      '#jvgCard .jvg-msg a{color:#1a56db;text-decoration:underline;word-break:break-all;}' +
+      '#jvgCard .jvg-row.me .jvg-msg a{color:#1a56db;}' +
       '#jvgCard .jvg-recs{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px;}' +
       '#jvgCard .jvg-rec{display:flex;align-items:center;gap:10px;text-decoration:none;background:#fff;border:1px solid #e0e7ff;border-radius:12px;padding:9px 11px;color:#1e293b;transition:border-color .15s;}' +
       '#jvgCard .jvg-rec:hover{border-color:#6366f1;background:#f8faff;}' +
@@ -110,7 +120,8 @@
       '#jvgCard .jvg-img{background:#fff;border:2px solid #a5b4fc;color:#6366f1;border-radius:12px;padding:0 12px;font-size:18px;cursor:pointer;flex-shrink:0;animation:jvgSpark 1.5s ease-in-out infinite;}' +
       '#jvgCard .jvg-img:hover{background:#eef2ff;}' +
       '@keyframes jvgSpark{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.55);border-color:#818cf8;}50%{box-shadow:0 0 0 7px rgba(99,102,241,0);border-color:#6366f1;}}' +
-      '#jvgCard .jvg-msg.me img{max-width:150px;border-radius:10px;display:inline-block;}' +
+      '#jvgCard .jvg-msg img{max-width:200px;border-radius:10px;display:block;}' +
+      '#jvgCard .jvg-quick,#jvgCard .jvg-recs,#jvgCard .jvg-intake{clear:both;}' +
       '#jvgCard .jvg-foot{display:flex;gap:8px;padding:11px 12px;border-top:1px solid #eef2f7;background:#fff;}' +
       '#jvgCard .jvg-in-txt{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;}' +
       '#jvgCard .jvg-in-txt:focus{border-color:#6366f1;}' +
@@ -121,18 +132,35 @@
       '#jvgCard .jvg-intake input:focus,#jvgCard .jvg-intake select:focus{border-color:#6366f1;}' +
       '#jvgCard .jvg-intake .jvg-ik-start{background:#4f46e5;border:none;color:#fff;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;margin-top:2px;}' +
       '#jvgCard .jvg-intake .jvg-ik-start:hover{background:#4338ca;}' +
+      '#jvgCard .jvg-custinfo{clear:both;align-self:center;text-align:center;font-size:12.5px;font-weight:700;color:#1e293b;background:rgba(255,255,255,.85);border:1px solid rgba(99,102,241,.25);border-radius:999px;padding:6px 14px;margin:2px auto 8px;width:fit-content;}' +
       '#jvgCard .jvg-send:disabled{opacity:.5;cursor:default;}' +
       '#jvgCard .jvg-typing{font-size:13px;color:#94a3b8;}';
     document.head.appendChild(st);
   }
 
-  function addMsg(text, who) {
+  function _nowHM() {
+    var d = new Date(); var h = d.getHours(), m = d.getMinutes();
+    var ap = h < 12 ? '오전' : '오후'; var h12 = h % 12; if (h12 === 0) h12 = 12;
+    return (_lang === 'kr' ? (ap + ' ') : '') + h12 + ':' + (m < 10 ? '0' + m : m);
+  }
+  function _avaImg() { return '<img class="jvg-row-ava" src="/jarvis-character.jpg?v=1" alt="" onerror="this.src=\'/mascot-character.webp\'">'; }
+  // 카톡식 메시지 행 (아바타+이름+말풍선+시간). 반환=말풍선 엘리먼트(타이핑 교체용)
+  function _addRow(bubbleHtml, who, senderName) {
     var b = _root.querySelector('.jvg-body');
-    var d = document.createElement('div');
-    d.className = 'jvg-msg' + (who === 'me' ? ' me' : '');
-    d.innerHTML = _linkify(text);
-    b.appendChild(d); b.scrollTop = b.scrollHeight;
-    return d;
+    var row = document.createElement('div');
+    row.className = 'jvg-row ' + (who === 'me' ? 'me' : 'ai');
+    var ava = (who === 'me') ? '' : _avaImg();
+    var who2 = (who === 'me') ? '' : '<div class="jvg-who">' + esc(senderName || tr('카푸', 'カプ', 'Kapu')) + '</div>';
+    row.innerHTML = ava + '<div class="jvg-rowmain">' + who2 +
+      '<div class="jvg-bubwrap"><div class="jvg-msg">' + bubbleHtml + '</div><span class="jvg-time">' + _nowHM() + '</span></div></div>';
+    b.appendChild(row); b.scrollTop = b.scrollHeight;
+    return row.querySelector('.jvg-msg');
+  }
+  function addMsg(text, who, senderName) { return _addRow(_linkify(text), who, senderName); }
+  function _mgrLabel(senderName) {
+    var s = String(senderName || '');
+    if (s.indexOf('관리자') >= 0) return (s.replace('관리자', '담당매니저').trim() || '담당매니저');
+    return tr('카푸', 'カプ', 'Kapu');
   }
 
   function addRecs(products) {
@@ -221,24 +249,20 @@
   function readImage(file, cb) {
     try { var r = new FileReader(); r.onload = function () { var du = String(r.result); cb((du.split(',')[1] || ''), file.type || 'image/jpeg', du); }; r.readAsDataURL(file); } catch (e) {}
   }
-  function addImageMsg(dataUrl) {
-    var b = _root.querySelector('.jvg-body'); var d = document.createElement('div'); d.className = 'jvg-msg me';
-    d.innerHTML = '<img src="' + dataUrl + '" alt="">'; b.appendChild(d); b.scrollTop = b.scrollHeight;
-  }
+  function addImageMsg(dataUrl) { return _addRow('<img src="' + dataUrl + '" alt="">', 'me'); }
   // 담당매니저/시스템 메시지(관리자 답변)를 고객 화면에 표시 (AI·본인 메시지는 이미 표시되므로 제외)
   function _renderIncoming(m) {
     if (!m || !_root) return;
-    var b = _root.querySelector('.jvg-body'); if (!b) return;
-    if (m.message) { var d = document.createElement('div'); d.className = 'jvg-msg'; d.innerHTML = _linkify(m.message); b.appendChild(d); }
+    var who = _mgrLabel(m.sender_name);
+    if (m.message) _addRow(_linkify(m.message), 'ai', who);
     if (m.file_url) {
-      var fd = document.createElement('div'); fd.className = 'jvg-msg';
       var ft = String(m.file_type || '').toLowerCase();
       var isImg = ft.indexOf('image') === 0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url);
-      if (isImg) fd.innerHTML = '<img src="' + esc(m.file_url) + '" alt="" style="max-width:100%;border-radius:10px;cursor:pointer;" onclick="window.open(\'' + esc(m.file_url) + '\',\'_blank\')">';
-      else fd.innerHTML = '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener" style="color:#93c5fd;text-decoration:underline;">' + esc(m.file_name || '첨부파일') + '</a>';
-      b.appendChild(fd);
+      var html = isImg
+        ? '<img src="' + esc(m.file_url) + '" alt="" style="cursor:pointer;" onclick="window.open(\'' + esc(m.file_url) + '\',\'_blank\')">'
+        : '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener">' + esc(m.file_name || '첨부파일') + '</a>';
+      _addRow(html, 'ai', who);
     }
-    b.scrollTop = b.scrollHeight;
   }
   function _onIncoming(m) {
     if (!m || !m.id) return;
@@ -282,7 +306,7 @@
     if (!name) { addMsg(tr('성함을 다시 한 번 알려줄래? 😊', 'もう一度お名前を教えてね😊', 'Could you tell me your name again? 😊'), 'ai'); return; }
     _custName = name; _awaitingName = false;
     try { localStorage.setItem('kapu_cust_name', _custName); } catch (e) {}
-    try { var sb = window.sb; if (sb && sb.from && _room) await sb.from('chat_rooms').update({ customer_name: _custName }).eq('id', _room); } catch (e) {}
+    _syncCustToRoom();
     addMsg(tr('반가워 ' + _custName + '님! 그럼 안내할게 😊', _custName + 'さん、よろしくね！ご案内するよ😊', 'Nice to meet you, ' + _custName + '! Let me help 😊'), 'ai');
     var pend = _pendingMsg; _pendingMsg = '';
     if (pend) send(pend, null, true);
@@ -312,7 +336,7 @@
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
-      if (data.room_id) { var _wasNew = (_room !== data.room_id); _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} if (_wasNew) _subscribeRoom(); }
+      if (data.room_id) { var _wasNew = (_room !== data.room_id); _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} if (_wasNew) { _subscribeRoom(); _syncCustToRoom(); } }
       if (data.human_active) {
         // 담당 매니저가 직접 응대 중 — AI 폴백 대신 조용히 처리. 매니저 답변은 실시간 구독으로 도착.
         try { typing.remove(); } catch (e) {}
@@ -368,6 +392,18 @@
     btn.addEventListener('click', function () { close(); location.href = href; });
     wrap.appendChild(btn); b.appendChild(wrap); b.scrollTop = b.scrollHeight;
   }
+  // 성함/전화 → 현재 방에 반영 (customer_name 은 깨끗한 이름만, 전화는 별도 컬럼)
+  function _syncCustToRoom() {
+    try { var sb = window.sb; if (sb && sb.from && _room) { var u = {}; if (_custName) u.customer_name = _custName; if (_custPhone) u.customer_phone = _custPhone; if (Object.keys(u).length) sb.from('chat_rooms').update(u).eq('id', _room); } } catch (e) {}
+  }
+  // 기존 고객 정보 줄 (매니저 안내 위)
+  function _custInfoLine() {
+    if (!_custName && !_custPhone) return;
+    var b = _root.querySelector('.jvg-body');
+    var d = document.createElement('div'); d.className = 'jvg-custinfo';
+    d.innerHTML = '👤 ' + esc(_custName || tr('고객', 'お客様', 'Customer')) + (_custPhone ? (' · 📞 ' + esc(_custPhone)) : '');
+    b.appendChild(d); b.scrollTop = b.scrollHeight;
+  }
   function _addIntakeForm() {
     var b = _root.querySelector('.jvg-body');
     var TYPES = ['허니콤보드', '종이매대', '패브릭', '기타', '가맹문의'];
@@ -378,20 +414,25 @@
     var wrap = document.createElement('div'); wrap.className = 'jvg-intake';
     wrap.innerHTML =
       '<label>' + tr('성함', 'お名前', 'Name') + '</label>' +
-      '<input class="jvg-ik-name" type="text" placeholder="' + tr('성함을 입력해줘', 'お名前を入力', 'Your name') + '">' +
+      '<input class="jvg-ik-name" type="text" value="' + esc(_custName) + '" placeholder="' + tr('성함을 입력해줘', 'お名前を入力', 'Your name') + '">' +
+      '<label>' + tr('전화번호', '電話番号', 'Phone') + '</label>' +
+      '<input class="jvg-ik-phone" type="tel" value="' + esc(_custPhone) + '" placeholder="' + tr('예: 010-1234-5678', '例: 090-1234-5678', 'e.g. 010-1234-5678') + '">' +
       '<label>' + tr('제품 종류', '製品の種類', 'Product type') + '</label>' +
       '<select class="jvg-ik-type"><option value="">' + tr('선택해줘', '選択してね', 'Select') + '</option>' + opts + '</select>' +
       '<button class="jvg-ik-start">' + tr('상담 시작', '相談を始める', 'Start') + '</button>';
     b.appendChild(wrap); b.scrollTop = b.scrollHeight;
-    var nameInp = wrap.querySelector('.jvg-ik-name'), typeSel = wrap.querySelector('.jvg-ik-type'), startBtn = wrap.querySelector('.jvg-ik-start');
+    var nameInp = wrap.querySelector('.jvg-ik-name'), phoneInp = wrap.querySelector('.jvg-ik-phone'), typeSel = wrap.querySelector('.jvg-ik-type'), startBtn = wrap.querySelector('.jvg-ik-start');
     nameInp.addEventListener('input', function () { nameInp.style.borderColor = ''; });
+    phoneInp.addEventListener('input', function () { phoneInp.style.borderColor = ''; });
     startBtn.addEventListener('click', function () {
       var nm = (nameInp.value || '').trim().replace(/[\t<>]/g, '').slice(0, 20);
+      var ph = (phoneInp.value || '').trim().replace(/[^0-9+\-\s]/g, '').slice(0, 20);
       var ty = typeSel.value;
       if (!nm) { nameInp.focus(); nameInp.style.borderColor = '#ef4444'; return; }
-      _custName = nm; _awaitingName = false;
-      try { localStorage.setItem('kapu_cust_name', _custName); } catch (e) {}
-      try { var sb = window.sb; if (sb && sb.from && _room) sb.from('chat_rooms').update({ customer_name: _custName }).eq('id', _room); } catch (e) {}
+      if (ph.replace(/[^0-9]/g, '').length < 8) { phoneInp.focus(); phoneInp.style.borderColor = '#ef4444'; return; }
+      _custName = nm; _custPhone = ph; _awaitingName = false;
+      try { localStorage.setItem('kapu_cust_name', _custName); localStorage.setItem('kapu_cust_phone', _custPhone); } catch (e) {}
+      _syncCustToRoom();
       try { wrap.remove(); } catch (e) {}
       addMsg(tr('반가워 ' + _custName + '님! 😊', _custName + 'さん、よろしくね！😊', 'Nice to meet you, ' + _custName + '!'), 'ai');
       if (ty === '가맹문의') {
@@ -405,7 +446,8 @@
         addGreetActions();
       }
     });
-    nameInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); typeSel.focus(); } });
+    nameInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); phoneInp.focus(); } });
+    phoneInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); typeSel.focus(); } });
   }
   function open(mode) {
     if (_root) return;   // 이미 열려 있으면 무시
@@ -422,12 +464,12 @@
     if (mode === 'aftercart') {
       addMsg(_afterCartMsg(), 'ai');
       _addCartActions();
-    } else if (!_custName) {
-      // 2026-10-07(사장님): 첫 진입 — 성함 입력 + 제품종류 드롭다운 폼
+    } else if (!_custName || !_custPhone) {
+      // 2026-10-07(사장님): 첫 진입(또는 성함·전화 미등록) — 성함+전화+제품종류 폼
       addMsg(tr(
-        '안녕! 카멜레온 카푸야 😊\n성함과 찾는 제품을 알려주면 바로 딱 맞게 안내할게!',
-        'こんにちは！カメレオンのカプだよ😊\nお名前と探している製品を教えてね！',
-        'Hi! I\'m Kapu 😊\nTell me your name and what you\'re looking for!'
+        '안녕! 카멜레온 카푸야 😊\n성함과 연락처를 남겨주면 담당자가 더 정확히 도와줄 수 있어!',
+        'こんにちは！カメレオンのカプだよ😊\nお名前とご連絡先を教えてね！',
+        'Hi! I\'m Kapu 😊\nLeave your name and phone so we can help you better!'
       ), 'ai');
       _addIntakeForm();
     } else {
@@ -443,6 +485,7 @@
         '1. Drag a product image into the chat, or just tell me the product (e.g. "wall", "banner"). I\'ll send the right link — it has a step-by-step tutorial.\n\n' +
         '2. Prefer a person? You can order through your manager. Tap "Manager" below and I\'ll share an available manager\'s number.'
       ), 'ai');
+      _custInfoLine();
       addGreetActions();
     }
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });

@@ -177,6 +177,11 @@
         .rt-name-btn:hover { background: rgba(99,102,241,0.24); }
         .room-tile .room-mgr-wrap { flex: 1; min-width: 0; margin-top: 0; }
         .room-tile .room-mgr { display: block; width: 100%; box-sizing: border-box; text-align: center; padding: 10px 8px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rt-row2 { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; }
+        .rt-phone { font-size: 12px; color: #93c5fd; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .rt-phone.rt-phone-none { color: #64748b; }
+        .rt-consult { flex-shrink: 0; background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.35); border-radius: 9px; padding: 7px 14px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .rt-consult:hover { background: rgba(34,197,94,0.28); }
 
         .mgr-filter-bar { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 14px 12px; align-items: center; border-bottom: 1px solid rgba(148,163,184,0.12); }
         .mgr-filter-bar .mflabel { font-size: 12px; color: #94a3b8; margin-right: 2px; }
@@ -382,20 +387,28 @@
                 if(_roomPage < 0) _roomPage = 0;
                 const pageRooms = _view.slice(_roomPage*ROOMS_PER_PAGE, _roomPage*ROOMS_PER_PAGE + ROOMS_PER_PAGE);
                 el.innerHTML = pageRooms.map(r=>{
-                    const nm = (r.customer_name||r.nickname||'게스트');
+                    const rawNm = (r.customer_name||r.nickname||'게스트');
+                    let phone = (r.customer_phone||'').trim();
+                    if(!phone && rawNm.indexOf('|')>=0) phone = rawNm.split('|')[1].trim();
+                    const nm = (rawNm.split('|')[0].trim()) || '게스트';
                     const lm = lastMap[r.id];
                     const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,90)) : '';
                     const fresh = _freshRooms[r.id];
                     const am = (r.assigned_manager||'').trim();
                     const chip = `<span class="room-mgr ${am?'assigned':''}" onclick="event.stopPropagation(); toggleRoomMgr('${r.id}')">${am?('👤 '+esc(am)+(r.human_active?' 상담중':'')):'담당 지정'} ▾</span>`;
+                    const nmArg = JSON.stringify(esc(nm)).replace(/"/g,'&quot;');
                     return `<div class="room-tile ${fresh?'fresh':''}">
                         <div class="rt-body">
                             <div class="rt-top">${esc(fmtAgo(r.updated_at))} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
                             <div class="rt-prev">${esc(prev)}</div>
                         </div>
                         <div class="rt-btns">
-                            <button class="rt-name-btn" onclick="openConv('${r.id}', ${JSON.stringify(esc(nm)).replace(/"/g,'&quot;')})">${esc(nm)}</button>
+                            <button class="rt-name-btn" onclick="openConv('${r.id}', ${nmArg})">${esc(nm)}</button>
                             <div class="room-mgr-wrap">${chip}<div class="room-mgr-dd" id="rmdd-${r.id}" onclick="event.stopPropagation()">${mgrDdOptions(r.id, am)}</div></div>
+                        </div>
+                        <div class="rt-row2">
+                            ${phone?`<a class="rt-phone" href="tel:${esc(phone.replace(/[^0-9+]/g,''))}" onclick="event.stopPropagation()">📞 ${esc(phone)}</a>`:`<span class="rt-phone rt-phone-none">번호 없음</span>`}
+                            <button class="rt-consult" onclick="openConv('${r.id}', ${nmArg})">상담하기</button>
                         </div>
                     </div>`;
                 }).join('');
