@@ -93,7 +93,9 @@
       '#jvgFab{position:fixed;right:16px;bottom:18px;width:60px;height:60px;border-radius:50%;background:#fff;border:none;box-shadow:0 6px 20px rgba(15,23,42,.22);cursor:pointer;z-index:2147482998;overflow:hidden;padding:0;}' +
       '#jvgFab img{width:100%;height:100%;object-fit:cover;}' +
       '#advFloatingFab,#kapuFab,#btnAiAdvisor,#floatingChatBtn{display:none!important;}' +
-      '#jvgCard .jvg-x{margin-left:auto;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
+      '#jvgCard .jvg-reset{margin-left:auto;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:700;cursor:pointer;line-height:1;padding:7px 12px;border-radius:999px;font-family:inherit;white-space:nowrap;}' +
+      '#jvgCard .jvg-reset:hover{background:rgba(255,255,255,.3);}' +
+      '#jvgCard .jvg-x{margin-left:8px;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
       '#jvgCard .jvg-body{flex:1;overflow-y:auto;padding:14px 12px;background:#b2c7d9;}' +
       '#jvgCard .jvg-row{display:flex;align-items:flex-start;gap:7px;margin-bottom:12px;}' +
       '#jvgCard .jvg-row.me{flex-direction:row-reverse;}' +
@@ -513,23 +515,9 @@
     nameInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); phoneInp.focus(); } });
     phoneInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); typeSel.focus(); } });
   }
-  function open(mode) {
-    if (_root) return;   // 이미 열려 있으면 무시
-    ensureStyles();
-    _backdrop = document.createElement('div'); _backdrop.id = 'jvgBackdrop';
-    _backdrop.addEventListener('click', close);
-    document.body.appendChild(_backdrop);
-    _root = document.createElement('div'); _root.id = 'jvgCard';
-    _root.innerHTML =
-      '<div class="jvg-head"><img class="jvg-ava" src="/jarvis-character.jpg?v=1" alt="카푸" onerror="this.src=\'/mascot-character.webp\'"><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('편하게 말 걸어~', 'お気軽にどうぞ', 'Talk to me anytime') + '</div></div><button class="jvg-x" aria-label="close">×</button></div>' +
-      '<div class="jvg-body"></div>' +
-      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
-    document.body.appendChild(_root);
-    if (mode === 'aftercart') {
-      addMsg(_afterCartMsg(), 'ai');
-      _addCartActions();
-    } else if (!_custName || !_custPhone) {
-      // 2026-10-07(사장님): 첫 진입(또는 성함·전화 미등록) — 성함+전화+제품종류 폼
+  // 인사 렌더 (첫진입=성함/전화 폼, 재방문=안내+버튼). open() 과 리셋에서 공용.
+  function _renderGreeting() {
+    if (!_custName || !_custPhone) {
       addMsg(tr(
         '안녕하세요! 카멜레온 카푸예요 😊\n성함과 연락처를 남겨주시면 담당자가 더 정확히 도와드릴 수 있어요!',
         'こんにちは！カメレオンのカプです😊\nお名前とご連絡先を教えていただけますか？',
@@ -537,7 +525,6 @@
       ), 'ai');
       _addIntakeForm();
     } else {
-      // 재방문(성함 보유): 주문 방법 안내 + 버튼
       addMsg(tr(
         '안녕하세요! 행사 준비 중이신가요? 제가 안내해 드릴게요.\n\n주문하는 방법은 2가지가 있어요.\n\n' +
         '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓으시거나, "가벽"·"배너"처럼 제품명을 말씀해 주세요. 딱 맞는 링크를 드릴게요. 링크에 들어가시면 튜토리얼로 차근차근 안내해 드려요.\n\n' +
@@ -551,6 +538,40 @@
       ), 'ai');
       _custInfoLine();
       addGreetActions();
+    }
+  }
+  // 2026-10-07(사장님): 채팅 리셋 — 지금까지 대화 삭제 + 새 채팅 시작(새 room). 성함/전화는 유지.
+  function _resetChat() {
+    if (!confirm(tr(
+      '지금까지의 대화 내용이 삭제되고 새로운 채팅이 시작됩니다. 계속하시겠어요?',
+      'これまでの会話が削除され、新しい会話が始まります。よろしいですか？',
+      'Your current conversation will be cleared and a new chat will start. Continue?'
+    ))) return;
+    try { _unsubscribeRoom(); } catch (e) {}
+    if (_humanWaitTimer) { clearTimeout(_humanWaitTimer); _humanWaitTimer = null; }
+    _room = null; _hist = []; _seenMsgIds = {}; _humanNoticeShown = false; _awaitingName = false; _pendingMsg = ''; _lastAskedText = ''; _forceAiNext = false;
+    try { localStorage.removeItem('kapu_room_id'); } catch (e) {}
+    var b = _root && _root.querySelector('.jvg-body'); if (b) b.innerHTML = '';
+    _renderGreeting();
+    _scrollBottom();
+  }
+  function open(mode) {
+    if (_root) return;   // 이미 열려 있으면 무시
+    ensureStyles();
+    _backdrop = document.createElement('div'); _backdrop.id = 'jvgBackdrop';
+    _backdrop.addEventListener('click', close);
+    document.body.appendChild(_backdrop);
+    _root = document.createElement('div'); _root.id = 'jvgCard';
+    _root.innerHTML =
+      '<div class="jvg-head"><img class="jvg-ava" src="/jarvis-character.jpg?v=1" alt="카푸" onerror="this.src=\'/mascot-character.webp\'"><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('편하게 말씀해 주세요~', 'お気軽にどうぞ', 'Talk to me anytime') + '</div></div><button class="jvg-reset" type="button">' + tr('새 채팅', '新しい会話', 'New chat') + '</button><button class="jvg-x" aria-label="close">×</button></div>' +
+      '<div class="jvg-body"></div>' +
+      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
+    document.body.appendChild(_root);
+    if (mode === 'aftercart') {
+      addMsg(_afterCartMsg(), 'ai');
+      _addCartActions();
+    } else {
+      _renderGreeting();
     }
     requestAnimationFrame(function () { _root.classList.add('jvg-in'); if (_backdrop) _backdrop.classList.add('jvg-in'); });
 
@@ -575,6 +596,7 @@
     inp.addEventListener('paste', handlePaste);
     _root.addEventListener('paste', handlePaste);
     _root.querySelector('.jvg-x').addEventListener('click', close);
+    var _rst = _root.querySelector('.jvg-reset'); if (_rst) _rst.addEventListener('click', _resetChat);
     // 담당매니저 답변 실시간 수신 (기존 방이 있으면 놓친 답변도 불러와 표시)
     if (_room) { _loadMissed(); _subscribeRoom(); }
   }
