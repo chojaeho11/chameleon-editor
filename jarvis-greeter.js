@@ -43,6 +43,8 @@
   // 2026-10-07(사장님): 채팅에서 고객 성함 1회 물어보기 → chat_rooms.customer_name 반영(관리자 콘솔에 실명 표기)
   var _custName = (function () { try { return localStorage.getItem('kapu_cust_name') || ''; } catch (e) { return ''; } })();
   var _awaitingName = false, _pendingMsg = '';
+  // 2026-10-07(사장님): 담당매니저 답변 실시간 수신 — chat_messages 구독
+  var _msgSub = null, _seenMsgIds = {};
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
@@ -63,8 +65,8 @@
     st.textContent =
       '#jvgBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:2147482999;opacity:0;transition:opacity .35s;}' +
       '#jvgBackdrop.jvg-in{opacity:1;}' +
-      '#jvgCard{position:fixed;left:50%;bottom:12px;transform:translateX(-50%) translateY(115%);width:min(480px,96vw);height:min(84vh,860px);max-height:calc(100vh - 24px);display:flex;flex-direction:column;background:#fff;border-radius:22px;z-index:2147483000;font-family:inherit;overflow:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1);box-shadow:0 12px 44px rgba(15,23,42,.3);}' +
-      '#jvgCard.jvg-in{transform:translateX(-50%) translateY(0);}' +
+      '#jvgCard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);opacity:0;width:min(540px,96vw);height:min(92vh,980px);max-height:calc(100vh - 20px);display:flex;flex-direction:column;background:#fff;border-radius:22px;z-index:2147483000;font-family:inherit;overflow:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .3s;box-shadow:0 12px 44px rgba(15,23,42,.3);}' +
+      '#jvgCard.jvg-in{transform:translate(-50%,-50%) scale(1);opacity:1;}' +
       '#jvgCard .jvg-head{display:flex;align-items:center;gap:12px;padding:16px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;flex-shrink:0;}' +
       '#jvgCard .jvg-ava{width:52px;height:52px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,.7);}' +
       '#jvgCard .jvg-name{font-weight:800;font-size:17px;line-height:1.2;}' +
@@ -95,6 +97,12 @@
       '#jvgCard .jvg-in-txt{flex:1;border:1.5px solid #e2e8f0;border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;}' +
       '#jvgCard .jvg-in-txt:focus{border-color:#6366f1;}' +
       '#jvgCard .jvg-send{background:#6366f1;border:none;color:#fff;border-radius:12px;padding:0 16px;font-weight:800;font-size:14px;cursor:pointer;}' +
+      '#jvgCard .jvg-intake{display:flex;flex-direction:column;gap:9px;background:#fff;border:1px solid #e0e7ff;border-radius:14px;padding:14px;margin:6px 0 4px;}' +
+      '#jvgCard .jvg-intake label{font-size:12px;font-weight:700;color:#475569;}' +
+      '#jvgCard .jvg-intake input,#jvgCard .jvg-intake select{width:100%;border:1.5px solid #e2e8f0;border-radius:11px;padding:11px 12px;font-size:14px;font-family:inherit;outline:none;color:#1e293b;background:#fff;box-sizing:border-box;}' +
+      '#jvgCard .jvg-intake input:focus,#jvgCard .jvg-intake select:focus{border-color:#6366f1;}' +
+      '#jvgCard .jvg-intake .jvg-ik-start{background:#4f46e5;border:none;color:#fff;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;margin-top:2px;}' +
+      '#jvgCard .jvg-intake .jvg-ik-start:hover{background:#4338ca;}' +
       '#jvgCard .jvg-send:disabled{opacity:.5;cursor:default;}' +
       '#jvgCard .jvg-typing{font-size:13px;color:#94a3b8;}';
     document.head.appendChild(st);
@@ -199,6 +207,56 @@
     var b = _root.querySelector('.jvg-body'); var d = document.createElement('div'); d.className = 'jvg-msg me';
     d.innerHTML = '<img src="' + dataUrl + '" alt="">'; b.appendChild(d); b.scrollTop = b.scrollHeight;
   }
+  // 담당매니저/시스템 메시지(관리자 답변)를 고객 화면에 표시 (AI·본인 메시지는 이미 표시되므로 제외)
+  function _renderIncoming(m) {
+    if (!m || !_root) return;
+    var b = _root.querySelector('.jvg-body'); if (!b) return;
+    if (m.message) { var d = document.createElement('div'); d.className = 'jvg-msg'; d.textContent = m.message; b.appendChild(d); }
+    if (m.file_url) {
+      var fd = document.createElement('div'); fd.className = 'jvg-msg';
+      var ft = String(m.file_type || '').toLowerCase();
+      var isImg = ft.indexOf('image') === 0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url);
+      if (isImg) fd.innerHTML = '<img src="' + esc(m.file_url) + '" alt="" style="max-width:100%;border-radius:10px;cursor:pointer;" onclick="window.open(\'' + esc(m.file_url) + '\',\'_blank\')">';
+      else fd.innerHTML = '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener" style="color:#93c5fd;text-decoration:underline;">' + esc(m.file_name || '첨부파일') + '</a>';
+      b.appendChild(fd);
+    }
+    b.scrollTop = b.scrollHeight;
+  }
+  function _onIncoming(m) {
+    if (!m || !m.id) return;
+    if (_seenMsgIds[m.id]) return;
+    _seenMsgIds[m.id] = 1;
+    var isMgr = m.sender_type !== 'customer' && String(m.sender_name || '').indexOf('관리자') >= 0;
+    var isSystem = m.sender_type === 'system';
+    if (isMgr || isSystem) _renderIncoming(m);   // AI(카푸)·고객 본인 메시지는 이미 표시됨 → 제외
+  }
+  function _subscribeRoom() {
+    if (!_room) return;
+    var sb = window.sb; if (!sb || !sb.channel) return;
+    if (_msgSub) { try { _msgSub.unsubscribe(); } catch (e) {} _msgSub = null; }
+    try {
+      _msgSub = sb.channel('kapu-room-' + _room)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + _room }, function (p) { _onIncoming(p.new); })
+        .subscribe();
+    } catch (e) {}
+  }
+  function _unsubscribeRoom() { if (_msgSub) { try { _msgSub.unsubscribe(); } catch (e) {} _msgSub = null; } }
+  // 열 때 그동안 놓친 담당매니저 답변을 불러와 표시
+  async function _loadMissed() {
+    if (!_room) return;
+    try {
+      var sb = window.sb; if (!sb || !sb.from) return;
+      var r = await sb.from('chat_messages').select('id, sender_type, sender_name, message, file_url, file_name, file_type, created_at').eq('room_id', _room).order('created_at', { ascending: true }).limit(100);
+      var rows = (r && r.data) || [];
+      rows.forEach(function (m) {
+        if (_seenMsgIds[m.id]) return;
+        _seenMsgIds[m.id] = 1;
+        var isMgr = m.sender_type !== 'customer' && String(m.sender_name || '').indexOf('관리자') >= 0;
+        var isSystem = m.sender_type === 'system';
+        if (isMgr || isSystem) _renderIncoming(m);
+      });
+    } catch (e) {}
+  }
   // 입력을 성함으로 캡처 → 저장 + 기존 방 이름 반영 + 보류 메시지 이어서 전송
   async function _captureName(raw) {
     addMsg(raw, 'me');
@@ -236,7 +294,7 @@
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
-      if (data.room_id) { _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} }
+      if (data.room_id) { var _wasNew = (_room !== data.room_id); _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} if (_wasNew) _subscribeRoom(); }
       var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
       typing.classList.remove('jvg-typing'); typing.textContent = msg;
       _hist.push({ role: 'user', content: text || '[사진 업로드]' });
@@ -276,6 +334,53 @@
     else { open('aftercart'); }
   };
 
+  // 2026-10-07(사장님): 첫 진입 인테이크 폼 — 성함 + 제품종류 선택
+  function _addLinkAction(label, href) {
+    var b = _root.querySelector('.jvg-body');
+    var wrap = document.createElement('div'); wrap.className = 'jvg-quick';
+    var btn = document.createElement('button'); btn.className = 'jvg-q jvg-q-primary'; btn.textContent = label;
+    btn.addEventListener('click', function () { close(); location.href = href; });
+    wrap.appendChild(btn); b.appendChild(wrap); b.scrollTop = b.scrollHeight;
+  }
+  function _addIntakeForm() {
+    var b = _root.querySelector('.jvg-body');
+    var TYPES = ['허니콤보드', '종이매대', '패브릭', '기타', '가맹문의'];
+    var JA = { '허니콤보드': 'ハニカムボード', '종이매대': '紙什器', '패브릭': 'ファブリック', '기타': 'その他', '가맹문의': '加盟のお問い合わせ' };
+    var EN = { '허니콤보드': 'Honeycomb Board', '종이매대': 'Paper Display', '패브릭': 'Fabric', '기타': 'Other', '가맹문의': 'Franchise' };
+    function optLabel(v) { return _lang === 'ja' ? JA[v] : (_lang === 'kr' ? v : EN[v]); }
+    var opts = TYPES.map(function (v) { return '<option value="' + v + '">' + esc(optLabel(v)) + '</option>'; }).join('');
+    var wrap = document.createElement('div'); wrap.className = 'jvg-intake';
+    wrap.innerHTML =
+      '<label>' + tr('성함', 'お名前', 'Name') + '</label>' +
+      '<input class="jvg-ik-name" type="text" placeholder="' + tr('성함을 입력해줘', 'お名前を入力', 'Your name') + '">' +
+      '<label>' + tr('제품 종류', '製品の種類', 'Product type') + '</label>' +
+      '<select class="jvg-ik-type"><option value="">' + tr('선택해줘', '選択してね', 'Select') + '</option>' + opts + '</select>' +
+      '<button class="jvg-ik-start">' + tr('상담 시작', '相談を始める', 'Start') + '</button>';
+    b.appendChild(wrap); b.scrollTop = b.scrollHeight;
+    var nameInp = wrap.querySelector('.jvg-ik-name'), typeSel = wrap.querySelector('.jvg-ik-type'), startBtn = wrap.querySelector('.jvg-ik-start');
+    nameInp.addEventListener('input', function () { nameInp.style.borderColor = ''; });
+    startBtn.addEventListener('click', function () {
+      var nm = (nameInp.value || '').trim().replace(/[\t<>]/g, '').slice(0, 20);
+      var ty = typeSel.value;
+      if (!nm) { nameInp.focus(); nameInp.style.borderColor = '#ef4444'; return; }
+      _custName = nm; _awaitingName = false;
+      try { localStorage.setItem('kapu_cust_name', _custName); } catch (e) {}
+      try { var sb = window.sb; if (sb && sb.from && _room) sb.from('chat_rooms').update({ customer_name: _custName }).eq('id', _room); } catch (e) {}
+      try { wrap.remove(); } catch (e) {}
+      addMsg(tr('반가워 ' + _custName + '님! 😊', _custName + 'さん、よろしくね！😊', 'Nice to meet you, ' + _custName + '!'), 'ai');
+      if (ty === '가맹문의') {
+        addMsg(tr('가맹·리셀러 안내 페이지로 안내할게!', '加盟・リセラーのご案内ページへ！', 'Let me take you to our franchise page!'), 'ai');
+        _addLinkAction(tr('가맹 안내 보러가기 →', '加盟案内を見る →', 'View franchise →'), '/franchise');
+      } else if (ty) {
+        var label = optLabel(ty);
+        send(tr(label + ' 제작하고 싶어', label + 'を作りたい', 'I want to make ' + label));
+      } else {
+        addMsg(tr('어떤 제품이 필요한지 알려주면 도와줄게! (사진·제품명 환영)', 'どんな製品が必要か教えてね！（写真・製品名OK）', 'Tell me what product you need! (photo or name)'), 'ai');
+        addGreetActions();
+      }
+    });
+    nameInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); typeSel.focus(); } });
+  }
   function open(mode) {
     if (_root) return;   // 이미 열려 있으면 무시
     ensureStyles();
@@ -291,8 +396,16 @@
     if (mode === 'aftercart') {
       addMsg(_afterCartMsg(), 'ai');
       _addCartActions();
+    } else if (!_custName) {
+      // 2026-10-07(사장님): 첫 진입 — 성함 입력 + 제품종류 드롭다운 폼
+      addMsg(tr(
+        '안녕! 카멜레온 카푸야 😊\n성함과 찾는 제품을 알려주면 바로 딱 맞게 안내할게!',
+        'こんにちは！カメレオンのカプだよ😊\nお名前と探している製品を教えてね！',
+        'Hi! I\'m Kapu 😊\nTell me your name and what you\'re looking for!'
+      ), 'ai');
+      _addIntakeForm();
     } else {
-      // 첫 인사 (반말·친근). 주문 방법 3가지 안내 + 버튼.
+      // 재방문(성함 보유): 주문 방법 안내 + 버튼
       addMsg(tr(
         '안녕! 행사 준비해? 내가 안내할게.\n\n주문하는 방법은 2가지가 있어.\n\n' +
         '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓거나, "가벽"·"배너"처럼 제품명을 말해줘. 내가 딱 맞는 링크를 줄게. 링크에 들어가면 튜토리얼로 차근차근 안내해줄게.\n\n' +
@@ -329,9 +442,12 @@
     inp.addEventListener('paste', handlePaste);
     _root.addEventListener('paste', handlePaste);
     _root.querySelector('.jvg-x').addEventListener('click', close);
+    // 담당매니저 답변 실시간 수신 (기존 방이 있으면 놓친 답변도 불러와 표시)
+    if (_room) { _loadMissed(); _subscribeRoom(); }
   }
 
   function close() {
+    _unsubscribeRoom();
     if (_backdrop) { _backdrop.classList.remove('jvg-in'); var bd = _backdrop; _backdrop = null; setTimeout(function () { try { bd.remove(); } catch (e) {} }, 400); }
     if (_root) { _root.classList.remove('jvg-in'); var rt = _root; _root = null; setTimeout(function () { try { rt.remove(); } catch (e) {} }, 400); }
   }
