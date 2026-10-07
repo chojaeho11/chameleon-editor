@@ -766,6 +766,7 @@ async function loadOrders() {
         // 고객 취소/환불 가능 범위: 미결제는 즉시취소, 결제완료~제작준비는 환불요청
         const preProductionStatuses = ['접수대기','입금대기','접수됨','파일처리중','제작준비'];
         const canCancel = preProductionStatuses.includes(o.status) && !['취소요청','취소됨'].includes(o.status);
+        const isDraft = o.status === '임시작성';   // 2026-10-07(#57): 임시작성은 고객이 삭제 가능(포인트/쿠폰 복구)
         const safeId = String(o.id); 
         const displayId = safeId.length > 8 ? safeId.substring(0,8) + '...' : safeId;
 
@@ -826,6 +827,7 @@ async function loadOrders() {
                         <button onclick="reOrder('${o.id}')" style="flex:1; height:32px; font-size:12px; font-weight:700; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer;">${window.t('btn_reorder','Reorder')}</button>
                         <button onclick="pickOrderItemToEdit('${o.id}')" style="flex:1; height:32px; font-size:12px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:7px; cursor:pointer;">✎ ${window.t('btn_edit_item','수정')}</button>
                     </div>` : ''}
+                    ${isDraft ? `<button onclick="deleteDraftOrder('${o.id}')" style="width:100%; height:32px; font-size:12px; font-weight:700; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer; margin-bottom:10px;">${window.t('btn_delete_draft','삭제')}</button>` : ''}
                     <!-- Line 3: 담당매니저 · 배송예정일 · 결제내역 (배경 옅은 슬레이트, 3등분) -->
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; background:#f8fafc; border-radius:10px; padding:10px 4px;">
                         <div style="text-align:center; padding:0 4px; border-right:1px solid #e2e8f0;">
@@ -862,6 +864,7 @@ async function loadOrders() {
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <div style="display:flex; gap:5px;">
                             ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="flex:1; font-size:12px; font-weight:700; padding:6px 8px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
+                            ${isDraft ? `<button class="btn-cancel-order" onclick="deleteDraftOrder('${o.id}')" style="flex:1; font-size:12px; font-weight:700; padding:6px 8px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer;">${window.t('btn_delete_draft', '삭제')}</button>` : ''}
                             <button onclick="reOrder('${o.id}')" style="flex:1; height:30px; font-size:12px; font-weight:700; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
                             ${(Array.isArray(items) && items.length>0 && items[0] && items[0].product && items[0].product.code) ? `<button onclick="pickOrderItemToEdit('${o.id}')" style="flex:1; height:30px; font-size:12px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:7px; cursor:pointer; white-space:nowrap;" title="${window.t('btn_edit_order_hint','옵션·파일을 바꿔서 다시 담기')}">✎ ${window.t('btn_edit_item','수정')}</button>` : ''}
                         </div>
@@ -943,6 +946,65 @@ async function cancelOrder(orderId) {
 
     loadOrders();
 }
+
+// 2026-10-07(#57 박성희): 임시작성(미결제 초안) 삭제 + 사용된 포인트/쿠폰 복구.
+//   임시작성엔 '취소' 버튼이 없어 고객이 못 지우고, 쓴 쿠폰이 묶여있던 문제.
+async function deleteDraftOrder(orderId) {
+    try {
+        const { data: order } = await sb.from('orders').select('status, user_id, discount_amount, items').eq('id', orderId).single();
+        if (!order) { showToast(window.t('msg_order_not_found', '주문을 찾을 수 없습니다.'), 'error'); return; }
+        if (order.status !== '임시작성') { showToast(window.t('msg_draft_only_delete', '임시작성 주문만 삭제할 수 있습니다.'), 'warn'); return; }
+        if (!confirm(window.t('confirm_delete_draft', '이 임시작성을 삭제하시겠습니까?\n사용한 포인트·쿠폰은 복구됩니다.'))) return;
+
+        // 1) 포인트/쿠폰 복구 — 이 주문으로 실제 차감된 wallet_logs(usage_*) 가 있으면 환원 (usage_refund 마커로 중복복구 방지).
+        //    임시작성은 보통 결제 전이라 차감이 없지만, 혹시 차감됐다면 되돌린다.
+        try {
+            if (currentUser && currentUser.id) {
+                const { data: used } = await sb.from('wallet_logs').select('id, amount, type').eq('related_order_id', orderId);
+                const spent = (used || []).filter(r => (r.amount || 0) < 0);
+                const already = (used || []).some(r => r.type === 'usage_refund');
+                if (spent.length && !already) {
+                    const restore = spent.reduce((s, r) => s + Math.abs(r.amount || 0), 0);
+                    if (restore > 0) {
+                        const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
+                        await sb.from('profiles').update({ mileage: (m && m.mileage || 0) + restore }).eq('id', currentUser.id);
+                        await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_refund', amount: restore, description: `임시작성 삭제 포인트 복구 (주문번호: ${orderId})`, related_order_id: orderId });
+                    }
+                }
+            }
+        } catch (eM) { console.warn('[deleteDraftOrder restore]', eM); }
+
+        // 2) 연결 design_requests 정리 (open/payment_pending 만 — cancelOrder 와 동일 규칙)
+        try {
+            const dreqIds = new Set();
+            let items = order.items;
+            if (typeof items === 'string') { try { items = JSON.parse(items); } catch (_) {} }
+            (items || []).forEach(it => { const rid = it && (it.design_request_id || it._designRequestId); if (rid) dreqIds.add(rid); });
+            try { const byTag = await sb.from('design_requests').select('id').ilike('description', '%[ORDER_ID:' + orderId + ' %'); (byTag.data || []).forEach(r => dreqIds.add(r.id)); } catch (_) {}
+            if (dreqIds.size > 0) {
+                const rowsCheck = await sb.from('design_requests').select('id, status').in('id', Array.from(dreqIds));
+                const deletable = (rowsCheck.data || []).filter(r => r.status === 'open' || r.status === 'payment_pending').map(r => r.id);
+                if (deletable.length > 0) {
+                    try { await sb.from('design_bids').delete().in('request_id', deletable); } catch (_) {}
+                    try { await sb.from('design_reviews').delete().in('request_id', deletable); } catch (_) {}
+                    try { await sb.from('design_requests').delete().in('id', deletable); } catch (_) {}
+                }
+            }
+        } catch (eDR) { console.warn('[deleteDraftOrder design_requests]', eDR); }
+
+        // 3) 주문 삭제 (RLS 로 delete 막히면 '취소됨' 으로 폴백)
+        const del = await sb.from('orders').delete().eq('id', orderId);
+        if (del.error) {
+            await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', orderId);
+        }
+        showToast(window.t('msg_draft_deleted', '임시작성이 삭제되었습니다.'), 'success');
+    } catch (e) {
+        console.error('deleteDraftOrder error:', e);
+        showToast(window.t('msg_delete_failed', '삭제 실패. 고객센터에 문의하세요.'), 'error');
+    }
+    loadOrders();
+}
+window.deleteDraftOrder = deleteDraftOrder;
 
 async function reOrder(orderId) {
     const order = window.myOrdersData?.find(o => o.id == orderId);
