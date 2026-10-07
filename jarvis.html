@@ -399,7 +399,7 @@
                     const nmArg = JSON.stringify(esc(nm)).replace(/"/g,'&quot;');
                     // 담당매니저 지정 시 타일 전체를 그 매니저 고유색으로 (미지정은 기본색)
                     const _col = _mgrColor(am);
-                    const _tileStyle = _col ? ` style="background:linear-gradient(160deg, ${_col}3d 0%, ${_col}17 100%); border-color:${_col};"` : '';
+                    const _tileStyle = _col ? ` style="background:linear-gradient(160deg, ${_mix(_col,0.62)} 0%, ${_mix(_col,0.34)} 100%); border-color:${_col}; box-shadow:inset 0 0 0 1px ${_col}66;"` : '';
                     return `<div class="room-tile ${fresh?'fresh':''}"${_tileStyle}>
                         <div class="rt-body">
                             <div class="rt-top">${esc(fmtAgo(r.updated_at))} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
@@ -453,6 +453,13 @@
             if(s && s.color && /^#?[0-9a-fA-F]{3,8}$/.test(String(s.color).replace('#',''))) { const c=String(s.color); return c[0]==='#'?c:('#'+c); }
             let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
             return _MGR_PALETTE[h % _MGR_PALETTE.length];
+        }
+        // 매니저색을 어두운 배경(#0f172a)과 섞어 진한 타일 배경 생성 (밝은 글씨 가독성 유지). pct=색 비중(0~1)
+        function _mix(hex, pct){
+            hex=String(hex||'').replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join('');
+            const r=parseInt(hex.slice(0,2),16)||100, g=parseInt(hex.slice(2,4),16)||116, b=parseInt(hex.slice(4,6),16)||139;
+            const dr=15,dg=23,db=42;
+            return 'rgb('+Math.round(r*pct+dr*(1-pct))+','+Math.round(g*pct+dg*(1-pct))+','+Math.round(b*pct+db*(1-pct))+')';
         }
         window.assignRoomMgr = async function(roomId, name){
             name=(name||'').trim();
@@ -801,7 +808,11 @@
         window.setManager = function(name){
             name=(name||'').trim(); if(!name) return;
             ME=name; try{ localStorage.setItem('jarvisMgrName', ME); }catch(e){}
-            paintMe(); repaintMgrUI(); toast('상담 매니저: ' + ME);
+            // 2026-10-07(사장님): 본인(매니저) 선택 시 자기 담당 방만 보기(미배정 제외). 본사는 전체.
+            _roomFilter = (name==='본사') ? '' : name;
+            _roomPage = 0;
+            paintMe(); repaintMgrUI(); toast('상담 매니저: ' + ME + (name!=='본사' ? ' — 내 담당만 보기' : ''));
+            loadRooms();
         };
         async function buildMgrUI(){
             let names = [];
