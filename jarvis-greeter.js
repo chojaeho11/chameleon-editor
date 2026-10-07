@@ -432,8 +432,7 @@
         _hist.push({ role: 'user', content: text || '[사진 업로드]' });
         if (!_humanNoticeShown) { _humanNoticeShown = true; addMsg(tr('담당 매니저가 직접 확인하고 있어요. 잠시만 기다려 주세요 🙋', '担当マネージャーが確認中です。少々お待ちください🙋', 'A manager is handling this now. One moment 🙋'), 'ai'); }
         _subscribeRoom();
-        _lastAskedText = text || _lastAskedText;   // 자리비움 시 AI 전환으로 다시 물어볼 질문
-        _startHumanWaitTimer();                     // 30초 내 매니저 답 없으면 AI 전환 제안
+        // 2026-10-07(사장님): 고객측 '1분 후 AI 전환' 프롬프트 제거. AI 재개는 관리자 10분 타이머(서버)가 처리.
         _scrollBottom();
       } else {
         if (_humanWaitTimer) { clearTimeout(_humanWaitTimer); _humanWaitTimer = null; }

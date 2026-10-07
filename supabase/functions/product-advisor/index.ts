@@ -87,10 +87,12 @@ serve(async (req) => {
         //   매니저의 답변은 chat_messages realtime 으로 고객에게 전달됨.
         if (clientRoomId) {
             try {
-                const { data: _hr } = await sb.from('chat_rooms').select('human_active').eq('id', clientRoomId).maybeSingle();
-                if (_hr && _hr.human_active && forceAi) {
-                    // 2026-10-07(사장님): 담당자 자리비움 → 고객이 'AI 전환' 선택 → 사람 상담 해제하고 AI 가 답변 진행.
-                    try { await sb.from('chat_rooms').update({ human_active: false, status: 'ai_chatting' }).eq('id', clientRoomId); } catch (_e) {}
+                const { data: _hr } = await sb.from('chat_rooms').select('human_active, human_active_until').eq('id', clientRoomId).maybeSingle();
+                // 2026-10-07(사장님): 매니저 참여 10분 타이머 — human_active_until 지나면 AI 자동 재개 (관리자 창 닫혀 있어도).
+                const _deadlinePassed = _hr && _hr.human_active && _hr.human_active_until && (new Date(_hr.human_active_until).getTime() <= Date.now());
+                if (_hr && _hr.human_active && (forceAi || _deadlinePassed)) {
+                    // 고객이 'AI 전환' 선택했거나, 매니저 참여 타이머(10분)가 만료됨 → 사람 상담 해제하고 AI 가 답변 진행.
+                    try { await sb.from('chat_rooms').update({ human_active: false, status: 'ai_chatting', human_active_until: null }).eq('id', clientRoomId); } catch (_e) {}
                 } else if (_hr && _hr.human_active) {
                     const _cn = (clientCustName || '').trim() || 'Guest';
                     try {

@@ -86,6 +86,8 @@
         .cmsg.mgr { align-self: flex-end; background: rgba(34,197,94,0.22); color: #dcfce7; border-bottom-right-radius: 4px; }
         .cmsg img { max-width: 180px; border-radius: 8px; margin-top: 6px; display: block; }
         .conv-foot { padding: 12px 14px; border-top: 1px solid rgba(148,163,184,0.15); }
+        .conv-timer { text-align: center; font-size: 13px; color: #86efac; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; font-weight: 700; }
+        .conv-timer b { color: #fde047; font-variant-numeric: tabular-nums; }
         .join-bar { display: flex; gap: 8px; }
         .reply-wrap { display: none; gap: 8px; align-items: flex-end; }
         .reply-wrap.show { display: flex; }
@@ -246,6 +248,7 @@
             </div>
             <div class="conv-body" id="convBody"></div>
             <div class="conv-foot">
+                <div class="conv-timer" id="convTimer" style="display:none;"></div>
                 <div class="join-bar" id="joinBar">
                     <button class="btn btn-join" id="joinBtn" onclick="managerJoin()">🙋 매니저 참여 (직접 답변)</button>
                 </div>
@@ -270,6 +273,8 @@
         let _globalSub = null, _roomSub = null;
         let _curRoom = null;          // {id, name, human_active}
         let _curRoomMgrSent = false;  // 이 방에서 매니저가 답을 보냈는가(→ 닫을 때 자동 증류 학습)
+        let _convTimer = null;        // 2026-10-07(사장님): 매니저 참여 10분 카운트다운
+        const JOIN_MINUTES = 10;
         let _roomsCache = [];
         let _freshRooms = {};         // roomId -> true (새 고객메시지 미확인)
         let _reloadRoomsTimer = null;
@@ -509,9 +514,10 @@
             document.getElementById('convBody').innerHTML = '<div style="text-align:center;color:#64748b;padding:30px;">불러오는 중...</div>';
             document.getElementById('convOv').classList.add('open');
             // 방 상태
-            try{ const { data: rm } = await sb.from('chat_rooms').select('human_active, assigned_manager, customer_name, nickname').eq('id',roomId).maybeSingle(); if(rm){ _curRoom.human_active=!!rm.human_active; _curRoom.assigned_manager=(rm.assigned_manager||''); const _cn=(name||rm.customer_name||rm.nickname||'고객'); document.getElementById('convName').textContent = _cn + (_curRoom.assigned_manager?('  ·  👤 '+_curRoom.assigned_manager):''); } }catch(e){}
+            try{ const { data: rm } = await sb.from('chat_rooms').select('human_active, human_active_until, assigned_manager, customer_name, nickname').eq('id',roomId).maybeSingle(); if(rm){ const _until = rm.human_active_until ? new Date(rm.human_active_until).getTime() : 0; const _expired = _until && _until <= Date.now(); _curRoom.human_active=(!!rm.human_active && !_expired); _curRoom.human_active_until=rm.human_active_until||null; _curRoom.assigned_manager=(rm.assigned_manager||''); const _cn=(name||rm.customer_name||rm.nickname||'고객'); document.getElementById('convName').textContent = _cn + (_curRoom.assigned_manager?('  ·  👤 '+_curRoom.assigned_manager):''); } }catch(e){}
             await renderConvMessages(roomId);
             paintJoinBar();
+            if(_curRoom.human_active && _curRoom.human_active_until){ _startConvTimer(new Date(_curRoom.human_active_until).getTime()); }
             subscribeRoom(roomId);
         };
         async function renderConvMessages(roomId){
@@ -545,6 +551,7 @@
         window.closeConv = function(){
             document.getElementById('convOv').classList.remove('open');
             if(_roomSub){ try{_roomSub.unsubscribe();}catch(e){} _roomSub=null; }
+            _stopConvTimer();   // 창 닫아도 서버(human_active_until)가 10분 뒤 AI 재개 처리
             if(_curRoom && _curRoomMgrSent){ distillRoom(_curRoom.id); }   // 닫을 때 매니저 답변 자동 증류 학습
             _curRoomMgrSent=false; _curRoom=null; loadRooms();
         };
@@ -561,24 +568,40 @@
         function paintJoinBar(){
             const joinBar=document.getElementById('joinBar'), replyWrap=document.getElementById('replyWrap');
             if(_curRoom && _curRoom.human_active){ joinBar.style.display='none'; replyWrap.classList.add('show'); }
-            else { joinBar.style.display='flex'; replyWrap.classList.remove('show'); }
+            else { joinBar.style.display='flex'; replyWrap.classList.remove('show'); _stopConvTimer(); }
+        }
+        // 매니저 참여 10분 카운트다운 — 다 되면 AI 자동 재개 (창 닫혀 있어도 서버가 처리)
+        function _fmtMMSS(ms){ ms=Math.max(0,ms); var s=Math.round(ms/1000); var m=Math.floor(s/60); var ss=s%60; return m+':'+(ss<10?'0'+ss:ss); }
+        function _stopConvTimer(){ if(_convTimer){ clearInterval(_convTimer); _convTimer=null; } var el=document.getElementById('convTimer'); if(el) el.style.display='none'; }
+        function _startConvTimer(untilMs){
+            _stopConvTimer();
+            var el=document.getElementById('convTimer'); if(!el) return;
+            el.style.display='block';
+            function tick(){
+                var rem = untilMs - Date.now();
+                if(rem<=0){ _stopConvTimer(); if(_curRoom && _curRoom.human_active) managerLeave(true); return; }
+                el.innerHTML = '🙋 상담 중 · <b>AI 전환까지 '+_fmtMMSS(rem)+'</b>';
+            }
+            tick(); _convTimer=setInterval(tick,1000);
         }
 
         window.managerJoin = async function(){
             if(!_curRoom) return;
             try{
-                await sb.from('chat_rooms').update({ human_active:true, assigned_manager:ME, status:'human' }).eq('id',_curRoom.id);
-                _curRoom.human_active=true; _curRoom.assigned_manager=ME; paintJoinBar();
+                const until = new Date(Date.now()+JOIN_MINUTES*60000).toISOString();
+                await sb.from('chat_rooms').update({ human_active:true, assigned_manager:ME, status:'human', human_active_until:until }).eq('id',_curRoom.id);
+                _curRoom.human_active=true; _curRoom.assigned_manager=ME; _curRoom.human_active_until=until; paintJoinBar();
+                _startConvTimer(new Date(until).getTime());
                 document.getElementById('replyTa').focus();
-                toast('🙋 매니저 참여 ('+ME+') — 이제 AI 대신 직접 답변합니다');
+                toast('🙋 매니저 참여 ('+ME+') — 10분간 직접 답변 (이후 AI 자동 재개)');
             }catch(e){ toast('참여 실패: '+(e?.message||e), true); }
         };
-        window.managerLeave = async function(){
+        window.managerLeave = async function(auto){
             if(!_curRoom) return;
             try{
-                await sb.from('chat_rooms').update({ human_active:false, status:'open' }).eq('id',_curRoom.id);
-                _curRoom.human_active=false; paintJoinBar();
-                toast('🤖 AI 응답 재개');
+                await sb.from('chat_rooms').update({ human_active:false, status:'open', human_active_until:null }).eq('id',_curRoom.id);
+                _curRoom.human_active=false; _curRoom.human_active_until=null; paintJoinBar(); _stopConvTimer();
+                toast(auto===true ? '⏱ 10분 경과 — AI 응답 재개' : '🤖 AI 응답 재개');
                 if(_curRoomMgrSent){ distillRoom(_curRoom.id); _curRoomMgrSent=false; }   // 매니저 답변 자동 증류 학습
             }catch(e){ toast('처리 실패: '+(e?.message||e), true); }
         };
@@ -589,12 +612,14 @@
             ta.disabled=true;
             const sender = (_curRoom.assigned_manager || ME);   // 이 방의 담당자 이름으로 발송
             try{
-                if(!_curRoom.human_active || !_curRoom.assigned_manager){ await sb.from('chat_rooms').update({ human_active:true, assigned_manager:sender, status:'human' }).eq('id',_curRoom.id); _curRoom.human_active=true; _curRoom.assigned_manager=sender; paintJoinBar(); }
+                const _until = new Date(Date.now()+JOIN_MINUTES*60000).toISOString();   // 매니저가 답하면 타이머 10분 연장
+                if(!_curRoom.human_active || !_curRoom.assigned_manager){ await sb.from('chat_rooms').update({ human_active:true, assigned_manager:sender, status:'human', human_active_until:_until }).eq('id',_curRoom.id); _curRoom.human_active=true; _curRoom.assigned_manager=sender; paintJoinBar(); }
                 const { error } = await sb.from('chat_messages').insert({
                     room_id:_curRoom.id, sender_type:'chatbot', sender_name:'관리자 '+sender, message:txt, created_at:new Date().toISOString()
                 });
                 if(error) throw error;
-                await sb.from('chat_rooms').update({ updated_at:new Date().toISOString() }).eq('id',_curRoom.id);
+                await sb.from('chat_rooms').update({ updated_at:new Date().toISOString(), human_active_until:_until }).eq('id',_curRoom.id);
+                _curRoom.human_active_until=_until; _startConvTimer(new Date(_until).getTime());
                 _curRoomMgrSent = true;
                 ta.value='';
                 // 내 화면에도 즉시 표시 (구독이 늦을 수 있어 낙관적 렌더 — 중복 시 구독쪽은 동일내용이라 무해)
