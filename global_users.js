@@ -1245,7 +1245,7 @@ window.deleteStaffDB = async (id) => {
 
 // [매니저 휴가 관리] — 휴가 시 OFF로 토글하면 챗봇/장바구니에서 회색 처리되어 선택 불가
 // 데이터: chatbot_knowledge.category='_managers' 의 is_active 컬럼
-const FIELD_MGR_NAMES = ['은미', '성희', '지숙', '연두', '혜림']; // 현장 매니저 last-name fragments (2026-10-02: 혜림 추가)
+const FIELD_MGR_NAMES = ['은미', '성희', '지숙', '연두', '혜림', '동연']; // 현장 매니저 last-name fragments (2026-10-02: 혜림 / 2026-10-07: 동연 추가)
 
 window.loadMgrVacation = async () => {
     const grid = document.getElementById('mgrVacationGrid');
