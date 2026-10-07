@@ -397,7 +397,10 @@
                     const am = (r.assigned_manager||'').trim();
                     const chip = `<span class="room-mgr ${am?'assigned':''}" onclick="event.stopPropagation(); toggleRoomMgr('${r.id}')">${am?('👤 '+esc(am)+(r.human_active?' 상담중':'')):'담당 지정'} ▾</span>`;
                     const nmArg = JSON.stringify(esc(nm)).replace(/"/g,'&quot;');
-                    return `<div class="room-tile ${fresh?'fresh':''}">
+                    // 담당매니저 지정 시 타일 전체를 그 매니저 고유색으로 (미지정은 기본색)
+                    const _col = _mgrColor(am);
+                    const _tileStyle = _col ? ` style="background:linear-gradient(160deg, ${_col}3d 0%, ${_col}17 100%); border-color:${_col};"` : '';
+                    return `<div class="room-tile ${fresh?'fresh':''}"${_tileStyle}>
                         <div class="rt-body">
                             <div class="rt-top">${esc(fmtAgo(r.updated_at))} ${fresh?'<span class="badge-new">NEW</span>':''}</div>
                             <div class="rt-prev">${esc(prev)}</div>
@@ -440,6 +443,17 @@
             return hit ? hit.id : null;
         }
         function _normPhone(p){ return String(p==null?'':p).replace(/[^0-9]/g,''); }
+        // 2026-10-07(사장님): 담당매니저별 고유색 — admin_staff.color 우선, 없으면 이름해시 팔레트. 본사=별도색.
+        const _MGR_PALETTE = ['#ef4444','#f59e0b','#10b981','#3b82f6','#a855f7','#ec4899','#14b8a6','#f97316','#eab308','#06b6d4'];
+        function _mgrColor(name){
+            name=(name||'').trim(); if(!name) return null;
+            if(name==='본사') return '#64748b';
+            let s = _staffList.find(x=>String(x.name||'').trim()===name);
+            if(!s) s = _staffList.find(x=>{ const sn=String(x.name||'').trim(); return sn && (sn.includes(name)||name.includes(sn)); });
+            if(s && s.color && /^#?[0-9a-fA-F]{3,8}$/.test(String(s.color).replace('#',''))) { const c=String(s.color); return c[0]==='#'?c:('#'+c); }
+            let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
+            return _MGR_PALETTE[h % _MGR_PALETTE.length];
+        }
         window.assignRoomMgr = async function(roomId, name){
             name=(name||'').trim();
             const dd=document.getElementById('rmdd-'+roomId); if(dd) dd.classList.remove('open');
@@ -835,7 +849,7 @@
             try{ const u=await sb.auth.getUser(); const em=u&&u.data&&u.data.user&&u.data.user.email; if(em){ _acctName = em.split('@')[0]; } }catch(e){}
             // 저장된 선택 우선, 없으면 계정명
             ME = (localStorage.getItem('jarvisMgrName') || _acctName || '관리자');
-            try{ const { data } = await sb.from('admin_staff').select('id,name,role'); _staffList = (data||[]).filter(s=>s.role==='manager'); }catch(e){ console.warn('[admin_staff]',e); }
+            try{ const { data } = await sb.from('admin_staff').select('id,name,role,color'); _staffList = (data||[]).filter(s=>s.role==='manager'); }catch(e){ console.warn('[admin_staff]',e); }
             await buildMgrUI();
             paintMe();
             paintAlarm();
