@@ -61,7 +61,15 @@
       .replace(/__([\s\S]*?)__/g, '$1')
       .trim();
   }
-  // 2026-10-07(사장님): 메시지 속 링크(제품/URL)를 클릭 가능한 앵커로 — 나머지는 이스케이프
+  // 2026-10-07(사장님): 메시지 속 링크 — 움짤(gif)·이미지·영상·유튜브는 카톡처럼 인라인 미리보기, 그 외는 앵커.
+  function _mediaFor(url) {
+    var base = String(url).split('#')[0].split('?')[0].toLowerCase();
+    var yt = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_\-]{6,})/);
+    if (yt) return '<a href="' + esc(url) + '" target="_blank" rel="noopener" style="display:block;position:relative;max-width:260px;margin:4px 0;border-radius:12px;overflow:hidden;line-height:0;"><img src="https://img.youtube.com/vi/' + esc(yt[1]) + '/hqdefault.jpg" alt="" style="width:100%;display:block;"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.28);color:#fff;font-size:30px;line-height:1;">▶</span></a>';
+    if (/\.(gif|png|jpe?g|webp|bmp|svg)$/.test(base)) return '<img src="' + esc(url) + '" alt="" style="max-width:200px;border-radius:10px;display:block;margin:4px 0;cursor:pointer;" onclick="window.open(\'' + esc(url) + '\',\'_blank\')">';
+    if (/\.(mp4|webm|mov|m4v)$/.test(base)) return '<video src="' + esc(url) + '" controls style="max-width:240px;border-radius:10px;display:block;margin:4px 0;"></video>';
+    return null;
+  }
   function _linkify(raw) {
     raw = String(raw == null ? '' : raw).replace(/\*\*/g, '');
     var re = /(https?:\/\/[^\s<]+)|(\/\?product=[A-Za-z0-9_%\-]+)/g;
@@ -70,8 +78,12 @@
       out += esc(raw.slice(last, m.index));
       var url = m[1] || (location.origin + m[2]);
       var isProd = /[?&]product=/.test(url);
-      var label = isProd ? '🔗 제품 보기' : (url.length > 46 ? url.slice(0, 43) + '…' : url);
-      out += '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(label) + '</a>';
+      var media = isProd ? null : _mediaFor(url);
+      if (media) { out += media; }
+      else {
+        var label = isProd ? '🔗 제품 보기' : (url.length > 46 ? url.slice(0, 43) + '…' : url);
+        out += '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(label) + '</a>';
+      }
       last = re.lastIndex;
     }
     out += esc(raw.slice(last));
@@ -536,6 +548,57 @@
     nameInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); phoneInp.focus(); } });
     phoneInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); typeSel.focus(); } });
   }
+  // 2026-10-07(사장님): 파일 업로드 — 이미지·PDF·일러스트·영상·움짤, 최대 30MB.
+  //   작은 정지 이미지는 AI 비전 분석 경로(제품 안내) 유지, 그 외는 storage 업로드 후 담당자 확인.
+  var MAX_FILE = 30 * 1024 * 1024;
+  function _handleFile(f) {
+    if (!f) return;
+    if (f.size > MAX_FILE) { try { alert(tr('파일은 최대 30MB까지 올릴 수 있어요.', 'ファイルは最大30MBまでです。', 'Max file size is 30MB.')); } catch (e) {} return; }
+    var isImg = /^image\//.test(f.type || '');
+    if (isImg && f.type !== 'image/gif' && f.size <= 8 * 1024 * 1024) {
+      // 정지 이미지(≤8MB) → 카푸가 보고 제품 안내 (기존 경로, 서버가 이미지 저장함)
+      readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); });
+      return;
+    }
+    _uploadFileToChat(f);
+  }
+  async function _uploadFileToChat(f) {
+    var sb = window.sb;
+    if (!sb || !sb.storage) {
+      if (/^image\//.test(f.type || '') && f.size <= 8 * 1024 * 1024) { readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); return; }
+      addMsg(tr('지금은 파일 업로드가 어려워요. 잠시 후 다시 시도해 주세요.', '今はアップロードできません。', 'File upload is unavailable right now.'), 'ai'); return;
+    }
+    var sendBtn = _root && _root.querySelector('.jvg-send'); if (sendBtn) sendBtn.disabled = true;
+    _busy = true;
+    var up = addMsg(tr('파일 올리는 중…', 'アップロード中…', 'Uploading…'), 'me'); up.classList.add('jvg-typing');
+    try {
+      // 방이 없으면 생성 (RLS off — 클라이언트 insert 가능)
+      if (!_room) {
+        try { var ins = await sb.from('chat_rooms').insert({ customer_name: _custName || '웹 고객', customer_phone: _custPhone || null, status: 'ai_chatting', source: 'chatbot', site_lang: _lang, assigned_manager: '' }).select('id').single(); if (ins && ins.data) { _room = ins.data.id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} _subscribeRoom(); } } catch (e) {}
+      }
+      var ext = ((f.name || 'file').split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin';
+      var path = 'room-' + (_room || 'x') + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      var upRes = await sb.storage.from('chat-files').upload(path, f, { upsert: true, contentType: f.type || undefined });
+      if (upRes && upRes.error) throw upRes.error;
+      var url = ((sb.storage.from('chat-files').getPublicUrl(path) || {}).data || {}).publicUrl || '';
+      try { up.closest('.jvg-row') && up.closest('.jvg-row').remove(); } catch (e) {}
+      var nm = f.name || 'file';
+      var isImg2 = /^image\//.test(f.type || '') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(nm);
+      var isVid = /^video\//.test(f.type || '') || /\.(mp4|webm|mov|m4v)$/i.test(nm);
+      var html;
+      if (isImg2) html = '<img src="' + esc(url) + '" alt="" style="cursor:pointer;" onclick="window.open(\'' + esc(url) + '\',\'_blank\')">';
+      else if (isVid) html = '<video src="' + esc(url) + '" controls style="max-width:100%;border-radius:10px;display:block;"></video>';
+      else html = '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(tr('파일: ', 'ファイル: ', 'File: ')) + esc(nm) + '</a>';
+      _addRow(html, 'me');
+      if (_room) { try { await sb.from('chat_messages').insert({ room_id: _room, sender_type: 'customer', sender_name: _custName || '고객', message: '', file_url: url, file_name: nm, file_type: f.type || '', created_at: new Date().toISOString() }); await sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', _room); } catch (e) {} }
+      addMsg(tr('파일 잘 받았어요! 담당자가 확인하고 안내해 드릴게요 😊', 'ファイルを受け取りました！担当者が確認してご案内します😊', 'Got your file! Our manager will review and get back to you 😊'), 'ai');
+    } catch (e) {
+      try { up.closest('.jvg-row') && up.closest('.jvg-row').remove(); } catch (_e) {}
+      addMsg(tr('파일 업로드에 실패했어요. 잠시 후 다시 시도해 주세요.', 'アップロードに失敗しました。', 'Upload failed. Please try again.'), 'ai');
+    } finally {
+      _busy = false; if (sendBtn) sendBtn.disabled = false; _scrollBottom();
+    }
+  }
   // 인사 렌더 (첫진입=성함/전화 폼, 재방문=안내+버튼). open() 과 리셋에서 공용.
   function _renderGreeting() {
     if (!_custName || !_custPhone) {
@@ -586,7 +649,7 @@
     _root.innerHTML =
       '<div class="jvg-head"><img class="jvg-ava" src="/jarvis-character.jpg?v=1" alt="카푸" onerror="this.src=\'/mascot-character.webp\'"><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('편하게 말씀해 주세요~', 'お気軽にどうぞ', 'Talk to me anytime') + '</div></div><button class="jvg-reset" type="button">' + tr('새 채팅', '新しい会話', 'New chat') + '</button><button class="jvg-x" aria-label="close">×</button></div>' +
       '<div class="jvg-body"></div>' +
-      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진 올리기', '写真', 'Photo') + '">📷</button><input class="jvg-file" type="file" accept="image/*" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진 올리거나 · 예: 가벽 3미터 · 배너 · 글씨스카시…', '写真、または例: パーティション3m…', 'Upload a photo, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
+      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진·파일 올리기 (이미지·PDF·일러스트·영상, 최대 30MB)', '写真・ファイル (最大30MB)', 'Upload photo/file (max 30MB)') + '">📎</button><input class="jvg-file" type="file" accept="image/*,video/*,.pdf,.ai,.eps,.psd,.zip" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진·파일·링크 또는 · 예: 가벽 3미터…', '写真・ファイル・リンク、または例: パーティション3m…', 'Photo/file/link, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
     if (mode === 'aftercart') {
       addMsg(_afterCartMsg(), 'ai');
@@ -605,14 +668,14 @@
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
     var imgBtn = _root.querySelector('.jvg-img'), fileInp = _root.querySelector('.jvg-file');
     imgBtn.addEventListener('click', function () { fileInp.click(); });
-    fileInp.addEventListener('change', function () { var f = fileInp.files && fileInp.files[0]; if (f) readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); fileInp.value = ''; });
+    fileInp.addEventListener('change', function () { var f = fileInp.files && fileInp.files[0]; if (f) _handleFile(f); fileInp.value = ''; });
     // 2026-09-24: 캡쳐 이미지 붙여넣기(Ctrl+V) 지원 — 클립보드 이미지 바로 전송
     function handlePaste(e) {
       var items = (e.clipboardData && e.clipboardData.items) || [];
       for (var i = 0; i < items.length; i++) {
         if (items[i].type && items[i].type.indexOf('image') === 0) {
           var f = items[i].getAsFile();
-          if (f) { e.preventDefault(); readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); }
+          if (f) { e.preventDefault(); _handleFile(f); }
           return;
         }
       }
