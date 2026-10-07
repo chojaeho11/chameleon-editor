@@ -58,6 +58,22 @@
       .replace(/__([\s\S]*?)__/g, '$1')
       .trim();
   }
+  // 2026-10-07(사장님): 메시지 속 링크(제품/URL)를 클릭 가능한 앵커로 — 나머지는 이스케이프
+  function _linkify(raw) {
+    raw = String(raw == null ? '' : raw).replace(/\*\*/g, '');
+    var re = /(https?:\/\/[^\s<]+)|(\/\?product=[A-Za-z0-9_%\-]+)/g;
+    var out = '', last = 0, m;
+    while ((m = re.exec(raw))) {
+      out += esc(raw.slice(last, m.index));
+      var url = m[1] || (location.origin + m[2]);
+      var isProd = /[?&]product=/.test(url);
+      var label = isProd ? '🔗 제품 보기' : (url.length > 46 ? url.slice(0, 43) + '…' : url);
+      out += '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(label) + '</a>';
+      last = re.lastIndex;
+    }
+    out += esc(raw.slice(last));
+    return out;
+  }
 
   function ensureStyles() {
     if (document.getElementById('jvgStyle')) return;
@@ -76,8 +92,10 @@
       '#advFloatingFab,#kapuFab,#btnAiAdvisor,#floatingChatBtn{display:none!important;}' +
       '#jvgCard .jvg-x{margin-left:auto;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.9;padding:2px 4px;}' +
       '#jvgCard .jvg-body{flex:1;overflow-y:auto;padding:16px;background:#fafafa;}' +
-      '#jvgCard .jvg-msg{font-size:14px;line-height:1.55;color:#1e293b;white-space:pre-wrap;margin-bottom:10px;}' +
-      '#jvgCard .jvg-msg.me{text-align:right;color:#4338ca;font-weight:600;}' +
+      '#jvgCard .jvg-msg{font-size:14px;line-height:1.5;color:#1e293b;white-space:pre-wrap;word-break:break-word;width:fit-content;max-width:82%;margin:0 0 8px 0;padding:9px 13px;border-radius:15px 15px 15px 4px;background:#fff;border:1px solid #e9edf5;box-sizing:border-box;}' +
+      '#jvgCard .jvg-msg.me{margin-left:auto;background:#6366f1;color:#fff;border-color:#6366f1;border-radius:15px 15px 4px 15px;}' +
+      '#jvgCard .jvg-msg a{color:#4f46e5;text-decoration:underline;word-break:break-all;}' +
+      '#jvgCard .jvg-msg.me a{color:#eef2ff;}' +
       '#jvgCard .jvg-recs{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px;}' +
       '#jvgCard .jvg-rec{display:flex;align-items:center;gap:10px;text-decoration:none;background:#fff;border:1px solid #e0e7ff;border-radius:12px;padding:9px 11px;color:#1e293b;transition:border-color .15s;}' +
       '#jvgCard .jvg-rec:hover{border-color:#6366f1;background:#f8faff;}' +
@@ -112,7 +130,7 @@
     var b = _root.querySelector('.jvg-body');
     var d = document.createElement('div');
     d.className = 'jvg-msg' + (who === 'me' ? ' me' : '');
-    d.textContent = text;
+    d.innerHTML = _linkify(text);
     b.appendChild(d); b.scrollTop = b.scrollHeight;
     return d;
   }
@@ -211,7 +229,7 @@
   function _renderIncoming(m) {
     if (!m || !_root) return;
     var b = _root.querySelector('.jvg-body'); if (!b) return;
-    if (m.message) { var d = document.createElement('div'); d.className = 'jvg-msg'; d.textContent = m.message; b.appendChild(d); }
+    if (m.message) { var d = document.createElement('div'); d.className = 'jvg-msg'; d.innerHTML = _linkify(m.message); b.appendChild(d); }
     if (m.file_url) {
       var fd = document.createElement('div'); fd.className = 'jvg-msg';
       var ft = String(m.file_type || '').toLowerCase();
@@ -303,7 +321,7 @@
         _subscribeRoom();
       } else {
         var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
-        typing.classList.remove('jvg-typing'); typing.textContent = msg;
+        typing.classList.remove('jvg-typing'); typing.innerHTML = _linkify(msg);
         _hist.push({ role: 'user', content: text || '[사진 업로드]' });
         _hist.push({ role: 'assistant', content: msg });
         addRecs(data.products);
