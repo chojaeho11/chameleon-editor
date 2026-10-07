@@ -153,7 +153,9 @@
       '#jvgCard .jvg-custinfo .ci-phone{font-size:13.5px;font-weight:600;opacity:.96;letter-spacing:.3px;}' +
       '#jvgCard .jvg-custinfo .ci-sep{width:1px;height:13px;background:rgba(255,255,255,.45);}' +
       '#jvgCard .jvg-send:disabled{opacity:.5;cursor:default;}' +
-      '#jvgCard .jvg-typing{font-size:13px;color:#94a3b8;}';
+      '#jvgCard .jvg-typing{font-size:13px;color:#94a3b8;}' +
+      '#jvgCard.jvg-drag{outline:3px dashed #6366f1;outline-offset:-6px;}' +
+      '#jvgCard.jvg-drag .jvg-body{background:#eef2ff;}';
     document.head.appendChild(st);
   }
 
@@ -550,10 +552,10 @@
   }
   // 2026-10-07(사장님): 파일 업로드 — 이미지·PDF·일러스트·영상·움짤, 최대 30MB.
   //   작은 정지 이미지는 AI 비전 분석 경로(제품 안내) 유지, 그 외는 storage 업로드 후 담당자 확인.
-  var MAX_FILE = 30 * 1024 * 1024;
+  var MAX_FILE = 100 * 1024 * 1024;
   function _handleFile(f) {
     if (!f) return;
-    if (f.size > MAX_FILE) { try { alert(tr('파일은 최대 30MB까지 올릴 수 있어요.', 'ファイルは最大30MBまでです。', 'Max file size is 30MB.')); } catch (e) {} return; }
+    if (f.size > MAX_FILE) { try { alert(tr('파일은 최대 100MB까지 올릴 수 있어요.', 'ファイルは最大100MBまでです。', 'Max file size is 100MB.')); } catch (e) {} return; }
     var isImg = /^image\//.test(f.type || '');
     if (isImg && f.type !== 'image/gif' && f.size <= 8 * 1024 * 1024) {
       // 정지 이미지(≤8MB) → 카푸가 보고 제품 안내 (기존 경로, 서버가 이미지 저장함)
@@ -649,7 +651,7 @@
     _root.innerHTML =
       '<div class="jvg-head"><img class="jvg-ava" src="/jarvis-character.jpg?v=1" alt="카푸" onerror="this.src=\'/mascot-character.webp\'"><div><div class="jvg-name">' + tr('카멜레온 카푸', 'カメレオン カプ', 'Chameleon Kapu') + '</div><div class="jvg-sub">' + tr('편하게 말씀해 주세요~', 'お気軽にどうぞ', 'Talk to me anytime') + '</div></div><button class="jvg-reset" type="button">' + tr('새 채팅', '新しい会話', 'New chat') + '</button><button class="jvg-x" aria-label="close">×</button></div>' +
       '<div class="jvg-body"></div>' +
-      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진·파일 올리기 (이미지·PDF·일러스트·영상, 최대 30MB)', '写真・ファイル (最大30MB)', 'Upload photo/file (max 30MB)') + '">📎</button><input class="jvg-file" type="file" accept="image/*,video/*,.pdf,.ai,.eps,.psd,.zip" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진·파일·링크 또는 · 예: 가벽 3미터…', '写真・ファイル・リンク、または例: パーティション3m…', 'Photo/file/link, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
+      '<div class="jvg-foot"><button class="jvg-img" title="' + tr('사진·파일 올리기 (이미지·PDF·일러스트·영상, 최대 100MB) · 드래그해서 놓아도 돼요', '写真・ファイル (最大100MB)', 'Upload photo/file (max 100MB)') + '">📎</button><input class="jvg-file" type="file" accept="image/*,video/*,.pdf,.ai,.eps,.psd,.zip" style="display:none"><input class="jvg-in-txt" type="text" placeholder="' + tr('사진·파일·링크 또는 · 예: 가벽 3미터…', '写真・ファイル・リンク、または例: パーティション3m…', 'Photo/file/link, or e.g. 3m wall…') + '"><button class="jvg-send">' + tr('보내기', '送信', 'Send') + '</button></div>';
     document.body.appendChild(_root);
     if (mode === 'aftercart') {
       addMsg(_afterCartMsg(), 'ai');
@@ -682,6 +684,16 @@
     }
     inp.addEventListener('paste', handlePaste);
     _root.addEventListener('paste', handlePaste);
+    // 2026-10-07(사장님): 드래그앤드롭 업로드
+    var _dragN = 0;
+    _root.addEventListener('dragenter', function (e) { e.preventDefault(); _dragN++; _root.classList.add('jvg-drag'); });
+    _root.addEventListener('dragover', function (e) { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; });
+    _root.addEventListener('dragleave', function (e) { e.preventDefault(); _dragN--; if (_dragN <= 0) { _dragN = 0; _root.classList.remove('jvg-drag'); } });
+    _root.addEventListener('drop', function (e) {
+      e.preventDefault(); _dragN = 0; _root.classList.remove('jvg-drag');
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) _handleFile(f);
+    });
     _root.querySelector('.jvg-x').addEventListener('click', close);
     var _rst = _root.querySelector('.jvg-reset'); if (_rst) _rst.addEventListener('click', _resetChat);
     // 실시간 수신 구독 (히스토리는 위에서 복원됨)
