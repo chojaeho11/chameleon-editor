@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20261007095148';
+    var CV = '20261007095828';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2672,10 +2672,15 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                         // 2026-09-17(사장님): 지정 순서(은미→지숙→연두→성희). 전화번호 없는 매니저(예: 정미선)는 제외.
                         var _MGR_ORDER = ['지숙','연두','성희'];
                         function _mgrRank(q){ q = String(q||''); for (var i=0;i<_MGR_ORDER.length;i++){ if (q.indexOf(_MGR_ORDER[i])>=0) return i; } return 900; }
+                        // 2026-10-07(사장님): 고객용 전화안내는 혜림(상담전화)만 노출.
+                        //   DB(_managers)는 주문배정·휴가관리와 공유하므로 지우지 않고 여기서만 필터.
+                        var _PHONE_GUIDE_NAMES = ['혜림'];
                         rows = rows.filter(function(r){
                             var ph = ''; try { ph = (JSON.parse(r.answer||'{}').phone||'').toString(); } catch(e){}
                             if (!ph && r.keywords) ph = String(r.keywords).replace(/[^0-9]/g,'');
-                            return !!ph;
+                            if (!ph) return false;
+                            var nm = String(r.question||'');
+                            return _PHONE_GUIDE_NAMES.some(function(n){ return nm.indexOf(n) >= 0; });
                         });
                         rows.sort(function(a,b){
                             var aOff = (a.is_active === false) ? 1 : 0;
