@@ -2194,6 +2194,10 @@ window.loadOrders = async () => {
                         ${(order.admin_note||'').includes('[COTTON-PRINT]') || (order.admin_note||'').includes('[Cotton Print')
                             ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:9px; font-weight:800; border-radius:50px; text-decoration:none; letter-spacing:0.3px;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();"><i class="fa-solid fa-file-lines"></i> 작업지시서</a>`
                             : `<a href="/workorder.html?id=${order.id}" target="_blank" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:9px; font-weight:800; border-radius:50px; text-decoration:none; letter-spacing:0.3px;" title="작업지시서 — Chameleon Printing 스타일" onclick="event.stopPropagation();"><i class="fa-solid fa-file-lines"></i> 작업지시서</a>`}
+                        <div style="margin-top:3px; display:flex; gap:3px; justify-content:center;">
+                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','quote')" style="padding:3px 7px; background:#eef2ff; color:#4f46e5; font-size:9px; font-weight:800; border-radius:50px; border:1px solid #c7d2fe; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="견적서 출력(인쇄/저장)"><i class="fa-solid fa-file-invoice"></i> 견적서</button>
+                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','statement')" style="padding:3px 7px; background:#ecfeff; color:#0e7490; font-size:9px; font-weight:800; border-radius:50px; border:1px solid #a5f3fc; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="거래명세서 출력(인쇄/저장)"><i class="fa-solid fa-receipt"></i> 명세서</button>
+                        </div>
                         ${(order.admin_note||'').includes('[MANAGER_QUOTE]') && !['칼선작업','제작중','완료됨','발송완료','배송완료'].includes(order.status)
                             ? `<button type="button" onclick="event.stopPropagation();window.openMgrQuoteEditor && window.openMgrQuoteEditor('${order.id}')" style="display:inline-block; margin-top:3px; padding:3px 7px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="매니저 견적 — 칼선작업 이전까지 수정 가능"><i class="fa-solid fa-pen-to-square"></i> 수정</button>`
                             : ''}
@@ -3386,13 +3390,17 @@ async function _rcLoadAddons() {
 }
 
 // ───── 견적서 (옵션 포함) ─────
-async function generateRecoveryQuotation(order, addonDB) {
+//   2026-10-07(#58 정미선): opts.title / opts.footer 로 거래명세서도 같은 양식으로 출력.
+async function generateRecoveryQuotation(order, addonDB, opts) {
+    opts = opts || {};
+    const _title = opts.title || '견 적 서';
+    const _footer = opts.footer || '위와 같이 청구(영수)합니다.';
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
     await _rcLoadFont(doc);
 
     doc.setFontSize(26);
-    _dt(doc, '견 적 서', 105, 22, { align:'center', weight:'bold' });
+    _dt(doc, _title, 105, 22, { align:'center', weight:'bold' });
     doc.setDrawColor(0); doc.setLineWidth(0.5); doc.line(15,28,195,28);
 
     doc.setFontSize(10);
@@ -3499,10 +3507,38 @@ async function generateRecoveryQuotation(order, addonDB) {
     doc.setFontSize(14);
     _dt(doc, finalAmt.toLocaleString()+'원', 195, y, {align:'right', weight:'bold'}, '#1a237e');
     doc.setFontSize(10);
-    _dt(doc, '위와 같이 청구(영수)합니다.', 105, 250, {align:'center'});
+    _dt(doc, _footer, 105, 250, {align:'center'});
     _dt(doc, new Date(order.created_at||Date.now()).toLocaleDateString(), 105, 262, {align:'center'});
     return doc.output('blob');
 }
+
+// 2026-10-07(#58 정미선): 통합주문관리 — 주문별 견적서/거래명세서 출력(새 탭 열기 → 인쇄/저장)
+window.printOrderDoc = async function (orderId, kind) {
+    try {
+        showLoading(true);
+        const { data: order } = await sb.from('orders')
+            .select('id, manager_name, phone, address, request_note, delivery_target_date, created_at, items, total_amount, discount_amount, site_code')
+            .eq('id', orderId).single();
+        if (!order) { showToast('주문을 찾을 수 없습니다.', 'error'); return; }
+        const { data: addons } = await sb.from('admin_addons').select('code, name, name_kr, name_jp, display_name, price');
+        const addonDB = {};
+        if (addons) addons.forEach(a => addonDB[a.code] = a);
+        await loadJsPDF();
+        const opts = (kind === 'statement')
+            ? { title: '거 래 명 세 서', footer: '위와 같이 거래명세합니다.' }
+            : { title: '견 적 서', footer: '위와 같이 청구(영수)합니다.' };
+        const blob = await generateRecoveryQuotation(order, addonDB, opts);
+        if (!blob) { showToast('문서 생성 실패', 'error'); return; }
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 60000);
+    } catch (e) {
+        console.error('[printOrderDoc]', e);
+        showToast('문서 출력 실패: ' + (e && e.message || e), 'error');
+    } finally {
+        showLoading(false);
+    }
+};
 
 // ───── 작업지시서 (옵션+이미지 포함) ─────
 async function generateRecoveryOrderSheet(order, addonDB) {
