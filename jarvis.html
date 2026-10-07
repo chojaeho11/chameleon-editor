@@ -377,7 +377,7 @@
                 // 담당 매니저 필터 적용 (_roomsCache 는 전체 유지, 렌더만 필터)
                 let _view = _roomsCache;
                 if(_roomFilter==='__none__') _view = _roomsCache.filter(r=>!((r.assigned_manager||'').trim()));
-                else if(_roomFilter) _view = _roomsCache.filter(r=>{ const am=(r.assigned_manager||'').trim(); return am===_roomFilter || am.includes(_roomFilter) || _roomFilter.includes(am); });
+                else if(_roomFilter) _view = _roomsCache.filter(r=>{ const am=(r.assigned_manager||'').trim(); return !!am && (am===_roomFilter || am.includes(_roomFilter) || _roomFilter.includes(am)); });
                 document.getElementById('liveCount').textContent = _view.length ? '('+_view.length+(_roomFilter?' / '+_roomsCache.length:'')+')' : '';
                 buildRoomFilter();
                 if(!_view.length){ el.innerHTML='<div class="empty" style="color:#64748b; font-weight:600;">'+(_roomFilter?'이 담당의 채팅방이 없습니다.':'아직 대화가 없습니다.')+'</div>'; renderRoomPager(0); return; }
