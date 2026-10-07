@@ -1060,19 +1060,10 @@ function _showPhonePopup() {
     const popups = {
         kr: `<div style="text-align:center;margin-bottom:16px;font-size:36px;">📞</div>
             <div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">전화 문의 안내</div>
-            <div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-                <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">🏭 본사(출고문의)</div>
-                <a href="tel:031-366-1984" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:15px;font-weight:700;">
-                    <i class="fa-solid fa-phone" style="color:#16a34a;"></i> 031-366-1984</a>
-            </div>
-            <div style="background:#ede9fe;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-                <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">👤 제품문의 담당 매니저</div>
-                <a href="tel:010-3455-1946" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
-                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>
-                <a href="tel:010-4994-5950" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">
-                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-4994-5950</a>
-                <a href="tel:010-2525-9943" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">
-                    <i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 연두 매니저 010-2525-9943</a>
+            <div style="background:#ede9fe;border-radius:12px;padding:16px 16px;margin-bottom:10px;">
+                <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">상담전화</div>
+                <a href="tel:010-3491-3535" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:17px;font-weight:700;">
+                    <i class="fa-solid fa-phone" style="color:#7c3aed;"></i> 010-3491-3535</a>
             </div>
             <div style="background:#eff6ff;border-radius:12px;padding:12px 16px;margin-bottom:6px;">
                 <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:4px;">✉️ 이메일</div>
@@ -2103,7 +2094,7 @@ async function showPhoneCard() {
                 const { data } = await sb.from('chatbot_knowledge')
                     .select('question,answer,is_active')
                     .eq('category', '_managers');
-                const FIELD_MGR_NAMES = ['성희','지숙','연두','혜림'];
+                const FIELD_MGR_NAMES = ['혜림'];
                 const rows = (data || []).filter(r => FIELD_MGR_NAMES.some(n => (r.question||'').includes(n)));
                 rows.sort((a,b) => {
                     const ai = FIELD_MGR_NAMES.findIndex(n => (a.question||'').includes(n));

@@ -159,7 +159,7 @@
       var sb = window.sb;
       if (sb && sb.from) {
         var r = await sb.from('chatbot_knowledge').select('question,answer,is_active').eq('category', '_managers');
-        var NAMES = ['성희', '지숙', '연두', '혜림'];
+        var NAMES = ['혜림'];
         var rows = (r.data || []).filter(function (x) { return NAMES.some(function (n) { return (x.question || '').indexOf(n) >= 0; }); });
         var lines = [];
         rows.forEach(function (x) {
