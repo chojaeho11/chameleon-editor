@@ -264,19 +264,25 @@
     try { var r = new FileReader(); r.onload = function () { var du = String(r.result); cb((du.split(',')[1] || ''), file.type || 'image/jpeg', du); }; r.readAsDataURL(file); } catch (e) {}
   }
   function addImageMsg(dataUrl) { return _addRow('<img src="' + dataUrl + '" alt="">', 'me'); }
-  // 담당매니저/시스템 메시지(관리자 답변)를 고객 화면에 표시 (AI·본인 메시지는 이미 표시되므로 제외)
+  function _fileHtml(m) {
+    var ft = String(m.file_type || '').toLowerCase();
+    var isImg = ft.indexOf('image') === 0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url || '');
+    return isImg
+      ? '<img src="' + esc(m.file_url) + '" alt="" style="cursor:pointer;" onclick="window.open(\'' + esc(m.file_url) + '\',\'_blank\')">'
+      : '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener">' + esc(m.file_name || '첨부파일') + '</a>';
+  }
+  // AI 메시지에서 제품카드(<!--PRODUCTS:...-->) 분리 → {text, products}
+  function _splitProducts(raw) {
+    raw = String(raw == null ? '' : raw); var products = [];
+    raw = raw.replace(/<!--PRODUCTS:([\s\S]*?)-->/g, function (_, j) { try { (JSON.parse(j) || []).forEach(function (p) { if (p && p.code) products.push({ code: p.code, name: p.name, img_url: p.img || p.img_url }); }); } catch (e) {} return ''; });
+    return { text: raw.trim(), products: products };
+  }
+  // 담당매니저/시스템 메시지(관리자 답변)를 고객 화면에 표시
   function _renderIncoming(m) {
     if (!m || !_root) return;
     var who = _mgrLabel(m.sender_name);
     if (m.message) _addRow(_linkify(m.message), 'ai', who);
-    if (m.file_url) {
-      var ft = String(m.file_type || '').toLowerCase();
-      var isImg = ft.indexOf('image') === 0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url);
-      var html = isImg
-        ? '<img src="' + esc(m.file_url) + '" alt="" style="cursor:pointer;" onclick="window.open(\'' + esc(m.file_url) + '\',\'_blank\')">'
-        : '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener">' + esc(m.file_name || '첨부파일') + '</a>';
-      _addRow(html, 'ai', who);
-    }
+    if (m.file_url) _addRow(_fileHtml(m), 'ai', who);
   }
   function _onIncoming(m) {
     if (!m || !m.id) return;
@@ -336,20 +342,35 @@
   }
   function _unsubscribeRoom() { if (_msgSub) { try { _msgSub.unsubscribe(); } catch (e) {} _msgSub = null; } }
   // 열 때 그동안 놓친 담당매니저 답변을 불러와 표시
-  async function _loadMissed() {
-    if (!_room) return;
+  // 2026-10-07(사장님): 재방문 시 전체 대화 복원 (고객질문+AI답변+매니저답변) — 관리자 화면과 동일하게.
+  //   cb(hadMessages): 메시지가 하나라도 있으면 true (없으면 인사 렌더).
+  async function _loadHistory(cb) {
+    if (!_room) { if (cb) cb(false); return; }
     try {
-      var sb = window.sb; if (!sb || !sb.from) return;
-      var r = await sb.from('chat_messages').select('id, sender_type, sender_name, message, file_url, file_name, file_type, created_at').eq('room_id', _room).order('created_at', { ascending: true }).limit(100);
+      var sb = window.sb; if (!sb || !sb.from) { if (cb) cb(false); return; }
+      var r = await sb.from('chat_messages').select('id, sender_type, sender_name, message, file_url, file_name, file_type, created_at').eq('room_id', _room).order('created_at', { ascending: true }).limit(200);
       var rows = (r && r.data) || [];
+      if (!rows.length) { if (cb) cb(false); return; }
       rows.forEach(function (m) {
         if (_seenMsgIds[m.id]) return;
         _seenMsgIds[m.id] = 1;
-        var isMgr = m.sender_type !== 'customer' && String(m.sender_name || '').indexOf('관리자') >= 0;
-        var isSystem = m.sender_type === 'system';
-        if (isMgr || isSystem) _renderIncoming(m);
+        var sn = String(m.sender_name || '');
+        if (m.sender_type === 'customer') {
+          if (m.message) { _addRow(_linkify(m.message), 'me'); _hist.push({ role: 'user', content: m.message }); }
+          if (m.file_url) _addRow(_fileHtml(m), 'me');
+        } else if (sn.indexOf('관리자') >= 0 || m.sender_type === 'system') {
+          _renderIncoming(m);   // 담당매니저/시스템
+        } else {
+          // AI 카푸
+          var pe = _splitProducts(m.message || '');
+          if (pe.text) { _addRow(_linkify(pe.text), 'ai', tr('카푸', 'カプ', 'Kapu')); _hist.push({ role: 'assistant', content: pe.text }); }
+          if (pe.products.length) addRecs(pe.products);
+          if (m.file_url) _addRow(_fileHtml(m), 'ai', tr('카푸', 'カプ', 'Kapu'));
+        }
       });
-    } catch (e) {}
+      _scrollBottom();
+      if (cb) cb(true);
+    } catch (e) { if (cb) cb(false); }
   }
   // 입력을 성함으로 캡처 → 저장 + 기존 방 이름 반영 + 보류 메시지 이어서 전송
   async function _captureName(raw) {
@@ -570,6 +591,9 @@
     if (mode === 'aftercart') {
       addMsg(_afterCartMsg(), 'ai');
       _addCartActions();
+    } else if (_room) {
+      // 재방문: 전체 대화 복원. 빈 방이면 인사, 있으면 아래에 고객정보+빠른버튼.
+      _loadHistory(function (had) { if (!had) { _renderGreeting(); } else { _custInfoLine(); addGreetActions(); } });
     } else {
       _renderGreeting();
     }
@@ -597,8 +621,8 @@
     _root.addEventListener('paste', handlePaste);
     _root.querySelector('.jvg-x').addEventListener('click', close);
     var _rst = _root.querySelector('.jvg-reset'); if (_rst) _rst.addEventListener('click', _resetChat);
-    // 담당매니저 답변 실시간 수신 (기존 방이 있으면 놓친 답변도 불러와 표시)
-    if (_room) { _loadMissed(); _subscribeRoom(); }
+    // 실시간 수신 구독 (히스토리는 위에서 복원됨)
+    if (_room) { _subscribeRoom(); }
   }
 
   function close() {
