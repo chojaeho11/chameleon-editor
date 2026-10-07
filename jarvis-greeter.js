@@ -283,7 +283,7 @@
     var isImg = ft.indexOf('image') === 0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url || '');
     return isImg
       ? '<img src="' + esc(m.file_url) + '" alt="" style="cursor:pointer;" onclick="window.open(\'' + esc(m.file_url) + '\',\'_blank\')">'
-      : '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener">' + esc(m.file_name || '첨부파일') + '</a>';
+      : '<a href="' + esc(m.file_url) + '" target="_blank" rel="noopener" download="' + esc(m.file_name || 'file') + '">' + esc(m.file_name || '첨부파일') + '</a>';
   }
   // AI 메시지에서 제품카드(<!--PRODUCTS:...-->) 분리 → {text, products}
   function _splitProducts(raw) {
@@ -578,8 +578,9 @@
       if (!_room) {
         try { var ins = await sb.from('chat_rooms').insert({ customer_name: _custName || '웹 고객', customer_phone: _custPhone || null, status: 'ai_chatting', source: 'chatbot', site_lang: _lang, assigned_manager: '' }).select('id').single(); if (ins && ins.data) { _room = ins.data.id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} _subscribeRoom(); } } catch (e) {}
       }
-      var ext = ((f.name || 'file').split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin';
-      var path = 'room-' + (_room || 'x') + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      // 2026-10-07(사장님): 원본 파일명을 경로 마지막 세그먼트로 → 다운로드 시 원래 이름 유지.
+      var safeName = (f.name || 'file').replace(/[\/\\?%*:|"<>\u0000-\u001f]+/g, '_').replace(/\s+/g, '_').slice(0, 120) || 'file';
+      var path = 'room-' + (_room || 'x') + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '/' + safeName;
       var upRes = await sb.storage.from('chat-files').upload(path, f, { upsert: true, contentType: f.type || undefined });
       if (upRes && upRes.error) throw upRes.error;
       var url = ((sb.storage.from('chat-files').getPublicUrl(path) || {}).data || {}).publicUrl || '';
@@ -590,7 +591,7 @@
       var html;
       if (isImg2) html = '<img src="' + esc(url) + '" alt="" style="cursor:pointer;" onclick="window.open(\'' + esc(url) + '\',\'_blank\')">';
       else if (isVid) html = '<video src="' + esc(url) + '" controls style="max-width:100%;border-radius:10px;display:block;"></video>';
-      else html = '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(tr('파일: ', 'ファイル: ', 'File: ')) + esc(nm) + '</a>';
+      else html = '<a href="' + esc(url) + '" target="_blank" rel="noopener" download="' + esc(nm) + '">' + esc(tr('파일: ', 'ファイル: ', 'File: ')) + esc(nm) + '</a>';
       _addRow(html, 'me');
       if (_room) { try { await sb.from('chat_messages').insert({ room_id: _room, sender_type: 'customer', sender_name: _custName || '고객', message: '', file_url: url, file_name: nm, file_type: f.type || '', created_at: new Date().toISOString() }); await sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', _room); } catch (e) {} }
       addMsg(tr('파일 잘 받았어요! 담당자가 확인하고 안내해 드릴게요 😊', 'ファイルを受け取りました！担当者が確認してご案内します😊', 'Got your file! Our manager will review and get back to you 😊'), 'ai');

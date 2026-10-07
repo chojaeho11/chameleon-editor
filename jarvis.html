@@ -514,7 +514,7 @@
                 const ft = String(m.file_type||'').toLowerCase();
                 const isImg = ft.indexOf('image')===0 || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(m.file_url);
                 if(isImg) fileHtml = `<img src="${esc(m.file_url)}" alt="" onclick="window.open('${esc(m.file_url)}','_blank')" style="cursor:pointer;">`;
-                else fileHtml = `<a class="cfile" href="${esc(m.file_url)}" target="_blank" rel="noopener">첨부파일: ${esc(m.file_name||'다운로드')}</a>`;
+                else fileHtml = `<a class="cfile" href="${esc(m.file_url)}" target="_blank" rel="noopener" download="${esc(m.file_name||'file')}">첨부파일: ${esc(m.file_name||'다운로드')}</a>`;
             }
             const _pe = _extractProducts(m.message||'');
             return `<div class="cmsg ${cls}"><div class="cwho">${esc(who)}</div>${_linkify(_pe.text)}${_pe.cards}${fileHtml}<div class="ct">${fmtTime(m.created_at)}</div></div>`;
