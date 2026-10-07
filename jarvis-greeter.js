@@ -44,7 +44,7 @@
   var _custName = (function () { try { return localStorage.getItem('kapu_cust_name') || ''; } catch (e) { return ''; } })();
   var _awaitingName = false, _pendingMsg = '';
   // 2026-10-07(사장님): 담당매니저 답변 실시간 수신 — chat_messages 구독
-  var _msgSub = null, _seenMsgIds = {};
+  var _msgSub = null, _seenMsgIds = {}, _humanNoticeShown = false;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
@@ -295,11 +295,19 @@
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
       if (data.room_id) { var _wasNew = (_room !== data.room_id); _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} if (_wasNew) _subscribeRoom(); }
-      var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
-      typing.classList.remove('jvg-typing'); typing.textContent = msg;
-      _hist.push({ role: 'user', content: text || '[사진 업로드]' });
-      _hist.push({ role: 'assistant', content: msg });
-      addRecs(data.products);
+      if (data.human_active) {
+        // 담당 매니저가 직접 응대 중 — AI 폴백 대신 조용히 처리. 매니저 답변은 실시간 구독으로 도착.
+        try { typing.remove(); } catch (e) {}
+        _hist.push({ role: 'user', content: text || '[사진 업로드]' });
+        if (!_humanNoticeShown) { _humanNoticeShown = true; addMsg(tr('담당 매니저가 직접 확인하고 있어! 잠시만 기다려줘 🙋', '担当マネージャーが確認中だよ。少し待ってね🙋', 'A manager is handling this now. One moment 🙋'), 'ai'); }
+        _subscribeRoom();
+      } else {
+        var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
+        typing.classList.remove('jvg-typing'); typing.textContent = msg;
+        _hist.push({ role: 'user', content: text || '[사진 업로드]' });
+        _hist.push({ role: 'assistant', content: msg });
+        addRecs(data.products);
+      }
     } catch (e) {
       typing.classList.remove('jvg-typing');
       typing.textContent = tr('죄송해요, 잠시 후 다시 시도해 주세요.', '申し訳ありません、後ほどお試しください。', 'Sorry, please try again shortly.');
