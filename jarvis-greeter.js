@@ -46,6 +46,8 @@
   var _awaitingName = false, _pendingMsg = '';
   // 2026-10-07(사장님): 담당매니저 답변 실시간 수신 — chat_messages 구독
   var _msgSub = null, _seenMsgIds = {}, _humanNoticeShown = false;
+  // 2026-10-07(사장님): 담당자 자리비움 시 30초 후 AI 전환 제안
+  var _humanWaitTimer = null, _lastAskedText = '', _forceAiNext = false;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
@@ -132,7 +134,10 @@
       '#jvgCard .jvg-intake input:focus,#jvgCard .jvg-intake select:focus{border-color:#6366f1;}' +
       '#jvgCard .jvg-intake .jvg-ik-start{background:#4f46e5;border:none;color:#fff;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;margin-top:2px;}' +
       '#jvgCard .jvg-intake .jvg-ik-start:hover{background:#4338ca;}' +
-      '#jvgCard .jvg-custinfo{clear:both;align-self:center;text-align:center;font-size:12.5px;font-weight:700;color:#1e293b;background:rgba(255,255,255,.85);border:1px solid rgba(99,102,241,.25);border-radius:999px;padding:6px 14px;margin:2px auto 8px;width:fit-content;}' +
+      '#jvgCard .jvg-custinfo{clear:both;align-self:center;display:inline-flex;align-items:center;gap:11px;justify-content:center;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;border-radius:999px;padding:10px 20px;margin:2px auto 10px;width:fit-content;max-width:92%;}' +
+      '#jvgCard .jvg-custinfo .ci-name{font-size:14px;font-weight:800;letter-spacing:.2px;}' +
+      '#jvgCard .jvg-custinfo .ci-phone{font-size:13.5px;font-weight:600;opacity:.96;letter-spacing:.3px;}' +
+      '#jvgCard .jvg-custinfo .ci-sep{width:1px;height:13px;background:rgba(255,255,255,.45);}' +
       '#jvgCard .jvg-send:disabled{opacity:.5;cursor:default;}' +
       '#jvgCard .jvg-typing{font-size:13px;color:#94a3b8;}';
     document.head.appendChild(st);
@@ -144,6 +149,11 @@
     return (_lang === 'kr' ? (ap + ' ') : '') + h12 + ':' + (m < 10 ? '0' + m : m);
   }
   function _avaImg() { return '<img class="jvg-row-ava" src="/jarvis-character.jpg?v=1" alt="" onerror="this.src=\'/mascot-character.webp\'">'; }
+  // 항상 맨 아래로 스크롤 (rAF — 새 내용 높이 반영 후). 이미지 로드 후에도 다시 호출.
+  function _scrollBottom() {
+    var b = _root && _root.querySelector('.jvg-body'); if (!b) return;
+    requestAnimationFrame(function () { b.scrollTop = b.scrollHeight; });
+  }
   // 카톡식 메시지 행 (아바타+이름+말풍선+시간). 반환=말풍선 엘리먼트(타이핑 교체용)
   function _addRow(bubbleHtml, who, senderName) {
     var b = _root.querySelector('.jvg-body');
@@ -153,7 +163,9 @@
     var who2 = (who === 'me') ? '' : '<div class="jvg-who">' + esc(senderName || tr('카푸', 'カプ', 'Kapu')) + '</div>';
     row.innerHTML = ava + '<div class="jvg-rowmain">' + who2 +
       '<div class="jvg-bubwrap"><div class="jvg-msg">' + bubbleHtml + '</div><span class="jvg-time">' + _nowHM() + '</span></div></div>';
-    b.appendChild(row); b.scrollTop = b.scrollHeight;
+    b.appendChild(row);
+    var _im = row.querySelector('.jvg-msg img'); if (_im) _im.addEventListener('load', _scrollBottom);
+    _scrollBottom();
     return row.querySelector('.jvg-msg');
   }
   function addMsg(text, who, senderName) { return _addRow(_linkify(text), who, senderName); }
@@ -270,7 +282,45 @@
     _seenMsgIds[m.id] = 1;
     var isMgr = m.sender_type !== 'customer' && String(m.sender_name || '').indexOf('관리자') >= 0;
     var isSystem = m.sender_type === 'system';
-    if (isMgr || isSystem) _renderIncoming(m);   // AI(카푸)·고객 본인 메시지는 이미 표시됨 → 제외
+    if (isMgr || isSystem) {
+      // 매니저가 답했으니 자리비움 타이머/제안 취소
+      if (_humanWaitTimer) { clearTimeout(_humanWaitTimer); _humanWaitTimer = null; }
+      _hideAiTakeoverPrompt();
+      _renderIncoming(m);   // AI(카푸)·고객 본인 메시지는 이미 표시됨 → 제외
+    }
+  }
+  // 담당자 자리비움 — 30초 내 답 없으면 "AI 전환?" 제안 + 버튼
+  function _startHumanWaitTimer() {
+    if (_humanWaitTimer) clearTimeout(_humanWaitTimer);
+    _humanWaitTimer = setTimeout(function () { _humanWaitTimer = null; _showAiTakeoverPrompt(); }, 30000);
+  }
+  function _hideAiTakeoverPrompt() {
+    if (!_root) return;
+    var el = _root.querySelector('.jvg-takeover'); if (el) { try { el.remove(); } catch (e) {} }
+  }
+  function _showAiTakeoverPrompt() {
+    if (!_root) return;
+    _hideAiTakeoverPrompt();
+    addMsg(tr(
+      '담당자가 잠시 자리를 비웠어요. 1분 후에도 답변이 없으면 인공지능인 제가 대신 답해 드려도 될까요?',
+      '担当者が少し席を外しています。1分後も返信がなければ、AIの私が代わりにお答えしてもよろしいですか？',
+      'The manager has stepped away. If there\'s no reply within a minute, may I (the AI) answer instead?'
+    ), 'ai');
+    var b = _root.querySelector('.jvg-body');
+    var wrap = document.createElement('div'); wrap.className = 'jvg-quick jvg-takeover';
+    var b1 = document.createElement('button'); b1.className = 'jvg-q jvg-q-primary';
+    b1.textContent = tr('인공지능으로 전환', 'AIに切り替える', 'Switch to AI');
+    b1.addEventListener('click', function () { _hideAiTakeoverPrompt(); _takeoverAI(); });
+    var b2 = document.createElement('button'); b2.className = 'jvg-q';
+    b2.textContent = tr('상담사 기다리기', '相談員を待つ', 'Keep waiting');
+    b2.addEventListener('click', function () { _hideAiTakeoverPrompt(); _startHumanWaitTimer(); });
+    wrap.appendChild(b1); wrap.appendChild(b2);
+    b.appendChild(wrap); _scrollBottom();
+  }
+  function _takeoverAI() {
+    _humanNoticeShown = false;
+    _forceAiNext = true;
+    send(_lastAskedText || tr('안내해 주세요', '案内してください', 'Please help me'), null, true);
   }
   function _subscribeRoom() {
     if (!_room) return;
@@ -334,6 +384,7 @@
       if (_room) payload.room_id = _room;
       if (_custName) payload.customer_name = _custName;
       if (_custPhone) payload.customer_phone = _custPhone;   // 2026-10-07: 전화번호도 서버 저장(window.sb 미의존)
+      if (_forceAiNext) { payload.force_ai = true; _forceAiNext = false; }   // 담당자 자리비움 → AI 전환
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
@@ -344,12 +395,17 @@
         _hist.push({ role: 'user', content: text || '[사진 업로드]' });
         if (!_humanNoticeShown) { _humanNoticeShown = true; addMsg(tr('담당 매니저가 직접 확인하고 있어요. 잠시만 기다려 주세요 🙋', '担当マネージャーが確認中です。少々お待ちください🙋', 'A manager is handling this now. One moment 🙋'), 'ai'); }
         _subscribeRoom();
+        _lastAskedText = text || _lastAskedText;   // 자리비움 시 AI 전환으로 다시 물어볼 질문
+        _startHumanWaitTimer();                     // 30초 내 매니저 답 없으면 AI 전환 제안
+        _scrollBottom();
       } else {
+        if (_humanWaitTimer) { clearTimeout(_humanWaitTimer); _humanWaitTimer = null; }
         var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
         typing.classList.remove('jvg-typing'); typing.innerHTML = _linkify(msg);
         _hist.push({ role: 'user', content: text || '[사진 업로드]' });
         _hist.push({ role: 'assistant', content: msg });
         addRecs(data.products);
+        _scrollBottom();
       }
     } catch (e) {
       typing.classList.remove('jvg-typing');
@@ -397,12 +453,19 @@
   function _syncCustToRoom() {
     try { var sb = window.sb; if (sb && sb.from && _room) { var u = {}; if (_custName) u.customer_name = _custName; if (_custPhone) u.customer_phone = _custPhone; if (Object.keys(u).length) sb.from('chat_rooms').update(u).eq('id', _room); } } catch (e) {}
   }
-  // 기존 고객 정보 줄 (매니저 안내 위)
+  function _fmtPhone(p) {
+    p = String(p == null ? '' : p).replace(/[^0-9]/g, '');
+    if (p.length === 11) return p.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    if (p.length === 10) return p.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    return String(_custPhone || '');
+  }
+  // 기존 고객 정보 줄 (매니저 안내 위) — 보라 그라데이션 박스, 흰 글씨, 픽토그램 없음
   function _custInfoLine() {
     if (!_custName && !_custPhone) return;
     var b = _root.querySelector('.jvg-body');
     var d = document.createElement('div'); d.className = 'jvg-custinfo';
-    d.innerHTML = '👤 ' + esc(_custName || tr('고객', 'お客様', 'Customer')) + (_custPhone ? (' · 📞 ' + esc(_custPhone)) : '');
+    d.innerHTML = '<span class="ci-name">' + esc(_custName || tr('고객', 'お客様', 'Customer')) + '</span>' +
+      (_custPhone ? ('<span class="ci-sep"></span><span class="ci-phone">' + esc(_fmtPhone(_custPhone)) + '</span>') : '');
     b.appendChild(d); b.scrollTop = b.scrollHeight;
   }
   function _addIntakeForm() {

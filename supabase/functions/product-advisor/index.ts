@@ -60,7 +60,7 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone } = reqBody;
+        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone, force_ai: forceAi } = reqBody;
         const trimmedMsg = (message || '').trim();
         if (!trimmedMsg && !image) throw new Error("message or image is required");
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
@@ -88,7 +88,10 @@ serve(async (req) => {
         if (clientRoomId) {
             try {
                 const { data: _hr } = await sb.from('chat_rooms').select('human_active').eq('id', clientRoomId).maybeSingle();
-                if (_hr && _hr.human_active) {
+                if (_hr && _hr.human_active && forceAi) {
+                    // 2026-10-07(사장님): 담당자 자리비움 → 고객이 'AI 전환' 선택 → 사람 상담 해제하고 AI 가 답변 진행.
+                    try { await sb.from('chat_rooms').update({ human_active: false, status: 'ai_chatting' }).eq('id', clientRoomId); } catch (_e) {}
+                } else if (_hr && _hr.human_active) {
                     const _cn = (clientCustName || '').trim() || 'Guest';
                     try {
                         await sb.from('chat_messages').insert({
@@ -267,23 +270,23 @@ serve(async (req) => {
         const langPrompts: Record<string, string> = {
             kr: `너는 카멜레온프린팅 상담사 "카푸"야. 진짜 사람처럼 편하게 말해.
 
-★★★★ 절대 규칙 — 아래 모든 지시·예시보다 우선한다. (프롬프트 예시가 존댓말/기호로 써 있어도, 넌 반드시 아래대로 바꿔서 말해):
-1) 무조건 반말. "~요 / ~어 / ~해 / ~인가요 / ~해줄게 / ~이야" 같은 존댓말 절대 금지. 예: "~네"→"~네", "확인해줄게"→"확인해줄게".
+★★★★ 절대 규칙 — 아래 모든 지시·예시보다 우선한다. (프롬프트 예시가 반말로 써 있어도, 넌 반드시 아래대로 바꿔서 말해):
+1) 무조건 정중한 반존대(해요체)로 말해요. "~요 / ~해요 / ~하세요 / ~해 드릴게요 / ~하실 수 있어요 / ~이에요" 체로만. 반말("~해 / ~이야 / ~줄게 / ~말해줘 / ~따라와")은 절대 금지, 과한 격식체(합쇼체)도 쓰지 마세요. 친근하면서도 공손하게. 예: "확인해 줄게"→"확인해 드릴게요", "눌러줘"→"눌러 주세요", "~네!"→"~네요!".
 2) 마크다운·특수기호(**, ##, -, 백틱 등) 절대 쓰지 마. 굵게/목록 만들지 말고 그냥 평문으로.
 3) 고객한테 질문하지 마! 사이즈·구성·설치위치·용도·개수·실내외 같은 거 되묻지 마. 사진이나 말로 제품이 대충 파악되면, 확정 못 해도 제일 비슷한 제품 하나로 짧게 안내하고 바로 아래 제품 링크로 보내. 여러 제품 나열하며 이것저것 묻지 마.
 4) 답변은 2~3문장 이내로 아주 짧게. 이모지는 거의 쓰지 마.
 예시) "배너 스탠드네! 아래 제품 링크에서 사이즈랑 옵션 고르면 돼. 눌러서 튜토리얼 따라와~" (+ products에 제품 카드 1개)
 (고객이 먼저 가격·재질·제작기간을 물으면 그때만 짧게 답해.)
 5) 정확한 견적은 "튜토리얼 따라 장바구니에 담으면 견적서를 뽑을 수 있어"라고 안내해. 채팅에서 담당 매니저가 견적 내준다고 하지 마.
-6) 담당 매니저 연락처·이메일·출고실 전화번호는 고객이 먼저 물어볼 때만 알려줘. 먼저 들이밀지 마.
+6) 담당 매니저 연락처·이메일·출고실 전화번호는 고객이 먼저 물어볼 때만 알려줘요. 먼저 들이밀지 마세요. ★ 고객이 특정 매니저(예: "지숙 매니저")를 지목하면 그 매니저 번호 하나만 알려주고, 다른 매니저는 절대 함께 나열하지 마세요. 특정인 지목 없이 그냥 "매니저 연락처"를 물을 때만 담당 매니저들을 안내하세요.
 
 
 ## 말투 규칙 (중요!)
 - **절대 "AI", "인공지능", "어시스턴트", "챗봇"이라는 단어를 쓰지 마.** 너는 카푸라는 이름의 상담사야.
-- 자기소개 할 때: "안녕하해~ 카멜레온프린팅 카푸이야!" 이런 식으로. AI라고 밝히지 마.
-- "~해 드리겠어", "~이야" 같은 딱딱한 경어 대신 "~해줄게", "~이야", "~거든요" 같이 부드럽게.
-- 기계적인 나열("첫째, 둘째, 셋째") 대신 자연스러운 흐름으로 설명해.
-- "궁금한 점이 있으면 언제든 물어봐 주해!" 같은 로봇 멘트 금지. 대신 "더 궁금한 거 있으면 편하게 말해줘~" 처럼.
+- 자기소개 할 때: "안녕하세요~ 카멜레온프린팅 카푸예요!" 이런 식으로. AI라고 밝히지 마세요.
+- "~해 드리겠습니다" 같은 딱딱한 격식체 대신 "~해 드릴게요", "~이에요", "~거든요" 같이 부드러운 해요체로.
+- 기계적인 나열("첫째, 둘째, 셋째") 대신 자연스러운 흐름으로 설명해요.
+- "궁금한 점이 있으면 언제든 문의 바랍니다" 같은 로봇 멘트 금지. 대신 "더 궁금한 거 있으시면 편하게 말씀해 주세요~" 처럼.
 - ★ 답변에 마크다운 기호(**, ##, -, \` 등)나 특수문자를 절대 쓰지 마! 굵게/제목 표시하려 하지 말고, 그냥 짧고 깔끔한 문장으로만 써. 여러 내용이면 줄바꿈으로 단락만 나눠. (고객 화면엔 기호가 그대로 보여서 지저분해져.)
 - ★★★★ 사진 응답은 무조건 딱 한두 줄로 끝내! 사진을 묘사하지 마 (무슨 형태인지·뭐가 보이는지·어디 설치됐는지 설명 절대 금지). 사이즈·높이·디자인파일·용도·개수·복도길이 아무것도 묻지 마. 무조건 이 형식만: "○○네! 아래 링크 클릭해, 튜토리얼로 안내할게." + products에 제품 1개. 이게 전부다. (예: "허니콤보드 가벽이네! 아래 링크 클릭해, 튜토리얼로 안내할게.")
 - ★ **이미지 분석 규칙 (어떤 제품인지 판단만! 설명·질문은 하지 마)**:
@@ -339,10 +342,9 @@ serve(async (req) => {
 - ❌ DB에 없는 가격/사이즈를 지어내지 마. 확실치 않으면 "정확한 금액은 담당 매니저가 확인해서 안내해줄게~" 하고 매니저 연락처를 안내해.
 - generate_quote 도구(견적서 PDF)는 아직 쓰지 마 — 금액은 채팅으로 친절히 안내하고, 확정·결제는 장바구니 링크로 유도.
 
-## 할인/프로모션 (적극 챙겨서 고객이 더 저렴하게!)
-- **금액 자동할인**: 상품+옵션 합계가 200만원 이상이면 10%부터 최대 30%까지 자동 할인 (금액이 클수록 할인율↑).
-- **PRO 구독** 시 추가 10% 할인.
-- **대량 구매**가 유리한 제품(원판 등)은 수량이 많을수록 저렴하다고 안내.
+## 할인/프로모션
+- 🚫 **일반 고객 대상 금액별 자동할인·PRO 구독 할인은 없어요(폐지됨).** 절대 "얼마 이상이면 몇 % 할인" "PRO 구독하면 추가 할인" 같은 안내를 하지 마세요. (금액·수량에 따른 자동 할인율은 없습니다.)
+- 할인은 **사업자(리셀러)/가맹점 등록 고객에게만** 적용돼요. 사업자 할인에 관심 있어 하면 "사업자(리셀러)로 등록하시면 할인가로 구매하실 수 있어요"라고 안내하고 ${siteUrl}/franchise 링크를 주세요. (구체적 할인율은 가맹 페이지/담당자 안내로 넘기세요.)
 - 진행 중인 **회원 혜택·쿠폰**(회원가입 무료 쿠폰, 첫 구매 페이백 등)이 있으면 "이거 받으면 더 저렴하게 할 수 있어!"라고 챙겨줘. (정확한 쿠폰 금액이 확실치 않으면 "회원가입 시 무료 쿠폰 혜택이 있어"처럼 일반적으로 안내하고, 자세한 금액은 확언하지 마.)
 - 규격 외 사이즈 추가비(예: 가벽 규격 외 +5만원) 같은 비용 요소도 미리 투명하게 알려줘.
 
@@ -488,7 +490,7 @@ serve(async (req) => {
      💡 **조명** — 가벽에 포인트 조명을 달아 분위기를 살릴 수 있어
      🔲 **코너기둥** — L자나 ㄱ자로 꺾이는 공간 연출이라면 필요해
      필요한 게 있으면 말해주면 견적에 추가해줄게!"
-   - ★★★ **금액별 할인 안내도 필수!** 가벽 합계가 200만원 이상이면 반드시 알려줘: "200만원 이상이면 10%부터 최대 30%까지 할인이 자동 적용돼! PRO 구독 시 추가 10%!"
+   - 🚫 금액별 자동할인·PRO 할인 안내 금지 (폐지됨). 할인은 사업자(리셀러)/가맹 등록 고객만 — 관심 있어 하면 가맹 페이지로 안내.
    - **코너기둥**: ㄱ자, ㄷ자 형태로 가벽을 연결. 수량 = 꺾이는 지점 수
    - **보조받침대**: ★ **독립된 덩어리당 1개!**
      · 코너기둥으로 연결된 가벽들은 하나의 덩어리 → 보조받침대 1개
@@ -1933,26 +1935,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                     });
                 }
 
-                // ★ 허니콤보드 금액별 할인
-                const hbTotal = quoteItems.filter((i: any) => (i._code || '').startsWith('hb_')).reduce((s: number, i: any) => s + i.total, 0);
-                if (hbTotal >= 2000000) {
-                    let hbDiscRate = 0;
-                    if (hbTotal >= 10000000) hbDiscRate = 0.30;
-                    else if (hbTotal >= 7000000) hbDiscRate = 0.25;
-                    else if (hbTotal >= 5000000) hbDiscRate = 0.20;
-                    else if (hbTotal >= 3000000) hbDiscRate = 0.15;
-                    else hbDiscRate = 0.10;
-                    const hbDiscAmt = Math.floor(hbTotal * hbDiscRate / 100) * 100;
-                    // 할인 기준 금액 (실제 금액이 아닌 적용 기준)
-                    const thresholdLabel = hbDiscRate >= 0.30 ? '1000만원' : hbDiscRate >= 0.25 ? '700만원' : hbDiscRate >= 0.20 ? '500만원' : hbDiscRate >= 0.15 ? '300만원' : '200만원';
-                    quoteItems.push({
-                        name: `허니콤보드 ${Math.round(hbDiscRate * 100)}% 할인`,
-                        spec: `${thresholdLabel} 이상`,
-                        qty: 1, unit_price: -hbDiscAmt, total: -hbDiscAmt,
-                        _code: '', _width_mm: 0, _height_mm: 0, is_addon: true
-                    });
-                    console.log("[quote] honeycomb discount:", hbDiscRate * 100 + '%', 'on', hbTotal, '→ -' + hbDiscAmt);
-                }
+                // 2026-10-07(사장님): 금액별 자동할인 폐지 — 일반 고객 할인 없음(리셀러 할인만 별도). 견적에 할인 라인 넣지 않음.
 
                 // ★ 배송비: 제품 크기와 지역에 따라 결정
                 const _region = qResult.shipping_region || 'unknown';
@@ -2167,9 +2150,8 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         const _lang = clientLang;
         const custNameMap: Record<string,string> = { kr: '웹 고객', ja: 'ウェブ顧客', us: 'Web Customer' };
         const defaultName = custNameMap[_lang] || '웹 고객';
-        const custName = clientCustName
-            ? (clientCustName + (clientCustPhone ? ' | ' + clientCustPhone : ''))
-            : defaultName;
+        // 2026-10-07(사장님): 이름에 전화번호 붙이지 않음 — 전화는 customer_phone 컬럼에 별도 저장.
+        const custName = clientCustName || defaultName;
         let roomId = '';
 
         try {
