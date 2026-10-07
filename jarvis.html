@@ -418,9 +418,11 @@
         function scheduleRoomsReload(){ clearTimeout(_reloadRoomsTimer); _reloadRoomsTimer=setTimeout(loadRooms, 600); }
 
         // 채팅방별 담당자 드롭다운 (클릭하면 아래로 펼쳐짐)
+        //   2026-10-07(사장님): 실제 매니저 + '본사 지정'만 (로그인 계정 이메일 이름 제외)
         function mgrDdOptions(roomId, current){
-            const names = (_mgrNames && _mgrNames.length) ? _mgrNames : ['조지숙','강은미','박성희','최연두'];
-            let h = names.map(n=>`<button class="${n===current?'cur':''}" onclick="assignRoomMgr('${roomId}', ${JSON.stringify(esc(n)).replace(/"/g,'&quot;')})">${esc(n)}${n===current?' ✓':''}</button>`).join('');
+            const names = (_roomMgrNames && _roomMgrNames.length) ? _roomMgrNames : ['지숙','성희','혜림','동연','연두'];
+            const list = ['본사'].concat(names.filter(n=>n!=='본사'));
+            let h = list.map(n=>{ const lbl = (n==='본사') ? '🏢 본사 지정' : esc(n); return `<button class="${n===current?'cur':''}" onclick="assignRoomMgr('${roomId}', ${JSON.stringify(esc(n)).replace(/"/g,'&quot;')})">${lbl}${n===current?' ✓':''}</button>`; }).join('');
             h += `<button class="dd-rel" onclick="assignRoomMgr('${roomId}','')">🤖 AI 에게 맡김 (해제)</button>`;
             return h;
         }
@@ -775,6 +777,7 @@
         // ── 상담 매니저 이름 선택 (헤더 드롭다운 + 우측 패널 연동) ──
         let _acctName = '관리자';
         let _mgrNames = [];
+        let _roomMgrNames = [];   // 2026-10-07: 방 담당지정/필터용 — 실제 매니저만(계정이름 제외)
         function paintMe(){ document.getElementById('meLabel').textContent = '상담 매니저: ' + ME; }
         function repaintMgrUI(){
             const sel = document.getElementById('mgrSelect');
@@ -789,12 +792,13 @@
         async function buildMgrUI(){
             let names = [];
             try{ const { data } = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers'); names = (data||[]).filter(m=>m.is_active!==false).map(m=>(m.question||'').trim()).filter(Boolean); }catch(e){}
-            if(!names.length) names = ['조지숙','강은미','박성희','최연두'];   // 폴백 (managers.md)
-            const opts = [];
-            if(_acctName && !names.includes(_acctName)) opts.push(_acctName);
-            names.forEach(n=>{ if(!opts.includes(n)) opts.push(n); });
-            if(ME && !opts.includes(ME)) opts.unshift(ME);
+            if(!names.length) names = ['지숙','성희','혜림','동연','연두'];   // 폴백
+            _roomMgrNames = names.slice();   // 방 담당지정/필터용 (실 매니저)
+            // 2026-10-07(사장님): 상담 매니저 선택 = '본사' + 실매니저 (로그인 계정 이메일 이름 제외)
+            const opts = ['본사'].concat(names.filter(n=>n!=='본사'));
             _mgrNames = opts;
+            // ME 보정 — opts 에 없는(이메일 접두사 등) 이름이면 '본사'로
+            if(!opts.includes(ME)){ ME = '본사'; try{ localStorage.setItem('jarvisMgrName', ME); }catch(e){} }
             const sel = document.getElementById('mgrSelect');
             if(sel){ sel.innerHTML = opts.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('') + '<option value="__custom__">✏ 직접 입력…</option>'; sel.value=ME; }
             const list = document.getElementById('mgrPickList');
@@ -806,7 +810,7 @@
         window.onRoomFilter = function(val){ _roomFilter = val||''; _roomPage = 0; loadRooms(); };
         function buildRoomFilter(){
             const bar=document.getElementById('roomFilterBar'); if(!bar) return;
-            const names = (_mgrNames && _mgrNames.length) ? _mgrNames : [];
+            const names = ['본사'].concat((_roomMgrNames||[]).filter(n=>n!=='본사'));
             const btn = (val,label)=>`<button class="mgr-filter-btn ${_roomFilter===val?'active':''}" onclick="onRoomFilter(${JSON.stringify(val).replace(/"/g,'&quot;')})">${esc(label)}</button>`;
             let h = '<span class="mflabel">매니저별 보기</span>' + btn('','전체');
             names.forEach(n=>{ h += btn(n, n); });

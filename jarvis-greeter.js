@@ -303,11 +303,11 @@
   async function _captureName(raw) {
     addMsg(raw, 'me');
     var name = String(raw || '').trim().split('\n')[0].replace(/[\t<>]/g, '').slice(0, 20).trim();
-    if (!name) { addMsg(tr('성함을 다시 한 번 알려줄래? 😊', 'もう一度お名前を教えてね😊', 'Could you tell me your name again? 😊'), 'ai'); return; }
+    if (!name) { addMsg(tr('성함을 다시 한 번 알려주시겠어요? 😊', 'もう一度お名前を教えていただけますか😊', 'Could you tell me your name again? 😊'), 'ai'); return; }
     _custName = name; _awaitingName = false;
     try { localStorage.setItem('kapu_cust_name', _custName); } catch (e) {}
     _syncCustToRoom();
-    addMsg(tr('반가워 ' + _custName + '님! 그럼 안내할게 😊', _custName + 'さん、よろしくね！ご案内するよ😊', 'Nice to meet you, ' + _custName + '! Let me help 😊'), 'ai');
+    addMsg(tr('반가워요 ' + _custName + '님! 그럼 안내해 드릴게요 😊', _custName + '様、よろしくお願いします！ご案内します😊', 'Nice to meet you, ' + _custName + '! Let me help 😊'), 'ai');
     var pend = _pendingMsg; _pendingMsg = '';
     if (pend) send(pend, null, true);
   }
@@ -320,7 +320,7 @@
     if (!_custName && text && !image) {
       addMsg(text, 'me');
       _pendingMsg = text; _awaitingName = true;
-      addMsg(tr('반가워! 먼저 성함을 알려줄래? 😊 (바로 이어서 안내해줄게)', 'はじめまして！まずお名前を教えてね😊（すぐにご案内するよ）', 'Nice to meet you! May I have your name first? 😊 (I\'ll help right after)'), 'ai');
+      addMsg(tr('반갑습니다! 먼저 성함을 알려주시겠어요? 😊 (바로 이어서 안내해 드릴게요)', 'はじめまして！まずお名前を教えていただけますか😊（すぐにご案内します）', 'Nice to meet you! May I have your name first? 😊 (I\'ll help right after)'), 'ai');
       return;
     }
     _busy = true;
@@ -333,6 +333,7 @@
       var payload = { message: text || (image ? tr('이 사진 보고 안내해줘', 'この写真を見て案内して', 'Guide me based on this photo') : ''), lang: _lang, conversation_history: _hist.slice(-30) };
       if (_room) payload.room_id = _room;
       if (_custName) payload.customer_name = _custName;
+      if (_custPhone) payload.customer_phone = _custPhone;   // 2026-10-07: 전화번호도 서버 저장(window.sb 미의존)
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
@@ -341,7 +342,7 @@
         // 담당 매니저가 직접 응대 중 — AI 폴백 대신 조용히 처리. 매니저 답변은 실시간 구독으로 도착.
         try { typing.remove(); } catch (e) {}
         _hist.push({ role: 'user', content: text || '[사진 업로드]' });
-        if (!_humanNoticeShown) { _humanNoticeShown = true; addMsg(tr('담당 매니저가 직접 확인하고 있어! 잠시만 기다려줘 🙋', '担当マネージャーが確認中だよ。少し待ってね🙋', 'A manager is handling this now. One moment 🙋'), 'ai'); }
+        if (!_humanNoticeShown) { _humanNoticeShown = true; addMsg(tr('담당 매니저가 직접 확인하고 있어요. 잠시만 기다려 주세요 🙋', '担当マネージャーが確認中です。少々お待ちください🙋', 'A manager is handling this now. One moment 🙋'), 'ai'); }
         _subscribeRoom();
       } else {
         var msg = stripMd(data.chat_message || data.summary || tr('무엇을 도와드릴까요?', '何かお手伝いできますか？', 'How can I help?'));
@@ -362,7 +363,7 @@
   // 2026-09-29(사장님): 장바구니 담은 뒤 안내 문구
   function _afterCartMsg() {
     return tr(
-      '와 대단한데 매우 잘했어!\n제품과 옵션을 잘 골랐다면 이제 주문할 수 있어.\n만약 다른 상품이 추가로 필요하다면 사진이나 제품명을 말해줘, 내가 링크를 줄게.',
+      '와, 아주 잘하셨어요!\n제품과 옵션을 잘 고르셨다면 이제 주문하실 수 있어요.\n혹시 다른 상품이 더 필요하시면 사진이나 제품명을 말씀해 주세요. 링크를 드릴게요.',
       'わあ、すごい！よくできたね。\n製品とオプションをちゃんと選べたなら、このまま注文できるよ。\n他にも必要な商品があれば、写真か製品名を教えてね。リンクを送るよ。',
       'Wow, nicely done!\nIf you\'ve picked the product and options you want, you\'re ready to order.\nNeed anything else? Send a photo or the product name and I\'ll get you a link.'
     );
@@ -434,15 +435,15 @@
       try { localStorage.setItem('kapu_cust_name', _custName); localStorage.setItem('kapu_cust_phone', _custPhone); } catch (e) {}
       _syncCustToRoom();
       try { wrap.remove(); } catch (e) {}
-      addMsg(tr('반가워 ' + _custName + '님! 😊', _custName + 'さん、よろしくね！😊', 'Nice to meet you, ' + _custName + '!'), 'ai');
+      addMsg(tr('반가워요 ' + _custName + '님! 😊', _custName + '様、よろしくお願いします！😊', 'Nice to meet you, ' + _custName + '!'), 'ai');
       if (ty === '가맹문의') {
-        addMsg(tr('가맹·리셀러 안내 페이지로 안내할게!', '加盟・リセラーのご案内ページへ！', 'Let me take you to our franchise page!'), 'ai');
+        addMsg(tr('가맹·리셀러 안내 페이지로 안내해 드릴게요!', '加盟・リセラーのご案内ページへご案内します！', 'Let me take you to our franchise page!'), 'ai');
         _addLinkAction(tr('가맹 안내 보러가기 →', '加盟案内を見る →', 'View franchise →'), '/franchise');
       } else if (ty) {
         var label = optLabel(ty);
-        send(tr(label + ' 제작하고 싶어', label + 'を作りたい', 'I want to make ' + label));
+        send(tr(label + ' 제작하려고 해요', label + 'を作りたいです', 'I want to make ' + label));
       } else {
-        addMsg(tr('어떤 제품이 필요한지 알려주면 도와줄게! (사진·제품명 환영)', 'どんな製品が必要か教えてね！（写真・製品名OK）', 'Tell me what product you need! (photo or name)'), 'ai');
+        addMsg(tr('어떤 제품이 필요하신지 알려주시면 도와드릴게요! (사진·제품명 환영)', 'どんな製品が必要かお知らせください！（写真・製品名OK）', 'Tell me what product you need! (photo or name)'), 'ai');
         addGreetActions();
       }
     });
@@ -467,17 +468,17 @@
     } else if (!_custName || !_custPhone) {
       // 2026-10-07(사장님): 첫 진입(또는 성함·전화 미등록) — 성함+전화+제품종류 폼
       addMsg(tr(
-        '안녕! 카멜레온 카푸야 😊\n성함과 연락처를 남겨주면 담당자가 더 정확히 도와줄 수 있어!',
-        'こんにちは！カメレオンのカプだよ😊\nお名前とご連絡先を教えてね！',
-        'Hi! I\'m Kapu 😊\nLeave your name and phone so we can help you better!'
+        '안녕하세요! 카멜레온 카푸예요 😊\n성함과 연락처를 남겨주시면 담당자가 더 정확히 도와드릴 수 있어요!',
+        'こんにちは！カメレオンのカプです😊\nお名前とご連絡先を教えていただけますか？',
+        'Hi! I\'m Kapu 😊\nPlease leave your name and phone so we can help you better!'
       ), 'ai');
       _addIntakeForm();
     } else {
       // 재방문(성함 보유): 주문 방법 안내 + 버튼
       addMsg(tr(
-        '안녕! 행사 준비해? 내가 안내할게.\n\n주문하는 방법은 2가지가 있어.\n\n' +
-        '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓거나, "가벽"·"배너"처럼 제품명을 말해줘. 내가 딱 맞는 링크를 줄게. 링크에 들어가면 튜토리얼로 차근차근 안내해줄게.\n\n' +
-        '2. 직접 하기 어렵다면 담당 매니저를 통해 주문할 수도 있어. 아래 "매니저 안내"를 누르면 지금 상담 가능한 매니저 전화번호를 알려줄게.',
+        '안녕하세요! 행사 준비 중이신가요? 제가 안내해 드릴게요.\n\n주문하는 방법은 2가지가 있어요.\n\n' +
+        '1. 채팅창에 만들고 싶은 제품 이미지를 끌어다 놓으시거나, "가벽"·"배너"처럼 제품명을 말씀해 주세요. 딱 맞는 링크를 드릴게요. 링크에 들어가시면 튜토리얼로 차근차근 안내해 드려요.\n\n' +
+        '2. 직접 하기 어려우시면 담당 매니저를 통해 주문하실 수도 있어요. 아래 "매니저 안내"를 누르시면 지금 상담 가능한 매니저를 안내해 드릴게요.',
         'こんにちは！イベントの準備かな？案内するよ。\n\nご注文の方法は2つあるよ。\n\n' +
         '1. チャットに作りたい製品の画像をドラッグするか、「パーティション」「バナー」のように製品名を教えてね。ぴったりのリンクを送るよ。リンクに入るとチュートリアルで案内するよ。\n\n' +
         '2. 難しければ担当マネージャー経由でも注文できるよ。下の「担当マネージャー」を押すと、今対応できるマネージャーの電話番号を送るよ。',
