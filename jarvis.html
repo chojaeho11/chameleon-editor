@@ -176,6 +176,10 @@
 
     <!-- 라이브 패널 -->
     <div id="livePanel">
+        <div id="roomFilterBar" style="padding:8px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid rgba(148,163,184,0.12);">
+            <span style="font-size:12px; color:#94a3b8;">담당 필터</span>
+            <select id="roomMgrFilter" onchange="onRoomFilterChange()" style="height:32px; border-radius:9px; background:rgba(255,255,255,0.06); border:1px solid rgba(148,163,184,0.2); color:#e2e8f0; font-family:inherit; font-size:12.5px; font-weight:700; padding:0 8px; cursor:pointer;"></select>
+        </div>
         <div id="roomList"><div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div></div>
     </div>
 
@@ -226,6 +230,8 @@
         let _roomsCache = [];
         let _freshRooms = {};         // roomId -> true (새 고객메시지 미확인)
         let _reloadRoomsTimer = null;
+        let _staffList = [];          // admin_staff (id,name,role) — 담당 매니저 id 매칭용
+        let _roomFilter = '';         // 담당 매니저 필터 ('' = 전체, '__none__' = 미지정)
 
         // ── 공통 유틸 ──
         function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -323,9 +329,13 @@
                         .in('room_id', ids).order('created_at',{ascending:false}).limit(300);
                     (msgs||[]).forEach(m=>{ if(!lastMap[m.room_id]) lastMap[m.room_id]=m; });
                 }
-                document.getElementById('liveCount').textContent = _roomsCache.length ? '('+_roomsCache.length+')' : '';
-                if(!_roomsCache.length){ el.innerHTML='<div class="empty">아직 대화가 없습니다.</div>'; return; }
-                el.innerHTML = _roomsCache.map(r=>{
+                // 담당 매니저 필터 적용 (_roomsCache 는 전체 유지, 렌더만 필터)
+                let _view = _roomsCache;
+                if(_roomFilter==='__none__') _view = _roomsCache.filter(r=>!((r.assigned_manager||'').trim()));
+                else if(_roomFilter) _view = _roomsCache.filter(r=>{ const am=(r.assigned_manager||'').trim(); return am===_roomFilter || am.includes(_roomFilter) || _roomFilter.includes(am); });
+                document.getElementById('liveCount').textContent = _view.length ? '('+_view.length+(_roomFilter?' / '+_roomsCache.length:'')+')' : '';
+                if(!_view.length){ el.innerHTML='<div class="empty">'+(_roomFilter?'이 담당의 채팅방이 없습니다.':'아직 대화가 없습니다.')+'</div>'; return; }
+                el.innerHTML = _view.map(r=>{
                     const nm = (r.customer_name||r.nickname||'게스트');
                     const lm = lastMap[r.id];
                     const prev = lm ? ((lm.sender_type==='customer'?'👤 ':(String(lm.sender_name||'').includes('관리자')?'🙋 ':'🤖 '))+_previewText(lm.message).slice(0,40)) : '';
@@ -362,12 +372,39 @@
             document.querySelectorAll('.room-mgr-dd.open').forEach(d=>d.classList.remove('open'));
             if(dd && !wasOpen) dd.classList.add('open');
         };
+        // 담당매니저 이름 → admin_staff.id 매칭 (admin_staff.name 이 풀네임이어도 조각 매칭: '조지숙' ⊃ '지숙')
+        function _resolveStaffId(name){
+            name=(name||'').trim(); if(!name) return null;
+            let hit = _staffList.find(s=>String(s.name||'').trim()===name);
+            if(!hit) hit = _staffList.find(s=>{ const sn=String(s.name||'').trim(); return sn && (sn.includes(name)||name.includes(sn)); });
+            return hit ? hit.id : null;
+        }
+        function _normPhone(p){ return String(p==null?'':p).replace(/[^0-9]/g,''); }
         window.assignRoomMgr = async function(roomId, name){
             name=(name||'').trim();
             const dd=document.getElementById('rmdd-'+roomId); if(dd) dd.classList.remove('open');
+            const room = _roomsCache.find(r=>String(r.id)===String(roomId)) || null;
+            const phoneNorm = _normPhone(room && room.customer_phone);
+            const custName = room ? (room.customer_name||room.nickname||'') : '';
             try{
-                if(name){ await sb.from('chat_rooms').update({ assigned_manager:name, human_active:true, status:'human' }).eq('id',roomId); toast('👤 '+name+' 담당 지정 (상담중 · AI 정지)'); }
-                else { await sb.from('chat_rooms').update({ assigned_manager:'', human_active:false, status:'open' }).eq('id',roomId); toast('🤖 AI 에게 맡김'); }
+                if(name){
+                    const sid = _resolveStaffId(name);
+                    await sb.from('chat_rooms').update({ assigned_manager:name, human_active:true, status:'human', staff_manager_id:sid }).eq('id',roomId);
+                    // 고객 귀속 (전화번호 기준) — 매니저 직원ID + 전화번호가 있을 때만
+                    if(sid && phoneNorm.length>=9){
+                        try{ await sb.from('manager_customers').upsert({ phone_norm:phoneNorm, staff_manager_id:sid, manager_name:name, customer_name:custName, source_room_id:String(roomId), updated_at:new Date().toISOString() }, { onConflict:'phone_norm' }); }catch(e){ console.warn('[ownership upsert]',e); }
+                        let back=0; try{ const { data } = await sb.rpc('attribute_customer_orders',{ p_phone_norm:phoneNorm, p_staff_id:sid }); back = (typeof data==='number')?data:0; }catch(e){ console.warn('[backfill]',e); }
+                        toast('👤 '+name+' 담당 지정 · 고객 귀속'+(back?(' (기존주문 '+back+'건)'):'')+' · AI 정지');
+                    } else if(sid){
+                        toast('👤 '+name+' 담당 지정 (전화번호 없어 고객 귀속 보류)', true);
+                    } else {
+                        toast('👤 '+name+' 담당 지정 (직원DB 매칭 안됨 — 귀속 보류)', true);
+                    }
+                } else {
+                    await sb.from('chat_rooms').update({ assigned_manager:'', human_active:false, status:'open', staff_manager_id:null }).eq('id',roomId);
+                    if(phoneNorm.length>=9){ try{ await sb.from('manager_customers').delete().eq('phone_norm',phoneNorm); }catch(e){ console.warn('[ownership delete]',e); } }
+                    toast('🤖 AI 에게 맡김 (고객 귀속 해제)');
+                }
             }catch(e){ toast('지정 실패: '+(e?.message||e), true); return; }
             if(_curRoom && _curRoom.id===roomId){ _curRoom.assigned_manager=name; _curRoom.human_active=!!name; paintJoinBar(); }
             loadRooms();
@@ -682,7 +719,16 @@
             if(sel){ sel.innerHTML = opts.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('') + '<option value="__custom__">✏ 직접 입력…</option>'; sel.value=ME; }
             const list = document.getElementById('mgrPickList');
             if(list){ list.innerHTML = opts.map(n=>`<button class="mgr-pick" data-name="${n.replace(/"/g,'&quot;')}" onclick="setManager(this.dataset.name)">${n}</button>`).join('') + `<button class="mgr-pick" style="opacity:.85;" onclick="onMgrCustom()">✏ 직접 입력…</button>`; }
+            buildRoomFilter();
             repaintMgrUI();
+        }
+        // 방 목록 담당 매니저 필터
+        window.onRoomFilterChange = function(){ const s=document.getElementById('roomMgrFilter'); _roomFilter = s ? (s.value||'') : ''; loadRooms(); };
+        function buildRoomFilter(){
+            const sel=document.getElementById('roomMgrFilter'); if(!sel) return;
+            const names = (_mgrNames && _mgrNames.length) ? _mgrNames : [];
+            sel.innerHTML = '<option value="">전체 담당</option>' + names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('') + '<option value="__none__">미지정</option>';
+            sel.value = _roomFilter;
         }
         window.onMgrChange = function(){ const sel=document.getElementById('mgrSelect'); const v=sel.value; if(v==='__custom__'){ onMgrCustom(); return; } setManager(v); };
         window.onMgrCustom = function(){ const c=(prompt('상담 매니저 이름을 입력하세요','')||'').trim(); if(c){ if(!_mgrNames.includes(c)){ _mgrNames.push(c); buildMgrUI().then(()=>setManager(c)); } else setManager(c); } else repaintMgrUI(); };
@@ -692,6 +738,7 @@
             try{ const u=await sb.auth.getUser(); const em=u&&u.data&&u.data.user&&u.data.user.email; if(em){ _acctName = em.split('@')[0]; } }catch(e){}
             // 저장된 선택 우선, 없으면 계정명
             ME = (localStorage.getItem('jarvisMgrName') || _acctName || '관리자');
+            try{ const { data } = await sb.from('admin_staff').select('id,name,role'); _staffList = (data||[]).filter(s=>s.role==='manager'); }catch(e){ console.warn('[admin_staff]',e); }
             await buildMgrUI();
             paintMe();
             paintAlarm();
