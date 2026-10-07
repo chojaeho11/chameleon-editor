@@ -40,6 +40,9 @@
   // 2026-09-30(사장님): 공용 room_id — advisor-panel 과 공유(localStorage 'kapu_room_id'). 재방문·새로고침에도 같은 대화로 이어져 관리자에서 한 대화로 보임.
   var _room = (function () { try { return localStorage.getItem('kapu_room_id') || null; } catch (e) { return null; } })();
   var _hist = [], _busy = false, _root = null, _backdrop = null;
+  // 2026-10-07(사장님): 채팅에서 고객 성함 1회 물어보기 → chat_rooms.customer_name 반영(관리자 콘솔에 실명 표기)
+  var _custName = (function () { try { return localStorage.getItem('kapu_cust_name') || ''; } catch (e) { return ''; } })();
+  var _awaitingName = false, _pendingMsg = '';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   // 2026-09-22(사장님): AI 응답의 마크다운 기호 제거 (**, *, ##, `, 목록기호) — 화면엔 평문만.
@@ -196,17 +199,40 @@
     var b = _root.querySelector('.jvg-body'); var d = document.createElement('div'); d.className = 'jvg-msg me';
     d.innerHTML = '<img src="' + dataUrl + '" alt="">'; b.appendChild(d); b.scrollTop = b.scrollHeight;
   }
-  async function send(text, image) {
+  // 입력을 성함으로 캡처 → 저장 + 기존 방 이름 반영 + 보류 메시지 이어서 전송
+  async function _captureName(raw) {
+    addMsg(raw, 'me');
+    var name = String(raw || '').trim().split('\n')[0].replace(/[\t<>]/g, '').slice(0, 20).trim();
+    if (!name) { addMsg(tr('성함을 다시 한 번 알려줄래? 😊', 'もう一度お名前を教えてね😊', 'Could you tell me your name again? 😊'), 'ai'); return; }
+    _custName = name; _awaitingName = false;
+    try { localStorage.setItem('kapu_cust_name', _custName); } catch (e) {}
+    try { var sb = window.sb; if (sb && sb.from && _room) await sb.from('chat_rooms').update({ customer_name: _custName }).eq('id', _room); } catch (e) {}
+    addMsg(tr('반가워 ' + _custName + '님! 그럼 안내할게 😊', _custName + 'さん、よろしくね！ご案内するよ😊', 'Nice to meet you, ' + _custName + '! Let me help 😊'), 'ai');
+    var pend = _pendingMsg; _pendingMsg = '';
+    if (pend) send(pend, null, true);
+  }
+  async function send(text, image, _noEcho) {
     if (_busy || (!text && !image)) return;
+    text = text || '';
+    // (1) 이름 대기중이면 이번 입력을 성함으로 처리
+    if (_awaitingName && text) { _captureName(text); return; }
+    // (2) 성함 미수집 + 텍스트 첫 메시지면 먼저 성함을 물어봄 (이미지 전송은 제외)
+    if (!_custName && text && !image) {
+      addMsg(text, 'me');
+      _pendingMsg = text; _awaitingName = true;
+      addMsg(tr('반가워! 먼저 성함을 알려줄래? 😊 (바로 이어서 안내해줄게)', 'はじめまして！まずお名前を教えてね😊（すぐにご案内するよ）', 'Nice to meet you! May I have your name first? 😊 (I\'ll help right after)'), 'ai');
+      return;
+    }
     _busy = true;
     var sendBtn = _root.querySelector('.jvg-send'); if (sendBtn) sendBtn.disabled = true;
     if (image && image.dataUrl) addImageMsg(image.dataUrl);
-    if (text) addMsg(text, 'me');
+    if (text && !_noEcho) addMsg(text, 'me');
     var typing = addMsg(image ? tr('잠깐만, 이미지 확인할게…', 'ちょっと写真を確認するね…', 'Let me check the image…') : tr('카푸가 입력 중…', 'カプが入力中…', 'Kapu is typing…'), 'ai');
     typing.classList.add('jvg-typing');
     try {
       var payload = { message: text || (image ? tr('이 사진 보고 안내해줘', 'この写真を見て案内して', 'Guide me based on this photo') : ''), lang: _lang, conversation_history: _hist.slice(-30) };
       if (_room) payload.room_id = _room;
+      if (_custName) payload.customer_name = _custName;
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
