@@ -6,6 +6,20 @@ const _fmEsc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&
 const _fmWon = (n) => '₩' + Number(n || 0).toLocaleString();
 const _FM_DONE = ['완료됨', '완료', '구매확정', '배송완료', '발송완료'];
 const _fmToast = (m, k) => { try { if (window.showToast) return window.showToast(m, k); } catch (e) {} alert(m); };
+// 2026-10-12(사장님): 가맹점·리셀러 승인/반려/승인취소 권한은 대표 계정 1개로 한정.
+const FR_APPROVER_EMAIL = 'korea900as@gmail.com';
+let _fmIsApprover = false, _fmApproverChecked = false;
+async function _fmCheckApprover() {
+    if (_fmApproverChecked) return _fmIsApprover;
+    try {
+        const { data } = await sb.auth.getUser();
+        const em = ((data && data.user && data.user.email) || '').toLowerCase();
+        _fmIsApprover = (em === FR_APPROVER_EMAIL);
+    } catch (e) { _fmIsApprover = false; }
+    _fmApproverChecked = true;
+    return _fmIsApprover;
+}
+const _FR_NOT_APPROVER_MSG = '가맹점·리셀러 승인/반려는 대표 계정(korea900as@gmail.com)만 가능합니다.';
 // 2026-09-21(사장님): 신청 유형(가맹점/리셀러)은 franchise 테마 JSON 의 applicantType 에 저장됨.
 const _FM_THEME_BASE = 'https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/logos/franchise/themes/';
 async function _fmApplicantType(slug) {
@@ -22,6 +36,7 @@ window.loadFranchiseManagement = async () => {
     const sum = document.getElementById('fmSummary');
     if (!wrap) return;
     wrap.innerHTML = '<div style="padding:20px;color:#64748b;"><span class="spinner"></span> 불러오는 중…</div>';
+    await _fmCheckApprover();  // 대표 계정만 승인/반려 버튼 노출
 
     let frs = [], pendingFrs = [], orders = [], msgs = [], roles = {}, setts = [];
     try {
@@ -106,7 +121,7 @@ window.loadFranchiseManagement = async () => {
     };
     const _fmMgmtBtn = '<button class="btn btn-sm" style="background:#e0e7ff;color:#3730a3;font-weight:700;" onclick="var p=this.closest(&quot;.fm-card&quot;).querySelector(&quot;.fm-mgmt&quot;);if(p){p.style.display=p.style.display===&quot;none&quot;?&quot;block&quot;:&quot;none&quot;;}">🛠 관리</button>';
     // 2026-09-30(사장님): 승인된 가맹/리셀러 → 일반 고객으로 전환(승인취소) 버튼.
-    const _fmRevokeBtn = (f) => '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;font-weight:700;" onclick="fmRevokeApproval(\'' + _fmEsc(f.slug) + '\',\'' + _fmEsc(f.owner_id || '') + '\',this)">승인취소</button>';
+    const _fmRevokeBtn = (f) => _fmIsApprover ? '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;font-weight:700;" onclick="fmRevokeApproval(\'' + _fmEsc(f.slug) + '\',\'' + _fmEsc(f.owner_id || '') + '\',this)">승인취소</button>' : '';
 
     // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — [승인](신청 유형으로) + [반려] + [관리].
     const pendTypes = pendingFrs.length ? await Promise.all(pendingFrs.map((f) => _fmApplicantType(f.slug))) : [];
@@ -132,8 +147,10 @@ window.loadFranchiseManagement = async () => {
                     + '<span style="color:#94a3b8;font-size:12px;">' + _fmEsc(f.phone || '') + ' · ' + _fmEsc(f.email || '') + ' · ' + _fmEsc(f.country || '') + ' · 신청 ' + d + '</span>'
                   + '</div>'
                   + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-                    + '<button class="btn btn-sm" style="background:' + apprBg + ';color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'' + at + '\',this)">' + apprLabel + '</button>'
-                    + '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="fmRejectApplicant(\'' + sl + '\',this)">❌ 반려</button>'
+                    + (_fmIsApprover
+                        ? ('<button class="btn btn-sm" style="background:' + apprBg + ';color:#fff;font-weight:800;" onclick="fmApproveApplicant(\'' + sl + '\',\'' + oid + '\',\'' + at + '\',this)">' + apprLabel + '</button>'
+                           + '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="fmRejectApplicant(\'' + sl + '\',this)">❌ 반려</button>')
+                        : '<span style="font-size:12px;color:#94a3b8;align-self:center;">승인·반려는 대표 계정만</span>')
                     + _fmMgmtBtn
                   + '</div>'
                 + '</div>'
@@ -246,6 +263,7 @@ window.fmPostHqNote = async (orderId) => {
 //   RLS 로 UPDATE 0행(조용한 실패) 대비 .select() 로 반영 확인.
 const _FM_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_admin_rls.sql 을 Supabase SQL Editor 에서 먼저 실행하세요.';
 window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
+    if (!(await _fmCheckApprover())) { _fmToast(_FR_NOT_APPROVER_MSG, 'error'); return; }
     role = (role === 'franchise' || role === 'gold') ? role : 'reseller';
     const pctTxt = (role === 'gold') ? '골드 가맹점' : (role === 'franchise') ? '가맹점' : '리셀러(완제품 20% 할인)';
     const _msg = (role === 'reseller') ? '\n\n승인 시 이 회원은 완제품을 20% 할인가로 매입할 수 있습니다.' : '\n\n승인 시 이 회원은 자재·원지·장비를 구매해 제작합니다(완제품 할인 없음).';
@@ -282,6 +300,7 @@ window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
     } catch (e) { _fmToast('승인 실패: ' + (e.message || e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
 };
 window.fmRejectApplicant = async (slug, btn) => {
+    if (!(await _fmCheckApprover())) { _fmToast(_FR_NOT_APPROVER_MSG, 'error'); return; }
     if (!confirm('[' + slug + '] 신청을 반려합니다.\n\n반려해도 신청자가 다시 저장하면 재신청됩니다. 계속할까요?')) return;
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
@@ -303,6 +322,7 @@ window.fmRejectApplicant = async (slug, btn) => {
 
 // 2026-09-30(사장님): 승인 취소 — 가맹/리셀러를 일반 고객으로 전환 (franchises.status=cancelled + profiles.role=customer).
 window.fmRevokeApproval = async (slug, ownerId, btn) => {
+    if (!(await _fmCheckApprover())) { _fmToast(_FR_NOT_APPROVER_MSG, 'error'); return; }
     if (!confirm('[' + slug + '] 의 가맹/리셀러 승인을 취소합니다.\n\n해당 리셀러(가맹점)은 일반 고객으로 전환됩니다.\n(완제품 할인·리셀러 콘솔·매장(/store) 모두 해제)\n\n계속할까요?')) return;
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
