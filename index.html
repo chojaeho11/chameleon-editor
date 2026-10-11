@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20261007230613';
+    var CV = '20261012005919';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -7202,6 +7202,19 @@ window.isPremiumTemplate = function(tpl) {
 
 // Start subscription flow
 window.startSubscription = async function(planType) {
+    // [구독 신규 가입 차단] PRO 구독 서비스 종료 — 신규 결제 생성 금지 (2026-10-12)
+    // 기존 구독 관리/해지는 manageSubscription(Stripe 포털)로 계속 가능.
+    try {
+        var _subEndedMsg = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'JP')
+            ? 'サブスクリプションの新規受付は終了しました。'
+            : (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY === 'US')
+                ? 'New subscriptions are no longer available.'
+                : '구독 서비스 신규 가입이 종료되었습니다.';
+        if (typeof showToast === 'function') showToast(_subEndedMsg, 'info');
+        else alert(_subEndedMsg);
+    } catch(_e) {}
+    return;
+    // eslint-disable-next-line no-unreachable
     if (!window.sb) { showToast('Loading...', 'info'); return; }
 
     var sess;
