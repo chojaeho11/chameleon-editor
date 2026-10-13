@@ -276,8 +276,8 @@ const _FM_RLS_MSG = '권한(RLS)으로 반영되지 않았습니다. _franchise_
 window.fmApproveApplicant = async (slug, ownerId, role, btn) => {
     if (!(await _fmCheckApprover())) { _fmToast(_FR_NOT_APPROVER_MSG, 'error'); return; }
     role = (role === 'franchise' || role === 'gold') ? role : 'reseller';
-    const pctTxt = (role === 'gold') ? '골드 가맹점' : (role === 'franchise') ? '가맹점' : '리셀러(완제품 20% 할인)';
-    const _msg = (role === 'reseller') ? '\n\n승인 시 이 회원은 완제품을 20% 할인가로 매입할 수 있습니다.' : '\n\n승인 시 이 회원은 자재·원지·장비를 구매해 제작합니다(완제품 할인 없음).';
+    const pctTxt = (role === 'gold') ? '골드 가맹점(완제품 20% 할인)' : (role === 'franchise') ? '가맹점(완제품 20% 할인)' : '리셀러(완제품 20% 할인)';
+    const _msg = '\n\n승인 시 이 회원은 완제품을 20% 할인가로 매입할 수 있습니다.\n(허니콤보드 원판·원지·잉크·소모품·인쇄장비 등 매입 자재·장비는 할인 제외)';
     if (!confirm('[' + slug + '] 을(를) ' + pctTxt + ' 로 승인합니다.' + _msg + ' 계속할까요?')) return;
     const orig = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }

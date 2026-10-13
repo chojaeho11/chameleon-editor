@@ -4917,8 +4917,10 @@ html, body { background: #ffffff !important; }
         // 2026-09-15(사장님): 원판(허니콤보드 원판)은 이미 도매가라 가맹/리셀러 매입할인 제외.
         // 2026-09-15: 가맹/리셀러 매입 할인 — 가맹점 20% / 리셀러·PRO 10% (window.memberDiscountPct). 미설정 시 10% 폴백.
         // 2026-09-29(사장님): 리셀러는 "허니콤보드 원판만 제외, 전 제품 20%". 그 외 등급/PRO 는 기존 제외 리스트 유지.
-        const _noProDisc = (window.memberTier === 'reseller')
-            ? state.isRawBoard
+        // 2026-10-13(사장님): 가맹점·골드도 리셀러와 동일 — 파트너 등급은 매입 자재·장비(원판/원지·잉크·장비)만 제외하고 전 제품 20%.
+        const _isPartnerTier = (window.memberTier === 'reseller' || window.memberTier === 'franchise' || window.memberTier === 'gold');
+        const _noProDisc = _isPartnerTier
+            ? state.isPartnerMaterial
             : (state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint || state.isRawBoard);
         const _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
         const proPct = (isPro && !_noProDisc) ? _memberPct : 0;
@@ -5590,6 +5592,21 @@ html, body { background: #ffffff !important; }
     }
     // 2026-08-16: order.js(_cartHasHoneycomb 설치캐파 제외)에서 재사용하도록 노출
     window._soIsRawBoardProduct = _soIsRawBoardProduct;
+
+    // 2026-10-13(사장님): 가맹/리셀러/골드 완제품 20% 할인에서 제외하는 "매입 자재·장비".
+    //   = 허니콤보드 원판(_soIsRawBoardProduct: 상위 Wholesale Board Prices) + 가맹점 상품(상위 123456789: 혜림허니콤 원지·잉크/소모품·인쇄장비).
+    //   ⚠ _soIsRawBoardProduct 는 배송·설치캐파·hexa-mode 에도 쓰이므로 건드리지 말고 별도 헬퍼로 분리.
+    function _soIsPartnerMaterial(p) {
+        if (!p) return false;
+        if (_soIsRawBoardProduct(p)) return true;
+        try {
+            if (typeof window._getTopCategoryCode === 'function' && p.category) {
+                if (String(window._getTopCategoryCode(p.category)) === '123456789') return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+    window._soIsPartnerMaterial = _soIsPartnerMaterial;
 
     // 2026-05-13: 원판인쇄 양면 여부 (이름에 "양면" 포함 시)
     function _soIsRawBoardDoubleSided(p) {
@@ -7776,7 +7793,9 @@ html, body { background: #ffffff !important; }
             else                                    shipFee = (totalQty >= 10)  ? 0 : 100000;
             // PRO/가맹/리셀러 매입 할인 (가맹점 20% / 리셀러·PRO 10%)
             // 2026-09-29(사장님): 원판(허니콤보드 원지)은 리셀러 할인 제외 — 리셀러만 0%, PRO 구독자는 기존대로 유지.
-            var proPct = (!!window.isProSubscriber && window.memberTier !== 'reseller') ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
+            // 2026-10-13(사장님): 가맹점·골드도 원판류(자재)는 할인 제외 → 파트너 등급 전원 0%.
+            var _rbIsPartner = (window.memberTier === 'reseller' || window.memberTier === 'franchise' || window.memberTier === 'gold');
+            var proPct = (!!window.isProSubscriber && !_rbIsPartner) ? ((typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10) : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
             // 2026-08-16: 커팅비 — 판당 3만원 flat × 원판 장수 (기존 개수 구간제 폐지).
             var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
@@ -14192,6 +14211,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-25: hexa-board.com(화이트라벨)에서 열린 상품은 모두 원판으로 처리 (카테고리 매핑 미로드 대비)
         state.isRawBoard = _soIsRawBoardProduct(p) || (typeof document !== 'undefined' && document.documentElement.classList.contains('hexa-mode'));
         state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
+        // 2026-10-13: 가맹/리셀러/골드 20% 할인 제외 자재·장비(원판/원지·잉크·장비) 여부 — 프리뷰 할인 계산용.
+        state.isPartnerMaterial = _soIsPartnerMaterial(p) || state.isRawBoard;
         // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
         // 2026-06-12: 종이매대 — 5단 프리셋 (1/100/300/500/1000). 기본 100.
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
@@ -19836,6 +19857,7 @@ html, body { background: #ffffff !important; }
         var taxBase = 0;          // 할인 적용 대상 (일반 상품가 + 옵션)
         var nonDiscountBase = 0;  // 할인 비적용 (매니저 견적 — 이미 협의가)
         var rawBoardBase = 0;     // 2026-07-03: 원판(허니콤보드) 부분 — nonDiscountBase 이지만 PRO(구독) 할인은 허용 (hexa-board 메인상품)
+        var partnerExclBase = 0;  // 2026-10-13: 가맹/리셀러/골드 20% 할인에서 제외할 매입 자재·장비(원판/원지·잉크·장비) 합계
         // 2026-06-01: 카트 합계 시 자동 묶음배송 — 모든 일반 항목의 개별 배송비 중 가장 큰 것 1건만 부과.
         //   (베스트굿즈는 정액 3천원 별도, 패브릭은 별도 발송이므로 가산 — 둘 다 max 룰에서 제외)
         var itemShipFees = [];
@@ -19862,6 +19884,8 @@ html, body { background: #ffffff !important; }
             // 2026-05-15: 원판 / 금액주문 — 단순 발송·입력 금액 그대로이므로 수량/구독 할인 제외
             // 2026-05-30: 베스트굿즈 — 100개+ 50% 만 적용, 금액티어(1M/5M/10M)·PRO 할인 모두 제외
             var _isRawBoardItem = !!(it.product && typeof _soIsRawBoardProduct === 'function' && _soIsRawBoardProduct(it.product));
+            // 2026-10-13: 파트너(가맹/리셀러/골드) 할인 제외 자재·장비 — base 와 무관하게 합산해 할인 base 에서 제외.
+            if (it.product && typeof _soIsPartnerMaterial === 'function' && _soIsPartnerMaterial(it.product)) partnerExclBase += (subPrice - shipFee);
             if (_soIsManagerQuoteItem(it) || it._isBestGoods || _isRawBoardItem || (it.product && _soIsAmountOrder(it.product))) {
                 nonDiscountBase += (subPrice - shipFee);
                 // 2026-07-03: 원판만 PRO(구독) 할인 base 에 포함 (사용자 요청) — 나머지 비할인(매니저견적/베스트굿즈/금액주문)은 제외 유지.
@@ -20017,14 +20041,16 @@ html, body { background: #ffffff !important; }
         // 2026-09-15(사장님): 원판(rawBoardBase)은 이미 도매가 — 가맹/리셀러/구독 할인 제외. proDisc base 에서 뺌.
         // 2026-09-29(사장님): 리셀러는 "허니콤보드 원판만 제외, 전 제품 20%" → 할인 base = 전체(taxBase+nonDiscountBase) − 원판.
         //   그 외 등급/PRO 는 기존대로 taxBase 만 (베스트굿즈·금액주문·매니저견적 제외 유지).
-        var _isReseller = (window.memberTier === 'reseller');
-        var _proBase = _isReseller ? Math.max(0, taxBase + nonDiscountBase - rawBoardBase) : taxBase;
+        // 2026-10-13(사장님): 가맹점·골드도 리셀러와 동일 — 파트너 등급은 전 제품 20%, 매입 자재·장비(partnerExclBase)만 제외.
+        var _isPartner = (window.memberTier === 'reseller' || window.memberTier === 'franchise' || window.memberTier === 'gold');
+        var _proBase = _isPartner ? Math.max(0, taxBase + nonDiscountBase - partnerExclBase) : taxBase;
         var proDisc = Math.round(_proBase * proPct / 100);
         var grandTotal = taxBase + nonDiscountBase - amountDisc - proDisc + shipTotal;
         return {
             taxBase: taxBase,
             nonDiscountBase: nonDiscountBase,
             rawBoardBase: rawBoardBase,
+            partnerExclBase: partnerExclBase,
             shipTotal: shipTotal,
             amountPct: amountPct,
             amountDisc: amountDisc,
@@ -20266,7 +20292,9 @@ html, body { background: #ffffff !important; }
         // 4) PRO/가맹/리셀러 매입 할인 (가맹점 20% / 리셀러·PRO 10%)
         var _memberPct = (typeof window.memberDiscountPct === 'number' && window.memberDiscountPct > 0) ? window.memberDiscountPct : 10;
         // 2026-09-29(사장님): 리셀러 자동할인 base(전체 − 원판)와 동일하게 잡아 결제창 이중차감 방지.
-        var _proMaxBase = (window.memberTier === 'reseller') ? Math.max(0, discBase - (calc.rawBoardBase || 0)) : discBase;
+        // 2026-10-13(사장님): 가맹점·골드 포함 — 파트너 등급은 매입 자재·장비(partnerExclBase) 제외한 base.
+        var _wIsPartner = (window.memberTier === 'reseller' || window.memberTier === 'franchise' || window.memberTier === 'gold');
+        var _proMaxBase = _wIsPartner ? Math.max(0, discBase - (calc.partnerExclBase || 0)) : discBase;
         var proMax = isPro ? Math.floor(_proMaxBase * _memberPct / 100) : 0;
 
         window._soWallet = {
@@ -20304,7 +20332,8 @@ html, body { background: #ffffff !important; }
         // 2026-09-29(사장님): 지갑 할인 카드 제목을 등급명으로 (리셀러=리셀러 할인, PRO=PRO 구독할인).
         try { var _prTtl = document.getElementById('soDiscProTitle'); if (_prTtl) { if (window.memberTier === 'reseller') _prTtl.textContent = tr('리셀러 할인','リセラー割引','Reseller discount'); else if (window.memberTier === 'franchise' || window.memberTier === 'gold') _prTtl.textContent = tr('가맹점 할인','加盟店割引','Franchise discount'); else _prTtl.textContent = tr('PRO 구독할인','PRO会員割引','PRO Subscriber'); } } catch(e){}
         // 2026-09-29(사장님): 리셀러는 20% 가 합계에 자동 반영되므로 지갑 '리셀러 할인' 카드는 숨김(중복 표시 혼란 방지). 할인은 그대로 적용됨.
-        try { if (window.memberTier === 'reseller') { var _proCd = document.querySelector('.so-disc-card[data-disc="pro"]'); if (_proCd) _proCd.style.display = 'none'; } } catch(e){}
+        // 2026-10-13(사장님): 가맹점·골드도 20% 자동반영 → 동일하게 카드 숨김.
+        try { if (window.memberTier === 'reseller' || window.memberTier === 'franchise' || window.memberTier === 'gold') { var _proCd = document.querySelector('.so-disc-card[data-disc="pro"]'); if (_proCd) _proCd.style.display = 'none'; } } catch(e){}
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
         var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
         var blogMax = Math.min(blogBal, 50000, Math.floor((calc.grandTotal || discBase || 0) * 0.05));   // 2026-09-29: 구매금액 5% 이내 + 최대 5만원
@@ -21637,7 +21666,7 @@ html, body { background: #ffffff !important; }
                 discountSummary += '\n할인: 구매금액 ' + cartCalc.amountPct + '% (-' + cartCalc.amountDisc.toLocaleString() + '원)';
             }
             if (cartCalc.proPct > 0) {
-                var _mtN = (window.memberTier === 'franchise' ? '가맹점' : (window.memberTier === 'reseller' ? '리셀러' : 'PRO 구독자'));
+                var _mtN = ((window.memberTier === 'franchise' || window.memberTier === 'gold') ? '가맹점' : (window.memberTier === 'reseller' ? '리셀러' : 'PRO 구독자'));
                 if (!_proSuppressed) {
                     discountSummary += '\n' + _mtN + ' ' + cartCalc.proPct + '% (-' + cartCalc.proDisc.toLocaleString() + '원)';
                 } else {
