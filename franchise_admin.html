@@ -294,7 +294,11 @@ select option{background:#1d1640;}
         <div class="hint" data-i18n="slugHint">고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.</div>
       </label>
       <label class="fld"><span class="lb" data-i18n="companyLabel">상호 (회사명) *</span><input type="text" id="fCompany" data-i18n-ph="companyPh" placeholder="예: 행복광고기획" maxlength="60"></label>
-      <label class="fld"><span class="lb" data-i18n="bizNoLabel">사업자등록번호 *</span><input type="text" id="fBizNo" data-i18n-ph="bizNoPh" placeholder="예: 123-45-67890" maxlength="20"><span class="hint" data-i18n="bizNoHint">본사 승인에 필요합니다. 사업자만 신청 가능합니다.</span></label>
+      <label class="fld"><span class="lb" data-i18n="bizNoLabel">사업자등록번호 *</span><input type="text" id="fBizNo" data-i18n-ph="bizNoPh" placeholder="예: 123-45-67890" maxlength="20"><span class="hint" data-i18n="bizNoHint">사업자번호 조회 후 자동승인됩니다. (골드 가맹점은 본사 승인)</span></label>
+      <label class="fld"><span class="lb" data-i18n="bizFileLabel">사업자등록증 첨부 *</span>
+        <input type="file" id="fBizFile" accept="image/*,application/pdf" style="font-size:12px;color:#9b94c4;padding:9px 0;">
+        <span class="hint" id="fBizFileHint" data-i18n="bizFileHint">이미지 또는 PDF. 본사 확인용으로만 사용됩니다(비공개 보관).</span>
+      </label>
       <div class="row2">
         <label class="fld"><span class="lb" data-i18n="phoneLabel">대표 전화번호 *</span><input type="tel" id="fPhone" data-i18n-ph="phonePh" placeholder="예: 031-000-0000"></label>
         <label class="fld"><span class="lb">휴대폰 번호</span><input type="tel" id="fMobile" placeholder="예: 010-0000-0000"></label>
@@ -539,8 +543,18 @@ select option{background:#1d1640;}
 
   var sb = window.supabase.createClient(SB_URL, SB_KEY);
   var $ = function(id){ return document.getElementById(id); };
-  var state = { user:null, franchise:null, allFranchises:[], theme:{}, products:[], selected:{}, logoUrl:'', heroImageUrl:'', myProducts:[], activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false };
+  var state = { user:null, franchise:null, allFranchises:[], theme:{}, products:[], selected:{}, logoUrl:'', heroImageUrl:'', myProducts:[], activeCat:'ALL', topMap:{}, subToTop:{}, hasAccess:false, bizFilePath:'' };
   var _mpUploadTarget = null;  // 자체 제품 이미지 업로드 대상 인덱스
+  // 한국 사업자등록번호 체크섬 검증 (자동승인 전 가벼운 "조회")
+  function _isValidKrBizNo(s){
+    var d = String(s||'').replace(/[^0-9]/g,'');
+    if (d.length !== 10) return false;
+    var w = [1,3,7,1,3,7,1,3,5], sum = 0, i;
+    for (i=0;i<9;i++){ sum += parseInt(d.charAt(i),10) * w[i]; }
+    sum += Math.floor((parseInt(d.charAt(8),10) * 5) / 10);
+    var chk = (10 - (sum % 10)) % 10;
+    return chk === parseInt(d.charAt(9),10);
+  }
 
   // ===== i18n =====
   var LANG = (function(){
@@ -561,7 +575,7 @@ select option{background:#1d1640;}
       c1Title:'① 홈페이지 정보', c1Desc:'고객에게 보일 사장님 회사 정보입니다. 상호·로고·연락처가 사장님 홈페이지에 표시됩니다.',
       slugLabel:'홈페이지 주소', slugSmall:'— 영문 소문자·숫자·하이픈만', slugHint:'고객이 방문할 사장님 홈페이지 주소입니다. 가입 후 변경이 어려우니 신중히 정하세요.',
       companyLabel:'상호 (회사명) *', companyPh:'예: 행복광고기획',
-      bizNoLabel:'사업자등록번호 *', bizNoPh:'예: 123-45-67890', bizNoHint:'본사 승인에 필요합니다. 사업자만 신청 가능합니다.', bizNoErr:'사업자등록번호를 입력하세요.', reapplyBlocked:'취소된 계정은 재신청이 불가합니다. 본사에 문의하세요.',
+      bizNoLabel:'사업자등록번호 *', bizNoPh:'예: 123-45-67890', bizNoHint:'사업자번호 조회 후 자동승인됩니다. (골드 가맹점은 본사 승인)', bizNoErr:'사업자등록번호를 입력하세요.', bizFileLabel:'사업자등록증 첨부 *', bizFileHint:'이미지 또는 PDF. 본사 확인용으로만 사용됩니다(비공개 보관).', bizFileErr:'사업자등록증을 첨부하세요.', reapplyBlocked:'취소된 계정은 재신청이 불가합니다. 본사에 문의하세요.',
       phoneLabel:'대표 전화번호 *', phonePh:'예: 031-000-0000', emailLabel:'이메일', countryLabel:'국가',
       co_KR:'대한민국', co_JP:'일본', co_US:'미국', co_CN:'중국', co_SA:'사우디', co_ES:'스페인', co_DE:'독일', co_FR:'프랑스',
       logoLabel:'로고', logoSmall:'— 정사각 이미지 권장',
@@ -571,7 +585,7 @@ select option{background:#1d1640;}
       c3Title:'④ 주문 현황', c3Desc:'고객이 사장님 스토어에서 주문한 내역입니다. 결제(계좌이체·카드)는 등록하신 계좌·PG로 <b>사장님께 직접 입금</b>되며, 본사 중계수수료는 없습니다.',
       c4Title:'④ 본사와 메시지', c4Desc:'본사 담당자와 주고받는 메시지입니다. 정산·제작·배송 등 문의를 이메일처럼 남기고 답변을 받으세요.',
       msgPh:'본사에 보낼 메시지를 입력하세요…', send:'보내기', save:'💾 저장', preview:'🔗 내 홈페이지 보기',
-      trialMode:'체험 모드', saving:'저장 중…', saved:'저장되었습니다', savedAddr:'저장됨 · 홈페이지 주소: ', saveFail:'저장 실패: ',
+      trialMode:'체험 모드', saving:'저장 중…', saved:'저장되었습니다', autoApproved:'자동승인 완료 — 바로 이용하실 수 있어요!', savedAddr:'저장됨 · 홈페이지 주소: ', saveFail:'저장 실패: ',
       slugErr:'홈페이지 주소(slug)는 3자 이상 영문/숫자로 입력하세요.', companyErr:'상호를 입력하세요.', phoneErr:'대표 전화번호를 입력하세요.',
       slugDup:'이미 사용 중인 홈페이지 주소입니다. 다른 주소를 입력하세요.',
       needSubSave:'저장은 가맹점 구독 회원만 가능합니다.\n지금 입력하신 내용은 체험용이며 저장되지 않습니다.\n\n구독 요금제를 확인하시겠습니까?',
@@ -625,7 +639,7 @@ select option{background:#1d1640;}
       c1Title:'① ホームページ情報', c1Desc:'お客様に表示される会社情報です。商号・ロゴ・連絡先がホームページに表示されます。',
       slugLabel:'ホームページアドレス', slugSmall:'— 半角英数字・ハイフンのみ', slugHint:'お客様が訪問するホームページアドレスです。登録後の変更は難しいので慎重に決めてください。',
       companyLabel:'商号 (会社名) *', companyPh:'例: 幸せ広告企画',
-      bizNoLabel:'事業者登録番号 *', bizNoPh:'例: 123-45-67890', bizNoHint:'本社の承認に必要です。事業者のみ申請可能です。', bizNoErr:'事業者登録番号を入力してください。', reapplyBlocked:'却下またはキャンセルされた申請は再申請できません。本社までお問い合わせください。',
+      bizNoLabel:'事業者登録番号 *', bizNoPh:'例: 123-45-67890', bizNoHint:'事業者番号の照会後、自動承認されます。（ゴールド加盟店は本社承認）', bizNoErr:'事業者登録番号を入力してください。', bizFileLabel:'事業者登録証の添付 *', bizFileHint:'画像またはPDF。本社確認用のみ（非公開保管）。', bizFileErr:'事業者登録証を添付してください。', reapplyBlocked:'却下またはキャンセルされた申請は再申請できません。本社までお問い合わせください。',
       phoneLabel:'代表電話番号 *', phonePh:'例: 03-0000-0000', emailLabel:'メール', countryLabel:'国',
       co_KR:'韓国', co_JP:'日本', co_US:'アメリカ', co_CN:'中国', co_SA:'サウジアラビア', co_ES:'スペイン', co_DE:'ドイツ', co_FR:'フランス',
       logoLabel:'ロゴ', logoSmall:'— 正方形画像推奨',
@@ -635,7 +649,7 @@ select option{background:#1d1640;}
       c3Title:'④ 注文状況', c3Desc:'お客様がストアで注文した内訳です。決済(銀行振込・カード)は登録した口座・PGへ<b>店舗様へ直接入金</b>され、本社の仲介手数料はありません。',
       c4Title:'④ 本社とのメッセージ', c4Desc:'本社担当者とのメッセージです。精算・製作・配送などの問い合わせをメールのように残せます。',
       msgPh:'本社へのメッセージを入力…', send:'送信', save:'💾 保存', preview:'🔗 ホームページを見る',
-      trialMode:'体験モード', saving:'保存中…', saved:'保存しました', savedAddr:'保存完了 · アドレス: ', saveFail:'保存失敗: ',
+      trialMode:'体験モード', saving:'保存中…', saved:'保存しました', autoApproved:'自動承認完了 — すぐにご利用いただけます！', savedAddr:'保存完了 · アドレス: ', saveFail:'保存失敗: ',
       slugErr:'ホームページアドレスは3文字以上の半角英数字で入力してください。', companyErr:'商号を入力してください。', phoneErr:'代表電話番号を入力してください。',
       slugDup:'すでに使用中のアドレスです。別のアドレスを入力してください。',
       needSubSave:'保存は加盟店サブスク会員のみ可能です。\n入力した内容は体験用で保存されません。\n\nサブスク料金を確認しますか？',
@@ -689,7 +703,7 @@ select option{background:#1d1640;}
       c1Title:'1. Homepage Info', c1Desc:'Your company info shown to customers. Name, logo and contact appear on your homepage.',
       slugLabel:'Homepage Address', slugSmall:'— lowercase letters, numbers, hyphens only', slugHint:'The address customers will visit. Hard to change later — choose carefully.',
       companyLabel:'Business Name *', companyPh:'e.g. Happy Ad Studio',
-      bizNoLabel:'Business Registration No. *', bizNoPh:'e.g. 123-45-67890', bizNoHint:'Required for HQ approval. Registered businesses only.', bizNoErr:'Enter your business registration number.', reapplyBlocked:'Rejected or cancelled applications cannot be resubmitted. Please contact HQ.',
+      bizNoLabel:'Business Registration No. *', bizNoPh:'e.g. 123-45-67890', bizNoHint:'Auto-approved after a business-number check. (Gold franchise needs HQ approval)', bizNoErr:'Enter your business registration number.', bizFileLabel:'Business registration file *', bizFileHint:'Image or PDF. Used only for HQ verification (stored privately).', bizFileErr:'Please attach your business registration.', reapplyBlocked:'Rejected or cancelled applications cannot be resubmitted. Please contact HQ.',
       phoneLabel:'Phone Number *', phonePh:'e.g. 555-000-0000', emailLabel:'Email', countryLabel:'Country',
       co_KR:'South Korea', co_JP:'Japan', co_US:'United States', co_CN:'China', co_SA:'Saudi Arabia', co_ES:'Spain', co_DE:'Germany', co_FR:'France',
       logoLabel:'Logo', logoSmall:'— square image recommended',
@@ -699,7 +713,7 @@ select option{background:#1d1640;}
       c3Title:'4. Orders', c3Desc:'Orders placed by customers in your store. Payments (bank transfer / card) go <b>directly to you</b> via the account and PG you registered — there is no HQ brokerage fee.',
       c4Title:'4. Messages with HQ', c4Desc:'Messages with your HQ contact. Leave questions about settlement, production or delivery and get replies.',
       msgPh:'Type a message to HQ…', send:'Send', save:'💾 Save', preview:'🔗 View my homepage',
-      trialMode:'Trial Mode', saving:'Saving…', saved:'Saved', savedAddr:'Saved · homepage address: ', saveFail:'Save failed: ',
+      trialMode:'Trial Mode', saving:'Saving…', saved:'Saved', autoApproved:'Auto-approved — you can start right away!', savedAddr:'Saved · homepage address: ', saveFail:'Save failed: ',
       slugErr:'Homepage address must be at least 3 letters/numbers.', companyErr:'Enter your business name.', phoneErr:'Enter your phone number.',
       slugDup:'That homepage address is already in use. Please choose another.',
       needSubSave:'Saving is for franchise subscribers only.\nWhat you entered is for trial and will not be saved.\n\nView subscription plans?',
@@ -753,7 +767,7 @@ select option{background:#1d1640;}
       c1Title:'1. 官网信息', c1Desc:'向顾客展示的公司信息。商号、LOGO与联系方式将显示在您的官网上。',
       slugLabel:'官网地址', slugSmall:'— 仅限小写字母、数字、连字符', slugHint:'顾客访问的地址。日后较难更改，请慎重选择。',
       companyLabel:'商号 *', companyPh:'例：快乐广告工作室',
-      bizNoLabel:'营业执照号 *', bizNoPh:'例：123-45-67890', bizNoHint:'总部审核需要。仅限企业申请。', bizNoErr:'请输入营业执照号。', reapplyBlocked:'被驳回或取消的申请无法重新提交。请联系总部。',
+      bizNoLabel:'营业执照号 *', bizNoPh:'例：123-45-67890', bizNoHint:'核验营业执照号后自动审核通过。（金牌加盟店需总部审核）', bizNoErr:'请输入营业执照号。', bizFileLabel:'营业执照附件 *', bizFileHint:'图片或PDF。仅供总部核验（私密保存）。', bizFileErr:'请上传营业执照。', reapplyBlocked:'被驳回或取消的申请无法重新提交。请联系总部。',
       phoneLabel:'电话号码 *', phonePh:'例：555-000-0000', emailLabel:'邮箱', countryLabel:'国家',
       co_KR:'韩国', co_JP:'日本', co_US:'美国', co_CN:'中国', co_SA:'沙特阿拉伯', co_ES:'西班牙', co_DE:'德国', co_FR:'法国',
       logoLabel:'LOGO', logoSmall:'— 建议使用正方形图片',
@@ -817,7 +831,7 @@ select option{background:#1d1640;}
       c1Title:'1. معلومات الموقع', c1Desc:'معلومات شركتك المعروضة للعملاء. يظهر الاسم والشعار وبيانات الاتصال على موقعك.',
       slugLabel:'عنوان الموقع', slugSmall:'— حروف صغيرة وأرقام وشرطات فقط', slugHint:'العنوان الذي يزوره العملاء. يصعب تغييره لاحقًا — اختر بعناية.',
       companyLabel:'اسم الشركة *', companyPh:'مثال: استوديو الإعلانات السعيد',
-      bizNoLabel:'رقم السجل التجاري *', bizNoPh:'مثال: 123-45-67890', bizNoHint:'مطلوب لموافقة المقر الرئيسي. للشركات المسجلة فقط.', bizNoErr:'أدخل رقم السجل التجاري.', reapplyBlocked:'لا يمكن إعادة تقديم الطلبات المرفوضة أو الملغاة. يرجى التواصل مع المقر الرئيسي.',
+      bizNoLabel:'رقم السجل التجاري *', bizNoPh:'مثال: 123-45-67890', bizNoHint:'تتم الموافقة تلقائيًا بعد التحقق من الرقم. (الامتياز الذهبي يتطلب موافقة المقر)', bizNoErr:'أدخل رقم السجل التجاري.', bizFileLabel:'إرفاق السجل التجاري *', bizFileHint:'صورة أو PDF. يُستخدم فقط للتحقق من قبل المقر (يُحفظ بشكل خاص).', bizFileErr:'يرجى إرفاق السجل التجاري.', reapplyBlocked:'لا يمكن إعادة تقديم الطلبات المرفوضة أو الملغاة. يرجى التواصل مع المقر الرئيسي.',
       phoneLabel:'رقم الهاتف *', phonePh:'مثال: 555-000-0000', emailLabel:'البريد الإلكتروني', countryLabel:'الدولة',
       co_KR:'كوريا الجنوبية', co_JP:'اليابان', co_US:'الولايات المتحدة', co_CN:'الصين', co_SA:'السعودية', co_ES:'إسبانيا', co_DE:'ألمانيا', co_FR:'فرنسا',
       logoLabel:'الشعار', logoSmall:'— يُفضّل صورة مربعة',
@@ -881,7 +895,7 @@ select option{background:#1d1640;}
       c1Title:'1. Información del sitio', c1Desc:'La información de su empresa que ven los clientes. Nombre, logo y contacto aparecen en su sitio.',
       slugLabel:'Dirección del sitio', slugSmall:'— solo minúsculas, números y guiones', slugHint:'La dirección que visitarán los clientes. Difícil de cambiar después — elíjala con cuidado.',
       companyLabel:'Nombre comercial *', companyPh:'ej. Estudio de Publicidad Feliz',
-      bizNoLabel:'N.º de registro mercantil *', bizNoPh:'ej. 123-45-67890', bizNoHint:'Necesario para la aprobación de la central. Solo empresas registradas.', bizNoErr:'Introduzca su número de registro mercantil.', reapplyBlocked:'Las solicitudes rechazadas o canceladas no pueden reenviarse. Contacte con la central.',
+      bizNoLabel:'N.º de registro mercantil *', bizNoPh:'ej. 123-45-67890', bizNoHint:'Aprobación automática tras verificar el número. (El Gold requiere aprobación de la central)', bizNoErr:'Introduzca su número de registro mercantil.', bizFileLabel:'Adjuntar registro mercantil *', bizFileHint:'Imagen o PDF. Solo para verificación de la central (almacenado en privado).', bizFileErr:'Adjunte su registro mercantil.', reapplyBlocked:'Las solicitudes rechazadas o canceladas no pueden reenviarse. Contacte con la central.',
       phoneLabel:'Teléfono *', phonePh:'ej. 555-000-0000', emailLabel:'Correo', countryLabel:'País',
       co_KR:'Corea del Sur', co_JP:'Japón', co_US:'Estados Unidos', co_CN:'China', co_SA:'Arabia Saudita', co_ES:'España', co_DE:'Alemania', co_FR:'Francia',
       logoLabel:'Logo', logoSmall:'— se recomienda imagen cuadrada',
@@ -945,7 +959,7 @@ select option{background:#1d1640;}
       c1Title:'1. Website-Infos', c1Desc:'Ihre für Kunden sichtbaren Firmeninfos. Name, Logo und Kontakt erscheinen auf Ihrer Website.',
       slugLabel:'Website-Adresse', slugSmall:'— nur Kleinbuchstaben, Zahlen, Bindestriche', slugHint:'Die Adresse, die Kunden besuchen. Später schwer zu ändern — sorgfältig wählen.',
       companyLabel:'Firmenname *', companyPh:'z. B. Happy Werbestudio',
-      bizNoLabel:'Gewerbe-Reg.-Nr. *', bizNoPh:'z. B. 123-45-67890', bizNoHint:'Für die Freigabe der Zentrale erforderlich. Nur für registrierte Unternehmen.', bizNoErr:'Geben Sie Ihre Gewerberegisternummer ein.', reapplyBlocked:'Abgelehnte oder stornierte Anträge können nicht erneut eingereicht werden. Bitte kontaktieren Sie die Zentrale.',
+      bizNoLabel:'Gewerbe-Reg.-Nr. *', bizNoPh:'z. B. 123-45-67890', bizNoHint:'Automatische Freigabe nach Nummernprüfung. (Gold erfordert Freigabe der Zentrale)', bizNoErr:'Geben Sie Ihre Gewerberegisternummer ein.', bizFileLabel:'Gewerbeanmeldung anhängen *', bizFileHint:'Bild oder PDF. Nur zur Prüfung durch die Zentrale (privat gespeichert).', bizFileErr:'Bitte Gewerbeanmeldung anhängen.', reapplyBlocked:'Abgelehnte oder stornierte Anträge können nicht erneut eingereicht werden. Bitte kontaktieren Sie die Zentrale.',
       phoneLabel:'Telefonnummer *', phonePh:'z. B. 555-000-0000', emailLabel:'E-Mail', countryLabel:'Land',
       co_KR:'Südkorea', co_JP:'Japan', co_US:'USA', co_CN:'China', co_SA:'Saudi-Arabien', co_ES:'Spanien', co_DE:'Deutschland', co_FR:'Frankreich',
       logoLabel:'Logo', logoSmall:'— quadratisches Bild empfohlen',
@@ -1009,7 +1023,7 @@ select option{background:#1d1640;}
       c1Title:'1. Infos du site', c1Desc:'Les infos de votre entreprise visibles par les clients. Nom, logo et contact apparaissent sur votre site.',
       slugLabel:'Adresse du site', slugSmall:'— minuscules, chiffres et tirets uniquement', slugHint:'L\'adresse que visiteront les clients. Difficile à changer ensuite — choisissez bien.',
       companyLabel:'Nom commercial *', companyPh:'ex. Studio Pub Heureux',
-      bizNoLabel:'N° d\'enregistrement d\'entreprise *', bizNoPh:'ex. 123-45-67890', bizNoHint:'Requis pour l\'approbation du siège. Entreprises enregistrées uniquement.', bizNoErr:'Saisissez votre numéro d\'enregistrement d\'entreprise.', reapplyBlocked:'Les demandes rejetées ou annulées ne peuvent pas être resoumises. Veuillez contacter le siège.',
+      bizNoLabel:'N° d\'enregistrement d\'entreprise *', bizNoPh:'ex. 123-45-67890', bizNoHint:'Validation automatique après vérification du numéro. (Gold nécessite l\'approbation du siège)', bizNoErr:'Saisissez votre numéro d\'enregistrement d\'entreprise.', bizFileLabel:'Joindre l\'enregistrement d\'entreprise *', bizFileHint:'Image ou PDF. Utilisé uniquement pour la vérification du siège (stocké en privé).', bizFileErr:'Veuillez joindre votre enregistrement d\'entreprise.', reapplyBlocked:'Les demandes rejetées ou annulées ne peuvent pas être resoumises. Veuillez contacter le siège.',
       phoneLabel:'Numéro de téléphone *', phonePh:'ex. 555-000-0000', emailLabel:'E-mail', countryLabel:'Pays',
       co_KR:'Corée du Sud', co_JP:'Japon', co_US:'États-Unis', co_CN:'Chine', co_SA:'Arabie saoudite', co_ES:'Espagne', co_DE:'Allemagne', co_FR:'France',
       logoLabel:'Logo', logoSmall:'— image carrée recommandée',
@@ -1634,7 +1648,10 @@ select option{background:#1d1640;}
       if (window._mgSetTier) window._mgSetTier(_at);
       if (window._mgSetMargin) window._mgSetMargin(_sv);
     } catch(e){}
-    if ($('fBizNo')) $('fBizNo').value = th.bizNo || '';
+    if ($('fBizNo')) $('fBizNo').value = (f && f.biz_no) || th.bizNo || '';
+    // 사업자등록증: 기존 업로드 있으면 재첨부 불필요
+    state.bizFilePath = (f && f.biz_file_path) || '';
+    try { var _bfh = $('fBizFileHint'); if (_bfh && state.bizFilePath) _bfh.innerHTML = '등록됨 — 변경하려면 새 파일을 선택하세요.'; } catch(e){}
     // 2026-09-15: 승인 상태 배너
     try { if (window._renderFrStatus) window._renderFrStatus(f && f.status); } catch(e){}
     // 결제 정보 (계좌·PG·도메인)
@@ -2028,6 +2045,11 @@ select option{background:#1d1640;}
     if (!company){ toast(T.companyErr,'err'); return; }
     if (!phone){ toast(T.phoneErr,'err'); return; }
     if (!bizNo){ toast(T.bizNoErr || '사업자등록번호를 입력하세요.','err'); if($('fBizNo'))$('fBizNo').focus(); return; }
+    var appType = (['gold','franchise','reseller'].indexOf(window._frApplicantType)>=0 ? window._frApplicantType : 'reseller');
+    var _bizFileEl = $('fBizFile');
+    var _bizFile = _bizFileEl && _bizFileEl.files && _bizFileEl.files[0];
+    if (!_bizFile && !state.bizFilePath){ toast(T.bizFileErr || '사업자등록증을 첨부하세요.','err'); if(_bizFileEl) _bizFileEl.focus(); return; }
+    if (_bizFile && _bizFile.size > 10*1024*1024){ toast('파일이 너무 큽니다(최대 10MB).','err'); return; }
 
     this.disabled = true; this.textContent = T.saving;
     $('saveStatus').textContent = '';
@@ -2050,6 +2072,14 @@ select option{background:#1d1640;}
       if (existing && existing.status === 'cancelled' && !isTestSave){
         throw new Error(T.reapplyBlocked || '취소된 계정은 재신청이 불가합니다. 본사에 문의하세요.');
       }
+      // 사업자등록증 업로드 (비공개 버킷 biz-docs, 본인 폴더=auth.uid())
+      if (_bizFile){
+        var _bext = ((_bizFile.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'')) || 'png';
+        var _bpath = state.user.id + '/' + slug + '_' + Date.now() + '.' + _bext;
+        var _bup = await sb.storage.from('biz-docs').upload(_bpath, _bizFile, { upsert:true });
+        if (_bup.error) throw _bup.error;
+        state.bizFilePath = _bpath;
+      }
       // isTestSave && 신규 slug → existing=null → 새 홈페이지 insert
       var payload = {
         owner_id: state.user.id,
@@ -2060,6 +2090,8 @@ select option{background:#1d1640;}
         country: $('fCountry').value,
         tagline: $('fTagline').value.trim() || null,
         logo_url: state.logoUrl || null,
+        biz_no: bizNo,
+        biz_file_path: state.bizFilePath || null,
         selected_products: Object.keys(state.selected),
         updated_at: new Date().toISOString()
       };
@@ -2100,6 +2132,15 @@ select option{background:#1d1640;}
         var tblob = new Blob([JSON.stringify(theme)], { type:'application/json' });
         await sb.storage.from(LOGO_BUCKET).upload('franchise/themes/'+slug+'.json', tblob, { upsert:true, cacheControl:'60', contentType:'application/json' });
       } catch(e){ console.warn('theme save', e); }
+      // 자동승인: 리셀러/일반가맹 + 사업자번호 체크섬 통과 → 즉시 승인. (골드는 fr_self_activate 가 서버에서 무시 → 대기 유지)
+      var _autoApproved = false;
+      if ((appType === 'reseller' || appType === 'franchise') && _isValidKrBizNo(bizNo)) {
+        try {
+          var _aa = await sb.rpc('fr_self_activate', { p_slug: slug, p_type: appType });
+          if (!_aa.error) { _autoApproved = true; if (res.data) res.data.status = 'approved'; }
+          else console.warn('self-activate', _aa.error);
+        } catch(e){ console.warn('self-activate', e); }
+      }
       // allFranchises 갱신 + 테스트 계정 스위처 다시 그리기
       var fi = state.allFranchises.findIndex(function(x){ return x.id===res.data.id; });
       if (fi >= 0) state.allFranchises[fi] = res.data;
@@ -2108,7 +2149,7 @@ select option{background:#1d1640;}
       loadOrders(); loadMessages();
       try { if (window._renderFrStatus) window._renderFrStatus(res.data && res.data.status); } catch(e){}
       $('saveStatus').innerHTML = T.savedAddr + '<b>/store/' + slug + '</b>';
-      toast(T.saved,'ok');
+      toast(_autoApproved ? (T.autoApproved || '자동승인 완료 — 바로 이용하실 수 있어요!') : T.saved, 'ok');
     } catch(e){
       toast(T.saveFail + (e.message||e), 'err');
     } finally {

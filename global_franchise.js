@@ -42,7 +42,7 @@ window.loadFranchiseManagement = async () => {
     try {
         // 2026-09-21(사장님): 승인 전 신청자도 여기서 보이게 — 전체 조회 후 pending/approved 분리.
         const { data } = await sb.from('franchises')
-            .select('id,owner_id,slug,company_name,phone,email,country,status,created_at')
+            .select('id,owner_id,slug,company_name,phone,email,country,status,created_at,biz_no,biz_file_path')
             .order('created_at', { ascending: false });
         const _all = data || [];
         pendingFrs = _all.filter((f) => (f.status || 'pending') === 'pending');
@@ -109,6 +109,7 @@ window.loadFranchiseManagement = async () => {
               + '📇 <b>연락 정보</b> · ' + _fmEsc(f.company_name || f.slug) + ' · ' + _fmEsc(f.phone || '-') + ' · ' + _fmEsc(f.email || '-') + ' · ' + _fmEsc(f.country || '-')
               + ' · <a href="/store/' + _fmEsc(f.slug) + '" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;">🔗 매장 보기</a>'
             + '</div>'
+            + _fmBizLine(f)
             + '<div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">🧾 주문 내역 (' + ords.length + '건 · 매출 ' + _fmWon(sales) + ')</div>'
             + '<div style="overflow-x:auto;margin-bottom:14px;"><table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="padding:5px 8px;text-align:left;">주문일</th><th style="padding:5px 8px;text-align:left;">번호</th><th style="padding:5px 8px;text-align:right;">금액</th><th style="padding:5px 8px;text-align:left;">상태</th></tr></thead><tbody>' + (orderRows || '<tr><td colspan="4" style="padding:10px;color:#94a3b8;">주문 없음</td></tr>') + '</tbody></table></div>'
             + '<div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:6px;">📨 요청 (본사 → ' + _fmEsc(f.company_name || '가맹점') + ')</div>'
@@ -122,6 +123,16 @@ window.loadFranchiseManagement = async () => {
     const _fmMgmtBtn = '<button class="btn btn-sm" style="background:#e0e7ff;color:#3730a3;font-weight:700;" onclick="var p=this.closest(&quot;.fm-card&quot;).querySelector(&quot;.fm-mgmt&quot;);if(p){p.style.display=p.style.display===&quot;none&quot;?&quot;block&quot;:&quot;none&quot;;}">🛠 관리</button>';
     // 2026-09-30(사장님): 승인된 가맹/리셀러 → 일반 고객으로 전환(승인취소) 버튼.
     const _fmRevokeBtn = (f) => _fmIsApprover ? '<button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;font-weight:700;" onclick="fmRevokeApproval(\'' + _fmEsc(f.slug) + '\',\'' + _fmEsc(f.owner_id || '') + '\',this)">승인취소</button>' : '';
+    // 2026-10-13(사장님): 사업자등록번호 + 사업자등록증(비공개) 열람 — 관리자 확인용.
+    const _fmBizLine = (f) => {
+        const no = (f && f.biz_no) ? _fmEsc(f.biz_no) : '';
+        const hasDoc = !!(f && f.biz_file_path);
+        if (!no && !hasDoc) return '';
+        return '<div style="font-size:12px;color:#475569;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 12px;margin-bottom:10px;">'
+            + '📄 <b>사업자</b> · 등록번호 ' + (no || '-')
+            + (hasDoc ? ' · <a href="#" onclick="return fmViewBizDoc(\'' + _fmEsc(f.biz_file_path) + '\')" style="color:#c2410c;text-decoration:underline;">사업자등록증 보기</a>' : ' · <span style="color:#b45309;">등록증 미첨부</span>')
+            + '</div>';
+    };
 
     // 2026-09-21(사장님): 대기 중인 가맹/리셀러 신청 — [승인](신청 유형으로) + [반려] + [관리].
     const pendTypes = pendingFrs.length ? await Promise.all(pendingFrs.map((f) => _fmApplicantType(f.slug))) : [];
@@ -348,6 +359,17 @@ window.fmRevokeApproval = async (slug, ownerId, btn) => {
         _fmToast('승인 취소 완료 — 일반 고객으로 전환되었습니다.', 'success');
         loadFranchiseManagement();
     } catch (e) { _fmToast('승인취소 실패: ' + (e.message || e), 'error'); if (btn) { btn.disabled = false; btn.textContent = orig; } }
+};
+
+// 2026-10-13(사장님): 사업자등록증(비공개 버킷) 서명 URL 열기 — 관리자 세션이라 SELECT RLS 통과.
+window.fmViewBizDoc = async (path) => {
+    try {
+        if (!path) { _fmToast('첨부된 사업자등록증이 없습니다.', 'error'); return false; }
+        const { data, error } = await sb.storage.from('biz-docs').createSignedUrl(path, 60);
+        if (error || !data || !data.signedUrl) throw (error || new Error('서명 URL 생성 실패'));
+        window.open(data.signedUrl, '_blank', 'noopener');
+    } catch (e) { _fmToast('사업자등록증 열기 실패: ' + (e.message || e), 'error'); }
+    return false;
 };
 
 window.fmSendMsg = async (slug, btn) => {
