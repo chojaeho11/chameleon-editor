@@ -60,11 +60,13 @@ serve(async (req) => {
     let reqBody: any = {};
     try {
         reqBody = await req.json();
-        const { message, lang, image, image_type, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone, force_ai: forceAi, request_reassign: requestReassign } = reqBody;
+        const { message, lang, image, image_type, file, file_type, file_name, conversation_history, session_id, room_id: clientRoomId, customer_name: clientCustName, customer_phone: clientCustPhone, force_ai: forceAi, request_reassign: requestReassign } = reqBody;
         const trimmedMsg = (message || '').trim();
-        if (!trimmedMsg && !image) throw new Error("message or image is required");
+        if (!trimmedMsg && !image && !file) throw new Error("message, image or file is required");
         if (trimmedMsg.length > 2000) throw new Error("Message too long");
         if (image && image.length > 10 * 1024 * 1024) throw new Error("Image too large (max 10MB)");
+        // PDF 문서(디자인/설계도) — base64 길이 제한(약 15MB → 원본 ~11MB)
+        if (file && file.length > 15 * 1024 * 1024) throw new Error("File too large (max ~11MB)");
 
         let clientLang = (lang || 'kr').toLowerCase();
         if (clientLang === 'en') clientLang = 'us';
@@ -713,6 +715,12 @@ serve(async (req) => {
 - 디자인 올라오면 해상도·크기·비율 직접 보고 "선명해요/흐릴 수 있어요", "비율이 달라 ~부분 잘릴 수 있어요" 식으로 구체 피드백. 없으면 디자인 의뢰(유료)/미니에디터 안내.
 - 정확한 사이즈·옵션·결제는 가벽 제품페이지 링크로 유도.
 
+**📎 고객이 파일(PDF)을 올리면 — 실제로 내용을 보고 분석해(절대 "파일 받았어요"로 끝내지 마):**
+- 먼저 그 파일이 ①인쇄용 **디자인 시안**인지 ②**설계도/행사장 구조도(평면도·부스배치도)**인지 네가 직접 판단해.
+- ①디자인 시안이면: 페이지 크기(mm)·해상도·비율이 만들려는 가벽 사이즈에 맞는지 보고 → "이 디자인 선명하고 좋아요! 가로 ○m면 딱이에요" 또는 "해상도가 좀 낮아서 크게 뽑으면 흐릴 수 있어요 / 비율이 달라 위아래가 잘릴 수 있어요"처럼 **구체적으로 문제없는지** 안내. 가로 1m 단위 이음새가 디자인 어디에 걸리는지도 짚어줘.
+- ②설계도/구조도면: 공간 치수·벽 위치·동선을 읽고 → 그 구조에 맞는 가벽 **배치·추천 사이즈·개수**, 실외구간이면 보조받침대, 실내면 포인트조명을 **상담하듯** 제안. (예: "도면 보니 입구 왼쪽 벽이 약 4m네요, 여기 가로 4m 양면 가벽이 딱 좋아요")
+- 분석 후에도 질문은 **한 번에 하나씩**, 따뜻하게. 애매하면 "이거 디자인이에요, 아니면 행사장 도면이에요?" 한 가지만 되물어.
+
 - 사이트: ${siteUrl}`,
 
             ja: `あなたはカメレオンプリンティングの担当者「カプ」です。本物の人間のように自然で親しみやすく対応してください。絵文字はごく特別な時だけ（普段はほぼ使わない）。3〜5文で回答。
@@ -1309,9 +1317,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
         }
 
-        // 이미지 포함 시 multimodal content 구성
-        function buildUserContent(text: string, img?: string, imgType?: string): any {
-            if (!img) {
+        // 이미지/문서(PDF) 포함 시 multimodal content 구성
+        function buildUserContent(text: string, img?: string, imgType?: string, file?: string, fileType?: string): any {
+            if (!img && !file) {
                 const fallback: Record<string, string> = {
                     kr: "이 제품에 대해 알려주세요",
                     ja: "この製品について教えてください",
@@ -1322,8 +1330,20 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
 
             const content: any[] = [];
 
-            // ★ 상품 카탈로그 텍스트 매칭 가이드 (이미지 대신 텍스트 설명 — API 타임아웃 방지)
-            if (_catalogThumbs.length > 0) {
+            // ★ 고객 업로드 PDF (디자인 시안 / 설계도 / 행사장 구조도) — Claude 문서 분석
+            if (file) {
+                content.push({
+                    type: "document",
+                    source: {
+                        type: "base64",
+                        media_type: "application/pdf",
+                        data: file,
+                    },
+                });
+            }
+
+            // ★ 상품 카탈로그 텍스트 매칭 가이드 (이미지일 때만)
+            if (img && _catalogThumbs.length > 0) {
                 const catalogGuide: Record<string, string> = {
                     kr: '우리 상품 카탈로그입니다. 고객 이미지와 매칭하여 어떤 상품인지 식별해주세요:\n',
                     ja: '商品カタログです。お客様の画像と照合して商品を特定してください:\n',
@@ -1333,16 +1353,27 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             }
 
             // 고객 이미지
-            content.push({
-                type: "image",
-                source: {
-                    type: "base64",
-                    media_type: imgType || "image/jpeg",
-                    data: img,
-                },
-            });
+            if (img) {
+                content.push({
+                    type: "image",
+                    source: {
+                        type: "base64",
+                        media_type: imgType || "image/jpeg",
+                        data: img,
+                    },
+                });
+            }
+
             if (text) {
                 content.push({ type: "text", text });
+            } else if (file) {
+                // 디자인이면 크기·해상도·비율을, 설계도/행사장 구조도면 배치·사이즈를 검토
+                const fileTexts: Record<string, string> = {
+                    kr: "고객이 올린 PDF 파일입니다. 먼저 이게 '인쇄용 디자인 시안'인지 '설계도/행사장 구조도'인지 파악하세요.\n- 디자인 시안이면: 페이지 크기(mm)·해상도·비율이 주문하려는 제품 규격에 맞는지, 테두리 여백/재단선(가로 1m 단위 이음새) 문제가 없는지 검토해서 '문제없음' 또는 '이런 점을 고쳐야 함'을 친근하게 안내.\n- 설계도/행사장 구조도면: 공간 치수·동선·벽 위치를 읽고, 그 구조에 맞는 가벽 배치·사이즈·받침대/조명을 상담하듯 제안.\n질문은 한 번에 하나씩, 따뜻한 말투로.",
+                    ja: "お客様がアップロードしたPDFです。まず『印刷用デザイン』か『図面/会場レイアウト』かを判断してください。\n- デザインの場合: ページサイズ(mm)・解像度・比率が注文製品の規格に合うか、余白/裁断線(横1m単位の継ぎ目)に問題がないか確認し、『問題なし』か『この点を直す必要あり』を親しみやすく案内。\n- 図面/会場レイアウトの場合: 寸法・動線・壁位置を読み取り、その構造に合った間仕切りの配置・サイズ・スタンド/照明を相談しながら提案。\n質問は一度に一つずつ、温かい口調で。",
+                    us: "This is a PDF the customer uploaded. First determine whether it is a 'print design' or a 'blueprint/venue floor plan'.\n- If a print design: check page size (mm), resolution, and aspect ratio against the intended product spec, and whether margins/cut-lines (1m-wide seams) are fine; warmly tell them it's OK or what to fix.\n- If a blueprint/floor plan: read the dimensions, flow, and wall positions, and advise on wall placement, sizing, base stands, and lighting that fit that layout.\nAsk one question at a time, in a warm tone.",
+                };
+                content.push({ type: "text", text: fileTexts[clientLang] || fileTexts['kr'] });
             } else {
                 const defaultTexts: Record<string, string> = {
                     kr: "이 이미지를 분석해주세요. 위 카탈로그와 비교하여 매칭되는 상품이 있으면 알려주세요.",
@@ -1385,7 +1416,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             });
         }
         // 현재 메시지 추가
-        messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type) });
+        messages.push({ role: "user", content: buildUserContent(trimmedMsg, image, image_type, file, file_type) });
 
         // ★ AI가 직접 도구 선택 — 견적서 생성 타이밍은 AI가 판단
         // 명시적 견적서 요청("견적서 줘")일 때만 강제, 그 외에는 AI auto

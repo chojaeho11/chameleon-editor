@@ -393,13 +393,13 @@
     var pend = _pendingMsg; _pendingMsg = '';
     if (pend) send(pend, null, true);
   }
-  async function send(text, image, _noEcho) {
-    if (_busy || (!text && !image)) return;
+  async function send(text, image, _noEcho, file) {
+    if (_busy || (!text && !image && !file)) return;
     text = text || '';
     // (1) 이름 대기중이면 이번 입력을 성함으로 처리
     if (_awaitingName && text) { _captureName(text); return; }
-    // (2) 성함 미수집 + 텍스트 첫 메시지면 먼저 성함을 물어봄 (이미지 전송은 제외)
-    if (!_custName && text && !image) {
+    // (2) 성함 미수집 + 텍스트 첫 메시지면 먼저 성함을 물어봄 (이미지/파일 분석은 제외)
+    if (!_custName && text && !image && !file) {
       addMsg(text, 'me');
       _pendingMsg = text; _awaitingName = true;
       addMsg(tr('반갑습니다! 먼저 성함을 알려주시겠어요? 😊 (바로 이어서 안내해 드릴게요)', 'はじめまして！まずお名前を教えていただけますか😊（すぐにご案内します）', 'Nice to meet you! May I have your name first? 😊 (I\'ll help right after)'), 'ai');
@@ -409,16 +409,17 @@
     var sendBtn = _root.querySelector('.jvg-send'); if (sendBtn) sendBtn.disabled = true;
     if (image && image.dataUrl) addImageMsg(image.dataUrl);
     if (text && !_noEcho) addMsg(text, 'me');
-    var typing = addMsg(image ? tr('잠깐만, 이미지 확인할게…', 'ちょっと写真を確認するね…', 'Let me check the image…') : tr('카푸가 입력 중…', 'カプが入力中…', 'Kapu is typing…'), 'ai');
+    var typing = addMsg((image || file) ? tr('잠깐만, 파일 확인할게…', 'ちょっとファイルを確認するね…', 'Let me check the file…') : tr('카푸가 입력 중…', 'カプが入力中…', 'Kapu is typing…'), 'ai');
     typing.classList.add('jvg-typing');
     try {
-      var payload = { message: text || (image ? tr('이 사진 보고 안내해줘', 'この写真を見て案内して', 'Guide me based on this photo') : ''), lang: _lang, conversation_history: _hist.slice(-30) };
+      var payload = { message: text || (image ? tr('이 사진 보고 안내해줘', 'この写真を見て案内して', 'Guide me based on this photo') : (file ? tr('이 파일(디자인/설계도) 분석해서 문제없는지 안내해줘', 'このファイル（デザイン/図面）を分析して問題ないか案内して', 'Analyze this file (design/blueprint) and tell me if there are any issues') : '')), lang: _lang, conversation_history: _hist.slice(-30) };
       if (_room) payload.room_id = _room;
       if (_custName) payload.customer_name = _custName;
       if (_custPhone) payload.customer_phone = _custPhone;   // 2026-10-07: 전화번호도 서버 저장(window.sb 미의존)
       if (_forceAiNext) { payload.force_ai = true; _forceAiNext = false; }   // 담당자 자리비움 → AI 전환
       if (_forceReassignNext) { payload.request_reassign = true; _forceReassignNext = false; }   // 담당자 변경요청 → 담당자없음
       if (image && image.base64) { payload.image = image.base64; payload.image_type = image.type; }
+      if (file && file.base64) { payload.file = file.base64; payload.file_type = file.type; if (file.name) payload.file_name = file.name; }
       var res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY, 'apikey': SUPA_KEY }, body: JSON.stringify(payload) });
       var data = await res.json();
       if (data.room_id) { var _wasNew = (_room !== data.room_id); _room = data.room_id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} if (_wasNew) { _subscribeRoom(); _syncCustToRoom(); } }
@@ -588,9 +589,12 @@
       readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); });
       return;
     }
+    // 2026-10-15(사장님): PDF(디자인/설계도/행사장 구조도) ≤8MB → storage 기록 + 카푸가 직접 분석(크기·해상도·구조 검토)
+    var isPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name || '');
+    if (isPdf && f.size <= 8 * 1024 * 1024) { _uploadFileToChat(f, true); return; }
     _uploadFileToChat(f);
   }
-  async function _uploadFileToChat(f) {
+  async function _uploadFileToChat(f, analyze) {
     var sb = window.sb;
     if (!sb || !sb.storage) {
       if (/^image\//.test(f.type || '') && f.size <= 8 * 1024 * 1024) { readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); }); return; }
@@ -620,6 +624,12 @@
       else html = '<a href="' + esc(url) + '" target="_blank" rel="noopener" download="' + esc(nm) + '">' + esc(tr('파일: ', 'ファイル: ', 'File: ')) + esc(nm) + '</a>';
       _addRow(html, 'me');
       if (_room) { try { await sb.from('chat_messages').insert({ room_id: _room, sender_type: 'customer', sender_name: _custName || '고객', message: '', file_url: url, file_name: nm, file_type: f.type || '', created_at: new Date().toISOString() }); await sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', _room); } catch (e) {} }
+      // 2026-10-15(사장님): PDF 는 카푸가 직접 분석(디자인=크기/해상도, 설계도/구조도=배치 상담). 그 외는 담당자 확인 안내.
+      if (analyze) {
+        _busy = false; if (sendBtn) sendBtn.disabled = false;
+        readImage(f, function (b64, type, du) { send('', null, true, { base64: b64, type: f.type || 'application/pdf', name: nm }); });
+        return;
+      }
       addMsg(tr('파일 잘 받았어요! 담당자가 확인하고 안내해 드릴게요 😊', 'ファイルを受け取りました！担当者が確認してご案内します😊', 'Got your file! Our manager will review and get back to you 😊'), 'ai');
     } catch (e) {
       try { up.closest('.jvg-row') && up.closest('.jvg-row').remove(); } catch (_e) {}
