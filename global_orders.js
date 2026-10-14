@@ -1523,6 +1523,7 @@ window.loadVipOrders = async () => {
         });
         tbody.innerHTML = '';
         const _ve = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        window._vipLeadLinks = {};   // 2026-10-15(버그#63): VIP 문의 → 상담채널 리드 링크
         data.forEach(item => {
             const _isHqPend = _vipHqPending(item);
             const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
@@ -1584,6 +1585,14 @@ window.loadVipOrders = async () => {
             if (!unlocked) _filesCell = '🔒';
             else if (realFiles.length) _filesCell = filesHtml + (realFiles.length > 1 ? `<button class="btn btn-sm" style="background:#0ea5e9;color:#fff;border:none;font-size:10px;margin:2px;padding:3px 8px;" onclick="downloadAllVipFiles(${item.id})">⬇ 전체</button>` : '');
             else _filesCell = '<span style="color:#64748b;">파일 없음</span>';
+            // 2026-10-15(버그#63): 이 문의로 고객을 상담채널로 리드하는 링크(이름·전화·문의내용 자동세팅).
+            try {
+                const _leadObj = { n: item.customer_name || '', p: item.customer_phone || '', m: (cleanMemo || '').trim().slice(0, 500) };
+                window._vipLeadLinks[item.id] = location.origin + '/?lead=' + encodeURIComponent(btoa(encodeURIComponent(JSON.stringify(_leadObj))));
+            } catch (e) { window._vipLeadLinks[item.id] = ''; }
+            const _leadBtn = window._vipLeadLinks[item.id]
+                ? `<button class="btn btn-sm" style="background:#10b981;color:#fff;border:none;font-size:10px;font-weight:700;padding:4px 8px;" onclick="copyVipLeadLink(${item.id})" title="고객에게 보낼 상담 링크 복사 — 클릭하면 상담창이 열리고 이 문의가 자동 전송됩니다">📨 상담 링크</button>`
+                : '';
 
             tbody.innerHTML += `
                 <tr style="background:${_isHqPend ? '#3b2f0a' : (st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a')};color:#e2e8f0;${_isHqPend ? 'box-shadow: inset 4px 0 0 #fbbf24;' : ''}">
@@ -1596,13 +1605,23 @@ window.loadVipOrders = async () => {
                     <td style="font-size:12px;color:#cbd5e1;max-width:360px;line-height:1.5;">${_memoCell}</td>
                     <td style="font-size:11px;">${_filesCell}</td>
                     <td style="text-align:center;">${statusBadge}</td>
-                    <td style="text-align:center;"></td>
+                    <td style="text-align:center;">${_leadBtn}</td>
                 </tr>`;
         });
     } catch (e) {
         console.error(e);
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">오류: ${e.message}</td></tr>`;
     }
+};
+
+// 2026-10-15(버그#63): VIP 문의 상담 리드 링크 복사 — 고객이 클릭하면 상담창 자동오픈 + 문의 자동전송.
+window.copyVipLeadLink = (id) => {
+    const u = (window._vipLeadLinks || {})[id];
+    if (!u) { showToast('링크 생성 실패', 'error'); return; }
+    const _ok = () => showToast('상담 링크 복사됨 — 고객에게 보내주세요 (문자/이메일)', 'success');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(_ok).catch(() => window.prompt('상담 링크 (복사하세요):', u));
+    } else { window.prompt('상담 링크 (복사하세요):', u); }
 };
 
 window.updateVipStatus = async (id, newStatus) => {

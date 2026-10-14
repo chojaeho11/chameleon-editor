@@ -759,7 +759,26 @@
     fab.addEventListener('click', open);
     document.body.appendChild(fab);
   }
+  // 2026-10-15(버그#63): 리드 링크 — 관리자가 만든 링크로 접속하면 이름/전화 자동세팅 + 문의 자동전송(새 상담 시작).
+  function _handleLeadLink() {
+    var tok = null;
+    try { tok = new URLSearchParams(location.search).get('lead'); } catch (e) {}
+    if (!tok) return false;
+    var ld = null;
+    try { ld = JSON.parse(decodeURIComponent(atob(tok))); } catch (e) { return false; }
+    if (!ld || (!ld.n && !ld.p && !ld.m)) return false;
+    if (ld.n) { _custName = String(ld.n); try { localStorage.setItem('kapu_cust_name', _custName); } catch (e) {} }
+    if (ld.p) { _custPhone = String(ld.p); try { localStorage.setItem('kapu_cust_phone', _custPhone); } catch (e) {} }
+    // 새 상담으로 시작 (이전 브라우저 방과 섞이지 않게)
+    _room = null; _hist = []; _seenMsgIds = {};
+    try { localStorage.removeItem('kapu_room_id'); } catch (e) {}
+    makeFab();
+    open();
+    if (ld.m) { setTimeout(function () { try { send(String(ld.m)); } catch (e) {} }, 900); }
+    return true;
+  }
   function boot() {
+    if (_handleLeadLink()) return;   // 리드 링크면 바로 상담 열기(자동 인사 스킵)
     if (!_fabAllowed()) return;
     makeFab();                  // 우측 카멜레온 버튼 — 홈/상세 어디서나 (재열기, 기존 💬 대체)
     if (!_isHomeView()) return; // 자동 인사는 홈에서만

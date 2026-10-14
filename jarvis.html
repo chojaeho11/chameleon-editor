@@ -224,7 +224,10 @@
     <!-- 라이브 패널 -->
     <div id="livePanel">
         <div class="mgr-filter-bar" id="roomFilterBar"><span class="mflabel">매니저별 보기</span></div>
-        <div style="margin:8px 0 10px;"><input id="roomSearch" type="text" placeholder="🔎 고객 이름 또는 전화번호로 검색" oninput="_onRoomSearch(this.value)" style="width:100%;max-width:340px;padding:8px 12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#e2e8f0;font-size:13px;box-sizing:border-box;"></div>
+        <div style="margin:8px 0 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input id="roomSearch" type="text" placeholder="🔎 고객 이름 또는 전화번호로 검색" oninput="_onRoomSearch(this.value)" style="flex:1;min-width:200px;max-width:340px;padding:8px 12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#e2e8f0;font-size:13px;box-sizing:border-box;">
+            <button onclick="_makeLeadLink()" title="이메일/VIP 등으로 접수된 고객에게 보낼 상담 링크 생성" style="padding:8px 12px;border:none;border-radius:8px;background:#10b981;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📨 상담 링크 만들기</button>
+        </div>
         <div id="roomList"><div class="empty" style="color:#64748b; font-weight:600;">불러오는 중...</div></div>
         <div class="room-pager" id="roomPager"></div>
     </div>
@@ -438,6 +441,17 @@
         function scheduleRoomsReload(){ clearTimeout(_reloadRoomsTimer); _reloadRoomsTimer=setTimeout(loadRooms, 600); }
         // 2026-10-15(버그#63): 고객 이름/전화 검색 (디바운스)
         window._onRoomSearch = function(v){ clearTimeout(_roomSearchTimer); _roomSearchTimer=setTimeout(function(){ _roomSearch=(v||'').trim().toLowerCase(); _roomPage=0; loadRooms(); }, 300); };
+        // 2026-10-15(버그#63): 범용 상담 리드 링크 생성 (이메일 등으로 접수된 고객용). 클릭 시 상담창 자동오픈+문의 자동전송.
+        window._makeLeadLink = function(){
+            const n = prompt('고객 이름:'); if(n===null) return;
+            const p = prompt('고객 전화번호:'); if(p===null) return;
+            const m = prompt('고객에게 전송될 문의 메시지(상담 시작 멘트):'); if(m===null) return;
+            let url='';
+            try { url = location.origin + '/?lead=' + encodeURIComponent(btoa(encodeURIComponent(JSON.stringify({ n:(n||'').trim(), p:(p||'').trim(), m:(m||'').trim() })))); }
+            catch(e){ alert('링크 생성 실패: ' + (e.message||e)); return; }
+            if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(()=>alert('상담 링크가 복사되었습니다. 고객에게 문자/이메일로 보내주세요.\n\n'+url)).catch(()=>window.prompt('상담 링크 (복사하세요):', url)); }
+            else window.prompt('상담 링크 (복사하세요):', url);
+        };
 
         // 채팅방별 담당자 드롭다운 (클릭하면 아래로 펼쳐짐)
         //   2026-10-07(사장님): 실제 매니저 + '본사 지정'만 (로그인 계정 이메일 이름 제외)
