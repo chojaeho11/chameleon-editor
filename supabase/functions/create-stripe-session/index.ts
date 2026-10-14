@@ -11,6 +11,12 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // 2026-10-14(사장님): 해외 카드결제(Stripe) 전면중단 — 해외는 무통장(해외계좌)만. 재개 시 이 블록만 제거.
+    return new Response(
+      JSON.stringify({ error: '해외 카드결제(Stripe)는 현재 중단되었습니다. 무통장입금(해외계좌)으로 결제해 주세요.', blocked: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    )
+
     const { amount, currency, order_id, success_url, cancel_url } = await req.json()
 
     if (!amount || !currency || !order_id) {

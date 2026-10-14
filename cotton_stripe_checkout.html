@@ -75,6 +75,34 @@ function showError(msg) {
         if (error || !order) { showError('Order not found.'); return; }
         if (order.payment_status === '결제완료' || order.payment_status === 'paid') { showError('Already paid.'); return; }
 
+        // 2026-10-14(사장님): 해외 카드결제(Stripe) 전면중단 → 무통장(해외계좌) 안내. 재개 시 이 블록 제거.
+        {
+            const M = {
+                ko: { title:'해외 카드결제가 중단되었습니다', desc:'주문 #'+order.id+' 은 접수되었습니다. 아래 해외계좌로 송금해 주세요. 입금 확인 후 제작이 시작됩니다.', acct:'해외 송금 계좌', home:'홈으로' },
+                ja: { title:'海外カード決済は停止中です', desc:'ご注文 #'+order.id+' は受け付けました。下記の海外口座へお振込ください。入金確認後に制作を開始します。', acct:'海外送金口座', home:'ホームへ' },
+                en: { title:'Card payment is unavailable', desc:'Your order #'+order.id+' has been received. Please wire to the account below. Production begins after we confirm your payment.', acct:'Overseas wire account', home:'Home' }
+            };
+            const m = M[lang] || M.en;
+            const homeUrl2 = location.origin + '/?lang=' + lang;
+            document.getElementById('loading').style.display = 'none';
+            const err = document.getElementById('error');
+            err.style.display = 'block';
+            err.innerHTML =
+                '<div style="font-size:40px;color:#b45309;margin:18px 0;"><i class="fa-solid fa-building-columns"></i></div>'
+                + '<h2>' + m.title + '</h2>'
+                + '<p style="margin:10px 0 16px;">' + m.desc + '</p>'
+                + '<div style="text-align:left;background:#faf6ed;border:1px solid #e7d9bf;border-radius:12px;padding:16px;font-size:13px;line-height:1.9;color:#451a03;">'
+                + '<div style="font-weight:800;margin-bottom:6px;">' + m.acct + '</div>'
+                + 'Community Federal Savings Bank<br>'
+                + 'Account: <b>8487335989</b><br>'
+                + 'Holder: CHAMELEON PRINTING INC<br>'
+                + 'SWIFT: <b>CMFGUS33</b> · ACH 026073150 · Fedwire 026073008<br>'
+                + '89-16 Jamaica Ave, Woodhaven, NY 11421'
+                + '</div>'
+                + '<a href="' + homeUrl2 + '" class="btn" style="margin-top:18px;">' + m.home + '</a>';
+            return;
+        }
+
         // KRW → 현지 통화 변환 (메인몰과 동일)
         const rates = { KR:1, JP:0.2, US:0.002, CN:0.05, AR:0.001, ES:0.002, DE:0.002, FR:0.002 };
         const currMap = { ja:'jpy', en:'usd' };
