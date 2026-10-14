@@ -1547,9 +1547,10 @@ window.loadVipOrders = async () => {
             if (st.includes('상담중:')) assignedManager = st.replace('상담중:', '').trim();
             else if (lockedBy) assignedManager = lockedBy;
             const _hqAlert = _isHqPend ? `<div style="font-size:10px;color:#fbbf24;font-weight:800;margin-bottom:3px;white-space:nowrap;">🔔 확인요망</div>` : '';
+            const _vipBadgeStyle = 'display:inline-block;width:96px;box-sizing:border-box;text-align:center;padding:5px 0;font-size:11px;font-weight:bold;border-radius:6px;';
             const managerBadge = _hqAlert + (assignedManager
-                ? `<span class="badge" style="background:#eef2ff;color:#4338ca;font-weight:bold;">${assignedManager}</span>`
-                : `<span class="badge" style="background:#fef3c7;color:#92400e;font-weight:bold;">본사/미지정</span>`);
+                ? `<span style="${_vipBadgeStyle}background:#eef2ff;color:#4338ca;">${assignedManager}</span>`
+                : `<span style="${_vipBadgeStyle}background:#fef3c7;color:#92400e;">본사/미지정</span>`);
 
             const catColor = { '허니콤':'#f59e0b', '종이매대':'#2563eb', '패브릭':'#db2777', '롤원단':'#0d9488' }[qqCategory] || '#475569';
             // 국가 표시 — 해외 접수만 국기 배지 (KR/국내는 표시 안 함)
@@ -1588,7 +1589,7 @@ window.loadVipOrders = async () => {
                 <tr style="background:${_isHqPend ? '#3b2f0a' : (st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a')};color:#e2e8f0;${_isHqPend ? 'box-shadow: inset 4px 0 0 #fbbf24;' : ''}">
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
-                    <td>${managerBadge}<div style="margin-top:5px;"><button class="btn btn-sm" style="background:#6366f1;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;" onclick="openVipAssignModal(${item.id})">담당 지정</button></div></td>
+                    <td>${managerBadge}<div style="margin-top:5px;"><button onclick="openVipAssignModal(${item.id})" style="${_vipBadgeStyle}background:#6366f1;color:#fff;border:none;cursor:pointer;">담당 지정</button></div></td>
                     <td>${catBadgeCell}</td>
                     <td style="font-size:12px;">${_nameCell}</td>
                     <td style="font-size:12px;white-space:nowrap;">${_phoneCell}</td>
