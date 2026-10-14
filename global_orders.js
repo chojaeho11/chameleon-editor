@@ -1572,7 +1572,7 @@ window.loadVipOrders = async () => {
                 <tr style="background:${_isHqPend ? '#3b2f0a' : (st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a')};color:#e2e8f0;${_isHqPend ? 'box-shadow: inset 4px 0 0 #fbbf24;' : ''}">
                     <td><input type="checkbox" class="vip-chk" value="${item.id}"></td>
                     <td>${new Date(item.created_at).toLocaleString()}</td>
-                    <td>${managerBadge}</td>
+                    <td>${managerBadge}<div style="margin-top:5px;"><button class="btn btn-sm" style="background:#6366f1;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;" onclick="openVipAssignModal(${item.id})">담당 지정</button></div></td>
                     <td>${catBadgeCell}</td>
                     <td colspan="4" style="padding:12px;color:#94a3b8;font-size:12px;">${lockLabel} · 내용은 상세보기에서 확인</td>
                     <td style="text-align:center;">${statusBadge}</td>
@@ -1612,6 +1612,7 @@ window.openVipAssignModal = (id) => {
                 <button onclick="assignVipConsultant(${id},'성희')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>성희</b> 매니저</button>
                 <button onclick="assignVipConsultant(${id},'지숙')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>지숙</b> 매니저</button>
                 <button onclick="assignVipConsultant(${id},'연두')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">👩 <b>연두</b> 매니저</button>
+                <button onclick="assignVipConsultant(${id},'동연')" style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">🧑 <b>동연</b> 매니저</button>
                 <button onclick="assignVipConsultant(${id},'본사')" style="padding:12px;border:1.5px solid #0ea5e9;border-radius:10px;background:#f0f9ff;cursor:pointer;font-size:14px;font-weight:600;text-align:left;">🏢 <b>본사</b> 직접 처리</button>
             </div>
         </div>
