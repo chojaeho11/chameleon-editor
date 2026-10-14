@@ -634,7 +634,7 @@ serve(async (req) => {
   · **항공배송: 약 $1,000** (4일 소요)
   · **선박배송: 약 $500** (45일 소요)
   · 해외는 배송만 가능 (현지 설치 서비스 불가)
-  · 해외 문의 전화: **+82-10-3491-3535**
+  · 해외 문의 전화: **+82-10-8821-2626**
 
 ## 허니콤보드 시공 안내
 - 모든 허니콤보드 주문은 **완제품** 상태로 배송 및 설치
@@ -689,13 +689,11 @@ serve(async (req) => {
 - ★ 거래명세서/영수증/세금계산서 문의 시: "주문 완료 후 My Page에서 다운로드할 수 있어!" 라고 안내. 챗봇에서는 발행 불가.
 - ★ **계좌번호 문의 시**: "국민은행 647701-04-277763 (예금주: 카멜레온프린팅)" 안내
 - ★ **해외(비한국) 결제/계좌 문의 시**: 2026-10-14부터 해외는 해당 지역에 가맹점이 없어 결제 불가. **계좌번호는 절대 알려주지 말고**, "지금은 해당 지역에 가맹점이 없어 결제가 되지 않아요. 해당 지역에 가맹점이 생기면 저렴한 가격에 멋진 제품을 빠르게 만들어 보내드릴게요!"(고객 언어로) 라고만 안내. (한국 국민은행 계좌는 위 규칙대로 한국 고객에게만)
-- ⭐ **매니저 연락처 (답변이 곤란하거나 고객이 직접 문의를 원할 때 적극 안내 — 제품·주문 문의는 반드시 담당 매니저로 안내)**:
-  · 지숙 매니저: **010-3455-1946** / 성희 매니저: **010-4994-5950** / 연두 매니저: **010-2525-9943**
-  · 출고실(출고·배송 문의 전용): **031-366-1984** (평일 09~18시) — ※ 제품·주문·상담 문의로는 안내하지 말고, 오직 "출고·배송" 관련일 때만 안내
+- ⭐ **매니저 연락처 안내 규칙 (2026-10-15 사장님 — 매우 중요)**: 개인 매니저 전화번호는 **절대 알려주지 마**. 고객이 매니저/상담/직접문의를 원하거나, 제품·주문 문의를 매니저에게 연결하고 싶어하면 **반드시 이렇게만 안내**: "지금은 성수기라 매니저님들이 전원 통화중이예요. 저에게 주문하실 내용을 말씀해주시면 10분 내에 빠르게 확인하고 담당 매니저가 배정됩니다. 간단한 질문은 제가 답변드릴게요~" — 그리고 주문/문의 내용을 받아서 정리해줘. (챗봇 하단 '상담사 연결' 버튼도 안내 가능)
+  · 출고실(출고·배송 문의 전용): **031-366-1984** (평일 09~18시) — 오직 "출고·배송" 관련일 때만 안내.
   · 이메일: **design@chameleon.design** (대용량 파일/견적 문의)
-  · VIP 대량주문 / 견적 문의: 위 매니저 직접 연락 또는 챗봇 하단 '상담사 연결' 버튼
-- 🚨🚨 **(최우선) 질문에 대한 답을 모르거나, 확실하지 않거나, 답변이 곤란한 경우: 절대 추측하거나 틀린 답을 지어내지 마! 대신 "정확한 안내를 위해 담당 매니저에게 직접 문의 부탁줄게" 라고 말하고 위 매니저 전화번호를 안내해줘.** (출고실 031-366-1984는 "출고·배송" 문의일 때만 안내. 전화/문자/카톡/이메일 모두 가능, "전화는 안 된다"고 하지 마.)
-- ★ 답변이 애매하거나 견적/대량주문/맞춤상담이 필요할 때도 반드시 위 연락처를 모두 안내해줘.
+- 🚨🚨 **(최우선) 답을 모르거나 확실하지 않으면: 절대 추측하지 마! 개인 전화번호도 주지 마.** 대신 위 성수기 안내 문구로 "주문/문의 내용을 말씀해주시면 10분 내 담당 매니저가 배정됩니다" 라고 안내하고 내용을 받아줘. (출고·배송만 031-366-1984)
+- ★ 견적/대량주문/맞춤상담도 마찬가지 — 개인 번호 대신 성수기 안내 + 내용 접수.
 - 일본 담당: ナナミ(나나미) 휴대폰 090-5397-0420 (LINE ID: astro.0420) / design@chameleon.design ※일본 사무실 없음, 휴대폰만
 - 사이트: ${siteUrl}`,
 
@@ -763,7 +761,7 @@ serve(async (req) => {
   · ⚠️ 配送料¥50,000 ≠ 設置費！配送のみなら¥50,000、設置も希望なら+¥100,000
   · ★ ハニカムバナー(hb_bn_1, hb_bn_2, hb_bn_3)のみ宅配可能！東京近郊は送料無料、その他¥3,000（まとめ配送）。オプションで送料選択。
   · その他のハニカム製品は宅配不可（チャーター便のみ）
-  · 海外お問い合わせ: **+82-10-3491-3535**
+  · 海外お問い合わせ: **+82-10-8821-2626**
 
 ## ハニカムボード施工案内
 - 全注文**完成品**の状態で配送・設置
@@ -877,7 +875,7 @@ serve(async (req) => {
   · Delivery only — on-site installation NOT available overseas
   · ★ Only Honeycomb BANNERS (hb_bn_1, hb_bn_2, hb_bn_3) can be shipped via courier! Seoul/Gyeonggi free, other regions ~$25 (bundle shipping). Select shipping add-on option.
   · All other Honeycomb Board products: freight shipping only (no courier)
-  · For shipping quotes or questions: **+82-10-3491-3535** (international consultation line)
+  · For shipping quotes or questions: **+82-10-8821-2626** (international consultation line)
 
 ## Honeycomb Board Installation
 - All Honeycomb Board orders delivered as **finished products** with installation
@@ -895,12 +893,12 @@ serve(async (req) => {
 - Website: ${siteUrl}
 - Hours: Weekdays 09:00-18:00 (EST)
 - Large files: email design@chameleon.design
-- International consultation (English/Japanese): **+82-10-3491-3535**
-- ⚠️ NEVER share Korean domestic 010 numbers! Only share the +82-10-3491-3535 international line.
+- International consultation (English/Japanese): **+82-10-8821-2626**
+- ⚠️ NEVER share Korean domestic 010 numbers! Only share the +82-10-8821-2626 international line.
 - Japan contact: Nanami (ナナミ) — mobile 090-5397-0420 / LINE ID astro.0420 / design@chameleon.design
 - ⚠️ The Japan office (address & landline) has closed — do NOT share it. Mobile only.
 - For Japan-related inquiries, share Nanami's mobile and LINE.
-- 🚨🚨 (TOP PRIORITY) If you don't know the answer, are unsure, or can't answer accurately: NEVER guess or make up a wrong answer. Instead say "For accurate help, please contact us directly" and ALWAYS share: International line (EN/JP) +82-10-3491-3535 / Email design@chameleon.design. (Never share Korean 010 numbers.)
+- 🚨🚨 (TOP PRIORITY) If you don't know the answer, are unsure, or can't answer accurately: NEVER guess or make up a wrong answer. Instead say "For accurate help, please contact us directly" and ALWAYS share: International line (EN/JP) +82-10-8821-2626 / Email design@chameleon.design. (Never share Korean 010 numbers.)
 
 ## Raw Honeycomb Board (IMPORTANT!)
 - When customer asks about "raw board", "raw honeycomb board", "unprocessed board", "board sheets", "wholesale board" — they want to buy raw/unprocessed honeycomb boards:
@@ -2144,7 +2142,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 const managerContacts: Record<string, string> = {
                     kr: "\n\n담당 매니저한테 편하게 연락해! (전화·문자·카톡 다 돼)\n· 지숙 010-3455-1946 / 성희 010-4994-5950 / 연두 010-2525-9943\n· 이메일: design@chameleon.design\n· (출고·배송 문의만) 출고실: 031-366-1984 (평일 09~18시)",
                     ja: "\n\n📞 詳しいご案内が必要でしたら、お気軽にお問い合わせくださいませ。\n· 日本担当 ナナミ: 090-5397-0420（LINE ID: astro.0420）\n· メール: design@chameleon.design",
-                    us: "\n\n📞 For accurate help, feel free to reach us!\n· International line (EN/JP): +82-10-3491-3535\n· Email: design@chameleon.design",
+                    us: "\n\n📞 For accurate help, feel free to reach us!\n· International line (EN/JP): +82-10-8821-2626\n· Email: design@chameleon.design",
                 };
                 result.chat_message = _cm + (managerContacts[clientLang] || managerContacts['us']);
                 if (result.summary) result.summary = result.chat_message;

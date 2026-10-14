@@ -24,12 +24,12 @@ function getLang() {
 const T = {
     kr: { title: '카프', subtitle: '쇼핑을 안내해 드립니다', studio: '여기서 놀자!', placeholder: '메시지를 입력하세요...', send: '전송', close: '닫기', editor: '에디터에서 디자인', cart: '장바구니', upload: '이미지 첨부', tooBig: '파일이 너무 큽니다 (최대 10MB). 더 큰 파일은 주문 시 업로드하거나 design@chameleon.design으로 보내주세요.', error: '죄송합니다, 답변을 가져오지 못했어요. 담당 매니저(지숙 010-3455-1946)에게 전화 주시면 빠르게 안내드립니다 😊', reset: '대화 초기화', consultant: '전화 안내', namePh: '이름', callbackTitle: '연락처를 남겨주세요', callbackDesc: '담당자가 확인 후 연락드리겠습니다', callbackSuccess: '연락처가 전달되었습니다! 담당자가 빠른 시간 내에 연락드릴게요', callbackPhonePh: '연락처 입력', callbackSubmit: '연락 요청하기', callbackPhoneErr: '연락처를 입력해주세요', quoteTitle: '전시/부스 견적 요청', quoteDesc: '아래 정보를 입력해주시면 담당자가 맞춤 견적을 보내드립니다', quoteEmailPh: 'email@example.com', quoteDetailPh: '필요한 구조물, 사이즈, 수량 등을 알려주세요', quoteFilePh: '레퍼런스 이미지나 도면을 올려주세요', quoteSubmit: '견적 요청 보내기', quoteSuccess: '견적 요청이 전송되었습니다! 담당자가 빠른 시간 내에 연락드리겠습니다' },
     ja: { title: 'カプ', subtitle: 'ショッピングをご案内します', studio: 'ここで遊ぼう!', placeholder: 'メッセージを入力...', send: '送信', close: '閉じる', editor: 'エディターでデザイン', cart: 'カートに入れる', upload: '画像添付', tooBig: 'ファイルが大きすぎます（最大10MB）。より大きいファイルはdesign@chameleon.designへお送りください。', error: '申し訳ありません、回答を取得できませんでした。お電話 047-712-1148 までお問い合わせください 😊', reset: 'チャットリセット', consultant: 'お電話案内', namePh: 'お名前', callbackTitle: '連絡先をお残しください', callbackDesc: '担当者が確認後、ご連絡いたします', callbackSuccess: '連絡先が送信されました！担当者がすぐにご連絡いたします', callbackPhonePh: '連絡先を入力', callbackSubmit: 'コールバックを依頼', callbackPhoneErr: '連絡先を入力してください', quoteTitle: '展示/ブース見積もり依頼', quoteDesc: '以下の情報をご入力いただければ、担当者がお見積もりをお送りします', quoteEmailPh: 'email@example.com', quoteDetailPh: '必要な構造物、サイズ、数量などをお知らせください', quoteFilePh: '参考画像や図面をアップロードしてください', quoteSubmit: '見積もり依頼を送信', quoteSuccess: '見積もり依頼が送信されました！担当者が早急にご連絡いたします' },
-    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Play Here!', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email design@chameleon.design.', error: 'Sorry, I could not retrieve a response. Please call HQ at +82-10-3491-3535 for quick assistance 😊', reset: 'Reset chat', consultant: 'Phone numbers', namePh: 'Name', callbackTitle: 'Please leave your number', callbackDesc: 'Our team will review and contact you', callbackSuccess: 'Your contact info has been submitted! Our team will reach out to you shortly', callbackPhonePh: 'Enter phone number', callbackSubmit: 'Request callback', callbackPhoneErr: 'Please enter your phone number', quoteTitle: 'Exhibition/Booth Quote Request', quoteDesc: 'Fill in the details below and our team will send you a custom quote', quoteEmailPh: 'email@example.com', quoteDetailPh: 'Describe the structures, sizes, quantities you need', quoteFilePh: 'Upload reference images or blueprints', quoteSubmit: 'Submit Quote Request', quoteSuccess: 'Your quote request has been submitted! Our team will contact you shortly' },
-    zh: { title: '卡普', subtitle: '为您导购', studio: '在这里玩!', placeholder: '请输入消息...', send: '发送', close: '关闭', editor: '在编辑器中设计', cart: '加入购物车', upload: '上传图片', tooBig: '文件太大（最大10MB）。', error: '抱歉，未能获取回复。请致电总部 +82-10-3491-3535 获取快速协助 😊', reset: '重置对话', consultant: '电话咨询', namePh: '姓名', callbackTitle: '请留下您的联系方式', callbackDesc: '我们的团队会确认后联系您', callbackSuccess: '联系方式已提交！我们的团队会尽快与您联系', callbackPhonePh: '输入电话号码', callbackSubmit: '请求回拨', callbackPhoneErr: '请输入电话号码' },
-    es: { title: 'Kapu', subtitle: 'Tu guía de compras', studio: '¡Juega Aquí!', placeholder: 'Escribe un mensaje...', send: 'Enviar', close: 'Cerrar', editor: 'Diseñar en Editor', cart: 'Añadir al carrito', upload: 'Adjuntar imagen', tooBig: 'Archivo demasiado grande (máx. 10MB).', error: 'Lo siento, no pude obtener una respuesta. Por favor, llame al +82-10-3491-3535 😊', reset: 'Reiniciar chat', consultant: 'Teléfono', namePh: 'Nombre', callbackTitle: 'Deja tu número', callbackDesc: 'Nuestro equipo revisará y te contactará', callbackSuccess: '¡Tu información de contacto ha sido enviada! Nuestro equipo se pondrá en contacto contigo pronto', callbackPhonePh: 'Ingresa tu teléfono', callbackSubmit: 'Solicitar llamada', callbackPhoneErr: 'Ingresa tu teléfono' },
-    de: { title: 'Kapu', subtitle: 'Ihr Einkaufsberater', studio: 'Hier spielen!', placeholder: 'Nachricht eingeben...', send: 'Senden', close: 'Schließen', editor: 'Im Editor gestalten', cart: 'In den Warenkorb', upload: 'Bild anhängen', tooBig: 'Datei zu groß (max. 10MB).', error: 'Entschuldigung, ich konnte keine Antwort abrufen. Bitte rufen Sie +82-10-3491-3535 an 😊', reset: 'Chat zurücksetzen', consultant: 'Telefon', namePh: 'Name', callbackTitle: 'Hinterlassen Sie Ihre Nummer', callbackDesc: 'Unser Team wird Sie kontaktieren', callbackSuccess: 'Ihre Kontaktdaten wurden übermittelt! Unser Team wird sich bald bei Ihnen melden', callbackPhonePh: 'Telefonnummer eingeben', callbackSubmit: 'Rückruf anfordern', callbackPhoneErr: 'Bitte Telefonnummer eingeben' },
-    fr: { title: 'Kapu', subtitle: 'Votre guide d\'achat', studio: 'Jouez ici!', placeholder: 'Tapez un message...', send: 'Envoyer', close: 'Fermer', editor: 'Designer dans l\'éditeur', cart: 'Ajouter au panier', upload: 'Joindre image', tooBig: 'Fichier trop volumineux (max 10MB).', error: 'Désolé, je n\'ai pas pu obtenir de réponse. Veuillez appeler le +82-10-3491-3535 😊', reset: 'Réinitialiser', consultant: 'Téléphone', namePh: 'Nom', callbackTitle: 'Laissez votre numéro', callbackDesc: 'Notre équipe vous contactera après vérification', callbackSuccess: 'Vos coordonnées ont été envoyées ! Notre équipe vous contactera bientôt', callbackPhonePh: 'Entrez votre téléphone', callbackSubmit: 'Demander un rappel', callbackPhoneErr: 'Entrez votre téléphone' },
-    ar: { title: 'كابو', subtitle: 'دليل التسوق', studio: '!العب هنا', placeholder: '...اكتب رسالة', send: 'إرسال', close: 'إغلاق', editor: 'التصميم في المحرر', cart: 'أضف للسلة', upload: 'إرفاق صورة', tooBig: 'الملف كبير جداً (الحد 10MB).', error: 'عذراً، لم أتمكن من الحصول على رد. يرجى الاتصال بنا على +82-10-3491-3535 😊', reset: 'إعادة تعيين', consultant: 'الهاتف', namePh: 'الاسم', callbackTitle: 'اترك رقمك', callbackDesc: 'سيتواصل فريقنا معك بعد المراجعة', callbackSuccess: 'تم إرسال معلومات الاتصال! سيتواصل فريقنا معك قريباً', callbackPhonePh: 'أدخل رقم الهاتف', callbackSubmit: 'طلب معاودة الاتصال', callbackPhoneErr: 'أدخل رقم هاتفك' },
+    en: { title: 'Kapu', subtitle: 'Your shopping guide', studio: 'Play Here!', placeholder: 'Type a message...', send: 'Send', close: 'Close', editor: 'Design in Editor', cart: 'Add to Cart', upload: 'Attach image', tooBig: 'File too large (max 10MB). For larger files, please email design@chameleon.design.', error: 'Sorry, I could not retrieve a response. Please call HQ at +82-10-8821-2626 for quick assistance 😊', reset: 'Reset chat', consultant: 'Phone numbers', namePh: 'Name', callbackTitle: 'Please leave your number', callbackDesc: 'Our team will review and contact you', callbackSuccess: 'Your contact info has been submitted! Our team will reach out to you shortly', callbackPhonePh: 'Enter phone number', callbackSubmit: 'Request callback', callbackPhoneErr: 'Please enter your phone number', quoteTitle: 'Exhibition/Booth Quote Request', quoteDesc: 'Fill in the details below and our team will send you a custom quote', quoteEmailPh: 'email@example.com', quoteDetailPh: 'Describe the structures, sizes, quantities you need', quoteFilePh: 'Upload reference images or blueprints', quoteSubmit: 'Submit Quote Request', quoteSuccess: 'Your quote request has been submitted! Our team will contact you shortly' },
+    zh: { title: '卡普', subtitle: '为您导购', studio: '在这里玩!', placeholder: '请输入消息...', send: '发送', close: '关闭', editor: '在编辑器中设计', cart: '加入购物车', upload: '上传图片', tooBig: '文件太大（最大10MB）。', error: '抱歉，未能获取回复。请致电总部 +82-10-8821-2626 获取快速协助 😊', reset: '重置对话', consultant: '电话咨询', namePh: '姓名', callbackTitle: '请留下您的联系方式', callbackDesc: '我们的团队会确认后联系您', callbackSuccess: '联系方式已提交！我们的团队会尽快与您联系', callbackPhonePh: '输入电话号码', callbackSubmit: '请求回拨', callbackPhoneErr: '请输入电话号码' },
+    es: { title: 'Kapu', subtitle: 'Tu guía de compras', studio: '¡Juega Aquí!', placeholder: 'Escribe un mensaje...', send: 'Enviar', close: 'Cerrar', editor: 'Diseñar en Editor', cart: 'Añadir al carrito', upload: 'Adjuntar imagen', tooBig: 'Archivo demasiado grande (máx. 10MB).', error: 'Lo siento, no pude obtener una respuesta. Por favor, llame al +82-10-8821-2626 😊', reset: 'Reiniciar chat', consultant: 'Teléfono', namePh: 'Nombre', callbackTitle: 'Deja tu número', callbackDesc: 'Nuestro equipo revisará y te contactará', callbackSuccess: '¡Tu información de contacto ha sido enviada! Nuestro equipo se pondrá en contacto contigo pronto', callbackPhonePh: 'Ingresa tu teléfono', callbackSubmit: 'Solicitar llamada', callbackPhoneErr: 'Ingresa tu teléfono' },
+    de: { title: 'Kapu', subtitle: 'Ihr Einkaufsberater', studio: 'Hier spielen!', placeholder: 'Nachricht eingeben...', send: 'Senden', close: 'Schließen', editor: 'Im Editor gestalten', cart: 'In den Warenkorb', upload: 'Bild anhängen', tooBig: 'Datei zu groß (max. 10MB).', error: 'Entschuldigung, ich konnte keine Antwort abrufen. Bitte rufen Sie +82-10-8821-2626 an 😊', reset: 'Chat zurücksetzen', consultant: 'Telefon', namePh: 'Name', callbackTitle: 'Hinterlassen Sie Ihre Nummer', callbackDesc: 'Unser Team wird Sie kontaktieren', callbackSuccess: 'Ihre Kontaktdaten wurden übermittelt! Unser Team wird sich bald bei Ihnen melden', callbackPhonePh: 'Telefonnummer eingeben', callbackSubmit: 'Rückruf anfordern', callbackPhoneErr: 'Bitte Telefonnummer eingeben' },
+    fr: { title: 'Kapu', subtitle: 'Votre guide d\'achat', studio: 'Jouez ici!', placeholder: 'Tapez un message...', send: 'Envoyer', close: 'Fermer', editor: 'Designer dans l\'éditeur', cart: 'Ajouter au panier', upload: 'Joindre image', tooBig: 'Fichier trop volumineux (max 10MB).', error: 'Désolé, je n\'ai pas pu obtenir de réponse. Veuillez appeler le +82-10-8821-2626 😊', reset: 'Réinitialiser', consultant: 'Téléphone', namePh: 'Nom', callbackTitle: 'Laissez votre numéro', callbackDesc: 'Notre équipe vous contactera après vérification', callbackSuccess: 'Vos coordonnées ont été envoyées ! Notre équipe vous contactera bientôt', callbackPhonePh: 'Entrez votre téléphone', callbackSubmit: 'Demander un rappel', callbackPhoneErr: 'Entrez votre téléphone' },
+    ar: { title: 'كابو', subtitle: 'دليل التسوق', studio: '!العب هنا', placeholder: '...اكتب رسالة', send: 'إرسال', close: 'إغلاق', editor: 'التصميم في المحرر', cart: 'أضف للسلة', upload: 'إرفاق صورة', tooBig: 'الملف كبير جداً (الحد 10MB).', error: 'عذراً، لم أتمكن من الحصول على رد. يرجى الاتصال بنا على +82-10-8821-2626 😊', reset: 'إعادة تعيين', consultant: 'الهاتف', namePh: 'الاسم', callbackTitle: 'اترك رقمك', callbackDesc: 'سيتواصل فريقنا معك بعد المراجعة', callbackSuccess: 'تم إرسال معلومات الاتصال! سيتواصل فريقنا معك قريباً', callbackPhonePh: 'أدخل رقم الهاتف', callbackSubmit: 'طلب معاودة الاتصال', callbackPhoneErr: 'أدخل رقم هاتفك' },
 };
 function t(key) { const l = getLang(); return (T[l] && T[l][key]) || T['en'][key] || ''; }
 
@@ -1060,10 +1060,8 @@ function _showPhonePopup() {
     const popups = {
         kr: `<div style="text-align:center;margin-bottom:16px;font-size:36px;">📞</div>
             <div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">전화 문의 안내</div>
-            <div style="background:#ede9fe;border-radius:12px;padding:16px 16px;margin-bottom:10px;">
-                <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">상담전화</div>
-                <a href="tel:010-3491-3535" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:17px;font-weight:700;">
-                    <i class="fa-solid fa-phone" style="color:#7c3aed;"></i> 010-3491-3535</a>
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                <div style="font-size:13px;color:#78350f;line-height:1.7;text-align:left;">지금은 성수기라 매니저님들이 전원 통화중이예요. 저에게 주문할 걸 말씀해주시면 <b>10분 내</b>에 빠르게 확인하고 담당 매니저가 배정됩니다. 간단한 질문은 제가 답변드릴게요~</div>
             </div>
             <div style="background:#eff6ff;border-radius:12px;padding:12px 16px;margin-bottom:6px;">
                 <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:4px;">✉️ 이메일</div>
@@ -2085,44 +2083,10 @@ async function showPhoneCard() {
     // KR/JP은 본사 전화번호 다름. 다른 언어는 한국 본사로 안내
     const hqPhone = (lang === 'ja') ? '047-712-1148' : '031-366-1984';
 
-    // 매니저 목록 (KR 만 — 한국 매니저는 한국어로만 노출)
+    // 2026-10-15(사장님): 매니저 직통전화 안내 폐지 → 성수기 안내 문구(전원 통화중, 10분내 배정).
     let mgrItems = '';
     if (lang === 'kr') {
-        try {
-            const sb = getSb();
-            if (sb) {
-                const { data } = await sb.from('chatbot_knowledge')
-                    .select('question,answer,is_active')
-                    .eq('category', '_managers');
-                const FIELD_MGR_NAMES = ['혜림'];
-                const rows = (data || []).filter(r => FIELD_MGR_NAMES.some(n => (r.question||'').includes(n)));
-                rows.sort((a,b) => {
-                    const ai = FIELD_MGR_NAMES.findIndex(n => (a.question||'').includes(n));
-                    const bi = FIELD_MGR_NAMES.findIndex(n => (b.question||'').includes(n));
-                    return ai - bi;
-                });
-                rows.forEach(r => {
-                    let phone = '';
-                    try { phone = JSON.parse(r.answer || '{}').phone || ''; } catch(e) {}
-                    if (!phone) return;
-                    const phoneFmt = phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-                    const isOff = r.is_active === false;
-                    if (isOff) {
-                        mgrItems += `<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f1f5f9;border-radius:10px;color:#94a3b8;text-decoration:line-through;opacity:0.6;cursor:not-allowed;font-size:13px;">
-                            <span style="width:18px;text-align:center;">🌴</span>
-                            <span style="flex:1;">${r.question} ${L.mgr}</span>
-                            <span style="font-size:11px;">${L.vac}</span>
-                        </div>`;
-                    } else {
-                        mgrItems += `<a href="tel:${phone}" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#1e293b;font-size:14px;font-weight:600;transition:all 0.15s;" onmouseover="this.style.background='#fef3c7';this.style.borderColor='#f59e0b'" onmouseout="this.style.background='#fff';this.style.borderColor='#e2e8f0'">
-                            <span style="width:18px;text-align:center;color:#f59e0b;">👩</span>
-                            <span style="flex:1;">${r.question} ${L.mgr}</span>
-                            <span style="color:#7c3aed;font-weight:700;">${phoneFmt}</span>
-                        </a>`;
-                    }
-                });
-            }
-        } catch(e) { console.warn('[showPhoneCard] manager fetch failed', e); }
+        mgrItems = `<div style="padding:12px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;color:#78350f;font-size:13px;line-height:1.7;">지금은 성수기라 매니저님들이 전원 통화중이예요. 저에게 주문할 걸 말씀해주시면 <b>10분 내</b>에 빠르게 확인하고 담당 매니저가 배정됩니다. 간단한 질문은 제가 답변드릴게요~</div>`;
     }
 
     const row = document.createElement('div');

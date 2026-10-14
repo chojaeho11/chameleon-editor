@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20261015005124';
+    var CV = '20261015011727';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2484,11 +2484,11 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     </div>
                 </a>
                 <!-- 2026-06-12: US/해외 전용 Hyerim Seo (Director) 직통 카드 — 영어 사이트에서 표시 -->
-                <a href="tel:+821034913535" id="mgrPhoneUs" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(99,102,241,0.18); border:1.5px solid rgba(99,102,241,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(99,102,241,0.25); backdrop-filter:blur(4px);">
+                <a href="tel:+821088212626" id="mgrPhoneUs" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(99,102,241,0.18); border:1.5px solid rgba(99,102,241,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(99,102,241,0.25); backdrop-filter:blur(4px);">
                     <span style="font-size:22px;">🌏</span>
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
                         <span style="font-size:11px; opacity:0.85; letter-spacing:0.5px;">International Direct Line · Director</span>
-                        <b style="color:#fff; font-size:16px; white-space:nowrap; letter-spacing:0.3px;">Hyerim Seo · +82 10-3491-3535</b>
+                        <b style="color:#fff; font-size:16px; white-space:nowrap; letter-spacing:0.3px;">CEO Direct · +82 10-8821-2626</b>
                     </div>
                 </a>
                 <!-- 2026-06-11: JP 전용 LINE QR 카드 — 풀와이드, 가로 레이아웃 (QR 좌측 + 텍스트 우측) -->
@@ -2509,7 +2509,7 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                     </div>
                 </div>
                 <!-- 2026-06-12: US/해외 듀얼 컨택 카드 — 세로 스택 (한국 사무실 전화 빼고 대표 이메일).
-                     ① Hyerim Seo · Director (+82 10-3491-3535)
+                     ① CEO Direct (+82 10-8821-2626)
                      ② Hiba · International Manager (+212 617-901092)
                      ③ Representative Email · design@chameleon.design -->
                 <div id="mgrPhoneUsQr" style="display:none; grid-column:1 / -1; width:100%;">
@@ -2557,14 +2557,14 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                             <div class="usct-head">
                                 <div class="usct-avatar"><i class="fa-solid fa-user-tie"></i></div>
                                 <div class="usct-info">
-                                    <div class="usct-name">Hyerim Seo · <span class="usct-role">Director</span></div>
-                                    <div class="usct-phone">+82 10-3491-3535</div>
+                                    <div class="usct-name">CEO Direct · <span class="usct-role">Overseas</span></div>
+                                    <div class="usct-phone">+82 10-8821-2626</div>
                                     <div class="usct-desc">Korea HQ direct line · Mon-Fri 09:00-18:00 KST</div>
                                 </div>
                             </div>
                             <div class="usct-btns">
-                                <a class="usct-btn call-h" href="tel:+821034913535"><i class="fa-solid fa-phone"></i> Call</a>
-                                <a class="usct-btn wa" href="https://api.whatsapp.com/send?phone=821034913535" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                                <a class="usct-btn call-h" href="tel:+821088212626"><i class="fa-solid fa-phone"></i> Call</a>
+                                <a class="usct-btn wa" href="https://api.whatsapp.com/send?phone=821088212626" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                             </div>
                         </div>
                         <!-- ② Hiba (해외 영업 매니저, Morocco/Africa) -->
@@ -2653,6 +2653,11 @@ html.fr-clone #wholesaleBoardSection { display:none !important; }
                 async function loadMgrPhones() {
                     var slot = document.getElementById('mgrPhoneSlot');
                     if (!slot) return;
+                    // 2026-10-15(사장님): 매니저 직통전화 안내 폐지 — 성수기 안내 문구로 대체(전 매니저 통화중, 10분내 배정).
+                    slot.innerHTML = '<div style="grid-column:1 / -1; padding:16px 18px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:12px; color:#fff; text-align:left; line-height:1.7; font-size:13.5px;">'
+                        + '지금은 성수기라 매니저님들이 전원 통화중이예요.<br>저에게 주문할 걸 말씀해주시면 <b style="color:#fde047;">10분 내</b>에 빠르게 확인하고 담당 매니저가 배정됩니다.<br>간단한 질문은 제가 답변드릴게요~'
+                        + '</div>';
+                    return;
                     try {
                         var sb = window.sb;
                         if (!sb) {
@@ -9313,7 +9318,7 @@ async function handleSubReturn() {
         de:{title:['Kartondisplays müssen ','schnell faltbar UND stabil','sein.'], sub:'Die meisten Wettbewerber falten per One-Touch, kollabieren aber unter schweren Produkten — oder sind stabil, aber gar nicht One-Touch. Chameleon beherrscht beides.', c1t:'Zuerst 1 Muster bestellen', c1d:'Prüfen Sie die Qualität real. Wir empfehlen dringend ein Musterexemplar.', c2t:'FOB-Versand (Korea · Singapur · Marokko)', c2d:'Wir versenden zu FOB-Bedingungen aus unseren Werken in Korea, Singapur und Marokko.', c3t:'Tel. Beratung & Stanzdaten', c3d:'Für Aufträge mit Beratung oder individuellem Design bitte unten anrufen.', p1l:'English · 日本語', p2l:'Français · العربية', foot:'Alle <b>Designs sind kostenlos</b>. Nennen Sie uns die Maße und wir designen und konstruieren gratis. Zahlung: <b>10% Anzahlung, 90% Rest</b> nach Freigabe der Endfotos. Werke: <b>Korea · Singapur · Marokko</b>.'},
         fr:{title:['Les PLV carton doivent être ','pliables vite ET solides','.'], sub:'La plupart des concurrents se plient d\'un geste mais s\'effondrent sous les produits lourds, ou sont solides mais pas pliables d\'un geste. Chameleon maîtrise les deux.', c1t:'Commandez 1 échantillon d\'abord', c1d:'Vérifiez la qualité réelle. Nous recommandons fortement 1 échantillon.', c2t:'Expédition FOB (Corée · Singapour · Maroc)', c2d:'Nous expédions en conditions FOB depuis nos usines en Corée, Singapour et Maroc.', c3t:'Conseil téléphonique & fichiers de découpe', c3d:'Pour les commandes nécessitant conseil ou design, appelez les numéros ci-dessous.', p1l:'English · 日本語', p2l:'Français · العربية', foot:'Tous les <b>designs sont gratuits</b>. Indiquez la taille et nous concevons et ingénions gratuitement. Paiement : <b>10% d\'acompte, 90% de solde</b> après validation des photos finales. Usines : <b>Corée · Singapour · Maroc</b>.'}
     };
-    const PH1 = '+82 10 3491 3535';
+    const PH1 = '+82 10 8821 2626';
     const PH2 = '+212 617 901 092';
     window.renderPaperDisplayBanner = function(product, lang) {
         if (!product || !product.code) return '';
@@ -11259,7 +11264,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=5"></script>
-<script src="/simple_order.js?v=932"></script>
+<script src="/simple_order.js?v=933"></script>
 <script src="/sns-ranking.js?v=11"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=732"></script>
@@ -13270,7 +13275,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=480').then(m => {
+        import('./advisor-panel.js?v=481').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
@@ -13281,7 +13286,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         import('./ai-design-hero.js?v=29').catch(e => console.warn('AI design hero init skipped:', e));
 
         // 2026-09-21(사장님): 홈 "자비스 응대" 프로토타입 — 홈 진입 시 사이트가 먼저 인사하고 대화로 안내 (카푸 두뇌 재사용)
-        (function(){ try { var s=document.createElement('script'); s.src='/jarvis-greeter.js?v=37'; s.async=true; document.head.appendChild(s); } catch(e){} })();
+        (function(){ try { var s=document.createElement('script'); s.src='/jarvis-greeter.js?v=38'; s.async=true; document.head.appendChild(s); } catch(e){} })();
 
         // Photo Studio는 advisor-panel.js에 통합됨
 
@@ -25444,7 +25449,7 @@ window.dsmRenderProducts = async function(keyword) {
 })();
 </script>
 <script src="./gif-maker.js?v=434" defer></script>
-<script src="./npc-wizard.js?v=435" defer></script>
+<script src="./npc-wizard.js?v=436" defer></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">

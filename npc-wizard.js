@@ -1085,13 +1085,13 @@ window.NpcWizard = {
                                 <span style="display:inline-flex;width:18px;height:18px;border-radius:50%;background:#1e1b4b;color:#fff;align-items:center;justify-content:center;font-size:10px;">📞</span>
                                 <span>${_L.intlTitle}</span>
                             </div>
-                            <a href="tel:+821034913535" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all 0.15s;"
+                            <a href="tel:+821088212626" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all 0.15s;"
                                 onmouseover="this.style.borderColor='#1e1b4b';this.style.background='#f8fafc';"
                                 onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff';">
                                 <span style="font-size:16px;">🇰🇷</span>
                                 <div style="flex:1;min-width:0;">
                                     <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:1px;">EN · 日本語</div>
-                                    <div style="font-size:14px;font-weight:800;color:#1e1b4b;letter-spacing:0.2px;">+82 10 3491-3535</div>
+                                    <div style="font-size:14px;font-weight:800;color:#1e1b4b;letter-spacing:0.2px;">+82 10 8821-2626</div>
                                 </div>
                             </a>
                             <a href="tel:+212617901092" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;transition:all 0.15s;"

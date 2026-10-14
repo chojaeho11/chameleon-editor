@@ -243,29 +243,13 @@
       }
     } catch (e) {}
   }
-  // 2026-09-30(사장님): 지금 상담 가능한 매니저 전화 안내 (chatbot_knowledge _managers). KR 위주, 없으면 본사 전화.
+  // 2026-10-15(사장님): 매니저 직통전화 안내 폐지 → KR=성수기 안내 문구, 해외=대표 직통.
   async function _jvgShowManagers() {
-    var hq = (_lang === 'ja') ? '047-712-1148' : '031-366-1984';
-    var fallback = tr('상담 전화: ' + hq + ' (평일 09:00-18:00)', 'お電話: ' + hq, 'Call: ' + hq);
-    var text = fallback;
-    try {
-      var sb = window.sb;
-      if (sb && sb.from) {
-        var r = await sb.from('chatbot_knowledge').select('question,answer,is_active').eq('category', '_managers');
-        var NAMES = ['혜림'];
-        var rows = (r.data || []).filter(function (x) { return NAMES.some(function (n) { return (x.question || '').indexOf(n) >= 0; }); });
-        var lines = [];
-        rows.forEach(function (x) {
-          var phone = ''; try { phone = (JSON.parse(x.answer || '{}').phone) || ''; } catch (e) {}
-          if (!phone) return;
-          var fmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
-          var nm = NAMES.filter(function (n) { return (x.question || '').indexOf(n) >= 0; })[0] || '매니저';
-          lines.push('· ' + nm + ' 매니저 — ' + fmt + (x.is_active === false ? ' (지금 부재중)' : ''));
-        });
-        if (lines.length) text = tr('지금 상담 가능한 매니저야. 편하게 전화해줘:\n', '担当マネージャーです:\n', 'Available managers:\n') + lines.join('\n');
-      }
-    } catch (e) {}
-    _jvgReply(tr('매니저 안내', '担当マネージャー', 'Manager'), text);
+    if (_lang === 'kr') {
+      _jvgReply('매니저 안내', '지금은 성수기라 매니저님들이 전원 통화중이예요. 저에게 주문할 걸 말씀해주시면 10분 내에 빠르게 확인하고 담당 매니저가 배정됩니다. 간단한 질문은 제가 답변드릴게요~');
+      return;
+    }
+    _jvgReply(tr('매니저 안내', '担当マネージャー', 'Manager'), tr('', '代表直通: +82 10-8821-2626', 'CEO Direct: +82 10-8821-2626'));
   }
   // 인사 아래 안내 버튼: 매니저 / 이메일 / 사진올리기 / 출고문의(본사)
   function addGreetActions() {

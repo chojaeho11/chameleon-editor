@@ -456,7 +456,7 @@
         // 채팅방별 담당자 드롭다운 (클릭하면 아래로 펼쳐짐)
         //   2026-10-07(사장님): 실제 매니저 + '본사 지정'만 (로그인 계정 이메일 이름 제외)
         function mgrDdOptions(roomId, current){
-            const names = (_roomMgrNames && _roomMgrNames.length) ? _roomMgrNames : ['지숙','성희','혜림','동연','연두'];
+            const names = (_roomMgrNames && _roomMgrNames.length) ? _roomMgrNames : ['지숙','성희','동연','연두'];
             const list = ['본사'].concat(names.filter(n=>n!=='본사'));
             let h = list.map(n=>{ const lbl = (n==='본사') ? '🏢 본사 지정' : esc(n); return `<button class="${n===current?'cur':''}" onclick="assignRoomMgr('${roomId}', ${JSON.stringify(esc(n)).replace(/"/g,'&quot;')})">${lbl}${n===current?' ✓':''}</button>`; }).join('');
             h += `<button class="dd-rel" onclick="assignRoomMgr('${roomId}','')">🤖 AI 에게 맡김 (해제)</button>`;
@@ -737,7 +737,7 @@
         const MGR_TPL = {
             ko:`안녕하세요 고객님 😊\n\n제품·주문 문의는 담당 매니저에게 직접 연락 주세요!\n\n• 지숙 매니저: 010-3455-1946\n• 은미 매니저: 010-7793-5393\n• 성희 매니저: 010-4994-5950\n• 연두 매니저: 010-2525-9943\n\n📦 출고·배송 문의는 출고실 031-366-1984 (평일 09:00~18:00)\n\n편하신 분께 연락 주세요!`,
             ja:`お問い合わせありがとうございます 😊\n\n詳しいご案内は担当者に直接ご連絡いただくのが最も早いです。\n\n📞 ナナミ (海外担当): 090-5397-0420\n\nお気軽にご連絡ください!`,
-            en:`Hello! Thank you for your inquiry 😊\n\nFor the fastest response, please contact our overseas representative directly:\n\n📞 Hyerim Seo (CEO, Overseas): +82-10-3491-3535\n\nFeel free to reach out anytime!`
+            en:`Hello! Thank you for your inquiry 😊\n\nFor the fastest response, please contact us directly:\n\n📞 CEO Direct (Overseas): +82-10-8821-2626\n\nFeel free to reach out anytime!`
         };
         async function translate(text,to_lang){ try{ const {data,error}=await sb.functions.invoke('translate',{body:{text,to:to_lang}}); if(error){return '';} return (data&&data.translated)?data.translated:''; }catch(e){return '';} }
 
@@ -870,7 +870,7 @@
         async function buildMgrUI(){
             let names = [];
             try{ const { data } = await sb.from('chatbot_knowledge').select('question,is_active').eq('category','_managers'); names = (data||[]).filter(m=>m.is_active!==false).map(m=>(m.question||'').trim()).filter(Boolean); }catch(e){}
-            if(!names.length) names = ['지숙','성희','혜림','동연','연두'];   // 폴백
+            if(!names.length) names = ['지숙','성희','동연','연두'];   // 폴백
             _roomMgrNames = names.slice();   // 방 담당지정/필터용 (실 매니저)
             // 2026-10-07(사장님): 상담 매니저 선택 = '본사' + 실매니저 (로그인 계정 이메일 이름 제외)
             const opts = ['본사'].concat(names.filter(n=>n!=='본사'));

@@ -47,7 +47,7 @@ const LANGS = [
     },
     {
         lang: "en", countryCode: "US", label: "English", site: "www.chameleon.design", author: "Chameleon Printing",
-        contact: "Hiba +82 10-3491-3535 (WhatsApp)", fabricSite: "www.cotton-printer.com",
+        contact: "CEO Direct +82 10-8821-2626 (WhatsApp)", fabricSite: "www.cotton-printer.com",
     },
 ];
 
