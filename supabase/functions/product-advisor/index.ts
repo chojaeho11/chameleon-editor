@@ -930,11 +930,12 @@ serve(async (req) => {
         let knowledgeData: any[] = [];
         try {
             const { data: kn } = await sb.from('chatbot_knowledge')
-                .select('question,answer,category,language,keywords,priority')
+                .select('question,answer,category,language,keywords,priority,created_at')
                 .eq('is_active', true)
                 .neq('category', '_system_prompt').neq('category', '_managers')
                 .order('priority', { ascending: false })
-                .limit(200);
+                .order('created_at', { ascending: false })   // 2026-10-15: 같은 priority면 최신 학습 우선(새 학습이 컷에서 밀리던 문제)
+                .limit(300);
             const _langMap: Record<string,string> = { ko:'kr', kr:'kr', ja:'ja', jp:'ja', en:'us', us:'us' };
             knowledgeData = (kn || []).map((k: any) => ({
                 customer_message: (k.question || '') + (k.keywords ? ` (${k.keywords})` : ''),
@@ -958,9 +959,9 @@ serve(async (req) => {
         // ★ 이미 reviewed_at desc로 정렬되어 들어옴 (최신순) → 최신순 유지하되 lang 일치 우선
         // 1) clientLang 일치 + 최신 우선 (상위 30개)
         // 2) kr 또는 lang 없음 + 최신 우선 (상위 30개)
-        const _matchLang = langQa.filter((q: any) => q.lang === clientLang).slice(0, 30);
-        const _krLang = langQa.filter((q: any) => q.lang !== clientLang && (q.lang === 'kr' || !q.lang)).slice(0, 30);
-        const sortedQa = [..._matchLang, ..._krLang].slice(0, 60);
+        const _matchLang = langQa.filter((q: any) => q.lang === clientLang).slice(0, 60);
+        const _krLang = langQa.filter((q: any) => q.lang !== clientLang && (q.lang === 'kr' || !q.lang)).slice(0, 60);
+        const sortedQa = [..._matchLang, ..._krLang].slice(0, 120);
         let qaSection = '';
         if (sortedQa.length > 0) {
             const qaLabels: Record<string, { title: string; q: string; a: string; instruction: string }> = {

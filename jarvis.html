@@ -808,7 +808,7 @@
                 let finalAns=ans;
                 if(kb!=='ko'&&!fromMgrBtn){ if(statusEl)statusEl.textContent='✈️ '+kb.toUpperCase()+' 로 번역 중...'; const tr=await translate(ans,kb); if(tr)finalAns=tr; else if(statusEl){statusEl.className='jx-status err'; statusEl.textContent='번역 실패 — 한국어 그대로 저장합니다.';} }
                 if(statusEl){ statusEl.className='jx-status busy'; statusEl.textContent='📥 chatbot_knowledge 저장 중...'; }
-                const {data:ins,error:insErr}=await sb.from('chatbot_knowledge').insert({ category:'general', question:q, answer:finalAns, language:kb, priority:50, is_active:true }).select().single();
+                const {data:ins,error:insErr}=await sb.from('chatbot_knowledge').insert({ category:'general', question:q, answer:finalAns, language:kb, priority:100, is_active:true }).select().single();
                 if(insErr) throw insErr;
                 const upd={ needs_learning:false, admin_answer:ans, admin_answer_ko:ans, is_reviewed:true, reviewed_at:new Date().toISOString() };
                 if(row&&row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id',row.room_id); else await sb.from('advisor_qa_log').update(upd).eq('id',id);
@@ -831,7 +831,7 @@
                 const aiAns=(row&&row.ai_response||'').trim();
                 if(aiAns && q){
                     // AI 답변은 이미 고객 언어이므로 번역 없이 저장
-                    await sb.from('chatbot_knowledge').insert({ category:'general', question:q, answer:aiAns, language:kb, priority:50, is_active:true });
+                    await sb.from('chatbot_knowledge').insert({ category:'general', question:q, answer:aiAns, language:kb, priority:100, is_active:true });
                 }
                 const upd={ needs_learning:false, is_reviewed:true, reviewed_at:new Date().toISOString(), admin_answer:'[AI답변 학습]', admin_answer_ko:'[AI답변 학습]' };
                 if(row&&row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id',row.room_id); else await sb.from('advisor_qa_log').update(upd).eq('id',id);

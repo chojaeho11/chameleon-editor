@@ -342,7 +342,7 @@ function getSb() { return sb; }
         var q = document.getElementById('cbNewQ').value.trim(), a = document.getElementById('cbNewA').value.trim();
         if (!q || !a) { showToast('Enter question and answer', 'warn'); return; }
         var kw = document.getElementById('cbNewKw').value.trim();
-        var ins = await sb.from('chatbot_knowledge').insert({ category: 'general', question: q, answer: a, keywords: kw, language: 'ko', priority: 50 }).select();
+        var ins = await sb.from('chatbot_knowledge').insert({ category: 'general', question: q, answer: a, keywords: kw, language: 'ko', priority: 100 }).select();
         await sb.from('advisor_qa_log').insert({ lang:'kr', customer_message:q, customer_message_ko:q, ai_response:'[Direct Input]', admin_answer:a, admin_answer_ko:a, is_reviewed:true, reviewed_at:new Date().toISOString(), category:'general', is_active:true, has_image:false });
         if (kw && ins.data && ins.data[0]) {
             try { await sb.functions.invoke('admin-qa-update', { body: { action:'translate_keywords', knowledge_id: ins.data[0].id, keywords: kw } }); } catch(e) {}
