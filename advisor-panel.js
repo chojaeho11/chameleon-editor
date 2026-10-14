@@ -2258,22 +2258,40 @@ function showBankCard() {
         fr:'Titulaire: Chameleon Printing / Confirmation automatique',
         ar:'صاحب الحساب: Chameleon Printing / تأكيد تلقائي'
     };
-    const isJP = lang === 'ja';
-    const bankName = isJP ? '楽天銀行' : '국민은행';
-    const acctNum = isJP ? '8487335989' : '647701-04-277763';
+    // 2026-10-14(사장님): 해외(한국 아님)는 해당 지역 가맹점이 없어 결제 불가 → 계좌 숨기고 안내문구만.
+    const _advCountry = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
+    const _advIsKR = _advCountry ? (_advCountry === 'KR') : (lang === 'kr' || lang === 'ko');
     const row = document.createElement('div');
     row.className = 'adv-row adv-row-ai';
+    if (!_advIsKR) {
+        const _noFrMsg = {
+            ja:'現在、お住まいの地域に加盟店がないため、お支払いいただけません。地域に加盟店ができましたら、お手頃な価格で素敵な製品を素早くお作りしてお届けします。',
+            en:"Payment is currently unavailable as there is no partner in your region yet. Once a partner opens nearby, we'll quickly make and ship great products at an affordable price.",
+            zh:'目前您所在地区暂无加盟店，暂无法结算。该地区开设加盟店后，我们将以实惠的价格快速制作精美产品并寄送给您。',
+            es:'El pago no está disponible por ahora, ya que aún no hay socio en su región. Cuando abra uno cerca, fabricaremos y enviaremos excelentes productos a buen precio, rápidamente.',
+            de:'Zahlung derzeit nicht möglich, da es in Ihrer Region noch keinen Partner gibt. Sobald einer in Ihrer Nähe eröffnet, fertigen und liefern wir schnell großartige Produkte zu einem günstigen Preis.',
+            fr:"Le paiement est indisponible pour le moment, car il n'y a pas encore de partenaire dans votre région. Dès qu'un partenaire ouvrira près de chez vous, nous fabriquerons et expédierons rapidement de superbes produits à prix avantageux.",
+            ar:'الدفع غير متاح حاليًا لعدم وجود شريك في منطقتك. وبمجرد افتتاح شريك قريب منك، سنصنع ونشحن منتجات رائعة بسعر مناسب وبسرعة.'
+        };
+        row.innerHTML = `
+            <div class="adv-avatar"><i class="fa-solid fa-store"></i></div>
+            <div style="background:#fff;border:1px solid #e0e7ff;border-radius:16px;padding:14px 16px;max-width:90%;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <div style="font-size:13px;color:#334155;line-height:1.8;">${_noFrMsg[lang]||_noFrMsg.en}</div>
+            </div>
+        `;
+    } else {
     row.innerHTML = `
         <div class="adv-avatar"><i class="fa-solid fa-building-columns"></i></div>
         <div style="background:#fff;border:1px solid #e0e7ff;border-radius:16px;padding:14px 16px;max-width:90%;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:10px;">${titles[lang]||titles.en}</div>
+            <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:10px;">${titles[lang]||titles.kr}</div>
             <div style="padding:12px 14px;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;color:#15803d;">
-                <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${bankName}</div>
-                <div style="font-size:18px;font-weight:900;letter-spacing:1px;font-family:monospace;">${acctNum}</div>
+                <div style="font-size:12px;font-weight:700;margin-bottom:4px;">국민은행</div>
+                <div style="font-size:18px;font-weight:900;letter-spacing:1px;font-family:monospace;">647701-04-277763</div>
             </div>
-            <div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:8px;">${tips[lang]||tips.en}</div>
+            <div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:8px;">${tips[lang]||tips.kr}</div>
         </div>
     `;
+    }
     chatArea.appendChild(row);
     scrollChat();
     saveChat();

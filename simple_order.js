@@ -22092,6 +22092,18 @@ html, body { background: #ffffff !important; }
             if (payMethod === 'bank') {
                 // 2026-05-17: 가맹점 주문이면 가맹점 계좌로 안내 (2026-09-29: 계좌 미로드 대비 보장 로드)
                 try { if (window._soEnsureFrBank) await window._soEnsureFrBank(); } catch (e) {}
+                // 2026-10-14(사장님): 해외(가맹점 없음)는 계좌 숨기고 안내문구만. 한국/해외가맹점(frBank)은 기존대로.
+                var _soCountry = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+                if (!_soCountry || _soCountry === 'KR') { var _soH = (location.hostname || '').toLowerCase(); if (_soH.indexOf('cafe0101') >= 0) _soCountry = 'JP'; else if (_soH.indexOf('cafe3355') >= 0) _soCountry = 'US'; }
+                var _noFrOverseas = (_soCountry !== 'KR') && !(state.frBank && state.frBank.number);
+                if (_noFrOverseas) {
+                    alert(
+                        tr('주문이 접수되었습니다!', 'ご注文を受け付けました！', 'Your order has been received!') + '\n\n' +
+                        tr('지금은 해당 지역에 가맹점이 없어 결제가 되지 않습니다. 해당 지역에 가맹점이 생기면 저렴한 가격에 멋진 제품을 빠르게 만들어 보내드리겠습니다.',
+                           '現在、お住まいの地域に加盟店がないため、お支払いいただけません。地域に加盟店ができましたら、お手頃な価格で素敵な製品を素早くお作りしてお届けします。',
+                           "Payment is currently unavailable as there is no partner in your region yet. Once a partner opens nearby, we'll quickly make and ship great products at an affordable price.")
+                    );
+                } else {
                 var _acct = (state.frBank && state.frBank.number)
                     ? ((state.frBank.name || '') + ' ' + state.frBank.number + '\n' +
                        tr('예금주', '口座名義', 'Account holder') + ': ' + (state.frBank.holder || ''))
@@ -22103,6 +22115,7 @@ html, body { background: #ffffff !important; }
                     _acct + '\n\n' +
                     tr('입금 후 영업일 내 제작이 시작됩니다.', 'ご入金後、営業日内に製作を開始します。', 'Production starts within business days of payment.')
                 );
+                }
                 // 카트 비우기 + shield 로 전환 가림 + 화면 이동
                 try { localStorage.setItem('chameleon_cart_current', '[]'); if (window._clearAllCart) window._clearAllCart(); } catch (e) {}
                 _showLoadingShield();
