@@ -1522,6 +1522,7 @@ window.loadVipOrders = async () => {
             return new Date(b.created_at) - new Date(a.created_at);
         });
         tbody.innerHTML = '';
+        const _ve = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         data.forEach(item => {
             const _isHqPend = _vipHqPending(item);
             const realFiles = item.files ? item.files.filter(f => f.type !== '_error_log') : [];
@@ -1560,13 +1561,28 @@ window.loadVipOrders = async () => {
                 ? `<span class="badge" style="background:${catColor};color:#fff;font-weight:800;padding:4px 10px;">🚀 ${qqCategory}</span>${countryBadge}`
                 : `<span style="color:#94a3b8;">-</span>`;
 
-            // 모든 VIP 행: 컴팩트 표시 + 상세보기 팝업 (QQ 여부 무관)
-            const lockLabel = lockMatch ? `🔒 ${lockedBy} 잠금` : (assignedManager ? '🔓 오픈' : '🆕 미지정');
             const statusBadge = st.includes('상담중:')
                 ? `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;white-space:nowrap;">💬 ${assignedManager} 상담중</span>`
                 : (st === '확인됨'
                     ? `<span class="badge" style="background:#dcfce7;color:#15803d;">✅ 완료</span>`
                     : `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`);
+
+            // 2026-10-14(사장님): 목록에 고객명·연락처·요청내용·파일 다운로드를 바로 노출(상세보기 버튼 제거). 잠금 건은 열람 전까지 가림.
+            const _nameCell = unlocked ? _ve(item.customer_name || '-') : '🔒';
+            const _phoneCell = unlocked ? _ve(item.customer_phone || '-') : '🔒';
+            let _memoCell;
+            if (!unlocked) {
+                _memoCell = `🔒 ${_ve(lockedBy || '')} 잠금 <button class="btn btn-sm" style="background:#475569;color:#fff;border:none;font-size:10px;padding:2px 6px;" onclick="unlockVip(${item.id})">열람</button>`;
+            } else {
+                const _mt = (cleanMemo || '').trim();
+                _memoCell = _mt
+                    ? `<span title="${_ve(_mt)}">${_ve(_mt.slice(0, 90))}${_mt.length > 90 ? '…' : ''}</span>`
+                    : '<span style="color:#64748b;">-</span>';
+            }
+            let _filesCell;
+            if (!unlocked) _filesCell = '🔒';
+            else if (realFiles.length) _filesCell = filesHtml + (realFiles.length > 1 ? `<button class="btn btn-sm" style="background:#0ea5e9;color:#fff;border:none;font-size:10px;margin:2px;padding:3px 8px;" onclick="downloadAllVipFiles(${item.id})">⬇ 전체</button>` : '');
+            else _filesCell = '<span style="color:#64748b;">파일 없음</span>';
 
             tbody.innerHTML += `
                 <tr style="background:${_isHqPend ? '#3b2f0a' : (st === '대기중' || st === 'quote' ? '#1e1b4b' : '#0f172a')};color:#e2e8f0;${_isHqPend ? 'box-shadow: inset 4px 0 0 #fbbf24;' : ''}">
@@ -1574,11 +1590,12 @@ window.loadVipOrders = async () => {
                     <td>${new Date(item.created_at).toLocaleString()}</td>
                     <td>${managerBadge}<div style="margin-top:5px;"><button class="btn btn-sm" style="background:#6366f1;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;" onclick="openVipAssignModal(${item.id})">담당 지정</button></div></td>
                     <td>${catBadgeCell}</td>
-                    <td colspan="4" style="padding:12px;color:#94a3b8;font-size:12px;">${lockLabel} · 내용은 상세보기에서 확인</td>
+                    <td style="font-size:12px;">${_nameCell}</td>
+                    <td style="font-size:12px;white-space:nowrap;">${_phoneCell}</td>
+                    <td style="font-size:12px;color:#cbd5e1;max-width:360px;line-height:1.5;">${_memoCell}</td>
+                    <td style="font-size:11px;">${_filesCell}</td>
                     <td style="text-align:center;">${statusBadge}</td>
-                    <td style="text-align:center;">
-                        <button class="btn btn-sm" style="background:#fbbf24;color:#78350f;border:none;font-size:11px;font-weight:700;" onclick="openVipDetail(${item.id})">📋 상세보기</button>
-                    </td>
+                    <td style="text-align:center;"></td>
                 </tr>`;
         });
     } catch (e) {
