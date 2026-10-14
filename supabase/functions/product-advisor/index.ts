@@ -926,7 +926,29 @@ serve(async (req) => {
         };
         const labels = dataLabels[clientLang] || dataLabels['us'];
 
-        // ★ chatbot_knowledge 테이블도 함께 로드 (관리자 학습 페이지에서 추가한 것)
+        // ★ chatbot_knowledge 테이블 로드 (관리자 학습 페이지에서 추가한 것)
+        const _langMap: Record<string,string> = { ko:'kr', kr:'kr', ja:'ja', jp:'ja', en:'us', us:'us' };
+        const _mapKn = (kn: any[]) => (kn || []).map((k: any) => ({
+            customer_message: (k.question || '') + (k.keywords ? ` (${k.keywords})` : ''),
+            admin_answer: k.answer || '',
+            category: k.category || 'general',
+            lang: _langMap[(k.language||'ko').toLowerCase()] || 'kr',
+            reviewed_at: null
+        })).filter((q: any) => q.customer_message.trim() && q.admin_answer.trim());
+        // 2026-10-15(사장님): ① 질문 키워드로 관련 학습 "직접 검색" — 총 학습 수와 무관하게 관련된 건 항상 포함(사실상 무제한 확장).
+        let matchedKn: any[] = [];
+        try {
+            const _kws = trimmedMsg.replace(/[^0-9A-Za-z가-힣ぁ-んァ-ヶ一-龯\s]/g, ' ').split(/\s+/).filter((w: string) => w.length >= 2).slice(0, 10);
+            if (_kws.length) {
+                const _or = _kws.map((k: string) => { const kk = k.replace(/[,()*%]/g, ''); return `question.ilike.*${kk}*,keywords.ilike.*${kk}*,answer.ilike.*${kk}*`; }).join(',');
+                const { data: mk } = await sb.from('chatbot_knowledge')
+                    .select('question,answer,category,language,keywords')
+                    .eq('is_active', true).neq('category', '_system_prompt').neq('category', '_managers')
+                    .or(_or).limit(60);
+                matchedKn = _mapKn(mk);
+            }
+        } catch (e) { console.warn('keyword knowledge match failed:', e); }
+        // ② 최신·고우선 학습 일반 로드 (넓은 맥락용)
         let knowledgeData: any[] = [];
         try {
             const { data: kn } = await sb.from('chatbot_knowledge')
@@ -934,20 +956,18 @@ serve(async (req) => {
                 .eq('is_active', true)
                 .neq('category', '_system_prompt').neq('category', '_managers')
                 .order('priority', { ascending: false })
-                .order('created_at', { ascending: false })   // 2026-10-15: 같은 priority면 최신 학습 우선(새 학습이 컷에서 밀리던 문제)
+                .order('created_at', { ascending: false })
                 .limit(300);
-            const _langMap: Record<string,string> = { ko:'kr', kr:'kr', ja:'ja', jp:'ja', en:'us', us:'us' };
-            knowledgeData = (kn || []).map((k: any) => ({
-                customer_message: (k.question || '') + (k.keywords ? ` (${k.keywords})` : ''),
-                admin_answer: k.answer || '',
-                category: k.category || 'general',
-                lang: _langMap[(k.language||'ko').toLowerCase()] || 'kr',
-                reviewed_at: null
-            })).filter((q: any) => q.customer_message.trim() && q.admin_answer.trim());
+            knowledgeData = _mapKn(kn);
         } catch (e) { console.warn('chatbot_knowledge load failed:', e); }
 
-        // Q&A 학습 데이터 구성 — 언어별 필터링 + kr 공통 포함
-        const allQaData = [...knowledgeData, ...(qaRes.data || [])];
+        // Q&A 구성 — 키워드 매칭(관련) 먼저 → 일반 → 리뷰 QA. customer_message 기준 dedupe (관련 학습이 항상 상위).
+        const _seenQa = new Set<string>();
+        const allQaData = [...matchedKn, ...knowledgeData, ...(qaRes.data || [])].filter((q: any) => {
+            const key = (q.customer_message || '').trim();
+            if (!key || _seenQa.has(key)) return false;
+            _seenQa.add(key); return true;
+        });
         // ★ "디자인 무료" 관련 QA 필터링 (모든 디자인 의뢰는 유료 → 디자인마켓)
         const _filteredQa = allQaData.filter((q: any) => {
             const a = (q.admin_answer || '');
