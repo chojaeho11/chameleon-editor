@@ -2015,6 +2015,23 @@ window.loadOrders = async () => {
             }
         } catch(e) { console.warn('[loadOrders] franchise map', e); }
 
+        // 2026-10-15(버그#62): 리셀러/가맹/골드 발주 주문에 등급 배지 — 본사가 식별·배정하도록 (franchise_slug 없는 메인사이트 발주 포함).
+        const _roleMap = {};
+        try {
+            const _uids = [...new Set(data.map(o => o.user_id).filter(Boolean))];
+            if (_uids.length) {
+                const { data: _pr } = await sb.from('profiles').select('id, role').in('id', _uids);
+                (_pr || []).forEach(p => { if (['reseller', 'franchise', 'gold'].indexOf(p.role) >= 0) _roleMap[p.id] = p.role; });
+            }
+        } catch(e) { console.warn('[loadOrders] role map', e); }
+        const _roleBadge = (uid, hasFrSlug) => {
+            const r = _roleMap[uid];
+            if (!r || hasFrSlug) return '';   // 가맹점(store) 주문은 이미 🏪 배지가 있으므로 중복 방지
+            const meta = { reseller: ['🚀 리셀러', '#6366f1'], franchise: ['🏭 가맹점', '#c2410c'], gold: ['🥇 골드가맹', '#d97706'] }[r];
+            if (!meta) return '';
+            return `<div style="margin-top:3px;background:${meta[1]};color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;line-height:1.3;" title="${meta[0]} 발주 — 담당 배정 확인">${meta[0]}</div>`;
+        };
+
         data.forEach(order => {
             const items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
             const total = order.total_amount || 0;
@@ -2198,7 +2215,7 @@ window.loadOrders = async () => {
             tbody.innerHTML += `
                 <tr>
                     <td style="text-align:center;"><input type="checkbox" class="row-chk" value="${order.id}"></td>
-                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site === 'STORE' ? '스토어' : site === 'GODO' ? '고도몰' : site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}${order.franchise_slug ? `<div style="margin-top:3px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;line-height:1.3;" title="가맹점 주문 · /store/${order.franchise_slug}">🏪 ${_frMap[order.franchise_slug] || order.franchise_slug}</div>` : ''}</td>
+                    <td style="text-align:center;"><span class="badge-site ${site.toLowerCase()}" style="cursor:pointer;" onclick="fixSiteCode('${order.id}')" title="클릭하여 변경">${site === 'STORE' ? '스토어' : site === 'GODO' ? '고도몰' : site}</span>${(pmLower.includes('stripe') && site === 'KR') ? '<div style="font-size:9px;color:#ef4444;">⚠️오류?</div>' : ''}${order.franchise_slug ? `<div style="margin-top:3px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;line-height:1.3;" title="가맹점 주문 · /store/${order.franchise_slug}">🏪 ${_frMap[order.franchise_slug] || order.franchise_slug}</div>` : ''}${_roleBadge(order.user_id, !!order.franchise_slug)}</td>
                     <td style="text-align:center; line-height:1.2;">
                         <span style="color:#334155;">${orderDate}</span>
                         ${deliveryHtml}
@@ -3655,9 +3672,11 @@ async function generateRecoveryOrderSheet(order, addonDB) {
 
         // ★ 옵션 표시 (버그#45: 다운로드 작업지시서에 아크릴 색상·부자재·키링 옵션 누락 → 웹 작업지시서와 동일하게 보강)
         let _optLines = [];
+        const _optSeenCodes = new Set();   // 2026-10-15(버그#60): selectedAddons+addons 중복 방지
         if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = addonDB[code]; if (!add) return;
+                if (code) _optSeenCodes.add(code);
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                 _optLines.push(`• ${add.name_kr || add.display_name || add.name || code} (x${qty})`);
             });
@@ -3669,7 +3688,12 @@ async function generateRecoveryOrderSheet(order, addonDB) {
         }
         // 마감/부자재/고리 (cotton-print·키링 등) — it.addons 배열 [{type,code,name}]
         if (Array.isArray(item.addons)) {
-            item.addons.forEach(a => { if (a && (a.name || a.code)) _optLines.push(`• ${a.name || a.code}`); });
+            item.addons.forEach(a => {
+                if (!a || !(a.name || a.code)) return;
+                if (a.code && _optSeenCodes.has(a.code)) return;   // selectedAddons 와 중복이면 skip
+                if (a.code) _optSeenCodes.add(a.code);
+                _optLines.push(`• ${a.name || a.code}`);
+            });
         }
         // 키링/코롯토 옵션 (모양·칼선 / 인쇄면 / 포장)
         if (item._presetType === 'keyring' || item._presetType === 'korotto') {

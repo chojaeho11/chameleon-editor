@@ -7,7 +7,7 @@
 //   고쳐도 "재발"(예: #35 스티커 용지 누락)처럼 보였다. → 자가치유 추가. 배포된 version.txt 와 아래 CV 가 다르면 새로고침.
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다(손대지 말 것).
 (function(){
-    var CV = '20261014121914';
+    var CV = '20261015004434';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -891,6 +891,15 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     if (a && (a.name || a.code)) addonsArr.push({ code: a.code, qty: 1, label: a.name });
                 });
             }
+            // 2026-10-15(버그#60): 같은 부자재가 selectedAddons + addons 양쪽에 들어와 작업지시서에 2번 표시되던 문제 — code(없으면 label) 기준 중복 제거.
+            (function(){
+                const _seenAd = new Set();
+                addonsArr = addonsArr.filter(a => {
+                    const k = a.code ? ('c:' + a.code) : ('l:' + ((a.label || '').trim()));
+                    if (_seenAd.has(k)) return false;
+                    _seenAd.add(k); return true;
+                });
+            })();
 
             // 패브릭 패턴 정보 (cotton-print) — pattern_spec
             let fabricHtml = '';

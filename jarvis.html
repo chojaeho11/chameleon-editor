@@ -224,6 +224,7 @@
     <!-- 라이브 패널 -->
     <div id="livePanel">
         <div class="mgr-filter-bar" id="roomFilterBar"><span class="mflabel">매니저별 보기</span></div>
+        <div style="margin:8px 0 10px;"><input id="roomSearch" type="text" placeholder="🔎 고객 이름 또는 전화번호로 검색" oninput="_onRoomSearch(this.value)" style="width:100%;max-width:340px;padding:8px 12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#e2e8f0;font-size:13px;box-sizing:border-box;"></div>
         <div id="roomList"><div class="empty" style="color:#64748b; font-weight:600;">불러오는 중...</div></div>
         <div class="room-pager" id="roomPager"></div>
     </div>
@@ -280,6 +281,8 @@
         let _reloadRoomsTimer = null;
         let _staffList = [];          // admin_staff (id,name,role) — 담당 매니저 id 매칭용
         let _roomFilter = '';         // 담당 매니저 필터 ('' = 전체, '__none__' = 미지정)
+        let _roomSearch = '';         // 2026-10-15(버그#63): 고객 이름/전화 검색어
+        let _roomSearchTimer = null;
         let _roomPage = 0;            // 방 목록 페이지 (0-based)
         const ROOMS_PER_PAGE = 12;    // 바둑판 4칸 × 3줄
 
@@ -383,6 +386,15 @@
                 let _view = _roomsCache;
                 if(_roomFilter==='__none__') _view = _roomsCache.filter(r=>!((r.assigned_manager||'').trim()));
                 else if(_roomFilter) _view = _roomsCache.filter(r=>{ const am=(r.assigned_manager||'').trim(); return !!am && (am===_roomFilter || am.includes(_roomFilter) || _roomFilter.includes(am)); });
+                // 2026-10-15(버그#63): 고객 이름/전화 검색
+                if(_roomSearch){
+                    const _sd = _roomSearch.replace(/[^0-9]/g,'');
+                    _view = _view.filter(r=>{
+                        const nm = String(r.customer_name||r.nickname||'').toLowerCase();
+                        const ph = String(r.customer_phone||'').replace(/[^0-9]/g,'');
+                        return nm.indexOf(_roomSearch) >= 0 || (_sd && ph.indexOf(_sd) >= 0);
+                    });
+                }
                 document.getElementById('liveCount').textContent = _view.length ? '('+_view.length+(_roomFilter?' / '+_roomsCache.length:'')+')' : '';
                 buildRoomFilter();
                 if(!_view.length){ el.innerHTML='<div class="empty" style="color:#64748b; font-weight:600;">'+(_roomFilter?'이 담당의 채팅방이 없습니다.':'아직 대화가 없습니다.')+'</div>'; renderRoomPager(0); return; }
@@ -424,6 +436,8 @@
             }catch(e){ console.error('[rooms]',e); el.innerHTML='<div style="text-align:center;color:#fca5a5;padding:40px 0;">불러오기 실패: '+esc(e?.message||e)+'</div>'; }
         };
         function scheduleRoomsReload(){ clearTimeout(_reloadRoomsTimer); _reloadRoomsTimer=setTimeout(loadRooms, 600); }
+        // 2026-10-15(버그#63): 고객 이름/전화 검색 (디바운스)
+        window._onRoomSearch = function(v){ clearTimeout(_roomSearchTimer); _roomSearchTimer=setTimeout(function(){ _roomSearch=(v||'').trim().toLowerCase(); _roomPage=0; loadRooms(); }, 300); };
 
         // 채팅방별 담당자 드롭다운 (클릭하면 아래로 펼쳐짐)
         //   2026-10-07(사장님): 실제 매니저 + '본사 지정'만 (로그인 계정 이메일 이름 제외)
