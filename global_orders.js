@@ -1497,7 +1497,7 @@ window.loadVipOrders = async () => {
 
     try {
         const { data, error } = await sb.from('vip_orders')
-            .select('id, created_at, status, customer_name, customer_phone, memo, files, preferred_manager')
+            .select('id, created_at, status, customer_name, customer_phone, email, memo, files, preferred_manager')
             .order('created_at', { ascending: false })
             .limit(50);
 
@@ -1571,7 +1571,11 @@ window.loadVipOrders = async () => {
 
             // 2026-10-14(사장님): 목록에 고객명·연락처·요청내용·파일 다운로드를 바로 노출(상세보기 버튼 제거). 잠금 건은 열람 전까지 가림.
             const _nameCell = unlocked ? _ve(item.customer_name || '-') : '🔒';
-            const _phoneCell = unlocked ? _ve(item.customer_phone || '-') : '🔒';
+            // 2026-10-16(#66): 이메일(선택 수집)도 연락처 칸에 함께 표시 — 상담 링크를 이메일로 보내기 쉽게.
+            const _emailLine = (unlocked && item.email)
+                ? `<div style="font-size:11px;color:#93c5fd;margin-top:3px;"><a href="mailto:${_ve(item.email)}" style="color:#93c5fd;">${_ve(item.email)}</a></div>`
+                : '';
+            const _phoneCell = unlocked ? (_ve(item.customer_phone || '-') + _emailLine) : '🔒';
             let _memoCell;
             if (!unlocked) {
                 _memoCell = `🔒 ${_ve(lockedBy || '')} 잠금 <button class="btn btn-sm" style="background:#475569;color:#fff;border:none;font-size:10px;padding:2px 6px;" onclick="unlockVip(${item.id})">열람</button>`;
@@ -1788,6 +1792,7 @@ window.openVipDetail = async (id) => {
                 <div style="color:#94a3b8;">담당</div><div>${item.preferred_manager || lockedBy || '<span style=color:#94a3b8>미지정</span>'}</div>
                 <div style="color:#94a3b8;">고객명</div><div style="font-weight:700;color:#fbbf24;">${item.customer_name || '-'}</div>
                 <div style="color:#94a3b8;">연락처</div><div style="font-weight:700;">${item.customer_phone || '-'}</div>
+                ${item.email ? `<div style="color:#94a3b8;">이메일</div><div style="font-weight:700;"><a href="mailto:${item.email}" style="color:#93c5fd;">${item.email}</a></div>` : ''}
                 <div style="color:#94a3b8;">요청내용</div>
                 <div style="white-space:pre-wrap;background:#1e1b4b;padding:10px;border-radius:8px;">${(memo||'-').replace(/</g,'&lt;')}</div>
                 <div style="color:#94a3b8;">첨부파일</div><div>${filesHtml}</div>

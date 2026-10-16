@@ -1222,6 +1222,10 @@ function buildPanelUI() {
     });
 }
 
+// 2026-10-16(#66): VIP 문의에 이메일(선택) 수집 — 관리자가 상담 링크 보내기 수월하도록.
+function _qqEmailLbl() {
+    try { var l = (typeof getLang === 'function' ? getLang() : 'kr'); return ({ kr: '이메일 (선택)', ja: 'メール (任意)', en: 'Email (optional)', zh: '邮箱 (选填)', es: 'Correo (opcional)', de: 'E-Mail (optional)', fr: 'E-mail (facultatif)', ar: 'البريد (اختياري)' })[l] || 'Email (optional)'; } catch (e) { return 'Email (optional)'; }
+}
 const QQ_I18N = {
     kr: { title:'빠른견적서', desc:'아래 항목을 입력하시면 담당 매니저가 빠르게 견적을 보내드립니다.', name:'성함', phone:'연락처', budget:'예산금액', memo:'요청사항', memoPh:'수량/사이즈/납품일/용도 등 자세히', files:'파일 업로드', submit:'견적 요청 보내기', sending:'⏳ 전송 중...', connErr:'연결 오류. 새로고침 후 다시 시도해주세요.', upErr:'파일 업로드 실패: ', sendErr:'전송 실패: ', success:'✅ {cat} 견적 요청이 접수되었습니다. 담당 매니저가 곧 연락드립니다.', b1:'10만원', b2:'100만원', b3:'500만원', b4:'1000만원', catHoneycomb:'허니콤', catPaper:'종이매대', catFabric:'패브릭' },
     ja: { title:'クイック見積', desc:'以下の項目を入力いただくと、担当マネージャーが迅速にお見積りをお送りします。', name:'お名前', phone:'電話番号', budget:'ご予算', memo:'ご要望', memoPh:'数量/サイズ/納期/用途など詳しく', files:'ファイルアップロード', submit:'見積りを依頼する', sending:'⏳ 送信中...', connErr:'接続エラー。再読み込みしてください。', upErr:'ファイルアップロード失敗: ', sendErr:'送信失敗: ', success:'✅ {cat} の見積依頼を受付ました。担当者が連絡いたします。', b1:'10万円', b2:'100万円', b3:'500万円', b4:'1000万円', catHoneycomb:'ハニカム', catPaper:'紙製什器', catFabric:'ファブリック' },
@@ -1261,6 +1265,7 @@ function openQQSurvey(cat) {
                 <input type="hidden" id="qqCategory" name="category" value="">
                 <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.name} *</label><input type="text" name="name" required style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
                 <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.phone} *</label><input type="tel" name="phone" required placeholder="+82 10 1234 5678" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
+                <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${_qqEmailLbl()}</label><input type="email" name="email" placeholder="example@email.com" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;"></div>
                 <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:700;color:#334155;">${T.budget}</label>
                     <input type="hidden" name="budget" id="qqBudgetValue" value="">
                     <div id="qqBudgetBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;">
@@ -1317,6 +1322,7 @@ function openQQSurvey(cat) {
         const c = fd.get('category');
         const name = (fd.get('name')||'').trim();
         const phone = (fd.get('phone')||'').trim();
+        const email = (fd.get('email')||'').trim();
         const budget = (fd.get('budget')||'').trim();
         const memo = (fd.get('memo')||'').trim();
         const fileInput = form.querySelector('input[name=files]');
@@ -1352,7 +1358,7 @@ function openQQSurvey(cat) {
                     uploaded.push({ name: f.name, url: pub.publicUrl });
                 }
             }
-            const payload = { customer_name: name, customer_phone: phone, memo: body, files: uploaded, status: autoManager ? ('상담중: ' + autoManager) : '대기중' };
+            const payload = { customer_name: name, customer_phone: phone, email: email || null, memo: (email ? ('Email: ' + email + '\n') : '') + body, files: uploaded, status: autoManager ? ('상담중: ' + autoManager) : '대기중' };
             if (autoManager) payload.preferred_manager = autoManager;
             const { error } = await sb.from('vip_orders').insert(payload);
             if (error) { alert(T.sendErr + error.message); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
@@ -2280,6 +2286,7 @@ function startCallbackFlow() {
             <div style="display:flex; flex-direction:column; gap:6px;">
                 <input id="advCallbackPhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
                 <input id="advCallbackName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
+                <input id="advCallbackEmail" type="email" placeholder="${_qqEmailLbl()}" style="width:100%; padding:10px 14px; border:1.5px solid #7dd3fc; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; text-align:center;">
                 <button id="advCallbackSubmit" style="background:#0284c7; color:#fff; border:none; padding:12px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; width:100%;">${t('callbackSubmit')}</button>
             </div>
         </div>
@@ -2292,6 +2299,7 @@ function startCallbackFlow() {
     document.getElementById('advCallbackSubmit').addEventListener('click', async () => {
         const phone = document.getElementById('advCallbackPhone').value.trim();
         const name = document.getElementById('advCallbackName').value.trim();
+        const email = (document.getElementById('advCallbackEmail') || {}).value ? document.getElementById('advCallbackEmail').value.trim() : '';
         if (!phone) {
             document.getElementById('advCallbackPhone').style.borderColor = '#ef4444';
             document.getElementById('advCallbackPhone').placeholder = t('callbackPhoneErr');
@@ -2314,6 +2322,7 @@ function startCallbackFlow() {
                 await sb.from('callback_requests').insert({
                     phone: phone,
                     name: name || '',
+                    email: email || null,
                     summary: summary,
                     site_lang: getLang(),
                     status: 'pending',
@@ -2358,6 +2367,7 @@ function startQuoteFlow() {
             <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
                 <input id="advQuoteName" type="text" placeholder="${t('namePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; transition:border-color 0.15s;">
                 <input id="advQuotePhone" type="tel" placeholder="${t('callbackPhonePh')}" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; transition:border-color 0.15s;">
+                <input id="advQuoteEmail" type="email" placeholder="${_qqEmailLbl()}" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; transition:border-color 0.15s;">
                 <textarea id="advQuoteMemo" placeholder="${memoPh}" rows="3" style="width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; background:#fff; resize:vertical; min-height:72px;"></textarea>
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:#475569; background:#fff; border:1.5px dashed #cbd5e1; border-radius:10px; padding:12px 14px; box-sizing:border-box; width:100%;">
                     <i class="fa-solid fa-paperclip" style="color:#0ea5e9;"></i>
@@ -2376,6 +2386,7 @@ function startQuoteFlow() {
     document.getElementById('advQuoteSubmit').addEventListener('click', async () => {
         const name = (document.getElementById('advQuoteName').value || '').trim();
         const phone = (document.getElementById('advQuotePhone').value || '').trim();
+        const email = ((document.getElementById('advQuoteEmail') || {}).value || '').trim();
         const memo = (document.getElementById('advQuoteMemo').value || '').trim();
         const fileInput = document.getElementById('advQuoteFiles');
         const files = fileInput ? fileInput.files : [];
@@ -2424,8 +2435,9 @@ function startQuoteFlow() {
                 await sb.from('vip_orders').insert({
                     customer_name: name || 'Chat Quote',
                     customer_phone: phone,
+                    email: email || null,
                     preferred_manager: 'Quote-' + countryTag,
-                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\n고객: ${name}\nPhone: ${phone}\n\n${memo ? '요청사항: ' + memo + '\n\n' : ''}${chatSummary}`,
+                    memo: `[CHATBOT QUOTE REQUEST from ${window.location.hostname}]\n고객: ${name}\nPhone: ${phone}${email ? '\nEmail: ' + email : ''}\n\n${memo ? '요청사항: ' + memo + '\n\n' : ''}${chatSummary}`,
                     files: uploadedFiles,
                     status: 'quote'
                 });
