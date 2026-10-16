@@ -585,14 +585,33 @@
     if (f.size > MAX_FILE) { try { alert(tr('파일은 최대 100MB까지 올릴 수 있어요.', 'ファイルは最大100MBまでです。', 'Max file size is 100MB.')); } catch (e) {} return; }
     var isImg = /^image\//.test(f.type || '');
     if (isImg && f.type !== 'image/gif' && f.size <= 8 * 1024 * 1024) {
-      // 정지 이미지(≤8MB) → 카푸가 보고 제품 안내 (기존 경로, 서버가 이미지 저장함)
-      readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }); });
+      // 정지 이미지(≤8MB) → 카푸가 보고 제품 안내(AI 비전) + chat-files 에 직접 저장(매니저 열람, 2026-10-16 서버 flaky 저장 대체)
+      readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }).then(function () { _persistImageToChat(f); }); });
       return;
     }
     // 2026-10-15(사장님): PDF(디자인/설계도/행사장 구조도) ≤8MB → storage 기록 + 카푸가 직접 분석(크기·해상도·구조 검토)
     var isPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name || '');
     if (isPdf && f.size <= 8 * 1024 * 1024) { _uploadFileToChat(f, true); return; }
     _uploadFileToChat(f);
+  }
+  // 2026-10-16: 고객 이미지를 chat-files 에 직접 저장 + chat_messages insert (UI 없음, 매니저 jarvis 열람용).
+  //   서버(product-advisor) 백그라운드 저장이 isolate 종료로 간헐 실패하던 것을 클라이언트 저장으로 대체. send() 성공(_room 확정) 후 호출.
+  async function _persistImageToChat(f) {
+    try {
+      var sb = window.sb; if (!sb || !sb.storage || !f) return;
+      if (!_room) {
+        try { var ins = await sb.from('chat_rooms').insert({ customer_name: _custName || '웹 고객', customer_phone: _custPhone || null, status: 'ai_chatting', source: 'chatbot', site_lang: _lang, assigned_manager: '' }).select('id').single(); if (ins && ins.data) { _room = ins.data.id; try { localStorage.setItem('kapu_room_id', _room); } catch (e) {} _subscribeRoom(); } } catch (e) {}
+      }
+      if (!_room) return;
+      var safeName = (f.name || 'image').replace(/[\/\\?%*:|"<>\u0000-\u001f]+/g, '_').replace(/\s+/g, '_').slice(0, 120) || 'image';
+      var path = 'room-' + _room + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '/' + safeName;
+      var upRes = await sb.storage.from('chat-files').upload(path, f, { upsert: true, contentType: f.type || undefined });
+      if (upRes && upRes.error) return;
+      var url = ((sb.storage.from('chat-files').getPublicUrl(path) || {}).data || {}).publicUrl || '';
+      if (!url) return;
+      await sb.from('chat_messages').insert({ room_id: _room, sender_type: 'customer', sender_name: _custName || '고객', message: '', file_url: url, file_name: f.name || 'image', file_type: f.type || '', created_at: new Date().toISOString() });
+      try { await sb.from('chat_rooms').update({ updated_at: new Date().toISOString() }).eq('id', _room); } catch (e) {}
+    } catch (e) {}
   }
   async function _uploadFileToChat(f, analyze) {
     var sb = window.sb;

@@ -1222,7 +1222,29 @@ ALWAYS match customer's terminology to the correct product category and show rel
         } catch (e) { console.warn('[order-lookup] failed:', (e as any)?.message || e); }
 
         // ★ Q&A 학습 섹션을 시스템 프롬프트 최상단에 배치 (AI가 가장 우선 참고하도록)
-        const systemPrompt = `${orderContext ? orderContext + '\n\n' : ''}${qaSection ? qaSection + '\n\n' : ''}${selectedPrompt || langPrompts['kr']}
+        // ★ 현재 날짜 주입 (한국시간) — AI가 "오늘 며칠?"을 고객에게 되묻지 않도록. Deno는 UTC → +9h 로 KST 변환.
+        const _kstNow = new Date(Date.now() + 9 * 3600 * 1000);
+        const _ky = _kstNow.getUTCFullYear(), _km = _kstNow.getUTCMonth() + 1, _kd = _kstNow.getUTCDate();
+        const _kwK = ['일', '월', '화', '수', '목', '금', '토'][_kstNow.getUTCDay()];
+        const _kwE = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][_kstNow.getUTCDay()];
+        const _kwJ = ['日', '月', '火', '水', '木', '金', '土'][_kstNow.getUTCDay()];
+        // 4거래일(주말 제외) 후 최단 완성일을 코드로 계산해 AI에 넘김 — LLM 날짜산술 오류 방지.
+        const _addBizDays = (base: Date, n: number): Date => {
+            const d = new Date(base.getTime()); let added = 0;
+            while (added < n) { d.setUTCDate(d.getUTCDate() + 1); const wd = d.getUTCDay(); if (wd !== 0 && wd !== 6) added++; }
+            return d;
+        };
+        const _earliest = _addBizDays(_kstNow, 4);
+        const _rush = _addBizDays(_kstNow, 3); // 긴급비용 10만원 시 하루 단축
+        const _fmtK = (d: Date) => `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일(${['일', '월', '화', '수', '목', '금', '토'][d.getUTCDay()]})`;
+        const _fmtE = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+        const _dateHeaders: Record<string, string> = {
+            kr: `## 📅 오늘 날짜 (한국 시간): ${_ky}년 ${_km}월 ${_kd}일 (${_kwK}요일)\n고객이 "18일" "며칠 뒤" "다음주 금요일" 처럼 날짜를 말하면 이 오늘 날짜를 기준으로 **네가 직접 계산**해 (절대 고객에게 "오늘 며칠이에요?"라고 되묻지 마).\n- **긴급비용 없이 가능한 가장 빠른 완성일 = ${_fmtK(_earliest)}** (제작 최소 4거래일, 주말 제외 기준).\n- **긴급비용 10만원 쓰면 = ${_fmtK(_rush)}** 까지 당길 수 있음.\n→ 고객 요청일이 **${_fmtK(_earliest)} 이후(같거나 더 늦음)면 "기본 일정으로 충분"**, 그보다 빠르면 "긴급비용 필요" 또는 "그 날짜는 어려워요"로 솔직히 안내해. (토·일은 거래일 아님. 공휴일 끼면 하루씩 더 밀릴 수 있다고 덧붙여.) 절대 안 되는 날짜를 "충분해요"라고 하지 마.`,
+            ja: `## 📅 本日の日付 (韓国時間): ${_ky}年${_km}月${_kd}日 (${_kwJ}曜日)\nお客様が「18日」「何日後」「来週金曜」などと言ったら、この本日の日付を基準に**自分で計算**（「今日は何日ですか？」と聞き返さない）。\n- **特急料金なしで可能な最短完成日 = ${_fmtK(_earliest)}**（最短4営業日・土日除く）。\n- **特急料金10万ウォンで = ${_fmtK(_rush)}** まで短縮可能。\n→ ご希望日が${_fmtK(_earliest)}以降なら「通常日程で十分」、それより早ければ「特急料金が必要」または「その日は難しい」と正直に案内。土日は営業日に含めない。`,
+            us: `## 📅 Today's date (Korea time): ${_fmtE(_kstNow)} (${_kwE})\nWhen the customer gives a date ("the 18th", "in a few days", "next Friday"), compute it yourself from this date (never ask what today's date is).\n- **Earliest completion with NO rush fee = ${_fmtE(_earliest)}** (min 4 business days, excl. weekends).\n- **With 100,000 KRW rush fee = ${_fmtE(_rush)}**.\n→ If the requested date is on/after ${_fmtE(_earliest)}, say "the standard schedule is fine"; if earlier, say a rush fee is needed or that the date isn't feasible. Don't promise an impossible date.`,
+        };
+        const _dateHeader = _dateHeaders[clientLang] || _dateHeaders['kr'];
+        const systemPrompt = `${_dateHeader}\n\n${orderContext ? orderContext + '\n\n' : ''}${qaSection ? qaSection + '\n\n' : ''}${selectedPrompt || langPrompts['kr']}
 ${labels.note}
 ## ${labels.products}
 (c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²,w=width_mm,h=height_mm,d=description)
@@ -2274,7 +2296,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         const _needsLearning = /상담사|상담원|매니저|담당자|consultant|agent|担当|接続|스태프|contact you|team will|our team|callback|コールバック|请联系|contactar|kontaktieren|contacter/.test(_resultMsg)
             || /확인.*후.*답변|정확.*안내|도와드리|お手伝い|help you|get back to you|will assist|연락.*드리/.test(_resultMsg);
 
-        (async () => {
+        const _bgTask = (async () => {
             try {
                 // 1) Q&A 로그
                 await sb.from("advisor_qa_log").insert({
@@ -2289,31 +2311,13 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 // 2) chat_messages (개별 insert — realtime 트리거)
                 if (_roomId) {
                     const now = new Date();
-                    // 고객 이미지 → Storage 업로드
-                    let _custFileUrl = '';
-                    let _custFileName = '';
-                    if (_hasImage && image) {
-                        try {
-                            const ext = (image_type || 'image/jpeg').split('/')[1] || 'jpg';
-                            const path = `chat_images/${_roomId}_${Date.now()}.${ext}`;
-                            const imgBuf = Uint8Array.from(atob(image), c => c.charCodeAt(0));
-                            const { error: upErr } = await sb.storage.from('orders').upload(path, imgBuf, { contentType: image_type || 'image/jpeg' });
-                            if (!upErr) {
-                                const { data: urlData } = sb.storage.from('orders').getPublicUrl(path);
-                                _custFileUrl = urlData?.publicUrl || '';
-                                _custFileName = `image.${ext}`;
-                            }
-                        } catch(ue) { console.error('Image upload error:', ue); }
-                    }
-                    // 고객 메시지
+                    // 2026-10-16: 고객 이미지 Storage 저장은 클라이언트(그리터/advisor-panel)가 chat-files 버킷에 직접 수행.
+                    //   서버 백그라운드 업로드는 응답 후 isolate 종료로 간헐 실패(파일 안 보임)해서 제거 — 서버는 텍스트 메시지만 기록.
+                    //   (이미지 자체는 클라이언트가 별도 customer 메시지로 file_url 과 함께 insert → 매니저가 안정적으로 열람)
                     const custMsgData: any = {
                         room_id: _roomId, sender_type: 'customer', sender_name: custName,
-                        message: _trimmedMsg || '(이미지)', created_at: new Date(now.getTime() - 1000).toISOString(),
+                        message: _trimmedMsg || (_hasImage ? '(이미지)' : ''), created_at: new Date(now.getTime() - 1000).toISOString(),
                     };
-                    if (_custFileUrl) {
-                        custMsgData.file_url = _custFileUrl;
-                        custMsgData.file_name = _custFileName;
-                    }
                     await sb.from('chat_messages').insert(custMsgData);
                     // AI 텍스트 응답 + 제품 카드 데이터
                     let botMsg = _resultMsg;
@@ -2329,6 +2333,9 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
                 }
             } catch (e: any) { console.error("Async log error:", e.message); }
         })();
+        // ★ 2026-10-16: 응답 반환 후 isolate 종료로 이미지 업로드가 간헐적으로 잘려 매니저가 고객 사진을 못 보던 버그 →
+        //   EdgeRuntime.waitUntil 로 백그라운드 저장(이미지 storage + chat_messages insert)이 끝날 때까지 isolate 유지.
+        try { (globalThis as any).EdgeRuntime?.waitUntil?.(_bgTask); } catch (_wu) { /* 런타임 미지원 시 기존 fire-and-forget */ }
 
         // room_id를 응답에 포함
         if (roomId) result.room_id = roomId;
