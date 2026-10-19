@@ -11,7 +11,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20261019134430';
+    var CV = '20261019135120';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1510,10 +1510,16 @@ async function submitRollFabricRequest() {
     </div>
 </div>
 
+<!-- 2026-10-19(사장님): 원단 주문하기 배너 그라데이션 애니메이션(움직임). -->
+<style>
+@keyframes cpGradShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+#ctaOrderFabric { background-size:200% 200% !important; animation: cpGradShift 7s ease infinite; }
+@media (prefers-reduced-motion: reduce) { #ctaOrderFabric { animation: none; } }
+</style>
 <!-- 2026-05-22: CTA — 디자이너 진입은 한 장으로 통합 (둘 다 같은 디자이너로 진입). 패브릭포스터만 유지. -->
 <section style="max-width:1100px; margin:48px auto 0; padding:0 24px; display:flex; flex-direction:column; gap:16px;">
     <!-- 패브릭 포스터 / 내원단 만들기 (통합 진입) -->
-    <a id="ctaOrderFabric" href="/cotton-designer?mode=poster" style="display:block; background:linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #a855f7 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:#fff; position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(124,58,237,0.35);">
+    <a id="ctaOrderFabric" href="/cotton-designer?mode=poster" style="display:block; background:linear-gradient(135deg, #6d28d9 0%, #7c3aed 35%, #a855f7 65%, #6d28d9 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:#fff; position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(124,58,237,0.35);">
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
                 <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px; color:#fff;" data-i18n="cta_poster_title">
@@ -1532,16 +1538,14 @@ async function submitRollFabricRequest() {
     <!-- 2026-10-19(사장님): 도매 전용 최소 구매금액 안내 (무료샘플 제외 10만원). 플랫/무아이콘/무그림자 — 강조는 색·크기로. -->
     <div data-i18n="notice_min_order" style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:14px; padding:15px 22px; color:#6d28d9; font-size:14px; line-height:1.65;">도매 전용 인쇄몰입니다. 무료샘플 상품을 제외한 모든 패브릭 제품의 최소 주문금액은 10만원입니다.</div>
 
-    <!-- 2026-08-15: 총 39만원 무료포인트 이벤트 (리워드 허브). 기존 회원가입이벤트 배너는 여기로 통합 삭제. -->
+    <!-- 2026-08-15: 총 39만원 무료포인트 이벤트 (리워드 허브). 2026-10-19(사장님): 도매전용 안내처럼 슬림하게 축소(플랫/무그림자). -->
     <button type="button" id="ctaRewardHub" onclick="window.openRewardHub && window.openRewardHub()"
-        style="display:block; width:100%; margin-top:16px; background:linear-gradient(135deg,#d97706 0%,#f59e0b 50%,#fbbf24 100%); border:none; border-radius:20px; padding:32px; cursor:pointer; color:#fff; text-align:left; box-shadow:0 12px 32px rgba(217,119,6,0.30); font-family:inherit;">
-        <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
-            <div>
-                <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px; color:#fff;" data-i18n="cta_reward_title">🎁 총 39만원 무료포인트 이벤트</h2>
-                <p style="margin:8px 0 0; font-size:12.5px; color:#fff7ed; line-height:1.6;" data-i18n="cta_reward_sub">회원가입 1만 · 이번주접속 1만 · SNS체험단 5만/월 · 출석 2천/일 · 끝말잇기 1천/일 · 첫구매 캐시백 최대 20만 · 친구추천 각 3만</p>
-            </div>
-            <div style="background:#fff; color:#d97706; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(0,0,0,0.18); white-space:nowrap;" data-i18n="cta_reward_btn">참여하기</div>
+        style="display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%; background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:14px 22px; cursor:pointer; color:#9a3412; text-align:left; font-family:inherit;">
+        <div style="min-width:0;">
+            <span style="font-size:14px; color:#c2410c;" data-i18n="cta_reward_title">🎁 총 39만원 무료포인트 이벤트</span>
+            <span style="display:block; font-size:12px; color:#b45309; line-height:1.55; margin-top:3px;" data-i18n="cta_reward_sub">회원가입 1만 · 이번주접속 1만 · SNS체험단 5만/월 · 출석 2천/일 · 끝말잇기 1천/일 · 첫구매 캐시백 최대 20만 · 친구추천 각 3만</span>
         </div>
+        <span style="font-size:13px; color:#c2410c; white-space:nowrap;"><span data-i18n="cta_reward_btn">참여하기</span> &rsaquo;</span>
     </button>
 
     <!-- 2026-06-11: 4-card adv 섹션 삭제 — 동일 콘텐츠가 hero 캐러셀 슬라이드 4 장으로 이전됨 -->
