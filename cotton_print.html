@@ -11,7 +11,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20261016143209';
+    var CV = '20261019133721';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1528,6 +1528,9 @@ async function submitRollFabricRequest() {
             </div>
         </div>
     </a>
+
+    <!-- 2026-10-19(사장님): 도매 전용 최소 구매금액 안내 (무료샘플 제외 10만원). 플랫/무아이콘/무그림자 — 강조는 색·크기로. -->
+    <div data-i18n="notice_min_order" style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:14px; padding:15px 22px; color:#6d28d9; font-size:14px; line-height:1.65;">도매 전용 인쇄몰입니다. 무료샘플 상품을 제외한 모든 패브릭 제품의 최소 주문금액은 10만원입니다.</div>
 
     <!-- 2026-08-15: 총 39만원 무료포인트 이벤트 (리워드 허브). 기존 회원가입이벤트 배너는 여기로 통합 삭제. -->
     <button type="button" id="ctaRewardHub" onclick="window.openRewardHub && window.openRewardHub()"
@@ -4565,6 +4568,16 @@ cta_poster_title: {
     fr:'Commander le tissu'
 },
 cta_poster_btn: { ko:'내원단 만들기', ja:'オリジナル生地を作る', en:'Make my fabric', zh:'制作我的面料', ar:'اصنع قماشي', es:'Crear mi tela', de:'Meinen Stoff erstellen', fr:'Créer mon tissu' },
+notice_min_order: {
+    ko:'도매 전용 인쇄몰입니다. 무료샘플 상품을 제외한 모든 패브릭 제품의 최소 주문금액은 10만원입니다.',
+    ja:'卸売専用の印刷モールです。無料サンプルを除くすべてのファブリック製品の最低注文金額は ₩100,000 です。',
+    en:'Wholesale-only print mall. The minimum order for all fabric products (excluding free samples) is ₩100,000.',
+    zh:'批发专用印刷商城。除免费样品外，所有面料产品的最低订购金额为 ₩100,000。',
+    ar:'متجر طباعة للجملة فقط. الحد الأدنى للطلب لجميع منتجات الأقمشة (باستثناء العينات المجانية) هو ₩100,000.',
+    es:'Tienda de impresión solo para mayoristas. El pedido mínimo de todos los productos de tela (excepto muestras gratuitas) es ₩100,000.',
+    de:'Druck-Shop nur für den Großhandel. Die Mindestbestellung für alle Stoffprodukte (außer Gratismustern) beträgt ₩100,000.',
+    fr:'Boutique d\'impression réservée aux grossistes. La commande minimale pour tous les produits en tissu (hors échantillons gratuits) est de ₩100,000.'
+},
 cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en:'Print as single sheet', zh:'单张原样打印', ar:'طباعة كصفحة واحدة', es:'Imprimir como hoja única', de:'Als Einzelblatt drucken', fr:'Imprimer en feuille unique' },
 // 2026-06-29: 회원가입이벤트 CTA
 cta_event_title: { ko:'회원가입이벤트', ja:'会員登録イベント', en:'Signup Event', zh:'注册活动', ar:'حدث التسجيل', es:'Evento de registro', de:'Anmelde-Event', fr:'Événement d\'inscription' },
