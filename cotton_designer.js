@@ -2475,8 +2475,22 @@ function _cpMainCartUrl(mode) {
     return '/?' + q;
 }
 
-// 2026-05-13: 최소주문금액 제도 폐지 — 사용자 결정 (KR/JP/EN 모두 제한 없음)
-function checkMinOrderAmount(_total_krw) {
+// 2026-10-19(사장님): 패브릭 도매 전용 — 최소 주문금액 100,000원 강제 (무료샘플/스와치 제외).
+//   total_krw = 패브릭 상품 합계(it.price 합, 배송비 제외). 스와치(price 0)만 담으면 합계 0 → 면제.
+//   (2026-05-13 폐지했다가 재도입. cafe 도메인은 simple_order 게이트가 별도로도 강제: _soIsFabricOrderItem)
+function checkMinOrderAmount(total_krw) {
+    var t = Number(total_krw) || 0;
+    if (t <= 0) return true;   // 무료 원단 스와치(샘플)만 — 최소금액 면제
+    if (t < 100000) {
+        var lang = window.__CD_LANG || 'ko';
+        var msg = lang === 'ja'
+            ? '卸売専用の印刷モールです。無料サンプルを除くすべてのファブリック製品の最低注文金額は ₩100,000 です。'
+            : lang === 'en'
+            ? 'Wholesale-only print mall. The minimum order for all fabric products (excluding free samples) is ₩100,000.'
+            : '도매 전용 인쇄몰입니다. 무료샘플 상품을 제외한 모든 패브릭 제품의 최소 주문금액은 10만원입니다.';
+        try { alert(msg); } catch (e) {}
+        return false;
+    }
     return true;
 }
 

@@ -19052,9 +19052,12 @@ html, body { background: #ffffff !important; }
                 // 2026-06-17: 매니저 금액주문 (manager_quote) 가 카트에 있으면 최소금액 면제.
                 var _hasMgrQuoteInCart = allItems.some(_soIsManagerQuoteItem);
                 var _hasHcInCart2 = allItems.some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
-                // 2026-06-25: 허니콤보드만 최소금액(100K) 유지, 그 외 전 제품 최소금액 폐지 (0)
-                var _minKrw = _hasHcInCart2 ? 100000 : 0;
-                var _minLabel = _hasHcInCart2
+                // 2026-10-19(사장님): 패브릭(무료샘플 제외)도 허니콤보드처럼 최소 100K.
+                var _hasFabricInCart2 = allItems.some(function(_it){ return typeof window._soIsFabricOrderItem === 'function' && window._soIsFabricOrderItem(_it); });
+                // 2026-06-25: 허니콤보드만 최소금액(100K) 유지, 그 외 전 제품 최소금액 폐지 (0) / 2026-10-19: 패브릭 추가
+                var _min100 = _hasHcInCart2 || _hasFabricInCart2;
+                var _minKrw = _min100 ? 100000 : 0;
+                var _minLabel = _min100
                     ? ((_sc === 'JP') ? '¥10,000' : (_sc === 'US' ? '$100' : '100,000원'))
                     : ((_sc === 'JP') ? '¥3,000' : (_sc === 'US' ? '$30' : '30,000원'));
                 if (_sub <= 0) {
@@ -19484,10 +19487,13 @@ html, body { background: #ffffff !important; }
             var _gcHasMgrQuote = (_gcCart || []).some(_soIsManagerQuoteItem);
             // 허니콤 family 가 카트에 있으면 100K, 그 외 30K
             var _gcHasHc = (_gcCart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
-            var _MIN = _gcHasHc ? 100000 : 0;  // 2026-06-25: 허니콤보드만 최소금액, 그 외 폐지
+            // 2026-10-19(사장님): 패브릭(무료샘플 제외)도 최소 100K 강제.
+            var _gcHasFabric = (_gcCart || []).some(function(_it){ return typeof window._soIsFabricOrderItem === 'function' && window._soIsFabricOrderItem(_it); });
+            var _gcMin100 = _gcHasHc || _gcHasFabric;
+            var _MIN = _gcMin100 ? 100000 : 0;  // 2026-06-25: 허니콤보드만 / 2026-10-19: 패브릭 추가
             if (!_gcHasMgrQuote && _gcSub > 0 && _gcSub < _MIN) {
                 var _sc3 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
-                var _md = _gcHasHc
+                var _md = _gcMin100
                     ? ((_sc3 === 'JP') ? '¥10,000' : (_sc3 === 'US' ? '$100' : '100,000원'))
                     : ((_sc3 === 'JP') ? '¥3,000' : (_sc3 === 'US' ? '$30' : '30,000원'));
                 alert(tr(
@@ -19838,6 +19844,18 @@ html, body { background: #ffffff !important; }
         return false;
     }
     window._soIsHoneycombCartItem = _soIsHoneycombCartItem;
+
+    // 2026-10-19(사장님): 패브릭 주문 항목 판정 — 허니콤보드처럼 최소 주문금액 100,000원 강제 (무료 원단 스와치/샘플은 제외).
+    //   무료샘플 = cotton_designer _cdAddSwatch (isSwatch:true, fabricCode 'SWATCH', price 0). 그 외 패브릭(__source cotton-print 등)은 전부 유료 주문.
+    function _soIsFabricOrderItem(it) {
+        if (!it) return false;
+        if (it.isSwatch || String(it.fabricCode || '') === 'SWATCH') return false;   // 무료 원단 스와치(샘플) 제외
+        if (Number(it.price) === 0) return false;                                     // 기타 0원 샘플 제외 (NaN/undefined 는 유료로 간주)
+        return it.__source === 'cotton-print' || it.source === 'cotton-print'
+            || !!it.fabricCode || (it.fabric && (it.product_code || it.product_name))
+            || it.orderWcm != null || it.width_cm != null;
+    }
+    window._soIsFabricOrderItem = _soIsFabricOrderItem;
 
     // 2026-06-24: 아크릴 family 항목 판정 — 무료배송 (저장된 shipping.fee 무시, 신규/기존 카트 모두 적용)
     function _soIsAcrylicFamilyItem(it) {
@@ -21204,10 +21222,13 @@ html, body { background: #ffffff !important; }
             var _minSub = (_minCalc && _minCalc.grandTotal != null) ? _minCalc.grandTotal : ((_minCalc && (_minCalc.taxBase + _minCalc.nonDiscountBase + (_minCalc.shipTotal || 0))) || 0);
             var _minHasMgrQuote = (cart || []).some(function(_it){ return typeof window._soIsManagerQuoteItem === 'function' && window._soIsManagerQuoteItem(_it); });
             var _minHasHc = (cart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
-            var _MIN_KRW = _minHasHc ? 100000 : 0;  // 2026-06-25: 허니콤보드만 최소금액, 그 외 폐지
+            // 2026-10-19(사장님): 패브릭(무료샘플 제외)도 최소 100K 강제.
+            var _minHasFabric = (cart || []).some(function(_it){ return typeof window._soIsFabricOrderItem === 'function' && window._soIsFabricOrderItem(_it); });
+            var _minMin100 = _minHasHc || _minHasFabric;
+            var _MIN_KRW = _minMin100 ? 100000 : 0;  // 2026-06-25: 허니콤보드만 / 2026-10-19: 패브릭 추가
             if (!_minHasMgrQuote && _minSub > 0 && _minSub < _MIN_KRW) {
                 var _sc2 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
-                var _minDisp = _minHasHc
+                var _minDisp = _minMin100
                     ? ((_sc2 === 'JP') ? '¥10,000' : (_sc2 === 'US' ? '$100' : '100,000원'))
                     : ((_sc2 === 'JP') ? '¥3,000' : (_sc2 === 'US' ? '$30' : '30,000원'));
                 alert(tr(
