@@ -2282,17 +2282,17 @@ window.loadOrders = async () => {
                         </div>
                         <div style="margin-top:5px; display:flex; flex-direction:column; gap:3px; align-items:stretch;">
                         ${(order.admin_note||'').includes('[COTTON-PRINT]') || (order.admin_note||'').includes('[Cotton Print')
-                            ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="padding:4px 8px; background:#78350f; color:#fde68a; font-size:10px; font-weight:600; border-radius:6px; text-decoration:none; text-align:center;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();">작업지시서</a>`
-                            : `<a href="/workorder.html?id=${order.id}" target="_blank" style="padding:4px 8px; background:#78350f; color:#fde68a; font-size:10px; font-weight:600; border-radius:6px; text-decoration:none; text-align:center;" title="작업지시서 — Chameleon Printing 스타일" onclick="event.stopPropagation();">작업지시서</a>`}
+                            ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="padding:4px 8px; background:#78350f; color:#fde68a; font-size:10px; font-weight:600; border-radius:6px; text-decoration:none; text-align:center; white-space:nowrap;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();">작업지시서</a>`
+                            : `<a href="/workorder.html?id=${order.id}" target="_blank" style="padding:4px 8px; background:#78350f; color:#fde68a; font-size:10px; font-weight:600; border-radius:6px; text-decoration:none; text-align:center; white-space:nowrap;" title="작업지시서 — Chameleon Printing 스타일" onclick="event.stopPropagation();">작업지시서</a>`}
                         <div style="display:flex; gap:3px;">
-                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','quote')" style="flex:1; padding:4px 6px; background:#eef2ff; color:#4338ca; font-size:10px; font-weight:600; border-radius:6px; border:1px solid #c7d2fe; cursor:pointer; font-family:inherit;" title="견적서 출력(인쇄/저장)">견적서</button>
-                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','statement')" style="flex:1; padding:4px 6px; background:#ecfeff; color:#0e7490; font-size:10px; font-weight:600; border-radius:6px; border:1px solid #a5f3fc; cursor:pointer; font-family:inherit;" title="거래명세서 출력(인쇄/저장)">명세서</button>
+                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','quote')" style="flex:1; padding:4px 6px; background:#eef2ff; color:#4338ca; font-size:10px; font-weight:600; border-radius:6px; border:1px solid #c7d2fe; cursor:pointer; font-family:inherit; white-space:nowrap;" title="견적서 출력(인쇄/저장)">견적서</button>
+                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','statement')" style="flex:1; padding:4px 6px; background:#ecfeff; color:#0e7490; font-size:10px; font-weight:600; border-radius:6px; border:1px solid #a5f3fc; cursor:pointer; font-family:inherit; white-space:nowrap;" title="거래명세서 출력(인쇄/저장)">명세서</button>
                         </div>
                         ${(order.admin_note||'').includes('[MANAGER_QUOTE]') && !['칼선작업','제작중','완료됨','발송완료','배송완료'].includes(order.status)
-                            ? `<button type="button" onclick="event.stopPropagation();window.openMgrQuoteEditor && window.openMgrQuoteEditor('${order.id}')" style="padding:4px 8px; background:#b45309; color:#fff; font-size:10px; font-weight:600; border-radius:6px; border:none; cursor:pointer; font-family:inherit;" title="매니저 견적 — 칼선작업 이전까지 수정 가능">견적 수정</button>`
+                            ? `<button type="button" onclick="event.stopPropagation();window.openMgrQuoteEditor && window.openMgrQuoteEditor('${order.id}')" style="padding:4px 8px; background:#b45309; color:#fff; font-size:10px; font-weight:600; border-radius:6px; border:none; cursor:pointer; font-family:inherit; white-space:nowrap;" title="매니저 견적 — 칼선작업 이전까지 수정 가능">견적 수정</button>`
                             : ''}
                         ${order.design_complete
-                            ? `<div style="padding:4px 8px; background:#dcfce7; color:#15803d; font-size:10px; font-weight:600; border-radius:6px; text-align:center;" title="${order.design_complete_at ? new Date(order.design_complete_at).toLocaleString('ko-KR') : ''} — ${(order.design_complete_by||'').replace(/"/g,'&quot;')}">디자인완료</div>`
+                            ? `<div style="padding:4px 8px; background:#dcfce7; color:#15803d; font-size:10px; font-weight:600; border-radius:6px; text-align:center; white-space:nowrap;" title="${order.design_complete_at ? new Date(order.design_complete_at).toLocaleString('ko-KR') : ''} — ${(order.design_complete_by||'').replace(/"/g,'&quot;')}">디자인완료</div>`
                             : ''}
                         ${_omDesignerBadge(order.id)}
                         </div>
@@ -2326,7 +2326,7 @@ function _omDesignerBadge(orderId) {
     const names = m[orderId] || m[Number(orderId)] || m[String(orderId)];
     if (!names || !names.length) return '';
     const esc = (typeof _ve === 'function') ? _ve : (s => String(s == null ? '' : s));
-    return `<div style="padding:4px 8px; background:#faf5ff; color:#7c3aed; font-size:10px; font-weight:600; border-radius:6px; text-align:center;" title="배정된 디자이너">디자이너 ${names.map(esc).join(', ')}</div>`;
+    return `<div style="padding:4px 8px; background:#faf5ff; color:#7c3aed; font-size:10px; font-weight:600; border-radius:6px; text-align:center; white-space:nowrap;" title="배정된 디자이너">디자이너 ${names.map(esc).join(', ')}</div>`;
 }
 function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
     let opts = `<option value="">미지정</option>`;

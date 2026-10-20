@@ -7,7 +7,7 @@ window._supabase = sb;
 import { checkAdminAccess } from "./global_common.js?v=437";
 
 // 나머지 기능 파일들 불러오기
-import "./global_orders.js?v=510";
+import "./global_orders.js?v=511";
 import "./global_products.js?v=308";
 import "./global_users.js?v=329";
 import "./global_franchise.js?v=13";
