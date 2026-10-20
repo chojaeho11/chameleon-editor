@@ -2186,6 +2186,40 @@ window.loadStaffPayroll = async () => {
             }
         }
     } catch (e) { if (dgnBody) dgnBody.innerHTML = `<tr><td colspan="4" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
+
+    // ===== ③ 오지급 회수(차감) 예정 — staff_pay_adjustments (status=pending) =====
+    //   2026-10-20(사장님): 두 정산 모두 월별 실시간 계산이라 저장 필드가 없음 → 회수 건을 목록으로 띄워
+    //   지급 시 수동 반영(해당 정산에서 차감) 후 [적용완료]. (매니저 동명 중복 때문에 자동차감은 안 함)
+    try {
+        const adjWrap = document.getElementById('payAdjWrap');
+        const adjBody = document.getElementById('payAdjBody');
+        const { data: adjs } = await sb.from('staff_pay_adjustments')
+            .select('id, kind, display_name, amount, reason')
+            .eq('status', 'pending').order('created_at', { ascending: true });
+        if (adjBody) {
+            if (!adjs || !adjs.length) {
+                if (adjWrap) adjWrap.style.display = 'none';
+                adjBody.innerHTML = '';
+            } else {
+                if (adjWrap) adjWrap.style.display = '';
+                adjBody.innerHTML = adjs.map(a => {
+                    const kindLbl = a.kind === 'manager' ? '매니저 정산' : '디자이너 정산';
+                    const amt = Math.abs(Number(a.amount) || 0);
+                    return `<tr><td>${esc(kindLbl)}</td><td style="font-weight:700;">${esc(a.display_name || '')}</td><td style="text-align:right;font-weight:800;color:#dc2626;">-${amt.toLocaleString()}원</td><td style="font-size:12px;color:#64748b;">${esc(a.reason || '')}</td><td style="text-align:center;"><button class="btn btn-sm" style="background:#16a34a;color:#fff;font-size:11px;" onclick="applyPayAdjustment('${a.id}')">적용완료</button></td></tr>`;
+                }).join('');
+            }
+        }
+    } catch (e) { /* 테이블 없거나 권한 이슈 시 무시 */ }
+};
+
+// 2026-10-20(사장님): 회수(차감) 건 적용완료 처리 — 해당 정산에서 이미 빼고 지급한 경우에만.
+window.applyPayAdjustment = async (id) => {
+    if (!confirm('이 회수 건을 적용완료로 처리할까요?\n(정산에서 이미 차감하고 지급한 경우에만 눌러주세요 — 목록에서 사라집니다.)')) return;
+    try {
+        const { error } = await sb.from('staff_pay_adjustments').update({ status: 'applied', applied_at: new Date().toISOString() }).eq('id', id);
+        if (error) { alert('처리 실패: ' + error.message); return; }
+        if (typeof window.loadStaffPayroll === 'function') window.loadStaffPayroll();
+    } catch (e) { alert('처리 오류: ' + (e.message || e)); }
 };
 
 window.downloadSettlementCsv = async (designerId) => {

@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20261020150344';
+        var CV = '20261020151318';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -2731,6 +2731,12 @@ function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>
                         </div>
                     </div>
                     <div style="font-size:12px;color:#78350f;margin-bottom:14px;line-height:1.6;">매니저 = <b>매출 기여 ×4%</b> (정미선=본사직원 제외) · 디자이너 = <b>고객의뢰(디자인보드) 자동정산</b>(정산금=의뢰금). 1일~말일 발생 기준 · 다음달 10일 지급.</div>
+                    <!-- 2026-10-20(사장님): 오지급 회수(차감) 예정 — 해당 정산에서 빼고 지급 후 [적용완료]. -->
+                    <div id="payAdjWrap" style="display:none; margin-bottom:16px; border:1px solid #fecaca; background:#fef2f2; border-radius:10px; padding:12px 14px;">
+                        <div style="font-weight:800; color:#b91c1c; margin-bottom:6px;">💸 정산 시 회수(차감) 예정</div>
+                        <div style="font-size:11.5px; color:#7f1d1d; margin-bottom:8px; line-height:1.5;">아래 금액을 <b>해당 정산(매니저/디자이너)</b>에서 빼고 지급하세요. 반영 후 [적용완료]를 누르면 목록에서 사라집니다.</div>
+                        <table><thead><tr><th>정산 구분</th><th>대상</th><th style="text-align:right;">회수액</th><th>사유</th><th style="text-align:center;">처리</th></tr></thead><tbody id="payAdjBody"></tbody></table>
+                    </div>
                     <div style="margin-bottom:18px;">
                         <div style="font-weight:800;color:#1e293b;margin-bottom:6px;">🧑‍💼 매니저 페이 (매출기여 4%)</div>
                         <table><thead><tr><th>매니저</th><th style="text-align:right;">매출 기여</th><th style="text-align:right;">페이 (4%)</th></tr></thead><tbody id="payMgrBody"><tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:14px;">정산 조회를 눌러주세요.</td></tr></tbody></table>
@@ -4129,7 +4135,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=324"></script>
+    <script type="module" src="global_admin.js?v=325"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
