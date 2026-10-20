@@ -2056,6 +2056,35 @@ window.loadOrders = async () => {
             return `<div style="margin-top:3px;background:${meta[1]};color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:5px;line-height:1.3;" title="${meta[0]} 발주 — 담당 배정 확인">${meta[0]}</div>`;
         };
 
+        // 2026-10-20(사장님): 디자이너↔주문 자동 연동 — 이 페이지 주문들의 design_request 배정 디자이너 매핑.
+        //   design_request 는 description 에 '주문번호: N' + '[DESIGNER:uuid CLAIMED:..]' 를 담음.
+        const _omDgnMap = {};
+        try {
+            const _oids = data.map(o => o.id);
+            if (_oids.length) {
+                const _orq = _oids.map(id => 'description.ilike.*주문번호: ' + id + '*').join(',');
+                const { data: _drs } = await sb.from('design_requests')
+                    .select('description')
+                    .in('status', ['claimed', 'completed', 'settlement_requested', 'settled'])
+                    .or(_orq).limit(800);
+                const _dids = new Set(), _pending = [];
+                (_drs || []).forEach(dr => {
+                    const mo = String(dr.description || '').match(/주문번호:\s*(\d+)/);
+                    const md = String(dr.description || '').match(/\[DESIGNER:([0-9a-fA-F-]{36})/);
+                    if (mo && md && _oids.indexOf(Number(mo[1])) >= 0) { _pending.push({ ord: Number(mo[1]), did: md[1] }); _dids.add(md[1]); }
+                });
+                const _nameMap = {};
+                if (_dids.size) {
+                    const ids = [..._dids];
+                    try { const { data: _dps } = await sb.from('designer_profiles').select('id, display_name').in('id', ids); (_dps || []).forEach(d => { if (d.display_name) _nameMap[d.id] = d.display_name; }); } catch (e) {}
+                    const _miss = ids.filter(id => !_nameMap[id]);
+                    if (_miss.length) { try { const { data: _pfs } = await sb.from('profiles').select('id, username, email').in('id', _miss); (_pfs || []).forEach(p => { _nameMap[p.id] = p.username || (p.email || '').split('@')[0] || '디자이너'; }); } catch (e) {} }
+                }
+                _pending.forEach(x => { const nm = _nameMap[x.did] || '디자이너'; (_omDgnMap[x.ord] = _omDgnMap[x.ord] || []); if (_omDgnMap[x.ord].indexOf(nm) < 0) _omDgnMap[x.ord].push(nm); });
+            }
+        } catch (e) { console.warn('[loadOrders] designer map', e); }
+        window._omDesignerMap = _omDgnMap;
+
         data.forEach(order => {
             const items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
             const total = order.total_amount || 0;
@@ -2251,19 +2280,22 @@ window.loadOrders = async () => {
                         <div style="cursor:pointer;margin-top:2px;" onclick="event.stopPropagation();openOrderMemo('${order.id}')" title="${(order.admin_note||'').replace(/"/g,'&quot;').replace(/\n/g,' ')}">
                             ${order.admin_note ? '<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;font-size:10px;line-height:18px;text-align:center;font-weight:bold;">✉</span>' : '<span style="font-size:14px;opacity:0.3;">💬</span>'}
                         </div>
+                        <div style="margin-top:5px; display:flex; flex-direction:column; gap:3px; align-items:stretch;">
                         ${(order.admin_note||'').includes('[COTTON-PRINT]') || (order.admin_note||'').includes('[Cotton Print')
-                            ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:9px; font-weight:800; border-radius:50px; text-decoration:none; letter-spacing:0.3px;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();"><i class="fa-solid fa-file-lines"></i> 작업지시서</a>`
-                            : `<a href="/workorder.html?id=${order.id}" target="_blank" style="display:inline-block; margin-top:4px; padding:3px 7px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:9px; font-weight:800; border-radius:50px; text-decoration:none; letter-spacing:0.3px;" title="작업지시서 — Chameleon Printing 스타일" onclick="event.stopPropagation();"><i class="fa-solid fa-file-lines"></i> 작업지시서</a>`}
-                        <div style="margin-top:3px; display:flex; gap:3px; justify-content:center;">
-                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','quote')" style="padding:3px 7px; background:#eef2ff; color:#4f46e5; font-size:9px; font-weight:800; border-radius:50px; border:1px solid #c7d2fe; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="견적서 출력(인쇄/저장)"><i class="fa-solid fa-file-invoice"></i> 견적서</button>
-                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','statement')" style="padding:3px 7px; background:#ecfeff; color:#0e7490; font-size:9px; font-weight:800; border-radius:50px; border:1px solid #a5f3fc; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="거래명세서 출력(인쇄/저장)"><i class="fa-solid fa-receipt"></i> 명세서</button>
+                            ? `<a href="/cotton_workorder.html?id=${order.id}" target="_blank" style="padding:4px 8px; background:#78350f; color:#fde68a; font-size:10px; font-weight:600; border-radius:6px; text-decoration:none; text-align:center;" title="Cotton Print 작업지시서 보기/인쇄" onclick="event.stopPropagation();">작업지시서</a>`
+                            : `<a href="/workorder.html?id=${order.id}" target="_blank" style="padding:4px 8px; background:#78350f; color:#fde68a; font-size:10px; font-weight:600; border-radius:6px; text-decoration:none; text-align:center;" title="작업지시서 — Chameleon Printing 스타일" onclick="event.stopPropagation();">작업지시서</a>`}
+                        <div style="display:flex; gap:3px;">
+                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','quote')" style="flex:1; padding:4px 6px; background:#eef2ff; color:#4338ca; font-size:10px; font-weight:600; border-radius:6px; border:1px solid #c7d2fe; cursor:pointer; font-family:inherit;" title="견적서 출력(인쇄/저장)">견적서</button>
+                            <button type="button" onclick="event.stopPropagation();window.printOrderDoc('${order.id}','statement')" style="flex:1; padding:4px 6px; background:#ecfeff; color:#0e7490; font-size:10px; font-weight:600; border-radius:6px; border:1px solid #a5f3fc; cursor:pointer; font-family:inherit;" title="거래명세서 출력(인쇄/저장)">명세서</button>
                         </div>
                         ${(order.admin_note||'').includes('[MANAGER_QUOTE]') && !['칼선작업','제작중','완료됨','발송완료','배송완료'].includes(order.status)
-                            ? `<button type="button" onclick="event.stopPropagation();window.openMgrQuoteEditor && window.openMgrQuoteEditor('${order.id}')" style="display:inline-block; margin-top:3px; padding:3px 7px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="매니저 견적 — 칼선작업 이전까지 수정 가능"><i class="fa-solid fa-pen-to-square"></i> 수정</button>`
+                            ? `<button type="button" onclick="event.stopPropagation();window.openMgrQuoteEditor && window.openMgrQuoteEditor('${order.id}')" style="padding:4px 8px; background:#b45309; color:#fff; font-size:10px; font-weight:600; border-radius:6px; border:none; cursor:pointer; font-family:inherit;" title="매니저 견적 — 칼선작업 이전까지 수정 가능">견적 수정</button>`
                             : ''}
                         ${order.design_complete
-                            ? `<div style="margin-top:3px; padding:3px 7px; background:#dcfce7; color:#15803d; font-size:9px; font-weight:800; border-radius:50px; letter-spacing:0.3px; display:inline-block;" title="${order.design_complete_at ? new Date(order.design_complete_at).toLocaleString('ko-KR') : ''} — ${(order.design_complete_by||'').replace(/"/g,'&quot;')}"><i class="fa-solid fa-check-circle"></i> 디자인완료</div>`
+                            ? `<div style="padding:4px 8px; background:#dcfce7; color:#15803d; font-size:10px; font-weight:600; border-radius:6px; text-align:center;" title="${order.design_complete_at ? new Date(order.design_complete_at).toLocaleString('ko-KR') : ''} — ${(order.design_complete_by||'').replace(/"/g,'&quot;')}">디자인완료</div>`
                             : ''}
+                        ${_omDesignerBadge(order.id)}
+                        </div>
                     </td>
                     
                     <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${_omItemLabel(i)} (${i.qty || 1})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${_omItemLabel(i)} (${i.qty || 1})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
@@ -2288,6 +2320,14 @@ window.loadOrders = async () => {
         updateCancelReqBadge();
     }
 };
+// 2026-10-20(사장님): 주문행에 배정된 디자이너 표시 (window._omDesignerMap 은 loadOrders 에서 채움)
+function _omDesignerBadge(orderId) {
+    const m = window._omDesignerMap || {};
+    const names = m[orderId] || m[Number(orderId)] || m[String(orderId)];
+    if (!names || !names.length) return '';
+    const esc = (typeof _ve === 'function') ? _ve : (s => String(s == null ? '' : s));
+    return `<div style="padding:4px 8px; background:#faf5ff; color:#7c3aed; font-size:10px; font-weight:600; border-radius:6px; text-align:center;" title="배정된 디자이너">디자이너 ${names.map(esc).join(', ')}</div>`;
+}
 function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
     let opts = `<option value="">미지정</option>`;
 
