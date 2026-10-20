@@ -21895,42 +21895,43 @@ html, body { background: #ffffff !important; }
                     var _si_qty = Math.max(1, Number(_si_it.qty) || 1);
                     var _si_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_si_it) : ((_si_it.product && _si_it.product.price) || 0);
                     var _si_unitPrice = Math.round((Number(_si_price) || 0) / _si_qty);
-                    var _si_payout = 40000;   // 디자이너 지급 (사용자 요청) — 1개당
+                    var _si_payout = 40000;   // 디자이너 지급 — 디자인 1건당 (수량 무관)
                     // 참고 파일 (로고/참고사진) 수집
                     var _si_files = [];
                     ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function(f){ if (_si_it[f] && typeof _si_it[f] === 'string') _si_files.push(_si_it[f]); });
                     if (Array.isArray(_si_it.uploadedFiles)) _si_it.uploadedFiles.forEach(function(u){ if (u && typeof u === 'string') _si_files.push(u); });
-                    // 2026-07-02: 구매 수량만큼 의뢰 생성 (1개=1디자인 작업, 각 payout 40,000).
-                    for (var _su = 0; _su < _si_qty; _su++) {
-                        var _si_idxLbl = (_si_qty > 1) ? ' (' + (_su + 1) + '/' + _si_qty + ')' : '';
-                        var _si_desc = '[' + (_si_custName || '고객') + ' · ' + (_si_custPhone || '-') + ']\n'
-                            + '제품: ' + _si_prodName + (_si_qty > 1 ? ' · ' + (_su + 1) + '/' + _si_qty + '번째' : '') + '\n'
-                            + (_si_title ? '타이틀 문구: ' + _si_title + '\n' : '')
-                            + (_si_sub ? '서브 문구: ' + _si_sub + '\n' : '')
-                            + (_si_req ? '요청사항: ' + _si_req + '\n' : '')
-                            + '주문번호: ' + (newOrderId || '-') + '\n'
-                            + '※ 입체 글씨 스카시 디자인 (누끼·칼선 포함)\n\n'
-                            + '[FREE_REQ:{"customerPrice":' + _si_unitPrice + ',"designerPayout":' + _si_payout + '}]';
-                        var _si_payload = {
-                            customer_id: _scUid,
-                            title: '[글씨스카시] ' + _si_prodName + (_si_title ? ' — ' + _si_title : '') + _si_idxLbl,
-                            description: _si_desc,
-                            category: '글씨스카시',
-                            country: 'KR',
-                            budget_min: _si_payout,
-                            budget_max: _si_payout,
-                            phone: _si_custPhone || null,
-                            files: _si_files,
-                            status: 'open'
-                        };
-                        try {
-                            var _si_ins = await _scSb.from('design_requests').insert(_si_payload).select().single();
-                            if (!_si_ins.error && _si_ins.data && _su === 0) {
-                                if (!_si_it.designRequest) _si_it.designRequest = {};
-                                _si_it.designRequest.request_id = _si_ins.data.id;
-                            }
-                        } catch (_sie) { console.warn('[scarci dreq insert]', _sie); }
-                    }
+                    // 2026-10-20(사장님 버그제보): 구매 수량만큼 의뢰 생성 → 1 디자인=1 의뢰 로 수정.
+                    //   글씨스카시 수량은 '동일 디자인의 인쇄 매수'라 디자인 작업·정산은 1건(40,000). 수량만큼 중복 등록·과지급되던 버그 제거.
+                    //   (서로 다른 디자인은 장바구니 별도 항목 → 바깥 items 루프가 각각 1건 생성.)
+                    var _si_lineTotal = Math.round(Number(_si_price) || 0);   // 이 항목(수량 포함) 고객 결제액
+                    var _si_desc = '[' + (_si_custName || '고객') + ' · ' + (_si_custPhone || '-') + ']\n'
+                        + '제품: ' + _si_prodName + '\n'
+                        + (_si_qty > 1 ? '수량: ' + _si_qty + '개 (동일 디자인)\n' : '')
+                        + (_si_title ? '타이틀 문구: ' + _si_title + '\n' : '')
+                        + (_si_sub ? '서브 문구: ' + _si_sub + '\n' : '')
+                        + (_si_req ? '요청사항: ' + _si_req + '\n' : '')
+                        + '주문번호: ' + (newOrderId || '-') + '\n'
+                        + '※ 입체 글씨 스카시 디자인 (누끼·칼선 포함)\n\n'
+                        + '[FREE_REQ:{"customerPrice":' + _si_lineTotal + ',"designerPayout":' + _si_payout + '}]';
+                    var _si_payload = {
+                        customer_id: _scUid,
+                        title: '[글씨스카시] ' + _si_prodName + (_si_title ? ' — ' + _si_title : ''),
+                        description: _si_desc,
+                        category: '글씨스카시',
+                        country: 'KR',
+                        budget_min: _si_payout,
+                        budget_max: _si_payout,
+                        phone: _si_custPhone || null,
+                        files: _si_files,
+                        status: 'open'
+                    };
+                    try {
+                        var _si_ins = await _scSb.from('design_requests').insert(_si_payload).select().single();
+                        if (!_si_ins.error && _si_ins.data) {
+                            if (!_si_it.designRequest) _si_it.designRequest = {};
+                            _si_it.designRequest.request_id = _si_ins.data.id;
+                        }
+                    } catch (_sie) { console.warn('[scarci dreq insert]', _sie); }
                 }
             } catch (e) { console.warn('[scarci dreq batch]', e); }
 
