@@ -489,8 +489,10 @@ let userEmail = null;
 let activeTab = 'open';
 let currentCompleteId = null;
 let currentCompleteRow = null;
-// 현재 사용자의 디자이너 승인 상태: null=미신청 / 'pending'=신청대기 / 'approved'=승인됨
+// 현재 사용자의 디자이너 승인 상태: null=미신청 / 'pending'=신청대기 / 'approved'=승인됨 / 'blocked'=수신차단
 let myDesignerStatus = null;
+// 2026-10-20(사장님): 디자인 의뢰를 받을 수 없는 계정 (매니저 겸직 등 디자인 미수행). 이메일 기준 하드 차단 — is_active/admin 과 무관하게 claim 불가.
+const BLOCKED_DESIGNER_EMAILS = ['scr3257@naver.com'];   // 조지숙 매니저
 // 디자이너 프로필 캐시 (claimed/완료 카드에 표시할 이름/이메일)
 const designerProfileCache = {};
 // 2026-06-15: 고객 프로필 캐시 (내가 받은 의뢰의 고객 연락처/이름 — design_requests.phone 누락 시 폴백).
@@ -529,6 +531,8 @@ async function init() {
         if (!prof) myDesignerStatus = null;
         else myDesignerStatus = prof.is_active ? 'approved' : 'pending';
     } catch (e) { myDesignerStatus = null; }
+    // 2026-10-20(사장님): 차단 계정은 is_active 와 무관하게 수신 불가
+    if (userEmail && BLOCKED_DESIGNER_EMAILS.indexOf(String(userEmail).toLowerCase()) >= 0) myDesignerStatus = 'blocked';
     render();
     _dbStartPoll();   // 새 디자인 의뢰 소리 알림 시작
 }
@@ -1315,7 +1319,18 @@ async function render() {
 
     // 승인 상태 배너 (미승인 디자이너 안내)
     if (myDesignerStatus !== 'approved') {
-        if (myDesignerStatus === 'pending') {
+        if (myDesignerStatus === 'blocked') {
+            html += `
+                <div class="db-card" style="background:rgba(148,163,184,0.10); border-color:rgba(148,163,184,0.30);">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:15px; font-weight:700; color:#64748b; letter-spacing:-0.3px;">디자인 의뢰 수신 불가 계정</div>
+                            <div style="font-size:12.5px; color:#86868b; margin-top:4px; line-height:1.5;">이 계정은 디자인 의뢰를 받을 수 없습니다. 자세한 내용은 본사에 문의해 주세요.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (myDesignerStatus === 'pending') {
             html += `
                 <div class="db-card" style="background:rgba(255,149,0,0.08); border-color:rgba(255,149,0,0.25);">
                     <div style="display:flex; align-items:center; gap:14px;">
@@ -1809,9 +1824,11 @@ window.dbDownloadAll = dbDownloadAll;
 
 async function dbClaim(id) {
     if (myDesignerStatus !== 'approved') {
-        alert(myDesignerStatus === 'pending'
-            ? '디자이너 승인 대기중입니다. 본사 검토 완료 후 의뢰를 받을 수 있어요.'
-            : '먼저 메인 페이지에서 디자이너 신청을 해주세요.');
+        alert(myDesignerStatus === 'blocked'
+            ? '이 계정은 디자인 의뢰를 받을 수 없습니다.'
+            : myDesignerStatus === 'pending'
+                ? '디자이너 승인 대기중입니다. 본사 검토 완료 후 의뢰를 받을 수 있어요.'
+                : '먼저 메인 페이지에서 디자이너 신청을 해주세요.');
         return;
     }
     if (!confirm('이 의뢰를 맡으시겠습니까? 맡으신 후엔 완료까지 책임지셔야 합니다.')) return;

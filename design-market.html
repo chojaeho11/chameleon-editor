@@ -3599,12 +3599,14 @@ async function registerAsDesigner() {
         'seonyul661@gmail.com',      // 이선율
         '1976.kyounghee@gmail.com',  // 김경희
         '1234@cafe2626.com',         // 본사
-        'scr3257@naver.com',         // 조지숙
         'thrma194@naver.com',        // 박성희
         'toonde@kakao.com'           // 최연두
     ];
+    // 2026-10-20(사장님): 디자인 의뢰를 받을 수 없는 계정 — 디자이너 등록 자체 차단 (매니저 겸직 등).
+    const BLOCKED_DESIGNER_EMAILS = ['scr3257@naver.com'];   // 조지숙 매니저
     let _hqEmail = '';
     try { const { data: { user } } = await sb.auth.getUser(); _hqEmail = ((user && user.email) || '').toLowerCase(); } catch (e) {}
+    if (BLOCKED_DESIGNER_EMAILS.indexOf(_hqEmail) >= 0) { showToast('이 계정은 디자이너로 등록할 수 없습니다.', 'error'); return; }
     const _isHQ = HQ_STAFF_EMAILS.indexOf(_hqEmail) >= 0;
 
     // 2026-06-13: 신규 디자이너 신청 — is_active=false 로 등록, 본사 승인 후 활성화 (본사직원은 위 목록이면 자동 true)
