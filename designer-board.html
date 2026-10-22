@@ -491,8 +491,9 @@ let currentCompleteId = null;
 let currentCompleteRow = null;
 // 현재 사용자의 디자이너 승인 상태: null=미신청 / 'pending'=신청대기 / 'approved'=승인됨 / 'blocked'=수신차단
 let myDesignerStatus = null;
-// 2026-10-20(사장님): 디자인 의뢰를 받을 수 없는 계정 (매니저 겸직 등 디자인 미수행). 이메일 기준 하드 차단 — is_active/admin 과 무관하게 claim 불가.
-const BLOCKED_DESIGNER_EMAILS = ['scr3257@naver.com'];   // 조지숙 매니저
+// 2026-10-22(사장님): 모든 매니저가 디자인 의뢰를 받을 수 있게 차단 전면 해제.
+//   (2026-10-20 scr3257 차단은 오류였음 — scr3257=박성희(디자인 가능), 메모리가 조지숙으로 잘못 라벨링.)
+const BLOCKED_DESIGNER_EMAILS = [];
 // 디자이너 프로필 캐시 (claimed/완료 카드에 표시할 이름/이메일)
 const designerProfileCache = {};
 // 2026-06-15: 고객 프로필 캐시 (내가 받은 의뢰의 고객 연락처/이름 — design_requests.phone 누락 시 폴백).
