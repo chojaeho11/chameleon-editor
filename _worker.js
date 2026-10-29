@@ -829,9 +829,14 @@ export default {
                 }
             }
 
-            // 2026-05-13: 랜딩 페이지는 cotton-print.com 도메인 그대로 유지 (proxy/rewrite)
-            //   - 301 redirect 하면 URL 이 cafe2626.com 으로 바뀜 → 사용자 불만
-            //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 cotton-print.com 유지
+            // 2026-10-29(사장님): KR 패브릭 도메인 통합 — cotton-print.com → cafe2626.com/cotton-print 301 (1개 주소).
+            //   cafeHost===cafe2626 (= cotton-print.com, KR) 랜딩 경로만. JP(cotton-printer→cafe0101)·US(chameleon.design)는 별도 결정 전까지 기존 서빙 유지.
+            if (cafeHost === 'www.cafe2626.com' &&
+                (path === '' || path === 'index.html' || path === 'cotton-print' || path === 'cotton-print.html' || path === 'fabric' || path === 'fabric-print')) {
+                return Response.redirect('https://www.cafe2626.com/cotton-print' + (url.search || ''), 301);
+            }
+            // 2026-05-13: 랜딩 페이지는 cotton-print.com 도메인 그대로 유지 (proxy/rewrite) — JP/US 전용 도메인만 해당.
+            //   - env.ASSETS.fetch() 로 cotton_print.html 을 직접 서빙 → URL 은 도메인 유지
             //   - 단, 로그인·카트는 cafe 도메인 origin 에 있으므로 login-required 경로는 redirect 유지
             if (path === '' || path === 'index.html') {
                 // 2026-09-10: 언더스코어 pretty-URL 회귀 fix — 하이픈 별칭(_redirects 200)으로 콘텐츠 직접 서빙.

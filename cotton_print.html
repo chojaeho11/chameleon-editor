@@ -11,7 +11,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20261029161923';
+    var CV = '20261029162330';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -150,13 +150,15 @@
         } catch (e) {}
     }
     // 2026-05-15: canonical / og:url — JP 도메인이면 cotton-printer.com 으로 동적 변경 (SEO)
-    if (h.indexOf('cotton-printer.com') >= 0) {
+    // 2026-10-29(사장님): KR 패브릭은 cafe2626.com/cotton-print 로 통합 → cafe 도메인이면 canonical 을 그쪽으로 자기참조.
+    if (h.indexOf('cotton-printer.com') >= 0 || h.indexOf('cafe2626.com') >= 0) {
+        var _cpCanon = (h.indexOf('cotton-printer.com') >= 0) ? 'https://www.cotton-printer.com' + location.pathname : 'https://www.cafe2626.com/cotton-print';
         document.addEventListener('DOMContentLoaded', function () {
             try {
                 var canon = document.querySelector('link[rel="canonical"]');
-                if (canon) canon.href = 'https://www.cotton-printer.com' + location.pathname;
+                if (canon) canon.href = _cpCanon;
                 var og = document.querySelector('meta[property="og:url"]');
-                if (og) og.content = 'https://www.cotton-printer.com' + location.pathname;
+                if (og) og.content = _cpCanon;
             } catch (e) {}
         });
     }
