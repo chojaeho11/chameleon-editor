@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20261029162921';
+    var CV = '20261029164046';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -189,6 +189,12 @@ a { text-decoration: none; color: inherit; }
     height: 60px;
 }
 .logo { font-size: 17px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; white-space: nowrap; }
+/* 2026-10-29: 로고를 '카멜레온프린팅(모회사 메인) / 홈으로(이 보드 랜딩)' 두 버튼으로 분리 */
+.brand-nav { display: flex; align-items: center; gap: 8px; }
+.hdr-link { font-size: 13px; line-height: 1; color: var(--primary); text-decoration: none; padding: 7px 12px; border: 1px solid var(--primary); border-radius: 8px; white-space: nowrap; font-family: inherit; transition: background .15s, color .15s; }
+.hdr-link-parent:hover { background: var(--primary); color: #fff; }
+.hdr-link-home { color: #555; border-color: #ccc; }
+.hdr-link-home:hover { background: #555; color: #fff; border-color: #555; }
 .nav-links { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
 .nav-links a {
     font-size: 13px; font-weight: 600; color: var(--text-light);
@@ -410,6 +416,8 @@ a { text-decoration: none; color: inherit; }
     .site-header { padding: 0 12px; }
     .header-inner { height: 48px; }
     .logo { font-size: 15px; }
+    .brand-nav { gap: 6px; }
+    .hdr-link { font-size: 12px; padding: 6px 9px; }
     .nav-links { gap: 8px; }
     .nav-links a { font-size: 12px; }
     .btn-home { padding: 6px 10px; font-size: 11px; }
@@ -448,9 +456,10 @@ a { text-decoration: none; color: inherit; }
 <!-- 헤더 -->
 <header class="site-header">
     <div class="header-inner">
-        <a id="logoLink" href="/" class="logo">
-            <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i><span data-i18n="brand_logo">Chameleon Honeycomb</span>
-        </a>
+        <div class="brand-nav">
+            <a id="parentSiteLink" href="https://www.cafe2626.com/" class="hdr-link hdr-link-parent" data-i18n="nav_parent">카멜레온프린팅</a>
+            <a id="logoLink" href="/raw-board" class="hdr-link hdr-link-home" data-i18n="nav_home">홈으로</a>
+        </div>
         <nav class="nav-links">
             <!-- 2026-06-04: 로그인 버튼 — 적립금/이벤트쿠폰/예치금/PRO 할인 사용 위한 인증 -->
             <button id="hbAuthBtn" onclick="window.hbOpenLogin()" style="display:inline-flex; align-items:center; gap:5px; padding:7px 12px; border-radius:8px; background:#fff; color:var(--primary); border:1.5px solid var(--primary); font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; font-family:inherit;">
@@ -1527,6 +1536,8 @@ calc_paper_other_consult: { ko:'그 외 사양은 개별 상담을 통해 견적
 calc_wholesale_note: { ko:'서울·경기 10장 이상 구매 시 무료배송 · 커팅 및 인쇄도 가능합니다 (라텍스).<br>10장 미만 소량은 용차 배송비가 부가됩니다.', ja:'ソウル·京畿は10枚以上のご購入で送料無料 · カット·印刷も可能です（ラテックス）。<br>10枚未満の少量はチャーター便配送料が加算されます。', en:'Free shipping in Seoul/Gyeonggi on orders of 10+ sheets · cutting & printing also available (latex).<br>Orders under 10 sheets incur a dedicated-vehicle delivery fee.', zh:'首尔·京畿购买10张以上免运费 · 亦可裁切与印刷（乳胶）。<br>不足10张的少量订单需加收专车运费。', ar:'شحن مجاني في سيول/جيونجي عند شراء 10 ألواح فأكثر · التقطيع والطباعة متاحان أيضاً (لاتكس).<br>الطلبات أقل من 10 ألواح تُضاف إليها رسوم توصيل بمركبة مخصصة.', es:'Envío gratis en Seúl/Gyeonggi en pedidos de 10+ hojas · también corte e impresión (látex).<br>Los pedidos de menos de 10 hojas tienen un cargo de entrega en vehículo dedicado.', de:'Kostenloser Versand in Seoul/Gyeonggi ab 10 Blatt · Schneiden & Drucken ebenfalls möglich (Latex).<br>Bei Bestellungen unter 10 Blatt fällt eine Sonderfahrzeug-Liefergebühr an.', fr:'Livraison gratuite à Séoul/Gyeonggi dès 10 feuilles · découpe et impression aussi possibles (latex).<br>Les commandes de moins de 10 feuilles entraînent des frais de livraison par véhicule dédié.' },
 feat_title: { ko:'왜 카멜레온허니콤 원판인가요?', ja:'なぜChameleon Honeycombの原板なのか', en:'Why Chameleon Honeycomb Raw Board?', zh:'Why Chameleon Honeycomb Raw Board?', ar:'Why Chameleon Honeycomb Raw Board?', es:'Why Chameleon Honeycomb Raw Board?', de:'Why Chameleon Honeycomb Raw Board?', fr:'Why Chameleon Honeycomb Raw Board?' },
 brand_logo: { ko:'카멜레온허니콤', ja:'Chameleon Honeycomb', en:'Chameleon Honeycomb', zh:'Chameleon Honeycomb', ar:'Chameleon Honeycomb', es:'Chameleon Honeycomb', de:'Chameleon Honeycomb', fr:'Chameleon Honeycomb' },
+nav_parent: { ko:'카멜레온프린팅', ja:'カメレオンプリント', en:'Chameleon Printing', zh:'Chameleon Printing', ar:'Chameleon Printing', es:'Chameleon Printing', de:'Chameleon Printing', fr:'Chameleon Printing' },
+nav_home: { ko:'홈으로', ja:'ホーム', en:'Home', zh:'首页', ar:'الرئيسية', es:'Inicio', de:'Startseite', fr:'Accueil' },
 feat1_t: { ko:'인쇄 전문 보드 · 우수한 발색', ja:'印刷専門ボード · 優れた発色', en:'Print-grade board · superb color', zh:'Print-grade board · superb color', ar:'Print-grade board · superb color', es:'Print-grade board · superb color', de:'Print-grade board · superb color', fr:'Print-grade board · superb color' },
 feat1_d: { ko:'인쇄에 최적화된 표면으로 선명하고 정확한 색 표현이 가능합니다.', ja:'印刷に最適化された表面で、鮮明で正確な色再現が可能です。', en:'A surface optimized for printing delivers vivid, accurate color reproduction.', zh:'A surface optimized for printing delivers vivid, accurate color reproduction.', ar:'A surface optimized for printing delivers vivid, accurate color reproduction.', es:'A surface optimized for printing delivers vivid, accurate color reproduction.', de:'A surface optimized for printing delivers vivid, accurate color reproduction.', fr:'A surface optimized for printing delivers vivid, accurate color reproduction.' },
 feat2_t: { ko:'버진펄프 · V컷 칼날 손상 최소', ja:'バージンパルプ · Vカット刃の損傷最小', en:'Virgin pulp · minimal V-cut blade wear', zh:'Virgin pulp · minimal V-cut blade wear', ar:'Virgin pulp · minimal V-cut blade wear', es:'Virgin pulp · minimal V-cut blade wear', de:'Virgin pulp · minimal V-cut blade wear', fr:'Virgin pulp · minimal V-cut blade wear' },
@@ -2158,7 +2169,8 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (LANG === 'ja') homeHref = 'https://www.cafe0101.com/';
     else if (LANG === 'en') homeHref = 'https://chameleon.design/';
     else homeHref = 'https://chameleon.design/?lang=' + LANG;
-    ['logoLink','footerHomeLink'].forEach(function(id) {
+    // 2026-10-29: '카멜레온프린팅' 버튼 = 모회사 메인(언어별), '홈으로'(logoLink) = 이 보드 랜딩(/raw-board) 고정
+    ['parentSiteLink','footerHomeLink'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.href = homeHref;
     });
@@ -2170,7 +2182,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="raw_board.js?v=198"></script>
+<script src="raw_board.js?v=199"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

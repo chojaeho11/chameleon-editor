@@ -190,7 +190,10 @@
                 priceHtml +
             '</div>';
 
-        // 클릭 시 hexa-board.com 도메인에서 상세/주문 (화이트라벨 — 카멜레온 노출 안 함)
+        // 클릭 시 메인(카멜레온프린팅) 제품 상세로 이동.
+        // 2026-10-29: 도메인 통합(hexa-board.com → cafe2626.com/raw-board 301) 후 hexa-board.com/?product= 로 보내면
+        //   301 과정에서 ?product 파라미터가 떨어져 랜딩(이 페이지)으로 되돌아오는 버그 → 현재 도메인 루트(/?product=) 로 직접 이동.
+        //   (cafe2626.com/?product=CODE 가 상세 페이지를 서빙)
         // 2026-05-30: 클릭 즉시 화면 어둠 처리 + 스피너 → 사용자가 "멈춰있다" 느끼지 않게 navigate 전 시각 피드백.
         card.onclick = function() {
             try { _rbShowNavLoading(); } catch (e) {}
@@ -198,7 +201,7 @@
             var params = '?product=' + encodeURIComponent(product.code);
             if (lang && lang !== 'ko') params += '&lang=' + lang;
             // 약간의 지연 (브라우저가 prefetch 한 리소스를 활용해 새 페이지 진입을 더 빠르게 할 시간)
-            setTimeout(function(){ window.location.href = 'https://www.hexa-board.com/' + params; }, 30);
+            setTimeout(function(){ window.location.href = window.location.origin + '/' + params; }, 30);
         };
 
         return card;
