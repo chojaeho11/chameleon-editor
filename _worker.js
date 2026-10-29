@@ -604,6 +604,16 @@ export default {
                 path.endsWith('.gif')
             );
             if (isAssetHB) return await env.ASSETS.fetch(request);
+            // 2026-10-29(사장님): hexa-board.com 도메인 통합 → cafe2626.com/raw-board 로 301 (1개 주소 통일, SEO 통합).
+            //   단, 결제·콜백 페이지(cotton_checkout/stripe/success/fail/design-pay)는 진행중 결제 보호 위해 계속 실제 서빙(아래 기존 로직).
+            {
+                const _hbP = (url.pathname || '/').toLowerCase().replace(/\.html$/, '').replace(/\/$/, '');
+                const _hbPay = ['/cotton_checkout', '/cotton_stripe_checkout', '/success', '/fail', '/design-pay'];
+                if (_hbPay.indexOf(_hbP) < 0) {
+                    const _sfx = (_hbP.match(/^\/(ja|jp|en|us|zh|ar|es|de|fr)\b/) || [, ''])[1];
+                    return Response.redirect('https://www.cafe2626.com/raw-board' + (_sfx ? ('?lang=' + _sfx) : ''), 301);
+                }
+            }
             // 상품 상세(?product= / ?_p=) → 메인 SPA(index.html) 를 hexa-board 도메인에서 그대로 서빙 (화이트라벨, URL 유지).
             //   /distributors (또는 /distributors.html) → 유통사 모집 랜딩 페이지.
             //   그 외 모든 경로 → raw_board.html(원판 랜딩). index.html 의 hexa-mode 가 카멜레온 흔적을 숨김.
@@ -685,12 +695,18 @@ export default {
         // 2026-05-25: 허니콤보드 원판 페이지는 hexa-board.com 전용 도메인으로 이전.
         //   이전 도메인의 /raw-board(및 /raw_board) 접속은 hexa-board.com 으로 301 영구 이전 (SEO 통합/주소 통일).
         //   ※ hexa-board.com 자체는 위 블록에서 이미 처리되어 여기 도달하지 않음. 봇도 301 을 받아 색인이 이전됨.
+        // 2026-10-29(사장님): 도메인 통합 — 허니콤 원판 랜딩을 cafe2626.com/raw-board 에서 직접 서빙.
+        //   (이전엔 hexa-board.com 으로 301 했으나, 이제 1개 주소(cafe2626)로 통일. hexa-board.com 은 역으로 여기로 301.)
         if (path === 'raw-board' || path === 'raw_board') {
-            const _rl = (url.searchParams.get('lang') || '').toLowerCase()
-                || (url.hostname.includes('cafe0101') ? 'ja'
-                  : (url.hostname.includes('chameleon.design') ? 'en' : 'ko'));
-            const _rsfx = (_rl && _rl !== 'ko') ? ('/' + _rl) : '/';
-            return Response.redirect('https://www.hexa-board.com' + _rsfx, 301);
+            const rbRewrite = new URL('/raw-board', url.origin);
+            let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
+            if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {
+                const loc = new URL(rbResp.headers.get('Location'), url.origin);
+                rbResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+            }
+            const rbHdrs = new Headers(rbResp.headers);
+            rbHdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            return new Response(rbResp.body, { status: rbResp.status, headers: rbHdrs });
         }
 
         // ========== 2026-05-15: cafe3355.com → 종이매대(paper-stand) 전용 도메인 ==========
