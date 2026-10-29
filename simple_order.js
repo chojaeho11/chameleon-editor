@@ -9191,10 +9191,16 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 10000;
         }
-        // 2026-06-12: 배너 family (거치대 포함/미포함 모두) — 무료배송
+        // 2026-06-12: 배너 family — 무료배송. 단 2026-10-29(#71): 일반 배너(X배너/거치대/미니/일반)는
+        //   등신대처럼 배송옵션(수도권무료/60×180택배3만/지방20만) 사용 → 아래 method 기반 계산으로 fall-through.
+        //   현수막(placard 9종)·어깨띠(shoulderSash)는 기존 무료 유지.
         if (state.isBannerOutput) {
-            state._shipUpgradeReason = null;
-            return 0;
+            var _bnIsPlac = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(state.product);
+            if (_bnIsPlac || state.isShoulderSash) {
+                state._shipUpgradeReason = null;
+                return 0;
+            }
+            // 일반 배너: method 기반 계산으로 내려감 (self_pickup/metro_install_simple=0, regional_* 유료)
         }
         var method = state.shipMethod || 'self_pickup';
         // 2026-05-30: 원판 — 수도권 10장 이상 무료/미만 10만, 지방 100장 이상 무료/미만 20만
@@ -15824,9 +15830,12 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
         // 2026-06-09: 등신대/스카시도 시공 옵션 노출 — 가벽 없이 단독 시공 요청 가능. isInstallEligible 로 통합 판정.
         var _isHbFreeShip = state.isHoneycomb && !state.isInstallEligible;
-        // 2026-06-12: 배너 family (거치대 포함/미포함 전부) — 시공/배송 옵션 섹션 자체 숨김. 무조건 무료.
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput && !state.isShoulderSash
-            && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
+        // 2026-10-29(#71): 일반 배너(X배너/거치대/미니/일반) — 등신대처럼 배송옵션 노출. 현수막(placard)·어깨띠는 제외(기존 무료 유지).
+        var _bnIsPlac15 = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
+        var _isPlainBanner = state.isBannerOutput && !_bnIsPlac15 && !state.isShoulderSash;
+        // 2026-06-12: 배너 family — 시공/배송 옵션 섹션 숨김(무조건 무료). 단 일반 배너(_isPlainBanner)는 2026-10-29 노출.
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && (!state.isBannerOutput || _isPlainBanner) && !state.isShoulderSash
+            && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay || _isPlainBanner);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         // 2026-06-26: 허니콤보드 원판 — 전용 배송일/메모 박스 + 커팅서비스(파일 업로드) 박스 노출.
         var _rbDelBox = document.getElementById('soRbDeliveryBox');
@@ -15890,6 +15899,9 @@ html, body { background: #ffffff !important; }
         } else if (state.isStandee) {
             // 2026-06-09: 등신대 — 설치 없이 배송만. 3가지: 수도권 무료 / 60×180 택배 3만 / 지방배송 20만 (카트 묶음은 자동 carryover)
             allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
+        } else if (_isPlainBanner) {
+            // 2026-10-29(#71): 일반 배너 — 등신대와 동일 배송옵션 (수도권 무료 / 60×180 택배 3만 / 지방배송 20만)
+            allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
         } else if (_soIsTableProduct(p)) {
             // 2026-08-10 (버그#25 최연두): 허니콤 가구테이블 — 배송 옵션 '전부'(시공 5종 + 택배 + 방문수령).
             allowed = installKeys.concat(['parcel_shipping', 'self_pickup']);
@@ -15941,6 +15953,9 @@ html, body { background: #ffffff !important; }
         } else if ((state.isDeliveryOnly || state.isRawBoard) && allowed.indexOf('metro_delivery') >= 0) {
             // 2026-05-22: 허니콤보드(배송형·원판) — 기본 배송 = 수도권 배송 (10만원)
             defaultShip = 'metro_delivery';
+        } else if (_isPlainBanner && allowed.indexOf('metro_install_simple') >= 0) {
+            // 2026-10-29(#71): 일반 배너 — 기본 = 수도권 무료배송 (0원, 고객이 지방 선택 시 유료)
+            defaultShip = 'metro_install_simple';
         } else {
             for (var pi = 0; pi < parcelKeys.length; pi++) {
                 if (allowed.indexOf(parcelKeys[pi]) >= 0) { defaultShip = parcelKeys[pi]; break; }
@@ -20781,7 +20796,7 @@ html, body { background: #ffffff !important; }
             if (!cart || cart.length === 0) { alert(tr('장바구니가 비어있습니다.','カートが空です。','Your cart is empty.')); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=445');
+            var mod = await import('./export.js?v=446');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
@@ -20847,7 +20862,11 @@ html, body { background: #ffffff !important; }
                 id: '미리보기',
                 manager: name, phone: phone, address: fullAddr,
                 note: memo, date: '',
-                shippingFee: _pendingShipSum > 0 ? _pendingShipSum : (cartCalc.shipTotal || 0)
+                shippingFee: _pendingShipSum > 0 ? _pendingShipSum : (cartCalc.shipTotal || 0),
+                // 2026-10-29(#70): 매니저/대기 견적(?quote=) 재로드 시 라인 재구성이 어긋나 견적서 합계가 실결제액과
+                //   달라지던 버그 → 신뢰 가능한 카트 그랜드토탈(배송·상품할인 포함, 지갑 차감 전)을 전달해 합계 고정.
+                //   일반 카트(비-pending)는 전달 안 함 → export.js 기존 로직 그대로(무손상).
+                authoritativeTotal: _hasPending ? (Number(cartCalc.grandTotal) || Number(window._soCheckoutGrandTotal) || 0) : 0
             };
 
             // window.cartData 와 동일한 shape 으로 변환 (export.js 가 item.product 참조)

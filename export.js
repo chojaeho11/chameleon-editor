@@ -3,7 +3,7 @@ import { ADDON_DB as _IMPORTED_ADDON_DB, currentUser, sb } from "./config.js?v=4
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=435"; // 페이지 인덱스 가져오기
 import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=294";
 
-// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=445 / index.html?v=439 등).
+// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=446 / index.html?v=439 등).
 //   index.html 만 initConfig() 를 실행해 ADDON_DB 를 채우고 window.ADDON_DB 에 노출.
 //   export.js 가 import 한 ADDON_DB 는 빈 객체로 남아 견적서에서 b0001 등 addon 가격 누락.
 //   getter 로 항상 window.ADDON_DB 를 우선 사용.
@@ -2361,8 +2361,18 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     const _discountBase = Math.max(0, totalAmt - nonDiscountableAmt);
     const rateDiscountAmt = Math.round(_discountBase * discountRate);
     const afterRateDiscount = totalAmt - rateDiscountAmt;
+    // 2026-10-29(#70): 결제액 고정 — ?quote= (매니저/대기 견적) 재로드 시 _soCalcItemPrice 재분배로
+    //   라인 재구성이 어긋나 견적서 합계가 실제 결제액과 달라지던 버그. 신뢰 총액(authoritativeTotal, KRW)이
+    //   전달되면 그걸 결제전 그랜드토탈(배송·상품할인 포함)로 보고 합계 고정 → 견적서=결제. 미전달 시 기존 로직.
+    let _authTotal = (orderInfo && Number(orderInfo.authoritativeTotal) > 0) ? Number(orderInfo.authoritativeTotal) : 0;
+    if (_authTotal > 0 && _cr) {
+        if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') { if (_cr.JP) _authTotal = Math.round(_authTotal * _cr.JP); }
+        else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') { if (_cr.US) _authTotal = Math.round(_authTotal * _cr.US * 100) / 100; }
+    }
     // 2026-05-28: 예치금 사용액도 합계에서 차감 (이전엔 견적서에 반영 안됨)
-    const finalAmt = afterRateDiscount - usedMileage - usedDeposit + shippingFee;
+    const finalAmt = (_authTotal > 0)
+        ? (_authTotal - usedMileage - usedDeposit)   // authoritative 는 배송·상품할인 포함 → 지갑만 추가 차감
+        : (afterRateDiscount - usedMileage - usedDeposit + shippingFee);
 
     // [수정] 부가세 계산 (일본 10%, 한국 10%)
     const vat = Math.floor(finalAmt / 11);
@@ -2379,7 +2389,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     drawText(doc, TEXT.vat, summaryX, y+5, {align:'right'});
     drawText(doc, _fmtSummary(vat), 195, y+5, {align:'right'}); y+=6;
 
-    if (rateDiscountAmt > 0) {
+    if (rateDiscountAmt > 0 && !_authTotal) {   // 2026-10-29(#70): authoritative 클램프 시 할인은 이미 포함 → 라인 생략(이중차감 방지)
         doc.setTextColor(255, 0, 0);
         drawText(doc, `${TEXT.discount} (${(discountRate*100).toFixed(0)}%) :`, summaryX, y+5, {align:'right'}, "#ff0000");
         drawText(doc, "-" + _fmtSummary(rateDiscountAmt), 195, y+5, {align:'right'}, "#ff0000"); y+=6;
@@ -2396,7 +2406,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         drawText(doc, depositLabel, summaryX, y+5, {align:'right'}, "#0e7490");
         drawText(doc, "-" + _fmtSummary(usedDeposit), 195, y+5, {align:'right'}, "#0e7490"); y+=6;
     }
-    if (shippingFee > 0) {
+    if (shippingFee > 0 && !_authTotal) {   // 2026-10-29(#70): authoritative 클램프 시 배송비는 합계에 이미 포함 → 별도 '+' 라인 생략
         doc.setTextColor(0, 0, 0);
         const shippingLabel = CURRENT_LANG_CODE === 'ja' ? '配送料 :' : CURRENT_LANG_CODE === 'us' ? 'Shipping fee :' : '배송비 :';
         drawText(doc, shippingLabel, summaryX, y+5, {align:'right'});
