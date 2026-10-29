@@ -11,7 +11,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20261029162330';
+    var CV = '20261029162921';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -117,9 +117,13 @@
 <meta property="og:site_name" content="コットンプリント Cotton Print">
 <meta property="og:title" content="ファブリック印刷・生地プリント 専門 タペストリー/バックウォール/横断幕 | コットンプリント">
 <meta property="og:description" content="高画質ファブリック（生地・布）カスタム印刷。バックウォール、タペストリー、フォトゾーン、横断幕、のれん。最短即日出荷、無料デザインエディター付属、日本全国送料無料の商品多数。">
-<meta property="og:url" content="https://www.cotton-printer.com/">
+<meta property="og:url" content="https://www.cafe2626.com/cotton-print">
 <meta property="og:image" content="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1767690223510_KakaoTalk_20250530_165125661_16.jpg">
-<link rel="canonical" href="https://www.cotton-printer.com/">
+<link rel="canonical" href="https://www.cafe2626.com/cotton-print">
+<!-- 2026-10-29(사장님): 패브릭 도메인 통합 → cafe2626.com/cotton-print 로 SEO 이전. 언어 대체 링크. -->
+<link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/cotton-print">
+<link rel="alternate" hreflang="ja" href="https://www.cafe2626.com/cotton-print?lang=ja">
+<link rel="alternate" hreflang="x-default" href="https://www.cafe2626.com/cotton-print">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"コットンプリント Cotton Print","url":"https://www.cotton-printer.com","inLanguage":["ja","ko","en"],"alternateName":["カメレオンプリンティング ファブリック事業部","코튼프린팅","Cotton Print Japan"],"publisher":{"@type":"Organization","name":"(株)カメレオンプリンティング","url":"https://www.cafe0101.com","sameAs":["https://www.cafe2626.com","https://www.cafe0101.com","https://www.cafe3355.com","https://www.cotton-printer.com","https://www.cotton-print.com"]}}
 </script>
@@ -149,10 +153,10 @@
             history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
         } catch (e) {}
     }
-    // 2026-05-15: canonical / og:url — JP 도메인이면 cotton-printer.com 으로 동적 변경 (SEO)
-    // 2026-10-29(사장님): KR 패브릭은 cafe2626.com/cotton-print 로 통합 → cafe 도메인이면 canonical 을 그쪽으로 자기참조.
-    if (h.indexOf('cotton-printer.com') >= 0 || h.indexOf('cafe2626.com') >= 0) {
-        var _cpCanon = (h.indexOf('cotton-printer.com') >= 0) ? 'https://www.cotton-printer.com' + location.pathname : 'https://www.cafe2626.com/cotton-print';
+    // 2026-10-29(사장님): 패브릭 KR+JP 전부 cafe2626.com/cotton-print 로 통합 → canonical 을 언어별 자기참조(JP=?lang=ja).
+    if (h.indexOf('cafe2626.com') >= 0 || h.indexOf('cotton-print') >= 0) {
+        var _cpLang = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+        var _cpCanon = 'https://www.cafe2626.com/cotton-print' + ((_cpLang === 'ja' || _cpLang === 'jp') ? '?lang=ja' : '');
         document.addEventListener('DOMContentLoaded', function () {
             try {
                 var canon = document.querySelector('link[rel="canonical"]');

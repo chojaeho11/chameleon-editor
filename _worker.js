@@ -802,15 +802,14 @@ export default {
             );
             if (isAsset) return await env.ASSETS.fetch(request);
 
-            // 2026-05-15: cotton-print.com?lang=ja → cotton-printer.com 영구 301 리다이렉트.
-            //   광고/검색결과/SNS 의 옛 일본어 링크를 새 JP 도메인으로 통합 (SEO 가중치 합산).
-            //   asset 체크 이후로 둠 (정적 자원은 origin 그대로 fetch 해야 작동).
-            //   _isCottonPrinter 가 false 인 경우(=cotton-print.com)에만 적용 — 무한 루프 방지.
-            if (!_isCottonPrinter && (langParam === 'ja' || langParam === 'jp')) {
-                const targetUrl = new URL(url.toString());
-                targetUrl.hostname = 'www.cotton-printer.com';
-                targetUrl.searchParams.delete('lang');     // 도메인이 JP 라 lang 불필요
-                return Response.redirect(targetUrl.toString(), 301);
+            // 2026-10-29(사장님): 일본 패브릭도 cafe2626 로 통합 — 이용자 적어 지금 새 주소로 SEO 이전.
+            //   cotton-printer.com(JP 전용 도메인) 전체 → cafe2626.com/cotton-print?lang=ja 301.
+            if (_isCottonPrinter) {
+                return Response.redirect('https://www.cafe2626.com/cotton-print?lang=ja', 301);
+            }
+            // cotton-print.com?lang=ja → cafe2626.com/cotton-print?lang=ja 직접 301 (이전엔 cotton-printer.com 경유, 이제 통합).
+            if (langParam === 'ja' || langParam === 'jp') {
+                return Response.redirect('https://www.cafe2626.com/cotton-print?lang=ja', 301);
             }
 
             // 2026-08-11 (버그 #31): 패브릭 원단 딥링크(?mode=poster / ?fabric=..)로 랜딩 경로에 들어오면
