@@ -586,7 +586,14 @@
     var isImg = /^image\//.test(f.type || '');
     if (isImg && f.type !== 'image/gif' && f.size <= 8 * 1024 * 1024) {
       // 정지 이미지(≤8MB) → 카푸가 보고 제품 안내(AI 비전) + chat-files 에 직접 저장(매니저 열람, 2026-10-16 서버 flaky 저장 대체)
-      readImage(f, function (b64, type, du) { send('', { base64: b64, type: type, dataUrl: du }).then(function () { _persistImageToChat(f); }); });
+      // 2026-11-10(버그#72): 이미지를 AI 호출(send) 전에 먼저 저장 → send 실패·타임아웃·고객 이탈과 무관하게 매니저가 항상 열람.
+      //   (이전엔 send().then() 체인이라 send 가 reject 되거나 응답 전 창을 닫으면 file_url 행이 유실돼 텍스트만 남았음)
+      readImage(f, function (b64, type, du) {
+        _persistImageToChat(f).then(
+          function () { send('', { base64: b64, type: type, dataUrl: du }); },
+          function () { send('', { base64: b64, type: type, dataUrl: du }); }
+        );
+      });
       return;
     }
     // 2026-10-15(사장님): PDF(디자인/설계도/행사장 구조도) ≤8MB → storage 기록 + 카푸가 직접 분석(크기·해상도·구조 검토)

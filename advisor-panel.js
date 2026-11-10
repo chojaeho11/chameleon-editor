@@ -1034,7 +1034,7 @@ function _attachTooltip(el, type) {
     const lang = getLang();
     let content = '';
     if (type === 'phone') {
-        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">제품·주문 문의는 담당 매니저</div><div>👤 지숙: 010-3455-1946</div><div>👤 성희: 010-4994-5950</div><div>👤 연두: 010-2525-9943</div><div style="margin-top:6px;">🏭 출고문의: 031-366-1984</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
+        if (lang === 'kr') content = '<div style="font-weight:800;margin-bottom:6px;">📞 전화 문의</div><div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">제품·주문 문의는 담당 매니저</div><div>👤 지숙: 010-3455-1946</div><div>👤 성희: 010-4994-5950</div><div>👤 동연: 010-2642-4211</div><div>👤 연두: 010-2525-9943</div><div style="margin-top:6px;">🏭 출고문의: 031-366-1984</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 평일 09:00~18:00</div>';
         else if (lang === 'ja') content = '<div style="font-weight:800;margin-bottom:6px;">📞 お電話</div><div>🇯🇵 047-712-1148</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ 平日 09:00〜18:00</div>';
         else content = '<div style="font-weight:800;margin-bottom:6px;">📞 Contact</div><div>✉️ design@chameleon.design</div><div style="margin-top:4px;font-size:11px;color:#94a3b8;">⏰ Weekdays 09:00-18:00 KST</div>';
     } else {

@@ -371,9 +371,24 @@
         window.loadRooms = async function(){
             const el=document.getElementById('roomList');
             try{
-                const { data: rooms, error } = await sb.from('chat_rooms')
+                // 2026-11-10(버그#72): 매니저 필터/검색 시 "최근 60방"이 아니라 DB 전체 이력에서 조회.
+                //   (이전엔 limit(60) 캐시를 클라에서만 필터 → 담당 매니저의 과거 상담이력이 안 보였음. 실제 삭제 아님, 로드 범위 문제)
+                let _rq = sb.from('chat_rooms')
                     .select('id, customer_name, nickname, customer_phone, site_lang, status, human_active, assigned_manager, updated_at')
-                    .order('updated_at',{ascending:false}).limit(60);
+                    .order('updated_at',{ascending:false});
+                if(_roomSearch){
+                    const _sdq = _roomSearch.replace(/[^0-9]/g,'');
+                    const _safe = _roomSearch.replace(/[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ\s]/g,'').trim();
+                    const _ors = [];
+                    if(_safe){ _ors.push('customer_name.ilike.%'+_safe+'%'); _ors.push('nickname.ilike.%'+_safe+'%'); }
+                    if(_sdq){ _ors.push('customer_phone.ilike.%'+_sdq+'%'); }
+                    _rq = _ors.length ? _rq.or(_ors.join(',')).limit(200) : _rq.limit(60);
+                } else if(_roomFilter && _roomFilter!=='__none__'){
+                    _rq = _rq.ilike('assigned_manager', '%'+_roomFilter+'%').limit(200);
+                } else {
+                    _rq = _rq.limit(60);
+                }
+                const { data: rooms, error } = await _rq;
                 if(error) throw error;
                 _roomsCache = rooms||[];
                 // 각 방 마지막 메시지 프리뷰 — 최근 메시지 일괄 조회
@@ -382,7 +397,7 @@
                 if(ids.length){
                     const { data: msgs } = await sb.from('chat_messages')
                         .select('room_id, sender_type, message, created_at')
-                        .in('room_id', ids).order('created_at',{ascending:false}).limit(300);
+                        .in('room_id', ids).order('created_at',{ascending:false}).limit(600);
                     (msgs||[]).forEach(m=>{ if(!lastMap[m.room_id]) lastMap[m.room_id]=m; });
                 }
                 // 담당 매니저 필터 적용 (_roomsCache 는 전체 유지, 렌더만 필터)
@@ -735,7 +750,7 @@
         // ════════════════ AI 학습 (기존) ════════════════
         const LANG_MAP = { kr:{tag:'KR 🇰🇷',kb:'ko',cls:'kr'},ko:{tag:'KR 🇰🇷',kb:'ko',cls:'kr'},ja:{tag:'JP 🇯🇵',kb:'ja',cls:'ja'},jp:{tag:'JP 🇯🇵',kb:'ja',cls:'ja'},us:{tag:'US 🇺🇸',kb:'en',cls:'us'},en:{tag:'EN 🇺🇸',kb:'en',cls:'us'} };
         const MGR_TPL = {
-            ko:`안녕하세요 고객님 😊\n\n제품·주문 문의는 담당 매니저에게 직접 연락 주세요!\n\n• 지숙 매니저: 010-3455-1946\n• 은미 매니저: 010-7793-5393\n• 성희 매니저: 010-4994-5950\n• 연두 매니저: 010-2525-9943\n\n📦 출고·배송 문의는 출고실 031-366-1984 (평일 09:00~18:00)\n\n편하신 분께 연락 주세요!`,
+            ko:`안녕하세요 고객님 😊\n\n제품·주문 문의는 담당 매니저에게 직접 연락 주세요!\n\n• 지숙 매니저: 010-3455-1946\n• 은미 매니저: 010-7793-5393\n• 성희 매니저: 010-4994-5950\n• 동연 매니저: 010-2642-4211\n• 연두 매니저: 010-2525-9943\n\n📦 출고·배송 문의는 출고실 031-366-1984 (평일 09:00~18:00)\n\n편하신 분께 연락 주세요!`,
             ja:`お問い合わせありがとうございます 😊\n\n詳しいご案内は担当者に直接ご連絡いただくのが最も早いです。\n\n📞 ナナミ (海外担当): 090-5397-0420\n\nお気軽にご連絡ください!`,
             en:`Hello! Thank you for your inquiry 😊\n\nFor the fastest response, please contact us directly:\n\n📞 CEO Direct (Overseas): +82-10-8821-2626\n\nFeel free to reach out anytime!`
         };

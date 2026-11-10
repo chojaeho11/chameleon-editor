@@ -2232,7 +2232,7 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const _isFranchiseTopic = /가맹|리셀러|창업|대리점|프랜차이즈|franchise|reseller/i.test((trimmedMsg||'') + ' ' + (_cm||''));
             if (_isDeferral && !_hasPhone && result.type !== 'quote' && _custAskedContact && !_isFranchiseTopic) {
                 const managerContacts: Record<string, string> = {
-                    kr: "\n\n담당 매니저한테 편하게 연락해! (전화·문자·카톡 다 돼)\n· 지숙 010-3455-1946 / 성희 010-4994-5950 / 연두 010-2525-9943\n· 이메일: design@chameleon.design\n· (출고·배송 문의만) 출고실: 031-366-1984 (평일 09~18시)",
+                    kr: "\n\n담당 매니저한테 편하게 연락해! (전화·문자·카톡 다 돼)\n· 지숙 010-3455-1946 / 성희 010-4994-5950 / 동연 010-2642-4211 / 연두 010-2525-9943\n· 이메일: design@chameleon.design\n· (출고·배송 문의만) 출고실: 031-366-1984 (평일 09~18시)",
                     ja: "\n\n📞 詳しいご案内が必要でしたら、お気軽にお問い合わせくださいませ。\n· 日本担当 ナナミ: 090-5397-0420（LINE ID: astro.0420）\n· メール: design@chameleon.design",
                     us: "\n\n📞 For accurate help, feel free to reach us!\n· International line (EN/JP): +82-10-8821-2626\n· Email: design@chameleon.design",
                 };
