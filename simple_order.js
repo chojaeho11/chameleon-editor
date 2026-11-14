@@ -5483,17 +5483,19 @@ html, body { background: #ffffff !important; }
     //   - 롤종이(roll): 길이(m) 자유판매 × 20,000원/m + 용지(크라프트/화이트) + 두께(450g→폭1420 / 180g→폭1800).
     //   - 사이즈 2택(size): 2개 사이즈 중 택1 → 고정가, 수량=개수.
     //   배송: 수도권 무료 / 지방택배 50,000원 (5종 공통).
+    // shipType: 'roll'=수도권무료/지방택배5만 · 'truck'=+지방용차(완제품)/착불용차 · 'install'=지방설치배송 70만(용차 불가)
     var LARGE_PAPER_SPEC = {
-        '4534564566': { type: 'roll', name: '초대형 롤종이', unitPerM: 20000,
+        '4534564566': { type: 'roll', shipType: 'roll', name: '초대형 롤종이', unitPerM: 20000,
             colors: [ { key: 'kraft', label: '크라프트' }, { key: 'white', label: '화이트' } ],
             thickness: [ { g: 450, width: 1420 }, { g: 180, width: 1800 } ] },
-        '23423434': { type: 'size', name: '초대형 종이가방', sizes: [
+        '23423434': { type: 'size', shipType: 'truck', name: '초대형 종이가방', sizes: [
             { w: 1200, h: 800, d: 400, price: 150000 }, { w: 1400, h: 1000, d: 500, price: 180000 } ] },
-        '435345456': { type: 'size', name: '초대형 편지', noDepth: true, sizes: [
+        '435345456': { type: 'size', shipType: 'truck', name: '초대형 편지', noDepth: true, sizes: [
             { w: 1200, h: 800, price: 150000 }, { w: 1400, h: 1000, price: 180000 } ] },
-        '2345466666': { type: 'size', name: '초대형 종이상자', sizes: [
+        '2345466666': { type: 'size', shipType: 'truck', name: '초대형 종이상자', sizes: [
             { w: 700, h: 500, d: 400, price: 150000 }, { w: 1200, h: 800, d: 600, price: 220000 } ] },
-        '43242344': { type: 'size', name: '초대형 인형박스', sizes: [
+        // 2026-11-14: 인형박스 → 초대형 포토부스 개명. 지방=용차 불가 → 설치배송 70만.
+        '43242344': { type: 'size', shipType: 'install', name: '초대형 포토부스', sizes: [
             { w: 1200, h: 2000, d: 800, price: 1300000 }, { w: 1600, h: 2200, d: 1000, price: 1800000 } ] }
     };
     window.LARGE_PAPER_SPEC = LARGE_PAPER_SPEC;
@@ -9074,6 +9076,9 @@ html, body { background: #ffffff !important; }
         regional_delivery_simple:{ fee: 200000, label_ko: '지방배송',                 parts: [['지방배송', 200000]] },
         // 2026-11-14: 대형종이(롤종이/사이즈제품) 전용 — 수도권 무료(metro_install_simple) / 지방택배 5만.
         regional_parcel_50k:     { fee: 50000,  label_ko: '지방택배',                 parts: [['지방택배', 50000]] },
+        // 2026-11-14: 대형종이 사이즈제품(가방/편지/상자) 지방 — 용차배송(완제품, 기존 용차와 동가 20만) / 착불용차(착불=플랫폼 0).
+        regional_truck_finished: { fee: 200000, label_ko: '지방 용차배송(완제품)',    parts: [['지방 용차배송(완제품)', 200000]] },
+        regional_truck_collect:  { fee: 0,      label_ko: '지방 착불용차배송',         parts: [] },
         // 2026-05-13: 허니콤 자유인쇄커팅용 (시공 없이 배송만)
         metro_delivery:       { fee: 100000, label_ko: '수도권 배송',         parts: [['수도권 배송', 100000]] },
         regional_delivery:    { fee: 200000, label_ko: '지방 배송',           parts: [['지방 배송', 200000]] },
@@ -9113,6 +9118,9 @@ html, body { background: #ffffff !important; }
             case 'real_print_threshold':  return tr('배송비 (10만원 이상 무료)','配送料(10万円以上無料)','Shipping (free over ₩100k)');
             case 'metro_install_simple':  return tr('수도권 무료배송',         '首都圏 送料無料',     'Metro · FREE delivery');
             case 'regional_compact_60_180': return tr('60×180 이하 지방택배', '60×180以下 地方宅配', 'Regional parcel ≤60×180');
+            case 'regional_parcel_50k':   return tr('지방택배',                 '地方宅配',            'Regional parcel');
+            case 'regional_truck_finished': return tr('지방 용차배송(완제품)',   '地方トラック配送(完成品)', 'Regional truck (assembled)');
+            case 'regional_truck_collect': return tr('지방 착불용차배송',       '地方トラック(着払い)',  'Regional truck (freight collect)');
             case 'regional_delivery_simple': return tr('지방배송',             '地方配送',            'Regional delivery');
             case 'compact_parcel':        return tr('택배배송 (60×40cm 이하)', '宅配 (60×40cm以下)', 'Parcel (≤60×40cm)');
             case 'pd_bulk_free':          return tr('포장 없이 벌크배송 (무료)', '梱包なしバルク配送 (無料)', 'Bulk shipping · no packaging (FREE)');
@@ -16065,8 +16073,19 @@ html, body { background: #ffffff !important; }
             // 2026-10-29(#71): 일반 배너 — 등신대와 동일 배송옵션 (수도권 무료 / 60×180 택배 3만 / 지방배송 20만)
             allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
         } else if (state.isLargePaper) {
-            // 2026-11-14: 대형종이(롤종이/사이즈제품) — 수도권 무료 / 지방택배 5만.
-            allowed = ['metro_install_simple', 'regional_parcel_50k'];
+            // 2026-11-14: 대형종이 — shipType 별 배송옵션.
+            var _lpSpA = _soLargePaperSpec(p);
+            var _lpShipT = (_lpSpA && _lpSpA.shipType) || 'roll';
+            if (_lpShipT === 'install') {
+                // 포토부스 — 용차 불가. 수도권 무료 / 지방 설치배송 70만.
+                allowed = ['metro_install_simple', 'regional_install'];
+            } else if (_lpShipT === 'truck') {
+                // 가방/편지/상자 — 수도권 무료 / 지방택배 5만 / 지방 용차(완제품) / 지방 착불용차.
+                allowed = ['metro_install_simple', 'regional_parcel_50k', 'regional_truck_finished', 'regional_truck_collect'];
+            } else {
+                // 롤종이 — 수도권 무료 / 지방택배 5만.
+                allowed = ['metro_install_simple', 'regional_parcel_50k'];
+            }
         } else if (_soIsTableProduct(p)) {
             // 2026-08-10 (버그#25 최연두): 허니콤 가구테이블 — 배송 옵션 '전부'(시공 5종 + 택배 + 방문수령).
             allowed = installKeys.concat(['parcel_shipping', 'self_pickup']);
@@ -17571,6 +17590,8 @@ html, body { background: #ffffff !important; }
             shipping = {
                 method: state.shipMethod,
                 fee: actualFee,
+                // 2026-11-14: 배송방법 한글 라벨 저장 — 작업지시서(global_admin, SHIP_OPTS 미로드)에서 '착불용차배송' 등 표시용.
+                label: (typeof _soShipMethodLabel === 'function') ? _soShipMethodLabel(state.shipMethod) : '',
                 upgrade_reason: state._shipUpgradeReason || null,
                 delivery_date: _needsSchedule && sdEl ? sdEl.value : '',
                 delivery_time: _needsSchedule && stEl ? stEl.value : '',

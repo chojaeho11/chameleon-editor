@@ -3767,6 +3767,13 @@ async function generateRecoveryOrderSheet(order, addonDB) {
             const _KWRAP = { plain: '비조립 무포장', insert: '조립 및 개별포장', top: '라벨인쇄포장', bulk: '비조립 무포장', none: '비조립 무포장' };
             _optLines.push(`• 포장: ${_KWRAP[item._presetWrapType] || item._presetWrapType || '비조립 무포장'}`);
         }
+        // 2026-11-14: 배송 방법 표시 (착불용차배송·용차완제품 등 — 제작/배송팀 안내). 주문 시 저장된 라벨 우선.
+        try {
+            var _WO_SHIP_LABEL = { regional_truck_collect:'지방 착불용차배송', regional_truck_finished:'지방 용차배송(완제품)', regional_install:'지방 설치배송', regional_parcel_50k:'지방택배', regional_truck:'지방 용차배송', metro_install_simple:'수도권 무료배송', metro_install:'수도권 무료배송·무료설치', bundle_shipping:'다른 제품과 묶음배송' };
+            var _woShip = item.shipping || null;
+            var _woShipLbl = _woShip ? (_woShip.label || _WO_SHIP_LABEL[_woShip.method] || '') : '';
+            if (_woShipLbl) _optLines.push('• 배송: ' + _woShipLbl);
+        } catch (e) {}
         if (_optLines.length === 0) _optLines.push('• 기본 사양');
         _optLines.forEach(function (ln) { _dt(doc, ln, 25, optY); optY += 6; });
 
