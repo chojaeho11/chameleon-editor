@@ -84,7 +84,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20261114193211';
+    var CV = '20261114195007';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -4687,11 +4687,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var bizDeal = document.getElementById('bizDealSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
     var wholesaleBoard = document.getElementById('wholesaleBoardSection');
+    var largePaper = document.getElementById('largePaperSection');   // 2026-11-14: 대형종이 섹션
     var hcVideo = document.getElementById('honeycombVideoSection');
     var suspendNotice = document.getElementById('suspendNoticeSection');
     // 2026-09-10 순서변경(사장님): 허니콤보드 → 허니콤보드 원판 → 종이매대 → 패브릭인쇄, 그 아래 일시판매중지 안내.
+    //   2026-11-14(사장님): 대형종이(largePaper)를 허니콤보드(hotDeal)와 원판(wholesaleBoard) 사이에 삽입.
     //   인쇄물(printService)/광고물(popular)/굿즈(goods) 는 12월말까지 숨김(위 tempHideSections CSS) — 배열 뒤로 보내 위치 무의미.
-    [hotDeal, wholesaleBoard, paperDisplay, bizDeal, suspendNotice, printService, popular, goods, hcVideo].forEach(function(sec){
+    [hotDeal, largePaper, wholesaleBoard, paperDisplay, bizDeal, suspendNotice, printService, popular, goods, hcVideo].forEach(function(sec){
         if (sec) { moveAfter(sec, cursor); cursor = sec; }
     });
     // 영상1 (expositor4) → POPUP 영상 다음
@@ -6285,6 +6287,19 @@ window.addEventListener('load', function() {
         <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('wholesaleBoardGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
         <div id="wholesaleBoardGrid" class="hotdeal-grid"></div>
         <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('wholesaleBoardGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<!-- 2026-11-14(사장님): 대형종이 섹션 — 허니콤보드와 허니콤보드 원판 사이에 노출 (top category 'rollpaper'='대형종이'). 순서는 reorder 배열에서 largePaper 를 hotDeal↔wholesaleBoard 사이에 삽입. -->
+<div id="largePaperSection" class="hotdeal-wrapper" style="display:none; margin-top:0px;">
+    <div class="hotdeal-header">
+        <h2><span data-i18n="home_largepaper_title">대형종이</span> <span class="badge-hot" style="background:#0ea5e9;">Big Paper</span></h2>
+        <p data-i18n="home_largepaper_desc">초대형 사이즈 종이 제품 — 박스·상자·롤·편지·가방</p>
+    </div>
+    <div class="hotdeal-scroll-wrap">
+        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('largePaperGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <div id="largePaperGrid" class="hotdeal-grid"></div>
+        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('largePaperGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
@@ -13252,7 +13267,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadProductsByCategory('popularSection', 'popularGrid', '기타상품', 10, { codes: window._ETC_CODES, badge:{ label:'기타', color:'#0891b2' } });
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES }); loadProductsByCategory('largePaperSection', 'largePaperGrid', 'rollpaper', 10, { badge:{ label:'대형', color:'#0ea5e9' } });
         // 2026-09-14: 가맹점 마진(__FR_MARGIN)이 비동기로 늦게 로드될 때 홈 카드 전체를 다시 그려 마진 반영.
         window._frRerenderHome = function(){
             try {
@@ -13264,7 +13279,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
                     loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
                     loadProductsByCategory('popularSection', 'popularGrid', '기타상품', 10, { codes: window._ETC_CODES, badge:{ label:'기타', color:'#0891b2' } });
                 }
-                if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
+                if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES }); loadProductsByCategory('largePaperSection', 'largePaperGrid', 'rollpaper', 10, { badge:{ label:'대형', color:'#0ea5e9' } });
                 if (typeof window._applyFabPrices === 'function') window._applyFabPrices();
             } catch(e){}
         };
@@ -19884,7 +19899,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadProductsByCategory('popularSection', 'popularGrid', '기타상품', 10, { codes: window._ETC_CODES, badge:{ label:'기타', color:'#0891b2' } });
         }
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES });
+        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 5, { codes: window._RAW_BOARD_CODES }); loadProductsByCategory('largePaperSection', 'largePaperGrid', 'rollpaper', 10, { badge:{ label:'대형', color:'#0ea5e9' } });
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
