@@ -5485,7 +5485,7 @@ html, body { background: #ffffff !important; }
     //   배송: 수도권 무료 / 지방택배 50,000원 (5종 공통).
     // shipType: 'roll'=수도권무료/지방택배5만 · 'truck'=+지방용차(완제품)/착불용차 · 'install'=지방설치배송 70만(용차 불가)
     var LARGE_PAPER_SPEC = {
-        '4534564566': { type: 'roll', shipType: 'roll', name: '초대형 롤종이', unitPerM: 20000,
+        '4534564566': { type: 'roll', shipType: 'roll', name: '초대형 롤 도화지', unitPerM: 20000,
             colors: [ { key: 'kraft', label: '크라프트' }, { key: 'white', label: '화이트' } ],
             thickness: [ { g: 450, width: 1420 }, { g: 180, width: 1800 } ] },
         '23423434': { type: 'size', shipType: 'truck', name: '초대형 종이가방', sizes: [
