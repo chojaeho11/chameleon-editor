@@ -245,9 +245,33 @@ window.loadCategories = async () => {
     const prodCatSelect = document.getElementById('newProdCategory');
     const filterProdCat = document.getElementById('filterProdCat');
 
-    // [수정] 대분류가 로딩되지 않았거나 선택되지 않았으면 중단 (서버 에러 방지)
+    // [수정] 대분류가 로딩되지 않았거나 선택되지 않았으면 소분류 "관리 목록"은 안내만.
+    //   단, 2026-11-14: 상품등록 카테고리 드롭다운(newProdCategory)은 "로딩 중"에 멈춰 새 카테고리가 안 보이던 문제 →
+    //   대분류 미선택(초기/전체)이어도 전체 소분류를 [대분류]별 그룹으로 채운다. (대분류 선택 시엔 아래 분기서 그 대분류 소분류만 재채움)
     if(!filterTopVal || filterTopVal === 'all') {
         listArea.innerHTML = '<div style="width:100%; text-align:center; padding:40px; color:#94a3b8; font-size:14px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">왼쪽 상단에서 [대분류]를 선택하시면 해당 소분류 목록이 나타납니다.</div>';
+        try {
+            if (prodCatSelect || filterProdCat) {
+                const { data: allSubs } = await sb.from('admin_categories').select('code,name,top_category_code').order('top_category_code', {ascending:true}).order('sort_order', {ascending:true});
+                const topName = {};
+                Array.from(filterEl.options).forEach(o => { if (o.value && o.value !== 'all') topName[o.value] = (o.textContent || '').trim(); });
+                let optsHtml = '<option value="">카테고리 선택</option>';
+                let filterHtml = '<option value="all">📂 전체</option>';
+                let curTop = undefined;
+                (allSubs || []).forEach(c => {
+                    if (c.top_category_code !== curTop) {
+                        if (curTop !== undefined) optsHtml += '</optgroup>';
+                        curTop = c.top_category_code;
+                        optsHtml += '<optgroup label="' + ((topName[curTop] || curTop || '기타').replace(/"/g,'')) + '">';
+                    }
+                    optsHtml += `<option value="${c.code}">${c.name}</option>`;
+                    filterHtml += `<option value="${c.code}">${c.name}</option>`;
+                });
+                if (curTop !== undefined) optsHtml += '</optgroup>';
+                if (prodCatSelect) prodCatSelect.innerHTML = optsHtml;
+                if (filterProdCat) filterProdCat.innerHTML = filterHtml;
+            }
+        } catch(e) { console.warn('[loadCategories] 전체 소분류 로드 실패:', e); if (prodCatSelect) prodCatSelect.innerHTML = '<option value="">카테고리 선택</option>'; }
         return;
     }
 
