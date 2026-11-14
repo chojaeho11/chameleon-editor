@@ -2709,6 +2709,42 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-11-14: 대형종이(rollpaper) 전용 섹션 — 롤종이(용지/두께) 또는 사이즈 2택. -->
+        <div class="so-section" id="soLargePaperSection" style="display:none;">
+          <!-- 롤종이: 용지 색상 + 두께(폭 종속) -->
+          <div id="soRollPaperOpts" style="display:none;">
+            <div class="so-section-title">${tr('용지 색상', '用紙カラー', 'Paper color')}</div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:14px;">
+              <button type="button" class="so-lp-color-btn active" data-color="kraft" onclick="window._soPickRollPaperColor(this)"
+                style="padding:14px 10px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:12px; cursor:pointer; font-family:inherit;">${tr('크라프트', 'クラフト', 'Kraft')}</button>
+              <button type="button" class="so-lp-color-btn" data-color="white" onclick="window._soPickRollPaperColor(this)"
+                style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:12px; cursor:pointer; font-family:inherit;">${tr('화이트', 'ホワイト', 'White')}</button>
+            </div>
+            <div class="so-section-title">${tr('두께', '厚さ', 'Thickness')}</div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;">
+              <button type="button" class="so-lp-thick-btn active" data-thick="450" data-width="1420" onclick="window._soPickRollPaperThick(this)"
+                style="padding:14px 10px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:12px; cursor:pointer; font-family:inherit;">
+                <div style="font-size:14px; font-weight:800;">450g</div>
+                <div style="font-size:11px; opacity:0.85; margin-top:3px;">${tr('아주 두꺼움 · 폭 1420mm', '極厚 · 幅1420mm', 'Very thick · W1420mm')}</div>
+              </button>
+              <button type="button" class="so-lp-thick-btn" data-thick="180" data-width="1800" onclick="window._soPickRollPaperThick(this)"
+                style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:12px; cursor:pointer; font-family:inherit;">
+                <div style="font-size:14px; font-weight:800;">180g</div>
+                <div style="font-size:11px; opacity:0.85; margin-top:3px;">${tr('도화지 두께 · 폭 1800mm', '画用紙厚 · 幅1800mm', 'Drawing-paper · W1800mm')}</div>
+              </button>
+            </div>
+            <div style="padding:12px 14px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; font-size:12.5px; color:#0369a1; line-height:1.7;">
+              ${tr('길이(미터) 단위로 판매합니다 · <b>20,000원/m</b>', '長さ(メートル)単位販売 · <b>20,000ウォン/m</b>', 'Sold by length (meters) · <b>20,000 KRW/m</b>')}<br>
+              ${tr('아래 수량 칸에 원하는 길이(미터)를 입력하세요.', '下の数量欄に希望の長さ(m)を入力してください。', 'Enter the length (meters) in the quantity box below.')}
+            </div>
+          </div>
+          <!-- 사이즈 제품: 2개 사이즈 택1 (JS 가 상품 스펙으로 버튼 렌더) -->
+          <div id="soLpSizeOpts" style="display:none;">
+            <div class="so-section-title">${tr('사이즈 선택', 'サイズ選択', 'Size')}</div>
+            <div id="soLpSizeBtns" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-06-01: 인라인 파일 업로드 카드 — 광고인쇄/허니콤 상품에서 우측 사이드바 최상단으로 이동 (JS 로 위치 조정). -->
         <div class="so-section" id="soInlineUploadCard" style="display:none;">
           <div class="so-section-title">
@@ -4678,6 +4714,18 @@ html, body { background: #ffffff !important; }
             // 표시 단가 = 합계 / 수량 (10~99 2배·샘플 등에서 '단가 × 수량 = 합계' 일치)
             unit = Math.round(subtotal / Math.max(1, qty));
         }
+        // 2026-11-14: 대형종이 — 롤종이(20,000원×미터) / 사이즈제품(사이즈가×수량). 제품페이지=장바구니 단일 진실.
+        if (state.isLargePaper) {
+            var _lpS = _soLargePaperSpec(state.product);
+            if (state.isRollPaper && _lpS) {
+                unit = _lpS.unitPerM || 20000;        // 1미터당 단가
+                subtotal = unit * qty;                // qty = 미터수
+            } else if (state.isLargePaperSize && _lpS) {
+                var _szObj = (_lpS.sizes || [])[state.largePaperSizeIdx || 0];
+                unit = _szObj ? _szObj.price : (Number(state.product && state.product.price) || 0);
+                subtotal = unit * qty;                // qty = 개수
+            }
+        }
         const tierPct = 0;
         const discount = 0;
         // 옵션별 breakdown (이름 + 가격)
@@ -5423,12 +5471,35 @@ html, body { background: #ffffff !important; }
         try {
             if (typeof window._getTopCategoryCode === 'function' && p.category) {
                 var top = String(window._getTopCategoryCode(p.category) || '').toLowerCase();
-                if (top === 'paper_display' || top.indexOf('paper') >= 0 || top.indexOf('종이매대') >= 0) return true;
+                // 2026-11-14: 'rollpaper'(대형종이) 가 'paper' 부분매칭으로 종이매대 오인되던 버그 → top 정확 일치만.
+                if (top === 'paper_display' || top.indexOf('종이매대') >= 0) return true;
             }
         } catch (e) {}
         if (/종이매대|paper\s*display|paper\s*stand|cardboard\s*display/i.test(name)) return true;
         return false;
     }
+
+    // 2026-11-14(사장님): 대형종이(top category 'rollpaper') 제품군 스펙. 코드별 전용 주문방식.
+    //   - 롤종이(roll): 길이(m) 자유판매 × 20,000원/m + 용지(크라프트/화이트) + 두께(450g→폭1420 / 180g→폭1800).
+    //   - 사이즈 2택(size): 2개 사이즈 중 택1 → 고정가, 수량=개수.
+    //   배송: 수도권 무료 / 지방택배 50,000원 (5종 공통).
+    var LARGE_PAPER_SPEC = {
+        '4534564566': { type: 'roll', name: '초대형 롤종이', unitPerM: 20000,
+            colors: [ { key: 'kraft', label: '크라프트' }, { key: 'white', label: '화이트' } ],
+            thickness: [ { g: 450, width: 1420 }, { g: 180, width: 1800 } ] },
+        '23423434': { type: 'size', name: '초대형 종이가방', sizes: [
+            { w: 1200, h: 800, d: 400, price: 150000 }, { w: 1400, h: 1000, d: 500, price: 180000 } ] },
+        '435345456': { type: 'size', name: '초대형 편지', noDepth: true, sizes: [
+            { w: 1200, h: 800, price: 150000 }, { w: 1400, h: 1000, price: 180000 } ] },
+        '2345466666': { type: 'size', name: '초대형 종이상자', sizes: [
+            { w: 700, h: 500, d: 400, price: 150000 }, { w: 1200, h: 800, d: 600, price: 220000 } ] },
+        '43242344': { type: 'size', name: '초대형 인형박스', sizes: [
+            { w: 1200, h: 2000, d: 800, price: 1300000 }, { w: 1600, h: 2200, d: 1000, price: 1800000 } ] }
+    };
+    window.LARGE_PAPER_SPEC = LARGE_PAPER_SPEC;
+    function _soLargePaperSpec(p) { return (p && p.code && LARGE_PAPER_SPEC[p.code]) || null; }
+    function _soIsLargePaperProduct(p) { return !!_soLargePaperSpec(p); }
+    window._soIsLargePaperProduct = _soIsLargePaperProduct;
 
     // 2026-08-31: 종이매대 칼선 갤러리(paper_display_templates) 제거 — 설계 스튜디오로 대체.
 
@@ -9001,6 +9072,8 @@ html, body { background: #ffffff !important; }
         metro_install_simple:    { fee: 0,      label_ko: '수도권 무료배송',           parts: [] },
         regional_compact_60_180: { fee: 30000,  label_ko: '60×180 이하 지방택배',     parts: [['60×180 이하 지방택배', 30000]] },
         regional_delivery_simple:{ fee: 200000, label_ko: '지방배송',                 parts: [['지방배송', 200000]] },
+        // 2026-11-14: 대형종이(롤종이/사이즈제품) 전용 — 수도권 무료(metro_install_simple) / 지방택배 5만.
+        regional_parcel_50k:     { fee: 50000,  label_ko: '지방택배',                 parts: [['지방택배', 50000]] },
         // 2026-05-13: 허니콤 자유인쇄커팅용 (시공 없이 배송만)
         metro_delivery:       { fee: 100000, label_ko: '수도권 배송',         parts: [['수도권 배송', 100000]] },
         regional_delivery:    { fee: 200000, label_ko: '지방 배송',           parts: [['지방 배송', 200000]] },
@@ -10640,6 +10713,44 @@ html, body { background: #ffffff !important; }
         btn.style.border = '2px solid #0f172a';
         state.realPrintWidth = btn.getAttribute('data-width') === '127' ? '127' : '90';
         if (typeof recalc === 'function') recalc();
+    };
+    // 2026-11-14: 대형종이 — 롤종이 용지색/두께, 사이즈제품 사이즈 택1.
+    function _soLpActivate(cls, btn) {
+        document.querySelectorAll(cls).forEach(function(b){ b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#334155'; b.style.border = '2px solid #e2e8f0'; });
+        if (btn) { btn.classList.add('active'); btn.style.background = '#0f172a'; btn.style.color = '#fff'; btn.style.border = '2px solid #0f172a'; }
+    }
+    window._soPickRollPaperColor = function (btn) {
+        if (!btn) return; _soLpActivate('.so-lp-color-btn', btn);
+        state.rollPaperColor = btn.getAttribute('data-color') || 'kraft';
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soPickRollPaperThick = function (btn) {
+        if (!btn) return; _soLpActivate('.so-lp-thick-btn', btn);
+        state.rollPaperThickness = parseInt(btn.getAttribute('data-thick'), 10) || 450;
+        state.rollPaperWidth = parseInt(btn.getAttribute('data-width'), 10) || 1420;
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soPickLargePaperSize = function (idx, btn) {
+        state.largePaperSizeIdx = parseInt(idx, 10) || 0;
+        _soLpActivate('.so-lp-size-btn', btn);
+        if (typeof recalc === 'function') recalc();
+    };
+    // 사이즈제품 2개 버튼을 상품 스펙으로 렌더
+    window._soRenderLargePaperSizes = function () {
+        var wrap = document.getElementById('soLpSizeBtns');
+        var spec = _soLargePaperSpec(state.product);
+        if (!wrap || !spec || spec.type !== 'size') return;
+        var html = '';
+        (spec.sizes || []).forEach(function (s, i) {
+            var _active = (state.largePaperSizeIdx || 0) === i;
+            var dim = (Math.round(s.w) + '×' + Math.round(s.h) + (spec.noDepth ? '' : ('×' + Math.round(s.d))) + 'mm');
+            html += '<button type="button" class="so-lp-size-btn' + (_active ? ' active' : '') + '" data-idx="' + i + '" onclick="window._soPickLargePaperSize(' + i + ', this)" '
+                + 'style="padding:14px 10px; border:2px solid ' + (_active ? '#0f172a' : '#e2e8f0') + '; background:' + (_active ? '#0f172a' : '#fff') + '; color:' + (_active ? '#fff' : '#334155') + '; border-radius:12px; cursor:pointer; font-family:inherit; text-align:center;">'
+                + '<div style="font-size:13px; font-weight:800;">' + dim + '</div>'
+                + '<div style="font-size:13px; font-weight:900; margin-top:5px; color:' + (_active ? '#fde047' : '#4338ca') + ';">' + fmtPrice(s.price) + '</div>'
+                + '</button>';
+        });
+        wrap.innerHTML = html;
     };
     // 2026-06-08: 실사출력 (캘지/유포지 한정) — 표면 코팅 선택. UV 무료 / 무광 +1K/m / 유광 +2K/m.
     window._soPickRealPrintCoating = function (btn) {
@@ -14848,6 +14959,23 @@ html, body { background: #ffffff !important; }
                 if (_rpSchedSec) _rpSchedSec.style.display = 'none';
             } catch (e) {}
         }
+        // 2026-11-14(사장님): 대형종이(rollpaper) 제품군 — 롤종이(미터판매) / 사이즈2택.
+        var _lpSpec = _soLargePaperSpec(p);
+        state.isLargePaper = !!_lpSpec;
+        state.isRollPaper = !!(_lpSpec && _lpSpec.type === 'roll');
+        state.isLargePaperSize = !!(_lpSpec && _lpSpec.type === 'size');
+        if (state.isLargePaper) {
+            state.isAdPrint = false;
+            state.isCustomSize = false;
+            state.isPaperDisplay = false;   // rollpaper 오인 방지(이중 안전)
+            state.isRealPrint = false;
+            if (state.isRollPaper) {
+                state.rollPaperColor = 'kraft';
+                state.rollPaperThickness = 450;
+                state.rollPaperWidth = 1420;
+            }
+            if (state.isLargePaperSize) { state.largePaperSizeIdx = 0; }
+        }
         // 2026-06-04: 등신대 V2 (hb_pi_5 / acr_crt_stand) 만 면적×단가 + mm 입력. hb_ss/hb_point 은 원래 UI 유지.
         if (state.isStandeeV2) state.isCustomSize = true;
         // 2026-06-04: 자유인쇄커팅 — 면적 회베 계산기 모드로 전환 (이전 한판/반판 flat 가격 폐기)
@@ -15681,6 +15809,40 @@ html, body { background: #ffffff !important; }
                     if (_qtyUnit2) _qtyUnit2.textContent = tr('개', '個', 'pcs');
                 }
             }
+            // 2026-11-14: 대형종이 전용 layout — 롤종이(용지/두께) 또는 사이즈2택 섹션 + 수량(미터/개) + 불필요 섹션 숨김.
+            var _lpSec = document.getElementById('soLargePaperSection');
+            if (state.isLargePaper && _lpSec) {
+                _lpSec.style.display = '';
+                _lpSec.style.order = '-200';
+                var _lpRoll = document.getElementById('soRollPaperOpts');
+                var _lpSize = document.getElementById('soLpSizeOpts');
+                if (_lpRoll) _lpRoll.style.display = state.isRollPaper ? '' : 'none';
+                if (_lpSize) _lpSize.style.display = state.isLargePaperSize ? '' : 'none';
+                if (state.isLargePaperSize && typeof window._soRenderLargePaperSizes === 'function') window._soRenderLargePaperSizes();
+                if (_custSec) _custSec.style.display = 'none';
+                if (_multiSec) _multiSec.style.display = 'none';
+                if (_tierTable) _tierTable.style.display = 'none';
+                if (_presetTier) _presetTier.style.display = 'none';
+                if (_leftUpload) _leftUpload.style.display = '';
+                if (_leftUploadLabel) _leftUploadLabel.style.display = '';
+                if (_inlineUploadCard) _inlineUploadCard.style.display = 'none';
+                if (qtySec) {
+                    qtySec.style.display = '';
+                    qtySec.style.order = '-190';
+                    var _lpUnit = qtySec.querySelector('.so-qty-unit');
+                    if (_lpUnit) _lpUnit.textContent = state.isRollPaper ? tr('미터', 'm', 'm') : tr('개', '個', 'pcs');
+                    var _lpQ = document.getElementById('soQty');
+                    if (_lpQ) { _lpQ.value = Math.max(1, parseInt(_lpQ.value, 10) || 1); _lpQ.min = 1; }
+                    var _pdP = document.getElementById('soPdQtyPresets'); if (_pdP) _pdP.style.display = 'none';
+                    var _pdC = document.getElementById('soPdQtyCustomRow'); if (_pdC) _pdC.style.display = 'none';
+                }
+                if (state.isRollPaper) {
+                    document.querySelectorAll('.so-lp-color-btn').forEach(function(b){ var on=b.getAttribute('data-color')===(state.rollPaperColor||'kraft'); b.classList.toggle('active',on); b.style.background=on?'#0f172a':'#fff'; b.style.color=on?'#fff':'#334155'; b.style.border='2px solid '+(on?'#0f172a':'#e2e8f0'); });
+                    document.querySelectorAll('.so-lp-thick-btn').forEach(function(b){ var on=parseInt(b.getAttribute('data-thick'),10)===(state.rollPaperThickness||450); b.classList.toggle('active',on); b.style.background=on?'#0f172a':'#fff'; b.style.color=on?'#fff':'#334155'; b.style.border='2px solid '+(on?'#0f172a':'#e2e8f0'); });
+                }
+            } else if (_lpSec) {
+                _lpSec.style.display = 'none';
+            }
             // 2026-06-01: 허니콤보드 — 같은 멀티-라인 큐 UI 활성화 (가벽/박스/등신대/자유인쇄커팅 등 모든 허니콤 제품).
             //   ad-print 가 아니어도 honeycomb 이면 "+다른 사이즈도 같이 주문" 노출.
             //   ad-print 처럼 shipping/order 강제 변경은 안 함 — 가벽은 자체 설치/배송 옵션 유지.
@@ -15835,7 +15997,7 @@ html, body { background: #ffffff !important; }
         var _isPlainBanner = state.isBannerOutput && !_bnIsPlac15 && !state.isShoulderSash;
         // 2026-06-12: 배너 family — 시공/배송 옵션 섹션 숨김(무조건 무료). 단 일반 배너(_isPlainBanner)는 2026-10-29 노출.
         var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && (!state.isBannerOutput || _isPlainBanner) && !state.isShoulderSash
-            && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay || _isPlainBanner);
+            && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay || _isPlainBanner || state.isLargePaper);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         // 2026-06-26: 허니콤보드 원판 — 전용 배송일/메모 박스 + 커팅서비스(파일 업로드) 박스 노출.
         var _rbDelBox = document.getElementById('soRbDeliveryBox');
@@ -15902,6 +16064,9 @@ html, body { background: #ffffff !important; }
         } else if (_isPlainBanner) {
             // 2026-10-29(#71): 일반 배너 — 등신대와 동일 배송옵션 (수도권 무료 / 60×180 택배 3만 / 지방배송 20만)
             allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
+        } else if (state.isLargePaper) {
+            // 2026-11-14: 대형종이(롤종이/사이즈제품) — 수도권 무료 / 지방택배 5만.
+            allowed = ['metro_install_simple', 'regional_parcel_50k'];
         } else if (_soIsTableProduct(p)) {
             // 2026-08-10 (버그#25 최연두): 허니콤 가구테이블 — 배송 옵션 '전부'(시공 5종 + 택배 + 방문수령).
             allowed = installKeys.concat(['parcel_shipping', 'self_pickup']);
@@ -15955,6 +16120,9 @@ html, body { background: #ffffff !important; }
             defaultShip = 'metro_delivery';
         } else if (_isPlainBanner && allowed.indexOf('metro_install_simple') >= 0) {
             // 2026-10-29(#71): 일반 배너 — 기본 = 수도권 무료배송 (0원, 고객이 지방 선택 시 유료)
+            defaultShip = 'metro_install_simple';
+        } else if (state.isLargePaper && allowed.indexOf('metro_install_simple') >= 0) {
+            // 2026-11-14: 대형종이 — 기본 = 수도권 무료배송 (지방 선택 시 택배 5만)
             defaultShip = 'metro_install_simple';
         } else {
             for (var pi = 0; pi < parcelKeys.length; pi++) {
@@ -17572,6 +17740,14 @@ html, body { background: #ffffff !important; }
             _isRealPrint: !!state.isRealPrint,
             realPrintWidth: state.isRealPrint ? (state.realPrintWidth || '90') : null,
             realPrintCoating: state.isRealPrint ? (state.realPrintCoating || 'uv') : null,
+            // 2026-11-14: 대형종이 — 롤종이(용지/두께/미터) · 사이즈제품(사이즈 인덱스). _soCalcItemPrice/견적서/주문관리용.
+            _isLargePaper: !!state.isLargePaper,
+            _isRollPaper: !!state.isRollPaper,
+            _isLargePaperSize: !!state.isLargePaperSize,
+            rollPaperColor: state.isRollPaper ? (state.rollPaperColor || 'kraft') : null,
+            rollPaperThickness: state.isRollPaper ? (state.rollPaperThickness || 450) : null,
+            rollPaperWidth: state.isRollPaper ? (state.rollPaperWidth || 1420) : null,
+            largePaperSizeIdx: state.isLargePaperSize ? (state.largePaperSizeIdx || 0) : null,
             // 2026-05-30: 베스트굿즈 / 프리셋 플래그 — _soCalcItemPrice / 견적서 / 주문관리에서 100개+ 50%·정액배송·고리 300원 적용 트리거
             _isBestGoods: !!state.isBestGoods,
             _isPresetGoods: !!state.isPresetGoods,
@@ -19580,6 +19756,18 @@ html, body { background: #ffffff !important; }
         //   배송비를 포함해 반환해야 함. 미포함 시 카트합계 taxBase += (subPrice - shipFee) 에서 배송비만큼 상품가가
         //   깎여, JP 명함 카트 合計가 상품가 0 + 배송 5000 = ¥500 으로만 표시되던 버그. (KR 은 shipFee 0 이라 변화 없음)
         var _soItmShipInc = (it.shipping && typeof it.shipping.fee === 'number') ? it.shipping.fee : 0;
+        // 2026-11-14: 대형종이 — 롤종이(20,000원×미터) / 사이즈제품(사이즈가×수량). 배송비 포함 반환(early-return).
+        var _lpSpecItm = (it.product && it.product.code && window.LARGE_PAPER_SPEC && window.LARGE_PAPER_SPEC[it.product.code]) || null;
+        if (_lpSpecItm || it._isLargePaper) {
+            var _lpUnit;
+            if (it._isRollPaper || (_lpSpecItm && _lpSpecItm.type === 'roll')) {
+                _lpUnit = (_lpSpecItm && _lpSpecItm.unitPerM) || 20000;
+            } else {
+                var _lpSz = _lpSpecItm && (_lpSpecItm.sizes || [])[it.largePaperSizeIdx || 0];
+                _lpUnit = _lpSz ? _lpSz.price : (Number(it.product && it.product.price) || 0);
+            }
+            return _lpUnit * qty + _soItmShipInc;
+        }
         // 2026-06-15: 허니콤 배너 family — 코드 × 단/양 매핑 (_BANNER_PRICES 한 곳에서 관리).
         //   hb_bn_1: 단면 45K / 양면 80K, hb_bn_2(연결형): 단면 33K / 양면 70K, hb_bn_3: 80K.
         //   매핑 없으면 DB price → 레거시 폴백.
